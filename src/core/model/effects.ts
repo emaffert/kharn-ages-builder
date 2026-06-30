@@ -13,6 +13,12 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("grant-skill"), skillId: z.string() }),
   z.object({ kind: z.literal("grant-trait"), trait: z.string() }),
   z.object({ kind: z.literal("cap"), value: z.number() }),
+  z.object({
+    kind: z.literal("stat-modifier"),
+    stat: z.enum(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"]),
+    // nombre fixe, ou "level" = le niveau de la figurine elle-même.
+    amount: z.union([z.number(), z.literal("level")]),
+  }),
 ]);
 export type EffectOperation = z.infer<typeof EffectOperationSchema>;
 

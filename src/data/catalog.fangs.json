@@ -8,14 +8,6 @@
       "logo": "fangs"
     }
   ],
-  "magicWays": [
-    {
-      "id": "osteomancie",
-      "name": "Ostéomancie",
-      "factionId": "fangs",
-      "castingBonusText": "Une sorcière fang aura un bonus de + 1 par combattant terrassé au moment de l'incantation."
-    }
-  ],
   "skills": [
     {
       "id": "morsure",
@@ -153,6 +145,14 @@
       "sourceText": "La compétence « aliéné X » définit les Aliénés sur leur carte de profil, où X est le « Maître » auquel elles sont liées. Une figurine aliénée n'effectue jamais de test de témérité ni d'effroi."
     }
   ],
+  "magicWays": [
+    {
+      "id": "osteomancie",
+      "name": "Ostéomancie",
+      "factionId": "fangs",
+      "castingBonusText": "Une sorcière fang aura un bonus de + 1 par combattant terrassé au moment de l'incantation."
+    }
+  ],
   "models": [
     {
       "id": "larbin",
@@ -259,325 +259,6 @@
       ]
     }
   ],
-  "equipment": [
-    {
-      "id": "couteau",
-      "name": "Couteau",
-      "category": "arme-cac",
-      "cost": 0,
-      "isFree": true,
-      "hands": 1,
-      "effectsText": "Saignement 1 en cas de RC. Pas d'effet avec C.",
-      "restrictions": []
-    },
-    {
-      "id": "faucille-os",
-      "name": "Faucille d'Os",
-      "category": "arme-cac",
-      "cost": 15,
-      "hands": 1,
-      "effectsText": "Inflige « Saignement 2 », confère « Riposte ».",
-      "grantsSkills": [
-        {
-          "skillId": "rusee"
-        }
-      ],
-      "restrictions": [],
-      "cardImage": "cards/fangs-xayin-muskh.jpg"
-    },
-    {
-      "id": "croc-de-fiel",
-      "name": "Croc de fiel",
-      "category": "arme-cac",
-      "cost": 10,
-      "hands": 1,
-      "effectsText": "Empoisonne la victime.",
-      "restrictions": []
-    },
-    {
-      "id": "baton-relique",
-      "name": "Bâton relique",
-      "category": "arme-cac",
-      "cost": 15,
-      "hands": 1,
-      "effectsText": "Niv II : les Goulues dans son aura infligent +2 dégâts. Niv III : les Goulues dans son aura gagnent « Réceptif (ostéomancie) ».",
-      "restrictions": []
-    },
-    {
-      "id": "paire-poignards",
-      "name": "Paire de poignards",
-      "category": "arme-cac",
-      "cost": 18,
-      "hands": 2,
-      "effectsText": "3 dégâts / Saignement 2. 3 PA = 2 attaques à 2 PA successives.",
-      "restrictions": []
-    },
-    {
-      "id": "crosse-osteomancie",
-      "name": "Crosse d'Ostéomancie",
-      "category": "objet",
-      "cost": 20,
-      "hands": 1,
-      "effectsText": "Peut contenir 3 pages de sorts. Lors d'une incantation réussie, draine si possible 1 PA à la cible ennemie ou alliée. En combat, draine si possible 3 PA de la cible en cas de RC au lieu des dégâts supplémentaires.",
-      "restrictions": [
-        {
-          "id": "crosse-reserve-meneuses",
-          "type": "equipment-reserved",
-          "params": {
-            "trait": "meneuse"
-          },
-          "scope": "profil",
-          "sourceText": "Réservée aux Meneuses fangs.",
-          "severity": "error",
-          "autoEnforced": true
-        }
-      ],
-      "cardImage": "cards/fangs-meneuse-niv-3.jpg"
-    },
-    {
-      "id": "arbalete-de-poing",
-      "name": "Arbalète de poing",
-      "category": "arme-tir",
-      "cost": 0,
-      "hands": 1,
-      "effectsText": "Arme de tir entraînant plusieurs jets de défense (voir FAQ).",
-      "restrictions": []
-    }
-  ],
-  "grimoires": [
-    {
-      "id": "petit",
-      "name": "Petit grimoire",
-      "cost": 20,
-      "pages": 5
-    },
-    {
-      "id": "grand",
-      "name": "Grand grimoire",
-      "cost": 40,
-      "pages": "illimite"
-    }
-  ],
-  "spells": [
-    {
-      "id": "seduction-du-fiel",
-      "name": "Séduction du Fiel",
-      "kind": "grimoire",
-      "magicWayId": "osteomancie",
-      "pages": 2,
-      "cost": 10,
-      "reservedTo": {
-        "trait": "fille-de-nyx"
-      },
-      "target": "Le lanceur.",
-      "cadence": "1 / tour.",
-      "duration": "Jusqu'à la fin de la prochaine activation du lanceur.",
-      "difficulties": [
-        {
-          "threshold": 17,
-          "effectText": "Aucun effet ne peut être appliqué sur le lanceur lors des attaques réussies contre elle."
-        },
-        {
-          "threshold": 21,
-          "effectText": "Aucun effet ne peut être appliqué sur le lanceur lors des attaques, des défenses et des tirs réussis contre elle."
-        }
-      ],
-      "cardImage": "cards/fangs-apathee.jpg"
-    },
-    {
-      "id": "inflection-mentale",
-      "name": "Inflection Mentale",
-      "kind": "grimoire",
-      "magicWayId": "osteomancie",
-      "pages": 2,
-      "cost": 10,
-      "reservedTo": {
-        "trait": "fille-de-nyx"
-      },
-      "target": "1 ennemi.",
-      "cadence": "1 / tour.",
-      "duration": "Immédiat.",
-      "difficulties": [
-        {
-          "threshold": 15,
-          "effectText": "L'ennemi effectue immédiatement une action au choix du lanceur, avec les PA du lanceur mais ses propres caractéristiques."
-        },
-        {
-          "threshold": 21,
-          "effectText": "L'ennemi effectue immédiatement une action au choix du lanceur, avec ses propres PA et caractéristiques."
-        }
-      ],
-      "cardImage": "cards/fangs-broutcha.jpg"
-    },
-    {
-      "id": "sororite-mentale",
-      "name": "Sororité Mentale",
-      "kind": "grimoire",
-      "magicWayId": "osteomancie",
-      "pages": 2,
-      "reservedTo": {
-        "trait": "meneuse"
-      },
-      "target": "1 alliée.",
-      "cadence": "1 / tour.",
-      "duration": "Jusqu'à la fin de la prochaine activation de la cible.",
-      "difficulties": [
-        {
-          "threshold": 14,
-          "effectText": "Une alliée fang gagne la compétence « en éveil »."
-        },
-        {
-          "threshold": 19,
-          "effectText": "Une alliée fang gagne la compétence « fine lame »."
-        }
-      ],
-      "cardImage": "cards/fangs-meneuse-fr.jpg"
-    }
-  ],
-  "mounts": [],
-  "mountOptions": [],
-  "pacts": [],
-  "orders": [],
-  "specialCards": [
-    {
-      "id": "fille-de-nyx",
-      "name": "Fille de Nyx",
-      "cost": 0,
-      "scope": {
-        "trait": "fille-de-nyx"
-      },
-      "rulesText": [
-        {
-          "text": "Les filles de Nyx sont les plus proches de la Mère de tous les Fangs, elles sont versées dans les arts occultes depuis leur plus tendre enfance."
-        },
-        {
-          "text": "Elles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit."
-        },
-        {
-          "text": "De plus, elles acquièrent la compétence « Garde rapprochée » : elles peuvent recruter 1 larbin dans leur Fer de Lance sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance)."
-        }
-      ],
-      "constraints": [],
-      "effects": [
-        {
-          "id": "fille-de-nyx-larbin-gratuit",
-          "source": {
-            "kind": "special-card",
-            "id": "fille-de-nyx"
-          },
-          "scope": "fer-de-lance",
-          "target": {
-            "profileIds": [
-              "fangs-larbin-1"
-            ]
-          },
-          "operation": {
-            "kind": "cost-set",
-            "amount": 0,
-            "maxCount": 2
-          },
-          "appliesToListBuilding": true,
-          "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
-          "autoEnforced": true
-        }
-      ],
-      "cardImage": "cards/fangs-apathee.jpg"
-    },
-    {
-      "id": "apprentie-de-nyx",
-      "name": "Apprentie de Nyx",
-      "cost": 15,
-      "scope": {
-        "trait": "goulue"
-      },
-      "rulesText": [
-        {
-          "text": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie."
-        },
-        {
-          "text": "Elle ajoute son niveau à sa valeur de I pour la partie."
-        }
-      ],
-      "constraints": [],
-      "effects": [
-        {
-          "id": "apprentie-octroie-osteomancie",
-          "source": {
-            "kind": "special-card",
-            "id": "apprentie-de-nyx"
-          },
-          "scope": "fer-de-lance",
-          "target": {
-            "self": true
-          },
-          "operation": {
-            "kind": "grant-skill",
-            "skillId": "osteomancie"
-          },
-          "appliesToListBuilding": true,
-          "sourceText": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie.",
-          "autoEnforced": true
-        }
-      ],
-      "cardImage": "cards/fangs-goulue-1-fr.jpg"
-    },
-    {
-      "id": "xayin-muskh",
-      "name": "Xayìn & Muskh",
-      "cost": 0,
-      "scope": {
-        "profileIds": [
-          "fangs-xayin-2",
-          "fangs-muskh-1"
-        ]
-      },
-      "rulesText": [
-        {
-          "text": "Cette fille de Nyx a été bannie de la Tanière puis a fait d'un simple larbin une bête de guerre à force de magie et de régime kharné : Muskh."
-        },
-        {
-          "text": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement. Il apporte +4 en soutien à sa maîtresse. Au moment où Xayìn est engagée, il peut effectuer un unique « bond » gratuit si ce dernier l'amène dans le corps à corps."
-        },
-        {
-          "text": "Lorsqu'ils sont réunis dans un même Fer de Lance, ils sont joués indifféremment lors de la même activation."
-        }
-      ],
-      "constraints": [
-        {
-          "id": "muskh-requires-xayin",
-          "type": "requires-present",
-          "params": {
-            "subjectProfileId": "fangs-muskh-1",
-            "requiredProfileId": "fangs-xayin-2"
-          },
-          "scope": "fer-de-lance",
-          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
-          "severity": "error",
-          "autoEnforced": true
-        },
-        {
-          "id": "muskh-no-equipment",
-          "type": "forbids-equipment",
-          "params": {
-            "profileId": "fangs-muskh-1",
-            "categories": [
-              "arme-cac",
-              "arme-tir",
-              "bouclier",
-              "armure",
-              "objet"
-            ]
-          },
-          "scope": "profil",
-          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
-          "severity": "error",
-          "autoEnforced": true
-        }
-      ],
-      "effects": [],
-      "cardImage": "cards/fangs-xayin-muskh.jpg"
-    }
-  ],
   "profiles": [
     {
       "id": "fangs-larbin-1",
@@ -598,7 +279,7 @@
         "t": 2,
         "i": 2
       },
-      "stature": 1,
+      "stature": 3,
       "pa": 7,
       "pv": 18,
       "skills": [
@@ -616,7 +297,8 @@
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive"
         ]
       ],
       "traits": [
@@ -649,10 +331,7 @@
         }
       ],
       "cardImage": "cards/fangs-larbin-1-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-likan-1",
@@ -695,7 +374,7 @@
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "objectif"
+          "offensive"
         ]
       ],
       "traits": [],
@@ -736,18 +415,12 @@
       ],
       "rules": [
         {
-          "text": "Aliéné femelle fang."
-        },
-        {
           "label": "Kuuma",
           "text": "2 PA, 2 x V + D10, V dégâts, saignement 1."
         }
       ],
       "cardImage": "cards/fangs-likans.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-likan-2",
@@ -790,7 +463,7 @@
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "objectif"
+          "offensive"
         ],
         [
           "offensive"
@@ -834,18 +507,12 @@
       ],
       "rules": [
         {
-          "text": "Aliéné femelle fang."
-        },
-        {
           "label": "Kuuma",
           "text": "2 PA, 2 x V + 2D10, V dégâts, saignement 1."
         }
       ],
       "cardImage": "cards/fangs-likans.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-likan-3",
@@ -891,7 +558,8 @@
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "objectif"
+          "offensive",
+          "defensive"
         ],
         [
           "offensive"
@@ -938,22 +606,16 @@
       ],
       "rules": [
         {
-          "text": "Aliéné femelle fang."
-        },
-        {
           "label": "Kuuma",
           "text": "2 PA, 2 x V + 3D10, V dégâts, saignement 2."
         },
         {
           "label": "Saut à la gorge",
-          "text": "Lors d'une défense à 3 PA (2 x V + stature) réussie, le Likan gagne une attaque « Kuuma » gratuite."
+          "text": "Lors d'une défense à 3 PA (2 x V + stature) réussie, le Likan gagne une ATT « Kuuma » gratuite."
         }
       ],
       "cardImage": "cards/fangs-likans.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-goulue-1",
@@ -974,7 +636,7 @@
         "t": 3,
         "i": 3
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 7,
       "pv": 22,
       "skills": [
@@ -997,7 +659,9 @@
       ],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "objectif"
         ]
       ],
       "traits": [
@@ -1007,11 +671,7 @@
       "recruitment": [],
       "rules": [],
       "cardImage": "cards/fangs-goulue-1-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.i"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-goulue-2",
@@ -1070,14 +730,14 @@
       ],
       "recruitment": [],
       "rules": [],
+      "notes": [
+        "Acquiert « Rusé » via les Règles de bataille (non imprimé sur les cartes antérieures)."
+      ],
       "cardImage": "cards/fangs-goulue-1-fr.jpg",
       "unverifiedFields": [
         "stature",
         "masteryDice",
         "stats.i"
-      ],
-      "notes": [
-        "Acquiert « Rusé » via les Règles de bataille (non imprimé sur les cartes antérieures)."
       ]
     },
     {
@@ -1378,16 +1038,16 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang",
-        "meneuse"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
         ]
       },
+      "traits": [
+        "femelle-fang",
+        "meneuse"
+      ],
       "recruitment": [
         {
           "id": "meneuse-1-no-grand-grimoire",
@@ -1467,16 +1127,16 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang",
-        "meneuse"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
         ]
       },
+      "traits": [
+        "femelle-fang",
+        "meneuse"
+      ],
       "recruitment": [],
       "rules": [
         {
@@ -1546,16 +1206,16 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang",
-        "meneuse"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
         ]
       },
+      "traits": [
+        "femelle-fang",
+        "meneuse"
+      ],
       "recruitment": [],
       "rules": [
         {
@@ -1630,15 +1290,15 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
         ]
       },
+      "traits": [
+        "femelle-fang"
+      ],
       "recruitment": [],
       "rules": [
         {
@@ -1712,15 +1372,15 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
         ]
       },
+      "traits": [
+        "femelle-fang"
+      ],
       "recruitment": [],
       "rules": [
         {
@@ -1858,10 +1518,6 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang",
-        "fille-de-nyx"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
@@ -1871,6 +1527,10 @@
           "inflection-mentale"
         ]
       },
+      "traits": [
+        "femelle-fang",
+        "fille-de-nyx"
+      ],
       "recruitment": [],
       "rules": [
         {
@@ -1881,6 +1541,9 @@
           "text": "Inflige +2 dégâts en défense contre un Khérops."
         }
       ],
+      "notes": [
+        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
+      ],
       "cardImage": "cards/fangs-broutcha.jpg",
       "unverifiedFields": [
         "stature",
@@ -1888,9 +1551,6 @@
         "stats.c",
         "stats.t",
         "stats.i"
-      ],
-      "notes": [
-        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
       ]
     },
     {
@@ -1954,10 +1614,6 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang",
-        "fille-de-nyx"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
@@ -1967,19 +1623,23 @@
           "seduction-du-fiel"
         ]
       },
+      "traits": [
+        "femelle-fang",
+        "fille-de-nyx"
+      ],
       "recruitment": [],
       "rules": [
         {
           "text": "Convaincre / négocier automatique."
         }
       ],
+      "notes": [
+        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
+      ],
       "cardImage": "cards/fangs-apathee.jpg",
       "unverifiedFields": [
         "stature",
         "masteryDice"
-      ],
-      "notes": [
-        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
       ]
     },
     {
@@ -2044,16 +1704,16 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang",
-        "fille-de-nyx"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
         ]
       },
+      "traits": [
+        "femelle-fang",
+        "fille-de-nyx"
+      ],
       "recruitment": [],
       "rules": [
         {
@@ -2202,15 +1862,15 @@
           "esoterique"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
       "magic": {
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
         ]
       },
+      "traits": [
+        "femelle-fang"
+      ],
       "recruitment": [],
       "effects": [
         {
@@ -2234,9 +1894,9 @@
             "amount": -35
           },
           "appliesToListBuilding": true,
+          "optIn": true,
           "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha.",
-          "autoEnforced": true,
-          "optIn": true
+          "autoEnforced": true
         }
       ],
       "rules": [
@@ -2247,14 +1907,352 @@
           "text": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha."
         }
       ],
+      "notes": [
+        "Réduction « garde rapproché » : Broutcha (Fille de Nyx) peut dépenser SON allocation de garde rapproché sur Djouked (-35 Ko) au lieu de recruter un Larbin gratuit. Choix exclusif, à résoudre dans le constructeur de liste (budget partagé avec « Fille de Nyx », max 2 par Fer de Lance)."
+      ],
       "cardImage": "cards/fangs-djouked-3.jpg",
       "unverifiedFields": [
         "stature",
         "masteryDice"
-      ],
-      "notes": [
-        "Réduction « garde rapproché » : Broutcha (Fille de Nyx) peut dépenser SON allocation de garde rapproché sur Djouked (-35 Ko) au lieu de recruter un Larbin gratuit. Choix exclusif, à résoudre dans le constructeur de liste (budget partagé avec « Fille de Nyx », max 2 par Fer de Lance)."
       ]
+    }
+  ],
+  "equipment": [
+    {
+      "id": "couteau",
+      "name": "Couteau",
+      "category": "arme-cac",
+      "cost": 0,
+      "isFree": true,
+      "hands": 1,
+      "effectsText": "Saignement 1 en cas de RC. Pas d'effet avec C.",
+      "restrictions": []
+    },
+    {
+      "id": "faucille-os",
+      "name": "Faucille d'Os",
+      "category": "arme-cac",
+      "cost": 15,
+      "hands": 1,
+      "effectsText": "Inflige « Saignement 2 », confère « Riposte ».",
+      "grantsSkills": [
+        {
+          "skillId": "rusee"
+        }
+      ],
+      "restrictions": [],
+      "cardImage": "cards/fangs-xayin-muskh.jpg"
+    },
+    {
+      "id": "croc-de-fiel",
+      "name": "Croc de fiel",
+      "category": "arme-cac",
+      "cost": 10,
+      "hands": 1,
+      "effectsText": "Empoisonne la victime.",
+      "restrictions": []
+    },
+    {
+      "id": "baton-relique",
+      "name": "Bâton relique",
+      "category": "arme-cac",
+      "cost": 15,
+      "hands": 1,
+      "effectsText": "Niv II : les Goulues dans son aura infligent +2 dégâts. Niv III : les Goulues dans son aura gagnent « Réceptif (ostéomancie) ».",
+      "restrictions": []
+    },
+    {
+      "id": "paire-poignards",
+      "name": "Paire de poignards",
+      "category": "arme-cac",
+      "cost": 18,
+      "hands": 2,
+      "effectsText": "3 dégâts / Saignement 2. 3 PA = 2 attaques à 2 PA successives.",
+      "restrictions": []
+    },
+    {
+      "id": "crosse-osteomancie",
+      "name": "Crosse d'Ostéomancie",
+      "category": "objet",
+      "cost": 20,
+      "hands": 1,
+      "effectsText": "Peut contenir 3 pages de sorts. Lors d'une incantation réussie, draine si possible 1 PA à la cible ennemie ou alliée. En combat, draine si possible 3 PA de la cible en cas de RC au lieu des dégâts supplémentaires.",
+      "restrictions": [
+        {
+          "id": "crosse-reserve-meneuses",
+          "type": "equipment-reserved",
+          "params": {
+            "trait": "meneuse"
+          },
+          "scope": "profil",
+          "sourceText": "Réservée aux Meneuses fangs.",
+          "severity": "error",
+          "autoEnforced": true
+        }
+      ],
+      "cardImage": "cards/fangs-meneuse-niv-3.jpg"
+    },
+    {
+      "id": "arbalete-de-poing",
+      "name": "Arbalète de poing",
+      "category": "arme-tir",
+      "cost": 0,
+      "hands": 1,
+      "effectsText": "Arme de tir entraînant plusieurs jets de défense (voir FAQ).",
+      "restrictions": []
+    }
+  ],
+  "grimoires": [
+    {
+      "id": "petit",
+      "name": "Petit grimoire",
+      "cost": 20,
+      "pages": 5
+    },
+    {
+      "id": "grand",
+      "name": "Grand grimoire",
+      "cost": 40,
+      "pages": "illimite"
+    }
+  ],
+  "spells": [
+    {
+      "id": "seduction-du-fiel",
+      "name": "Séduction du Fiel",
+      "kind": "grimoire",
+      "magicWayId": "osteomancie",
+      "pages": 2,
+      "cost": 10,
+      "reservedTo": {
+        "trait": "fille-de-nyx"
+      },
+      "target": "Le lanceur.",
+      "cadence": "1 / tour.",
+      "duration": "Jusqu'à la fin de la prochaine activation du lanceur.",
+      "difficulties": [
+        {
+          "threshold": 17,
+          "effectText": "Aucun effet ne peut être appliqué sur le lanceur lors des attaques réussies contre elle."
+        },
+        {
+          "threshold": 21,
+          "effectText": "Aucun effet ne peut être appliqué sur le lanceur lors des attaques, des défenses et des tirs réussis contre elle."
+        }
+      ],
+      "cardImage": "cards/fangs-apathee.jpg"
+    },
+    {
+      "id": "inflection-mentale",
+      "name": "Inflection Mentale",
+      "kind": "grimoire",
+      "magicWayId": "osteomancie",
+      "pages": 2,
+      "cost": 10,
+      "reservedTo": {
+        "trait": "fille-de-nyx"
+      },
+      "target": "1 ennemi.",
+      "cadence": "1 / tour.",
+      "duration": "Immédiat.",
+      "difficulties": [
+        {
+          "threshold": 15,
+          "effectText": "L'ennemi effectue immédiatement une action au choix du lanceur, avec les PA du lanceur mais ses propres caractéristiques."
+        },
+        {
+          "threshold": 21,
+          "effectText": "L'ennemi effectue immédiatement une action au choix du lanceur, avec ses propres PA et caractéristiques."
+        }
+      ],
+      "cardImage": "cards/fangs-broutcha.jpg"
+    },
+    {
+      "id": "sororite-mentale",
+      "name": "Sororité Mentale",
+      "kind": "grimoire",
+      "magicWayId": "osteomancie",
+      "pages": 2,
+      "reservedTo": {
+        "trait": "meneuse"
+      },
+      "target": "1 alliée.",
+      "cadence": "1 / tour.",
+      "duration": "Jusqu'à la fin de la prochaine activation de la cible.",
+      "difficulties": [
+        {
+          "threshold": 14,
+          "effectText": "Une alliée fang gagne la compétence « en éveil »."
+        },
+        {
+          "threshold": 19,
+          "effectText": "Une alliée fang gagne la compétence « fine lame »."
+        }
+      ],
+      "cardImage": "cards/fangs-meneuse-fr.jpg"
+    }
+  ],
+  "mounts": [],
+  "mountOptions": [],
+  "pacts": [],
+  "orders": [],
+  "specialCards": [
+    {
+      "id": "fille-de-nyx",
+      "name": "Fille de Nyx",
+      "cost": 0,
+      "scope": {
+        "trait": "fille-de-nyx"
+      },
+      "rulesText": [
+        {
+          "text": "Les filles de Nyx sont les plus proches de la Mère de tous les Fangs, elles sont versées dans les arts occultes depuis leur plus tendre enfance."
+        },
+        {
+          "text": "Elles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit."
+        },
+        {
+          "text": "De plus, elles acquièrent la compétence « Garde rapprochée » : elles peuvent recruter 1 larbin dans leur Fer de Lance sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance)."
+        }
+      ],
+      "constraints": [],
+      "effects": [
+        {
+          "id": "fille-de-nyx-larbin-gratuit",
+          "source": {
+            "kind": "special-card",
+            "id": "fille-de-nyx"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "profileIds": [
+              "fangs-larbin-1"
+            ]
+          },
+          "operation": {
+            "kind": "cost-set",
+            "amount": 0,
+            "maxCount": 2
+          },
+          "appliesToListBuilding": true,
+          "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
+          "autoEnforced": true
+        }
+      ],
+      "cardImage": "cards/fangs-apathee.jpg"
+    },
+    {
+      "id": "apprentie-de-nyx",
+      "name": "Apprentie de Nyx",
+      "cost": 15,
+      "scope": {
+        "trait": "goulue"
+      },
+      "rulesText": [
+        {
+          "text": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie."
+        },
+        {
+          "text": "Elle ajoute son niveau à sa valeur de I pour la partie."
+        }
+      ],
+      "constraints": [],
+      "effects": [
+        {
+          "id": "apprentie-octroie-osteomancie",
+          "source": {
+            "kind": "special-card",
+            "id": "apprentie-de-nyx"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "osteomancie"
+          },
+          "appliesToListBuilding": true,
+          "sourceText": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie.",
+          "autoEnforced": true
+        },
+        {
+          "id": "apprentie-i-niveau",
+          "source": {
+            "kind": "special-card",
+            "id": "apprentie-de-nyx"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-modifier",
+            "stat": "i",
+            "amount": "level"
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "Elle ajoute son niveau à sa valeur de I pour la partie.",
+          "autoEnforced": false
+        }
+      ],
+      "cardImage": "cards/fangs-goulue-1-fr.jpg"
+    },
+    {
+      "id": "xayin-muskh",
+      "name": "Xayìn & Muskh",
+      "cost": 0,
+      "scope": {
+        "profileIds": [
+          "fangs-xayin-2",
+          "fangs-muskh-1"
+        ]
+      },
+      "rulesText": [
+        {
+          "text": "Cette fille de Nyx a été bannie de la Tanière puis a fait d'un simple larbin une bête de guerre à force de magie et de régime kharné : Muskh."
+        },
+        {
+          "text": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement. Il apporte +4 en soutien à sa maîtresse. Au moment où Xayìn est engagée, il peut effectuer un unique « bond » gratuit si ce dernier l'amène dans le corps à corps."
+        },
+        {
+          "text": "Lorsqu'ils sont réunis dans un même Fer de Lance, ils sont joués indifféremment lors de la même activation."
+        }
+      ],
+      "constraints": [
+        {
+          "id": "muskh-requires-xayin",
+          "type": "requires-present",
+          "params": {
+            "subjectProfileId": "fangs-muskh-1",
+            "requiredProfileId": "fangs-xayin-2"
+          },
+          "scope": "fer-de-lance",
+          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
+          "severity": "error",
+          "autoEnforced": true
+        },
+        {
+          "id": "muskh-no-equipment",
+          "type": "forbids-equipment",
+          "params": {
+            "profileId": "fangs-muskh-1",
+            "categories": [
+              "arme-cac",
+              "arme-tir",
+              "bouclier",
+              "armure",
+              "objet"
+            ]
+          },
+          "scope": "profil",
+          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
+          "severity": "error",
+          "autoEnforced": true
+        }
+      ],
+      "effects": [],
+      "cardImage": "cards/fangs-xayin-muskh.jpg"
     }
   ]
 }

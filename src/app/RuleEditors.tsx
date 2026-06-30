@@ -185,6 +185,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, trait: "" };
     case "cap":
       return { kind, value: 0 };
+    case "stat-modifier":
+      return { kind, stat: "i", amount: "level" };
   }
 }
 
@@ -204,13 +206,21 @@ function OperationEditor({
         onChange={(e) => onChange(defaultOperation(e.target.value as EffectOperation["kind"]))}
         className={INPUT}
       >
-        {(["cost-delta", "cost-set", "unlock-upgrade", "grant-skill", "grant-trait", "cap"] as const).map(
-          (k) => (
-            <option key={k} value={k}>
-              {k}
-            </option>
-          ),
-        )}
+        {(
+          [
+            "cost-delta",
+            "cost-set",
+            "unlock-upgrade",
+            "grant-skill",
+            "grant-trait",
+            "cap",
+            "stat-modifier",
+          ] as const
+        ).map((k) => (
+          <option key={k} value={k}>
+            {k}
+          </option>
+        ))}
       </select>
       {op.kind === "cost-delta" && (
         <Num label="montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
@@ -248,6 +258,30 @@ function OperationEditor({
         <Txt label="trait" value={op.trait} onChange={(v) => onChange({ ...op, trait: v })} />
       )}
       {op.kind === "cap" && <Num label="valeur" value={op.value} onChange={(v) => onChange({ ...op, value: v })} />}
+      {op.kind === "stat-modifier" && (
+        <>
+          <select
+            value={op.stat}
+            onChange={(ev) => onChange({ ...op, stat: ev.target.value as typeof op.stat })}
+            className={INPUT}
+          >
+            {(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"] as const).map((s) => (
+              <option key={s} value={s}>
+                {s.toUpperCase()}
+              </option>
+            ))}
+          </select>
+          <input
+            value={op.amount === "level" ? "level" : String(op.amount)}
+            placeholder='nombre ou "level"'
+            onChange={(ev) => {
+              const v = ev.target.value.trim();
+              onChange({ ...op, amount: v === "level" ? "level" : Number(v) });
+            }}
+            className={`${INPUT} w-28`}
+          />
+        </>
+      )}
     </div>
   );
 }

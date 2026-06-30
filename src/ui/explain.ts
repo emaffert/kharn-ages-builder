@@ -95,6 +95,11 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     case "cap":
       base = `Plafond ${op.value} pour ${tgt}`;
       break;
+    case "stat-modifier": {
+      const amount = op.amount === "level" ? "son niveau" : `${op.amount >= 0 ? "+" : ""}${op.amount}`;
+      base = `Ajoute ${amount} à ${op.stat.toUpperCase()} de ${tgt}`;
+      break;
+    }
   }
   if (e.condition) base += ` — si ${describeSelector(e.condition, cat)}`;
   if (e.optIn) base += " (au choix du joueur)";

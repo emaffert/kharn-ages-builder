@@ -1,0 +1,502 @@
+import type {
+  Catalog,
+  Constraint,
+  Effect,
+  EffectScope,
+  FerDeLance,
+  ListDocument,
+  Profile,
+  ProfileInstance,
+  Selector,
+  SpecialCard,
+} from "../model";
+
+/**
+ * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
+ * des effets dynamiques (octrois, déblocages, modificateurs de coût).
+ * Référence : docs/schema-donnees.md — couche 2 (ordre de résolution).
+ */
+
+export interface Issue {
+  severity: "error" | "warning";
+  ferDeLanceId?: string;
+  instanceId?: string;
+  ruleId?: string;
+  message: string;
+  /** Wording officiel — fait foi. */
+  sourceText: string;
+}
+
+export interface EvaluationResult {
+  totalCost: number;
+  costByInstance: Record<string, number>;
+  costByFerDeLance: Record<string, number>;
+  /** Traits octroyés par effet, par instance (en plus des traits de base du profil). */
+  grantedTraits: Record<string, string[]>;
+  issues: Issue[];
+}
+
+interface CatalogIndex {
+  profile: Map<string, Profile>;
+  equipmentCost: Map<string, number>;
+  equipmentCategory: Map<string, string>;
+  grimoireCost: Map<string, number>;
+  spellCost: Map<string, number>;
+  mountCost: Map<string, number>;
+  mountOptionCost: Map<string, number>;
+  orderCost: Map<string, number>;
+}
+
+interface ResolvedInstance {
+  ferDeLanceId: string;
+  fdlFactionId: string;
+  instance: ProfileInstance;
+  profile: Profile;
+  traits: Set<string>;
+  grantedSkills: Set<string>;
+}
+
+interface EffectOccurrence {
+  effect: Effect;
+  ferDeLanceId: string;
+  /** Pour les effets sourcés par un profil : l'instance source (pour `self`). */
+  sourceInstanceId?: string;
+}
+
+function indexCatalog(cat: Catalog): CatalogIndex {
+  return {
+    profile: new Map(cat.profiles.map((p) => [p.id, p])),
+    equipmentCost: new Map(cat.equipment.map((e) => [e.id, e.cost])),
+    equipmentCategory: new Map(cat.equipment.map((e) => [e.id, e.category])),
+    grimoireCost: new Map(cat.grimoires.map((g) => [g.id, g.cost])),
+    spellCost: new Map(cat.spells.map((s) => [s.id, s.cost ?? 0])),
+    mountCost: new Map(cat.mounts.map((m) => [m.id, m.cost])),
+    mountOptionCost: new Map(cat.mountOptions.map((o) => [o.id, o.cost])),
+    orderCost: new Map(cat.orders.map((o) => [o.id, o.cost])),
+  };
+}
+
+/** Un instance correspond-il aux champs d'identité d'un sélecteur (OR entre champs) ? */
+function instanceMatchesIdentity(sel: Selector, ri: ResolvedInstance): boolean {
+  if (sel.profileIds?.includes(ri.profile.id)) return true;
+  if (sel.modelIds && ri.profile.modelId && sel.modelIds.includes(ri.profile.modelId)) return true;
+  if (sel.traits?.some((t) => ri.traits.has(t))) return true;
+  if (sel.factionIds && ri.profile.factionId && sel.factionIds.includes(ri.profile.factionId)) {
+    return true;
+  }
+  return false;
+}
+
+function instancesInScope(
+  all: ResolvedInstance[],
+  scope: EffectScope | "profil",
+  ferDeLanceId: string,
+): ResolvedInstance[] {
+  if (scope === "ost") return all;
+  return all.filter((ri) => ri.ferDeLanceId === ferDeLanceId);
+}
+
+/** Une condition (sélecteur) est-elle satisfaite dans la portée ? */
+function conditionHolds(
+  condition: Selector | undefined,
+  scope: EffectScope,
+  ferDeLanceId: string,
+  all: ResolvedInstance[],
+): boolean {
+  if (!condition) return true;
+  const pool = instancesInScope(all, scope, ferDeLanceId);
+  const matches = pool.filter((ri) => instanceMatchesIdentity(condition, ri));
+  const threshold = condition.countAtLeast ?? 1;
+  return matches.length >= threshold;
+}
+
+function collectEffectOccurrences(
+  resolved: ResolvedInstance[],
+  cat: Catalog,
+): EffectOccurrence[] {
+  const occurrences: EffectOccurrence[] = [];
+
+  // Effets portés par les profils présents.
+  for (const ri of resolved) {
+    for (const effect of ri.profile.effects ?? []) {
+      occurrences.push({ effect, ferDeLanceId: ri.ferDeLanceId, sourceInstanceId: ri.instance.instanceId });
+    }
+  }
+
+  // Effets des cartes spéciales « intrinsèques » (coût 0) dont la portée correspond
+  // à un profil présent dans un Fer de Lance.
+  const fdlIds = [...new Set(resolved.map((ri) => ri.ferDeLanceId))];
+  for (const card of cat.specialCards) {
+    if (card.cost !== 0) continue; // les cartes payantes sont opt-in (non encore modélisées)
+    for (const fdlId of fdlIds) {
+      const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdlId);
+      if (inFdl.some((ri) => specialCardScopeMatches(card, ri))) {
+        for (const effect of card.effects) {
+          occurrences.push({ effect, ferDeLanceId: fdlId });
+        }
+      }
+    }
+  }
+
+  return occurrences;
+}
+
+function specialCardScopeMatches(card: SpecialCard, ri: ResolvedInstance): boolean {
+  if (card.scope.profileIds?.includes(ri.profile.id)) return true;
+  if (card.scope.trait && ri.traits.has(card.scope.trait)) return true;
+  return false;
+}
+
+/** Applique les octrois (grant-trait / grant-skill) jusqu'à atteindre un point fixe. */
+function applyGrants(resolved: ResolvedInstance[], occurrences: EffectOccurrence[]): void {
+  const MAX_ITERATIONS = 16; // garde anti-cycle
+  for (let i = 0; i < MAX_ITERATIONS; i++) {
+    let changed = false;
+    for (const occ of occurrences) {
+      const { effect } = occ;
+      if (effect.operation.kind !== "grant-trait" && effect.operation.kind !== "grant-skill") {
+        continue;
+      }
+      if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
+
+      const targets = resolveTargets(occ, resolved);
+      for (const ri of targets) {
+        if (effect.operation.kind === "grant-trait") {
+          if (!ri.traits.has(effect.operation.trait)) {
+            ri.traits.add(effect.operation.trait);
+            changed = true;
+          }
+        } else {
+          if (!ri.grantedSkills.has(effect.operation.skillId)) {
+            ri.grantedSkills.add(effect.operation.skillId);
+            changed = true;
+          }
+        }
+      }
+    }
+    if (!changed) return;
+  }
+}
+
+function resolveTargets(occ: EffectOccurrence, resolved: ResolvedInstance[]): ResolvedInstance[] {
+  const { effect } = occ;
+  const pool = instancesInScope(resolved, effect.scope, occ.ferDeLanceId);
+  if (effect.target.self) {
+    return pool.filter((ri) => ri.instance.instanceId === occ.sourceInstanceId);
+  }
+  return pool.filter((ri) => instanceMatchesIdentity(effect.target, ri));
+}
+
+function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex): number {
+  const inst = ri.instance;
+  let cost = ri.profile.cost;
+  for (const id of inst.removedBaseEquipmentIds) cost -= idx.equipmentCost.get(id) ?? 0;
+  for (const id of inst.addedEquipmentIds) cost += idx.equipmentCost.get(id) ?? 0;
+  if (inst.grimoireId) cost += idx.grimoireCost.get(inst.grimoireId) ?? 0;
+  for (const id of inst.spellIds) cost += idx.spellCost.get(id) ?? 0;
+  if (inst.mount) {
+    cost += idx.mountCost.get(inst.mount.mountId) ?? 0;
+    for (const id of inst.mount.optionIds) cost += idx.mountOptionCost.get(id) ?? 0;
+  }
+  for (const id of inst.orderIds ?? []) cost += idx.orderCost.get(id) ?? 0;
+  return cost;
+}
+
+function computeCosts(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+  idx: CatalogIndex,
+): Map<string, number> {
+  const cost = new Map<string, number>();
+  for (const ri of resolved) cost.set(ri.instance.instanceId, baseInstanceCost(ri, idx));
+
+  // cost-delta : modificateurs additifs.
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "cost-delta") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+
+    for (const ri of resolveTargets(occ, resolved)) {
+      const cats = occ.effect.target.equipmentCategories;
+      let delta = op.amount;
+      if (cats && cats.length > 0) {
+        // Appliqué une fois par équipement ajouté de la catégorie visée.
+        const n = ri.instance.addedEquipmentIds.filter((id) =>
+          cats.includes((idx.equipmentCategory.get(id) ?? "") as never),
+        ).length;
+        delta = op.amount * n;
+      }
+      cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + delta);
+    }
+  }
+
+  // cost-set : fixe le coût (ex. larbins gratuits), dans la limite de maxCount.
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "cost-set") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+
+    const matches = resolveTargets(occ, resolved)
+      .slice()
+      .sort((a, b) => (cost.get(b.instance.instanceId) ?? 0) - (cost.get(a.instance.instanceId) ?? 0));
+    const limit = op.maxCount ?? matches.length;
+    for (const ri of matches.slice(0, limit)) {
+      cost.set(ri.instance.instanceId, op.amount);
+    }
+  }
+
+  return cost;
+}
+
+function buildResolved(list: ListDocument, idx: CatalogIndex): ResolvedInstance[] {
+  const resolved: ResolvedInstance[] = [];
+  for (const fdl of list.fersDeLance) {
+    for (const inst of fdl.members) {
+      const profile = idx.profile.get(inst.profileId);
+      if (!profile) continue;
+      resolved.push({
+        ferDeLanceId: fdl.id,
+        fdlFactionId: fdl.factionId,
+        instance: inst,
+        profile,
+        traits: new Set(profile.traits),
+        grantedSkills: new Set(),
+      });
+    }
+  }
+  return resolved;
+}
+
+// ── Validation ─────────────────────────────────────────────────────────────
+
+function validate(
+  cat: Catalog,
+  list: ListDocument,
+  resolved: ResolvedInstance[],
+  idx: CatalogIndex,
+): Issue[] {
+  const issues: Issue[] = [];
+
+  for (const fdl of list.fersDeLance) {
+    const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdl.id);
+    validateLimitations(fdl, inFdl, issues);
+    validateFactionMembership(fdl, inFdl, issues);
+  }
+
+  validateForbiddenEquipment(cat, resolved, idx, issues);
+  validateRequiresPresent(cat, resolved, issues);
+  validateAttachments(cat, list, resolved, issues);
+
+  return issues;
+}
+
+function validateLimitations(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
+  const countByProfile = new Map<string, number>();
+  for (const ri of inFdl) {
+    countByProfile.set(ri.profile.id, (countByProfile.get(ri.profile.id) ?? 0) + 1);
+  }
+  const seenProfiles = new Set(inFdl.map((ri) => ri.profile.id));
+  for (const profileId of seenProfiles) {
+    const ri = inFdl.find((r) => r.profile.id === profileId)!;
+    const lim = ri.profile.limitation;
+    const count = countByProfile.get(profileId) ?? 0;
+    const max =
+      lim.kind === "X" ? (lim.value ?? Infinity) : lim.kind === "U" || lim.kind === "P" ? 1 : Infinity;
+    if (count > max) {
+      issues.push({
+        severity: "error",
+        ferDeLanceId: fdl.id,
+        ruleId: `limitation:${profileId}`,
+        message: `« ${ri.profile.name} » : ${count} recruté(s) pour une limitation de ${max}.`,
+        sourceText: `Limitation ${lim.kind}${lim.value ? " " + lim.value : ""}.`,
+      });
+    }
+  }
+}
+
+function validateFactionMembership(
+  fdl: FerDeLance,
+  inFdl: ResolvedInstance[],
+  issues: Issue[],
+): void {
+  for (const ri of inFdl) {
+    const pf = ri.profile.factionId;
+    if (!pf || pf === fdl.factionId) continue; // sans logo ou même faction
+    if (ri.traits.has("apatride")) continue;
+    const allowed = (ri.profile.recruitment ?? []).some(
+      (c) =>
+        c.type === "faction-membership" &&
+        Array.isArray((c.params as { allowedFactions?: unknown }).allowedFactions) &&
+        ((c.params as { allowedFactions: string[] }).allowedFactions).includes(fdl.factionId),
+    );
+    if (!allowed) {
+      issues.push({
+        severity: "error",
+        ferDeLanceId: fdl.id,
+        instanceId: ri.instance.instanceId,
+        ruleId: `faction:${ri.profile.id}`,
+        message: `« ${ri.profile.name} » (${pf}) ne peut pas être recruté dans un Fer de Lance ${fdl.factionId}.`,
+        sourceText: "Vous devez composer votre Fer de Lance en choisissant parmi une unique faction.",
+      });
+    }
+  }
+}
+
+function forbiddenCategories(c: Constraint): string[] {
+  const p = c.params as { categories?: unknown };
+  return Array.isArray(p.categories) ? (p.categories as string[]) : [];
+}
+
+function validateForbiddenEquipment(
+  cat: Catalog,
+  resolved: ResolvedInstance[],
+  idx: CatalogIndex,
+  issues: Issue[],
+): void {
+  // Contraintes portées par les profils (sujet = le profil) ...
+  const checks: { subjectProfileId: string; constraint: Constraint }[] = [];
+  for (const ri of resolved) {
+    for (const c of ri.profile.recruitment) {
+      if (c.type === "forbids-equipment") checks.push({ subjectProfileId: ri.profile.id, constraint: c });
+    }
+  }
+  // ... et par les cartes spéciales (sujet = params.profileId).
+  for (const card of cat.specialCards) {
+    for (const c of card.constraints) {
+      if (c.type !== "forbids-equipment") continue;
+      const subject = (c.params as { profileId?: string }).profileId;
+      if (subject) checks.push({ subjectProfileId: subject, constraint: c });
+    }
+  }
+
+  for (const { subjectProfileId, constraint } of checks) {
+    const cats = forbiddenCategories(constraint);
+    for (const ri of resolved.filter((r) => r.profile.id === subjectProfileId)) {
+      const offending = ri.instance.addedEquipmentIds.filter((id) =>
+        cats.includes(idx.equipmentCategory.get(id) ?? ""),
+      );
+      if (offending.length > 0) {
+        issues.push({
+          severity: constraint.severity,
+          ferDeLanceId: ri.ferDeLanceId,
+          instanceId: ri.instance.instanceId,
+          ruleId: constraint.id,
+          message: `« ${ri.profile.name} » ne peut pas être équipé de ce type d'équipement.`,
+          sourceText: constraint.sourceText,
+        });
+      }
+    }
+  }
+}
+
+function validateRequiresPresent(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
+  type Req = { subjectProfileId: string; requiredProfileId: string; constraint: Constraint };
+  const reqs: Req[] = [];
+  for (const ri of resolved) {
+    for (const c of ri.profile.recruitment) {
+      if (c.type !== "requires-present") continue;
+      const p = c.params as { requiredProfileId?: string; subjectProfileId?: string };
+      if (p.requiredProfileId) {
+        reqs.push({ subjectProfileId: p.subjectProfileId ?? ri.profile.id, requiredProfileId: p.requiredProfileId, constraint: c });
+      }
+    }
+  }
+  for (const card of cat.specialCards) {
+    for (const c of card.constraints) {
+      if (c.type !== "requires-present") continue;
+      const p = c.params as { requiredProfileId?: string; subjectProfileId?: string };
+      if (p.requiredProfileId && p.subjectProfileId) {
+        reqs.push({ subjectProfileId: p.subjectProfileId, requiredProfileId: p.requiredProfileId, constraint: c });
+      }
+    }
+  }
+
+  for (const req of reqs) {
+    // Vérifié par Fer de Lance.
+    const fdlIds = [...new Set(resolved.map((ri) => ri.ferDeLanceId))];
+    for (const fdlId of fdlIds) {
+      const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdlId);
+      const hasSubject = inFdl.some((ri) => ri.profile.id === req.subjectProfileId);
+      const hasRequired = inFdl.some((ri) => ri.profile.id === req.requiredProfileId);
+      if (hasSubject && !hasRequired) {
+        const subject = inFdl.find((ri) => ri.profile.id === req.subjectProfileId)!;
+        issues.push({
+          severity: req.constraint.severity,
+          ferDeLanceId: fdlId,
+          instanceId: subject.instance.instanceId,
+          ruleId: req.constraint.id,
+          message: `« ${subject.profile.name} » nécessite la présence d'une autre figurine dans le Fer de Lance.`,
+          sourceText: req.constraint.sourceText,
+        });
+      }
+    }
+  }
+}
+
+function validateAttachments(
+  _cat: Catalog,
+  list: ListDocument,
+  resolved: ResolvedInstance[],
+  issues: Issue[],
+): void {
+  const byInstanceId = new Map(resolved.map((ri) => [ri.instance.instanceId, ri]));
+  for (const fdl of list.fersDeLance) {
+    for (const carrier of fdl.members) {
+      const attached = carrier.attachedInstanceIds ?? [];
+      if (attached.length === 0) continue;
+      const carrierRi = byInstanceId.get(carrier.instanceId);
+      if (!carrierRi) continue;
+
+      const attachedRis = attached
+        .map((id) => byInstanceId.get(id))
+        .filter((ri): ri is ResolvedInstance => Boolean(ri));
+      const attachmentConstraint = attachedRis
+        .flatMap((ri) => ri.profile.recruitment)
+        .find((c) => c.type === "attachment");
+      if (!attachmentConstraint) continue;
+
+      const carrierLevel = carrierRi.profile.level ?? 0;
+      const sumLevels = attachedRis.reduce((s, ri) => s + (ri.profile.level ?? 0), 0);
+      if (sumLevels > carrierLevel) {
+        issues.push({
+          severity: attachmentConstraint.severity,
+          ferDeLanceId: fdl.id,
+          instanceId: carrier.instanceId,
+          ruleId: attachmentConstraint.id,
+          message: `Somme des niveaux des rattachés (${sumLevels}) supérieure au niveau du porteur « ${carrierRi.profile.name} » (${carrierLevel}).`,
+          sourceText: attachmentConstraint.sourceText,
+        });
+      }
+    }
+  }
+}
+
+// ── Point d'entrée ───────────────────────────────────────────────────────────
+
+export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult {
+  const idx = indexCatalog(cat);
+  const resolved = buildResolved(list, idx);
+  const occurrences = collectEffectOccurrences(resolved, cat);
+
+  applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe
+  const cost = computeCosts(resolved, occurrences, idx); // 4 : coûts
+  const issues = validate(cat, list, resolved, idx); // 5 : contraintes
+
+  const costByInstance: Record<string, number> = {};
+  const costByFerDeLance: Record<string, number> = {};
+  for (const ri of resolved) {
+    const c = cost.get(ri.instance.instanceId) ?? 0;
+    costByInstance[ri.instance.instanceId] = c;
+    costByFerDeLance[ri.ferDeLanceId] = (costByFerDeLance[ri.ferDeLanceId] ?? 0) + c;
+  }
+  const totalCost = Object.values(costByInstance).reduce((s, c) => s + c, 0);
+
+  const grantedTraits: Record<string, string[]> = {};
+  for (const ri of resolved) {
+    const base = new Set(ri.profile.traits);
+    const granted = [...ri.traits].filter((t) => !base.has(t));
+    if (granted.length > 0) grantedTraits[ri.instance.instanceId] = granted;
+  }
+
+  return { totalCost, costByInstance, costByFerDeLance, grantedTraits, issues };
+}

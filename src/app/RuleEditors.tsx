@@ -194,6 +194,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, value: 0 };
     case "stat-modifier":
       return { kind, stat: "i", amount: "level" };
+    case "spell-pages":
+      return { kind, amount: 0 };
   }
 }
 
@@ -222,6 +224,7 @@ function OperationEditor({
             "grant-trait",
             "cap",
             "stat-modifier",
+            "spell-pages",
           ] as const
         ).map((k) => (
           <option key={k} value={k}>
@@ -290,6 +293,9 @@ function OperationEditor({
             className={`${INPUT} w-28`}
           />
         </>
+      )}
+      {op.kind === "spell-pages" && (
+        <Num label="pages" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
       )}
     </div>
   );

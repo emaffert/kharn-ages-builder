@@ -109,6 +109,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Ajoute ${amount} à ${op.stat.toUpperCase()} de ${tgt}`;
       break;
     }
+    case "spell-pages":
+      base = `${op.amount >= 0 ? "+" : ""}${op.amount} page(s) de sorts pour ${tgt}`;
+      break;
   }
   if (e.condition) base += ` — si ${describeSelector(e.condition, cat)}`;
   if (e.optIn) base += " (au choix du joueur)";

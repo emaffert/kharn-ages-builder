@@ -19,6 +19,9 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     // nombre fixe, ou "level" = le niveau de la figurine elle-même.
     amount: z.union([z.number(), z.literal("level")]),
   }),
+  // Budget de pages de sorts (ex. Fille de Nyx : +3 ; Crosse d'Ostéomancie : +3).
+  // Enforcement (capacité vs sorts choisis) prévu côté constructeur de liste.
+  z.object({ kind: z.literal("spell-pages"), amount: z.number() }),
 ]);
 export type EffectOperation = z.infer<typeof EffectOperationSchema>;
 

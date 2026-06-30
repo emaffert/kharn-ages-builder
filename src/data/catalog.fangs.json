@@ -326,9 +326,7 @@
           "defensive"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
+      "traits": [],
       "recruitment": [
         {
           "id": "larbin-eprouve",
@@ -1292,7 +1290,7 @@
         }
       ],
       "baseEquipmentIds": [
-        "baton-relique"
+        "baton-relique-decatie-2"
       ],
       "masteryDice": [
         [
@@ -1369,7 +1367,7 @@
         }
       ],
       "baseEquipmentIds": [
-        "baton-relique"
+        "baton-relique-decatie-3"
       ],
       "masteryDice": [
         [
@@ -1455,9 +1453,7 @@
           "defensive"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
+      "traits": [],
       "recruitment": [],
       "rules": [
         {
@@ -1817,9 +1813,7 @@
           "defensive"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
+      "traits": [],
       "recruitment": [],
       "rules": [],
       "cardImage": "cards/fangs-xayin-muskh.jpg",
@@ -1891,9 +1885,7 @@
           "osteomancie"
         ]
       },
-      "traits": [
-        "femelle-fang"
-      ],
+      "traits": [],
       "recruitment": [],
       "effects": [
         {
@@ -1970,15 +1962,6 @@
       "restrictions": []
     },
     {
-      "id": "baton-relique",
-      "name": "Bâton relique",
-      "category": "arme-cac",
-      "cost": 15,
-      "hands": 1,
-      "effectsText": "Niv II : les Goulues dans son aura infligent +2 dégâts. Niv III : les Goulues dans son aura gagnent « Réceptif (ostéomancie) ».",
-      "restrictions": []
-    },
-    {
       "id": "paire-poignards",
       "name": "Paire de poignards",
       "category": "arme-cac",
@@ -1988,34 +1971,30 @@
       "restrictions": []
     },
     {
-      "id": "crosse-osteomancie",
-      "name": "Crosse d'Ostéomancie",
-      "category": "objet",
-      "cost": 20,
-      "hands": 1,
-      "effectsText": "Peut contenir 3 pages de sorts. Lors d'une incantation réussie, draine si possible 1 PA à la cible ennemie ou alliée. En combat, draine si possible 3 PA de la cible en cas de RC au lieu des dégâts supplémentaires.",
-      "restrictions": [
-        {
-          "id": "crosse-reserve-meneuses",
-          "type": "equipment-reserved",
-          "params": {
-            "trait": "meneuse"
-          },
-          "scope": "profil",
-          "sourceText": "Réservée aux Meneuses fangs.",
-          "severity": "error",
-          "autoEnforced": true
-        }
-      ],
-      "cardImage": "cards/fangs-meneuse-niv-3.jpg"
-    },
-    {
       "id": "arbalete-de-poing",
       "name": "Arbalète de poing",
       "category": "arme-tir",
       "cost": 0,
       "hands": 1,
       "effectsText": "Arme de tir entraînant plusieurs jets de défense (voir FAQ).",
+      "restrictions": []
+    },
+    {
+      "id": "baton-relique-decatie-2",
+      "name": "Bâton relique",
+      "category": "arme-cac",
+      "cost": 15,
+      "hands": 1,
+      "effectsText": "Les Goulues dans son aura infligent +2 dégâts.",
+      "restrictions": []
+    },
+    {
+      "id": "baton-relique-decatie-3",
+      "name": "Bâton relique",
+      "category": "arme-cac",
+      "cost": 15,
+      "hands": 1,
+      "effectsText": "Les Goulues dans son aura gagnent « Réceptif (ostéomancie) ».",
       "restrictions": []
     }
   ],
@@ -2154,6 +2133,24 @@
           "appliesToListBuilding": true,
           "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
           "autoEnforced": true
+        },
+        {
+          "id": "fille-de-nyx-pages",
+          "source": {
+            "kind": "special-card",
+            "id": "fille-de-nyx"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "spell-pages",
+            "amount": 3
+          },
+          "appliesToListBuilding": true,
+          "sourceText": "Elles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit.",
+          "autoEnforced": false
         }
       ],
       "cardImage": "cards/fangs-apathee.jpg"
@@ -2270,6 +2267,47 @@
       ],
       "effects": [],
       "cardImage": "cards/fangs-xayin-muskh.jpg"
+    },
+    {
+      "id": "crosse-osteomancie",
+      "name": "Crosse d'Ostéomancie",
+      "cost": 20,
+      "scope": {
+        "trait": "meneuse"
+      },
+      "rulesText": [
+        {
+          "text": "Peut contenir 3 pages de sorts."
+        },
+        {
+          "text": "Lors d'une incantation réussie, draine si possible 1 PA à la cible ennemie ou alliée."
+        },
+        {
+          "text": "En combat, draine si possible 3 PA de la cible en cas de RC au lieu des dégâts supplémentaires."
+        }
+      ],
+      "constraints": [],
+      "effects": [
+        {
+          "id": "crosse-pages",
+          "source": {
+            "kind": "special-card",
+            "id": "crosse-osteomancie"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "spell-pages",
+            "amount": 3
+          },
+          "appliesToListBuilding": true,
+          "sourceText": "Peut contenir 3 pages de sorts.",
+          "autoEnforced": false
+        }
+      ],
+      "cardImage": "cards/fangs-meneuse-niv-3.jpg"
     }
   ]
 }

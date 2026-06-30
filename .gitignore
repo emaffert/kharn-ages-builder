@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Vite / cache
+.vite/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Matériel sous copyright TGCM — non versionné
+# PDF : volumineux + reproduction interdite. Cartes : à héberger ailleurs / décider selon la visibilité du dépôt.
+rules corpus/
+cards/

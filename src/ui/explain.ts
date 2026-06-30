@@ -11,8 +11,14 @@ const profileName = (cat: Catalog, id: string) =>
 const skillName = (cat: Catalog, id: string) =>
   cat.skills.find((s) => s.id === id)?.keyword ?? id;
 
+const equipName = (cat: Catalog, id: string) =>
+  cat.equipment.find((e) => e.id === id)?.name ?? id;
+
 export function describeSelector(sel: Selector, cat: Catalog): string {
   if (sel.self) {
+    if (sel.equipmentIds?.length) {
+      return `son « ${sel.equipmentIds.map((id) => equipName(cat, id)).join(", ")} »`;
+    }
     if (sel.equipmentCategories?.length) {
       return `son équipement (${sel.equipmentCategories.join(", ")})`;
     }
@@ -27,6 +33,9 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
   if (sel.factionIds?.length) parts.push(`factions ${sel.factionIds.join(", ")}`);
   if (sel.equipmentCategories?.length) {
     parts.push(`équipement ${sel.equipmentCategories.join(", ")}`);
+  }
+  if (sel.equipmentIds?.length) {
+    parts.push(`équipement ${sel.equipmentIds.map((id) => equipName(cat, id)).join(", ")}`);
   }
   let s = parts.join(" / ") || "—";
   if (sel.countAtLeast) s = `au moins ${sel.countAtLeast} × ${s}`;

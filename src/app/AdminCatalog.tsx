@@ -253,11 +253,13 @@ function SkillsEditor({
             onChange={(e) => onChange(replaceAt(skills, i, { ...s, skillId: e.target.value }))}
             className={`${INPUT} flex-1`}
           >
-            {cat.skills.map((sk) => (
-              <option key={sk.id} value={sk.id}>
-                {sk.keyword}
-              </option>
-            ))}
+            {[...cat.skills]
+              .sort((a, b) => a.keyword.localeCompare(b.keyword))
+              .map((sk) => (
+                <option key={sk.id} value={sk.id}>
+                  {sk.keyword}
+                </option>
+              ))}
           </select>
           <input
             type="text"
@@ -391,8 +393,15 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
   const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
   const flag = (key: string) => toggleUnverified(profile.id, key);
 
+  // Une contrainte de carte ne concerne ce profil que si son sujet est ce profil
+  // (ou si elle n'a pas de sujet précis). Évite que Xayìn hérite des contraintes de Muskh.
+  const constraintConcernsProfile = (c: Constraint): boolean => {
+    const params = c.params as { subjectProfileId?: string; profileId?: string };
+    const subject = params.subjectProfileId ?? params.profileId;
+    return subject == null || subject === profile.id;
+  };
   const inheritedConstraints: { c: Constraint; via: string }[] = cards.flatMap((card) =>
-    card.constraints.map((c) => ({ c, via: card.name })),
+    card.constraints.filter(constraintConcernsProfile).map((c) => ({ c, via: card.name })),
   );
   const inheritedEffects: { e: Effect; via: string }[] = cards.flatMap((card) =>
     card.effects.map((e) => ({ e, via: card.name })),

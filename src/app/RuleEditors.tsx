@@ -119,6 +119,7 @@ function cleanSelector(sel: Selector): Selector {
   if (sel.traits?.length) out.traits = sel.traits;
   if (sel.factionIds?.length) out.factionIds = sel.factionIds;
   if (sel.equipmentCategories?.length) out.equipmentCategories = sel.equipmentCategories;
+  if (sel.equipmentIds?.length) out.equipmentIds = sel.equipmentIds;
   if (sel.countAtLeast != null) out.countAtLeast = sel.countAtLeast;
   return out;
 }
@@ -151,10 +152,16 @@ function SelectorEditor({
       />
       <StringList label="traits" values={selector.traits ?? []} onChange={(v) => set({ traits: v })} placeholder="trait" />
       <StringList
-        label="équip."
+        label="équip. (cat.)"
         values={selector.equipmentCategories ?? []}
         onChange={(v) => set({ equipmentCategories: v as Selector["equipmentCategories"] })}
         options={EQUIPMENT_CATEGORIES.map((c) => ({ value: c, label: c }))}
+      />
+      <StringList
+        label="équip. (précis)"
+        values={selector.equipmentIds ?? []}
+        onChange={(v) => set({ equipmentIds: v })}
+        options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
       />
       <label className="flex items-center gap-1 text-xs text-slate-400">
         au moins
@@ -247,11 +254,13 @@ function OperationEditor({
           onChange={(e) => onChange({ ...op, skillId: e.target.value })}
           className={INPUT}
         >
-          {cat.skills.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.keyword}
-            </option>
-          ))}
+          {[...cat.skills]
+            .sort((a, b) => a.keyword.localeCompare(b.keyword))
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.keyword}
+              </option>
+            ))}
         </select>
       )}
       {op.kind === "grant-trait" && (

@@ -252,11 +252,14 @@ function computeCosts(
 
     for (const ri of resolveTargets(occ, resolved)) {
       const cats = occ.effect.target.equipmentCategories;
+      const ids = occ.effect.target.equipmentIds;
       let delta = op.amount;
-      if (cats && cats.length > 0) {
-        // Appliqué une fois par équipement ajouté de la catégorie visée.
-        const n = ri.instance.addedEquipmentIds.filter((id) =>
-          cats.includes((idx.equipmentCategory.get(id) ?? "") as never),
+      if ((cats && cats.length > 0) || (ids && ids.length > 0)) {
+        // Appliqué une fois par équipement ajouté ciblé (par catégorie et/ou par id).
+        const n = ri.instance.addedEquipmentIds.filter(
+          (id) =>
+            (cats?.includes((idx.equipmentCategory.get(id) ?? "") as never) ?? false) ||
+            (ids?.includes(id) ?? false),
         ).length;
         delta = op.amount * n;
       }

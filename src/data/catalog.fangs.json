@@ -143,6 +143,31 @@
       "keyword": "Aliéné",
       "hasValue": true,
       "sourceText": "La compétence « aliéné X » définit les Aliénés sur leur carte de profil, où X est le « Maître » auquel elles sont liées. Une figurine aliénée n'effectue jamais de test de témérité ni d'effroi."
+    },
+    {
+      "id": "seigneur-de-guerre",
+      "keyword": "Seigneur de guerre",
+      "hasValue": true,
+      "sourceText": "Présent sur le champ de bataille et leader de l'Ost, génère autant de marqueurs d'activation que sa valeur (dont un réservé)."
+    },
+    {
+      "id": "effroi",
+      "keyword": "Effroi",
+      "hasValue": true,
+      "sourceText": "Provoque un test d'effroi (T + I + 1D10 ≥ valeur) chez la figurine qui interagit avec elle au corps à corps."
+    },
+    {
+      "id": "fine-lame",
+      "keyword": "Fine lame",
+      "hasValue": false,
+      "obligatory": true,
+      "sourceText": "Le défenseur ne peut pas dépenser plus de PA que le Safar doté de « fine lame » qui l'attaque."
+    },
+    {
+      "id": "riposte",
+      "keyword": "Riposte",
+      "hasValue": false,
+      "sourceText": "Ajoute un effet supplémentaire lors d'une défense à 3 PA, ou bénéficie des dégâts et de l'effet d'une caractéristique lors d'une défense à 2 PA."
     }
   ],
   "magicWays": [
@@ -692,7 +717,7 @@
         "t": 4,
         "i": 3
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 8,
       "pv": 24,
       "skills": [
@@ -718,10 +743,15 @@
       ],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "objectif"
         ],
         [
-          "defensive"
+          "defensive",
+          "offensive",
+          "objectif",
+          "esoterique"
         ]
       ],
       "traits": [
@@ -730,15 +760,8 @@
       ],
       "recruitment": [],
       "rules": [],
-      "notes": [
-        "Acquiert « Rusé » via les Règles de bataille (non imprimé sur les cartes antérieures)."
-      ],
       "cardImage": "cards/fangs-goulue-1-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.i"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-executeur-1",
@@ -756,10 +779,10 @@
         "p": 3,
         "a": 4,
         "c": 3,
-        "t": 3,
+        "t": 4,
         "i": 3
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 8,
       "pv": 18,
       "skills": [
@@ -774,7 +797,11 @@
           "skillId": "endurance"
         },
         {
-          "skillId": "embuscade"
+          "skillId": "embuscade",
+          "value": "Sa 1ère attaque quand il est révélé bénéficie de +2 au seuil et de +1 en dégâts."
+        },
+        {
+          "skillId": "independant"
         }
       ],
       "baseEquipmentIds": [
@@ -782,24 +809,16 @@
       ],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "tir"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
+      "traits": [],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Embuscade",
-          "text": "Sa 1ère attaque quand il est révélé bénéficie de +2 au seuil et de +1 en dégâts."
-        }
-      ],
+      "rules": [],
       "cardImage": "cards/fangs-executeur-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-executeur-2",
@@ -820,7 +839,7 @@
         "t": 5,
         "i": 4
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 8,
       "pv": 20,
       "skills": [
@@ -838,7 +857,11 @@
           "skillId": "harcelement"
         },
         {
-          "skillId": "embuscade"
+          "skillId": "embuscade",
+          "value": "Sa 1ère attaque quand il est révélé bénéficie de +3 au seuil et de +2 en dégâts."
+        },
+        {
+          "skillId": "independant"
         }
       ],
       "baseEquipmentIds": [
@@ -846,15 +869,17 @@
       ],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "tir"
         ],
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "tir"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
+      "traits": [],
       "recruitment": [],
       "effects": [
         {
@@ -866,8 +891,8 @@
           "scope": "fer-de-lance",
           "target": {
             "self": true,
-            "equipmentCategories": [
-              "arme-tir"
+            "equipmentIds": [
+              "arbalete-de-poing"
             ]
           },
           "operation": {
@@ -881,20 +906,12 @@
       ],
       "rules": [
         {
-          "label": "Embuscade",
-          "text": "Sa 1ère attaque quand il est révélé bénéficie de +3 au seuil et de +2 en dégâts."
-        },
-        {
           "label": "Arme de prédilection",
           "text": "Paye 10 de moins l'Arbalète de poing."
         }
       ],
       "cardImage": "cards/fangs-executeur-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.t"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-executeur-3",
@@ -914,7 +931,7 @@
         "t": 6,
         "i": 5
       },
-      "stature": 2,
+      "stature": 4,
       "pa": 9,
       "pv": 24,
       "skills": [
@@ -932,7 +949,11 @@
           "skillId": "harcelement"
         },
         {
-          "skillId": "embuscade"
+          "skillId": "embuscade",
+          "value": "Sa 1ère attaque quand il est révélé bénéficie de +4 au seuil et de +3 en dégâts."
+        },
+        {
+          "skillId": "independant"
         }
       ],
       "baseEquipmentIds": [
@@ -940,18 +961,22 @@
       ],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "tir"
         ],
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "tir"
         ],
         [
-          "offensive"
+          "offensive",
+          "defensive",
+          "tir"
         ]
       ],
-      "traits": [
-        "femelle-fang"
-      ],
+      "traits": [],
       "recruitment": [],
       "effects": [
         {
@@ -963,8 +988,8 @@
           "scope": "fer-de-lance",
           "target": {
             "self": true,
-            "equipmentCategories": [
-              "arme-tir"
+            "equipmentIds": [
+              "arbalete-de-poing"
             ]
           },
           "operation": {
@@ -978,20 +1003,12 @@
       ],
       "rules": [
         {
-          "label": "Embuscade",
-          "text": "Sa 1ère attaque quand il est révélé bénéficie de +4 au seuil et de +3 en dégâts."
-        },
-        {
           "label": "Arme de prédilection",
           "text": "Paye 10 de moins l'Arbalète de poing."
         }
       ],
       "cardImage": "cards/fangs-executeur-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.t"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-meneuse-1",
@@ -1008,11 +1025,11 @@
         "v": 4,
         "p": 3,
         "a": 4,
-        "c": 4,
+        "c": 3,
         "t": 4,
         "i": 4
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 8,
       "pv": 22,
       "skills": [
@@ -1035,7 +1052,9 @@
       ],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "offensive",
+          "defensive"
         ]
       ],
       "magic": {
@@ -1073,11 +1092,7 @@
         }
       ],
       "cardImage": "cards/fangs-meneuse-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.i"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-meneuse-2",
@@ -1098,7 +1113,7 @@
         "t": 4,
         "i": 5
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 8,
       "pv": 26,
       "skills": [
@@ -1114,6 +1129,9 @@
         {
           "skillId": "le-sang-m-attire",
           "value": 1
+        },
+        {
+          "skillId": "rusee"
         }
       ],
       "baseEquipmentIds": [
@@ -1145,12 +1163,7 @@
         }
       ],
       "cardImage": "cards/fangs-meneuse-fr.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.c",
-        "stats.t"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-meneuse-3",
@@ -1166,11 +1179,11 @@
         "v": 4,
         "p": 3,
         "a": 4,
-        "c": 4,
+        "c": 3,
         "t": 4,
         "i": 7
       },
-      "stature": 2,
+      "stature": 4,
       "pa": 9,
       "pv": 30,
       "skills": [
@@ -1185,25 +1198,35 @@
           "value": 2
         },
         {
-          "skillId": "maitre"
+          "skillId": "maitre",
+          "value": "ostéomancie"
         },
         {
           "skillId": "rusee"
         },
         {
-          "skillId": "harcelement"
+          "skillId": "harcelement",
+          "value": "Ajoute l'effet de V lors des attaques de corps à corps à 2 et 3 PA."
         }
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "offensive",
+          "defensive",
+          "objectif"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "objectif",
+          "defensive",
+          "offensive"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "defensive",
+          "objectif"
         ]
       ],
       "magic": {
@@ -1219,23 +1242,12 @@
       "recruitment": [],
       "rules": [
         {
-          "label": "Maître ostéomancie",
-          "text": "Maître dans le domaine ésotérique pour l'ostéomancie."
-        },
-        {
-          "label": "Harcèlement",
-          "text": "Ajoute l'effet de V lors des attaques de corps à corps à 2 et 3 PA."
-        },
-        {
           "label": "Collier en os",
           "text": "Permet de ne pas subir les effets négatifs sur un 5+."
         }
       ],
       "cardImage": "cards/fangs-meneuse-niv-3.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-decatie-2",
@@ -1255,7 +1267,7 @@
         "t": 4,
         "i": 5
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 8,
       "pv": 22,
       "skills": [
@@ -1284,10 +1296,15 @@
       ],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "defensive",
+          "objectif",
+          "tir"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "defensive",
+          "tir"
         ]
       ],
       "magic": {
@@ -1304,17 +1321,10 @@
         {
           "label": "Vieillarde",
           "text": "Les Fangs dans sa ZDC peuvent défendre à sa place."
-        },
-        {
-          "label": "Bâton relique",
-          "text": "Les Goulues dans son aura infligent +2 dégâts."
         }
       ],
       "cardImage": "cards/fangs-decatie-fr-1.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-decatie-3",
@@ -1334,7 +1344,7 @@
         "t": 4,
         "i": 5
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 9,
       "pv": 22,
       "skills": [
@@ -1363,13 +1373,19 @@
       ],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "defensive",
+          "objectif",
+          "tir"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "defensive",
+          "tir"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "defensive"
         ]
       ],
       "magic": {
@@ -1386,17 +1402,10 @@
         {
           "label": "Vieillarde",
           "text": "Les Fangs dans sa ZDC peuvent défendre à sa place."
-        },
-        {
-          "label": "Bâton relique",
-          "text": "Les Goulues dans son aura gagnent « Réceptif (ostéomancie) »."
         }
       ],
       "cardImage": "cards/fangs-decatie-fr-1.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-affame-1",
@@ -1417,7 +1426,7 @@
         "t": 2,
         "i": 2
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 7,
       "pv": 18,
       "skills": [
@@ -1442,7 +1451,8 @@
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive"
         ]
       ],
       "traits": [
@@ -1459,10 +1469,7 @@
         }
       ],
       "cardImage": "cards/fangs-affame.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-broutcha-2",
@@ -1478,12 +1485,12 @@
       "stats": {
         "v": 4,
         "p": 3,
-        "a": 4,
-        "c": 4,
+        "a": 5,
+        "c": 3,
         "t": 4,
-        "i": 4
+        "i": 5
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 9,
       "pv": 22,
       "skills": [
@@ -1505,6 +1512,16 @@
         },
         {
           "skillId": "en-eveil"
+        },
+        {
+          "skillId": "morsure"
+        },
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "seigneur-de-guerre",
+          "value": 1
         }
       ],
       "baseEquipmentIds": [
@@ -1512,10 +1529,16 @@
       ],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "offensive",
+          "defensive",
+          "objectif",
+          "tir"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "defensive",
+          "tir"
         ]
       ],
       "magic": {
@@ -1541,17 +1564,8 @@
           "text": "Inflige +2 dégâts en défense contre un Khérops."
         }
       ],
-      "notes": [
-        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
-      ],
       "cardImage": "cards/fangs-broutcha.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.c",
-        "stats.t",
-        "stats.i"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-apathee-3",
@@ -1572,7 +1586,7 @@
         "t": 3,
         "i": 6
       },
-      "stature": 2,
+      "stature": 4,
       "pa": 9,
       "pv": 23,
       "skills": [
@@ -1598,6 +1612,13 @@
         {
           "skillId": "sadique",
           "value": 2
+        },
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "seigneur-de-guerre",
+          "value": 1
         }
       ],
       "baseEquipmentIds": [
@@ -1605,13 +1626,19 @@
       ],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "defensive",
+          "objectif",
+          "tir"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "objectif",
+          "defensive"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "objectif"
         ]
       ],
       "magic": {
@@ -1633,14 +1660,8 @@
           "text": "Convaincre / négocier automatique."
         }
       ],
-      "notes": [
-        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
-      ],
       "cardImage": "cards/fangs-apathee.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-xayin-2",
@@ -1657,11 +1678,11 @@
         "v": 4,
         "p": 3,
         "a": 5,
-        "c": 5,
-        "t": 1,
-        "i": 4
+        "c": 3,
+        "t": 4,
+        "i": 5
       },
-      "stature": 2,
+      "stature": 3,
       "pa": 9,
       "pv": 24,
       "skills": [
@@ -1678,7 +1699,8 @@
           "skillId": "instinct-de-survie"
         },
         {
-          "skillId": "heroique"
+          "skillId": "heroique",
+          "value": "objectif"
         },
         {
           "skillId": "immunise-effroi-terreur"
@@ -1691,6 +1713,9 @@
         },
         {
           "skillId": "ambidextre"
+        },
+        {
+          "skillId": "independant"
         }
       ],
       "baseEquipmentIds": [
@@ -1698,10 +1723,14 @@
       ],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "offensive",
+          "defensive",
+          "objectif"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "objectif"
         ]
       ],
       "magic": {
@@ -1715,18 +1744,9 @@
         "fille-de-nyx"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Héroïque",
-          "text": "Héroïque « objectif »."
-        }
-      ],
+      "rules": [],
       "cardImage": "cards/fangs-xayin-muskh.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice",
-        "stats.i"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-muskh-1",
@@ -1747,7 +1767,7 @@
         "t": 5,
         "i": 2
       },
-      "stature": 4,
+      "stature": 5,
       "pa": 8,
       "pv": 30,
       "skills": [
@@ -1780,32 +1800,30 @@
         },
         {
           "skillId": "harcelement"
+        },
+        {
+          "skillId": "morsure",
+          "value": "Récupère en plus autant de PV qu'il en inflige."
+        },
+        {
+          "skillId": "effroi",
+          "value": 13
         }
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "offensive"
+          "offensive",
+          "defensive"
         ]
       ],
       "traits": [
         "femelle-fang"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "text": "Effroi 13."
-        },
-        {
-          "label": "Morsure",
-          "text": "Récupère en plus autant de PV qu'il en inflige."
-        }
-      ],
+      "rules": [],
       "cardImage": "cards/fangs-xayin-muskh.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "fangs-djouked-2",
@@ -1826,7 +1844,7 @@
         "t": 3,
         "i": 5
       },
-      "stature": 2,
+      "stature": 4,
       "pa": 8,
       "pv": 24,
       "skills": [
@@ -1850,16 +1868,21 @@
           "value": 1
         },
         {
-          "skillId": "receptif"
+          "skillId": "receptif",
+          "value": "ostéomancie"
         }
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
         [
-          "esoterique"
+          "esoterique",
+          "offensive",
+          "defensive",
+          "objectif"
         ],
         [
-          "esoterique"
+          "esoterique",
+          "objectif"
         ]
       ],
       "magic": {
@@ -1901,9 +1924,6 @@
       ],
       "rules": [
         {
-          "text": "Réceptif « ostéomancie »."
-        },
-        {
           "text": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha."
         }
       ],
@@ -1911,10 +1931,7 @@
         "Réduction « garde rapproché » : Broutcha (Fille de Nyx) peut dépenser SON allocation de garde rapproché sur Djouked (-35 Ko) au lieu de recruter un Larbin gratuit. Choix exclusif, à résoudre dans le constructeur de liste (budget partagé avec « Fille de Nyx », max 2 par Fer de Lance)."
       ],
       "cardImage": "cards/fangs-djouked-3.jpg",
-      "unverifiedFields": [
-        "stature",
-        "masteryDice"
-      ]
+      "unverifiedFields": []
     }
   ],
   "equipment": [

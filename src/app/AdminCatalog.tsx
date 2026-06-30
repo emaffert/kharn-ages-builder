@@ -972,6 +972,26 @@ function SkillCatalogDetail({
   );
 }
 
+/** Éditeur de texte multi-lignes (RuleText[] sans label) — pour cartes spéciales. */
+function TextLinesEditor({ items, onChange }: { items: RuleText[]; onChange: (r: RuleText[]) => void }) {
+  return (
+    <div className="space-y-2">
+      {items.map((r, i) => (
+        <div key={i} className="flex items-start gap-2">
+          <textarea
+            value={r.text}
+            rows={2}
+            onChange={(e) => onChange(replaceAt(items, i, { text: e.target.value }))}
+            className={`${INPUT} flex-1`}
+          />
+          <RemoveButton onClick={() => onChange(removeAt(items, i))} />
+        </div>
+      ))}
+      <AddButton onClick={() => onChange([...items, { text: "" }])}>+ ligne</AddButton>
+    </div>
+  );
+}
+
 function ProfileMultiSelect({
   label,
   ids,
@@ -1061,8 +1081,8 @@ function SpecialCardDetail({
         </div>
       </Section>
 
-      <Section title="Règles (verbatim — fait foi)">
-        <RulesEditor rules={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
+      <Section title="Texte de la carte (verbatim — fait foi)">
+        <TextLinesEditor items={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
       </Section>
 
       <Section title="Contraintes">
@@ -1318,6 +1338,17 @@ export function AdminCatalog() {
   const selectedSkill = catalog.skills.find((s) => s.id === selectedSkillId);
   const selectedCard = catalog.specialCards.find((s) => s.id === selectedCardId);
   const selectedSpell = catalog.spells.find((s) => s.id === selectedSpellId);
+
+  const previewImage =
+    view === "profiles"
+      ? selectedProfile?.cardImage
+      : view === "equipment"
+        ? selectedEquip?.cardImage
+        : view === "special-cards"
+          ? selectedCard?.cardImage
+          : view === "spells"
+            ? selectedSpell?.cardImage
+            : undefined;
 
   const tabClass = (active: boolean) =>
     `rounded px-2 py-1 text-xs font-medium ${
@@ -1586,23 +1617,23 @@ export function AdminCatalog() {
             ))}
         </div>
 
-        {view === "profiles" && import.meta.env.DEV && selectedProfile && (
+        {import.meta.env.DEV && previewImage && (
           <aside className="hidden w-[600px] shrink-0 overflow-y-auto border-l border-slate-800 p-4 xl:block">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-300/80">
               Carte (dev) — cliquer pour agrandir
             </p>
             <img
-              key={selectedProfile.id}
-              src={`/${selectedProfile.cardImage}`}
-              alt={`Carte de ${selectedProfile.name}`}
+              key={previewImage}
+              src={`/${previewImage}`}
+              alt="Carte"
               loading="lazy"
-              onClick={() => setZoom(`/${selectedProfile.cardImage}`)}
+              onClick={() => setZoom(`/${previewImage}`)}
               className="w-full cursor-zoom-in rounded border border-slate-700"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
             />
-            <p className="mt-2 break-all text-xs text-slate-600">{selectedProfile.cardImage}</p>
+            <p className="mt-2 break-all text-xs text-slate-600">{previewImage}</p>
           </aside>
         )}
       </main>

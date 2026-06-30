@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import type { Catalog, Constraint, Effect, Profile } from "@core";
+import type { Catalog, Constraint, Effect, Level, Limitation, Profile, RuleText, SkillRef } from "@core";
 import { describeConstraint, describeEffect, specialCardsForProfile } from "@ui/explain";
 import { useCatalogStore, type FieldValue } from "./useCatalogStore";
 
@@ -13,6 +13,11 @@ const STAT_LABELS: [keyof Profile["stats"], string][] = [
 ];
 
 const LEVEL_LABEL = ["", "I", "II", "III"];
+
+const INPUT = "rounded bg-slate-800 px-2 py-1 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600";
+
+const replaceAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
+const removeAt = <T,>(arr: T[], i: number): T[] => arr.filter((_, j) => j !== i);
 
 function Badge({ children, tone = "slate" }: { children: ReactNode; tone?: string }) {
   const tones: Record<string, string> = {
@@ -35,6 +40,31 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-300/80">{title}</h3>
       {children}
     </section>
+  );
+}
+
+function AddButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded border border-dashed border-slate-600 px-2 py-1 text-xs text-slate-400 hover:border-amber-600 hover:text-amber-300"
+    >
+      {children}
+    </button>
+  );
+}
+
+function RemoveButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Supprimer"
+      className="text-slate-500 hover:text-red-400"
+    >
+      ✕
+    </button>
   );
 }
 
@@ -102,18 +132,186 @@ function RuleCard({
   );
 }
 
+// ── Éditeurs de champs complexes ─────────────────────────────────────────────
+
+function RulesEditor({ rules, onChange }: { rules: RuleText[]; onChange: (r: RuleText[]) => void }) {
+  return (
+    <div className="space-y-2">
+      {rules.map((r, i) => (
+        <div key={i} className="flex items-start gap-2">
+          <input
+            placeholder="Label (optionnel)"
+            value={r.label ?? ""}
+            onChange={(e) => onChange(replaceAt(rules, i, { ...r, label: e.target.value || undefined }))}
+            className={`${INPUT} w-32 shrink-0`}
+          />
+          <textarea
+            value={r.text}
+            rows={2}
+            onChange={(e) => onChange(replaceAt(rules, i, { ...r, text: e.target.value }))}
+            className={`${INPUT} flex-1`}
+          />
+          <RemoveButton onClick={() => onChange(removeAt(rules, i))} />
+        </div>
+      ))}
+      <AddButton onClick={() => onChange([...rules, { text: "" }])}>+ règle</AddButton>
+    </div>
+  );
+}
+
+function SkillsEditor({
+  skills,
+  cat,
+  onChange,
+}: {
+  skills: SkillRef[];
+  cat: Catalog;
+  onChange: (s: SkillRef[]) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      {skills.map((s, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <select
+            value={s.skillId}
+            onChange={(e) => onChange(replaceAt(skills, i, { ...s, skillId: e.target.value }))}
+            className={`${INPUT} flex-1`}
+          >
+            {cat.skills.map((sk) => (
+              <option key={sk.id} value={sk.id}>
+                {sk.keyword}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            placeholder="val"
+            value={s.value ?? ""}
+            onChange={(e) =>
+              onChange(
+                replaceAt(skills, i, {
+                  ...s,
+                  value: e.target.value === "" ? undefined : Number(e.target.value),
+                }),
+              )
+            }
+            className={`${INPUT} w-16`}
+          />
+          <RemoveButton onClick={() => onChange(removeAt(skills, i))} />
+        </div>
+      ))}
+      <AddButton onClick={() => onChange([...skills, { skillId: cat.skills[0]?.id ?? "" }])}>
+        + compétence
+      </AddButton>
+    </div>
+  );
+}
+
+function TraitsEditor({ traits, onChange }: { traits: string[]; onChange: (t: string[]) => void }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {traits.map((t, i) => (
+        <span key={i} className="flex items-center gap-1 rounded bg-slate-800 px-1.5 py-0.5">
+          <input
+            value={t}
+            onChange={(e) => onChange(replaceAt(traits, i, e.target.value))}
+            className="w-28 bg-transparent text-xs text-slate-100 outline-none"
+          />
+          <RemoveButton onClick={() => onChange(removeAt(traits, i))} />
+        </span>
+      ))}
+      <AddButton onClick={() => onChange([...traits, "nouveau-trait"])}>+ trait</AddButton>
+    </div>
+  );
+}
+
+function EquipmentEditor({
+  ids,
+  cat,
+  onChange,
+}: {
+  ids: string[];
+  cat: Catalog;
+  onChange: (ids: string[]) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      {ids.map((id, i) => {
+        const e = cat.equipment.find((x) => x.id === id);
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <select
+              value={id}
+              onChange={(ev) => onChange(replaceAt(ids, i, ev.target.value))}
+              className={`${INPUT} flex-1`}
+            >
+              {cat.equipment.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.name}
+                </option>
+              ))}
+            </select>
+            <span className="w-16 text-right text-xs text-slate-400">{e ? `${e.cost} Ko` : "?"}</span>
+            <RemoveButton onClick={() => onChange(removeAt(ids, i))} />
+          </div>
+        );
+      })}
+      <AddButton onClick={() => onChange([...ids, cat.equipment[0]?.id ?? ""])}>
+        + équipement
+      </AddButton>
+    </div>
+  );
+}
+
+function LimitationEditor({
+  limitation,
+  onChange,
+}: {
+  limitation: Limitation;
+  onChange: (l: Limitation) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        value={limitation.kind}
+        onChange={(e) => onChange({ ...limitation, kind: e.target.value as Limitation["kind"] })}
+        className={INPUT}
+      >
+        <option value="X">X (multiple)</option>
+        <option value="U">U (unique)</option>
+        <option value="P">P (personnage)</option>
+        <option value="special">special</option>
+      </select>
+      {limitation.kind === "X" && (
+        <input
+          type="number"
+          value={limitation.value ?? ""}
+          onChange={(e) =>
+            onChange({ ...limitation, value: e.target.value === "" ? undefined : Number(e.target.value) })
+          }
+          className={`${INPUT} w-16`}
+          placeholder="X"
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Détail d'un profil ───────────────────────────────────────────────────────
+
 interface DetailProps {
   profile: Profile;
   cat: Catalog;
   updateField: (id: string, path: string, value: FieldValue) => void;
+  updateProfile: (id: string, patch: Partial<Profile>) => void;
   toggleUnverified: (id: string, key: string) => void;
 }
 
-function ProfileDetail({ profile, cat, updateField, toggleUnverified }: DetailProps) {
-  const equipById = useMemo(() => new Map(cat.equipment.map((e) => [e.id, e])), [cat]);
+function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverified }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   const uv = (key: string) => profile.unverifiedFields?.includes(key) ?? false;
   const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
+  const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
   const flag = (key: string) => toggleUnverified(profile.id, key);
 
   const constraints: { c: Constraint; via?: string }[] = [
@@ -144,15 +342,53 @@ function ProfileDetail({ profile, cat, updateField, toggleUnverified }: DetailPr
             <span className="text-sm">Ko</span>
           </label>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {profile.level && <Badge tone="violet">Niveau {LEVEL_LABEL[profile.level]}</Badge>}
-          <Badge>{profile.factionId ?? "sans logo"}</Badge>
-          <Badge tone="amber">
-            Limitation {profile.limitation.kind}
-            {profile.limitation.value ? ` ${profile.limitation.value}` : ""}
-          </Badge>
-          {profile.isNamed && <Badge tone="violet">Personnage</Badge>}
-          {profile.magic?.canCast && <Badge tone="green">Mage</Badge>}
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-1">
+            <span className="text-xs text-slate-400">Niveau</span>
+            <select
+              value={profile.level ?? ""}
+              onChange={(e) =>
+                patch({ level: e.target.value === "" ? undefined : (Number(e.target.value) as Level) })
+              }
+              className={INPUT}
+            >
+              <option value="">—</option>
+              <option value="1">I</option>
+              <option value="2">II</option>
+              <option value="3">III</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1">
+            <span className="text-xs text-slate-400">Faction</span>
+            <input
+              value={profile.factionId ?? ""}
+              onChange={(e) => patch({ factionId: e.target.value || undefined })}
+              className={`${INPUT} w-28`}
+            />
+          </label>
+          <LimitationEditor limitation={profile.limitation} onChange={(l) => patch({ limitation: l })} />
+          <label className="flex items-center gap-1 text-xs text-slate-300">
+            <input
+              type="checkbox"
+              checked={profile.isNamed ?? false}
+              onChange={(e) => patch({ isNamed: e.target.checked || undefined })}
+            />
+            Personnage
+          </label>
+          <label className="flex items-center gap-1 text-xs text-slate-300">
+            <input
+              type="checkbox"
+              checked={profile.magic?.canCast ?? false}
+              onChange={(e) =>
+                patch({
+                  magic: e.target.checked
+                    ? { canCast: true, magicWayIds: profile.magic?.magicWayIds ?? [] }
+                    : undefined,
+                })
+              }
+            />
+            Mage
+          </label>
           {profile.cardCode && <Badge>{profile.cardCode}</Badge>}
         </div>
       </header>
@@ -193,49 +429,27 @@ function ProfileDetail({ profile, cat, updateField, toggleUnverified }: DetailPr
         </div>
       </Section>
 
-      <Section title="Dés de maîtrise">
-        <div className="flex items-center gap-2">
-          <span
-            className={`rounded px-2 py-1 text-sm ${
-              uv("masteryDice") ? "bg-amber-950/40 ring-1 ring-amber-600/60" : "bg-slate-800"
-            }`}
-          >
-            {profile.masteryDice.join(", ") || "—"}
-          </span>
-          <FlagButton active={uv("masteryDice")} onClick={() => flag("masteryDice")} />
-        </div>
+      <Section title="Compétences">
+        <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
       </Section>
 
-      <Section title="Compétences">
-        <div className="flex flex-wrap gap-1.5">
-          {profile.skills.length === 0 && <span className="text-sm text-slate-500">Aucune.</span>}
-          {profile.skills.map((s, idx) => (
-            <Badge key={`${s.skillId}-${idx}`}>
-              {cat.skills.find((sk) => sk.id === s.skillId)?.keyword ?? s.skillId}
-              {s.value != null ? ` ${s.value}` : ""}
-            </Badge>
-          ))}
-        </div>
+      <Section title="Traits">
+        <TraitsEditor traits={profile.traits} onChange={(t) => patch({ traits: t })} />
       </Section>
 
       <Section title="Équipement de base">
-        <ul className="space-y-1 text-sm text-slate-200">
-          {profile.baseEquipmentIds.length === 0 && (
-            <li className="text-slate-500">Aucun (mains nues).</li>
-          )}
-          {profile.baseEquipmentIds.map((id) => {
-            const e = equipById.get(id);
-            return (
-              <li key={id} className="flex justify-between">
-                <span>{e?.name ?? id}</span>
-                <span className="text-slate-400">{e ? `${e.cost} Ko` : "?"}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <EquipmentEditor
+          ids={profile.baseEquipmentIds}
+          cat={cat}
+          onChange={(ids) => patch({ baseEquipmentIds: ids })}
+        />
       </Section>
 
-      <Section title="Contraintes (validées par le moteur)">
+      <Section title="Règles de la carte (verbatim — fait foi)">
+        <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
+      </Section>
+
+      <Section title="Contraintes (lecture seule — validées par le moteur)">
         {constraints.length === 0 && <p className="text-sm text-slate-500">Aucune.</p>}
         <div className="space-y-2">
           {constraints.map(({ c, via }, idx) => (
@@ -258,7 +472,7 @@ function ProfileDetail({ profile, cat, updateField, toggleUnverified }: DetailPr
         </div>
       </Section>
 
-      <Section title="Effets / octrois">
+      <Section title="Effets / octrois (lecture seule)">
         {effects.length === 0 && <p className="text-sm text-slate-500">Aucun.</p>}
         <div className="space-y-2">
           {effects.map(({ e, via }, idx) => (
@@ -278,18 +492,6 @@ function ProfileDetail({ profile, cat, updateField, toggleUnverified }: DetailPr
             />
           ))}
         </div>
-      </Section>
-
-      <Section title="Règles de la carte (verbatim — fait foi)">
-        <ul className="space-y-1 text-sm">
-          {profile.rules.length === 0 && <li className="text-slate-500">Aucune.</li>}
-          {profile.rules.map((r, idx) => (
-            <li key={idx} className="text-slate-200">
-              {r.label && <span className="font-semibold text-amber-300/90">{r.label} : </span>}
-              {r.text}
-            </li>
-          ))}
-        </ul>
       </Section>
 
       {import.meta.env.DEV && (
@@ -312,8 +514,8 @@ function ProfileDetail({ profile, cat, updateField, toggleUnverified }: DetailPr
 }
 
 export function AdminCatalog() {
-  const { catalog, dirty, unverifiedCount, updateField, toggleUnverified, reset, exportJson } =
-    useCatalogStore();
+  const store = useCatalogStore();
+  const { catalog } = store;
   const [selectedId, setSelectedId] = useState(catalog.profiles[0]?.id ?? "");
   const [query, setQuery] = useState("");
 
@@ -337,22 +539,22 @@ export function AdminCatalog() {
           />
           <div className="flex gap-1.5">
             <button
-              onClick={exportJson}
+              onClick={store.exportJson}
               className="flex-1 rounded bg-amber-600/80 px-2 py-1 text-xs font-medium text-amber-50 hover:bg-amber-600"
             >
               Exporter JSON
             </button>
             <button
-              onClick={reset}
-              disabled={!dirty}
+              onClick={store.reset}
+              disabled={!store.dirty}
               className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-600 disabled:opacity-40"
             >
               Réinitialiser
             </button>
           </div>
           <p className="text-xs text-slate-500">
-            {filtered.length} profil(s) · {unverifiedCount} champ(s) ⚠
-            {dirty && <span className="text-amber-400"> · modifié</span>}
+            {filtered.length} profil(s) · {store.unverifiedCount} champ(s) ⚠
+            {store.dirty && <span className="text-amber-400"> · modifié</span>}
           </p>
         </div>
         <ul className="flex-1 overflow-y-auto p-2">
@@ -384,8 +586,9 @@ export function AdminCatalog() {
             <ProfileDetail
               profile={selected}
               cat={catalog}
-              updateField={updateField}
-              toggleUnverified={toggleUnverified}
+              updateField={store.updateField}
+              updateProfile={store.updateProfile}
+              toggleUnverified={store.toggleUnverified}
             />
           </div>
         ) : (

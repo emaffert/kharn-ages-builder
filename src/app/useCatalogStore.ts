@@ -60,6 +60,13 @@ export function useCatalogStore() {
     [apply],
   );
 
+  /** Modifie des champs complexes (tableaux/objets) d'un profil par fusion superficielle. */
+  const updateProfile = useCallback(
+    (id: string, patch: Partial<Profile>) =>
+      apply((c) => mapProfile(c, id, (p) => ({ ...p, ...patch }))),
+    [apply],
+  );
+
   const toggleUnverified = useCallback(
     (id: string, key: string) =>
       apply((c) =>
@@ -93,5 +100,14 @@ export function useCatalogStore() {
     0,
   );
 
-  return { catalog, dirty, unverifiedCount, updateField, toggleUnverified, reset, exportJson };
+  return {
+    catalog,
+    dirty,
+    unverifiedCount,
+    updateField,
+    updateProfile,
+    toggleUnverified,
+    reset,
+    exportJson,
+  };
 }

@@ -39,6 +39,15 @@ describe("useCatalogStore", () => {
     expect(has()).toBe(!before);
   });
 
+  it("modifie un champ complexe (règles) via updateProfile", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    const id = result.current.catalog.profiles[0]!.id;
+    act(() => result.current.updateProfile(id, { rules: [{ text: "Nouvelle règle" }] }));
+    expect(result.current.catalog.profiles.find((p) => p.id === id)!.rules).toEqual([
+      { text: "Nouvelle règle" },
+    ]);
+  });
+
   it("réinitialise les modifications locales", () => {
     const { result } = renderHook(() => useCatalogStore());
     const id = result.current.catalog.profiles[0]!.id;

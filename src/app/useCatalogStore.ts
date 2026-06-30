@@ -1,5 +1,13 @@
 import { useCallback, useState } from "react";
-import { parseCatalog, type Catalog, type Equipment, type Profile, type Skill } from "@core";
+import {
+  parseCatalog,
+  type Catalog,
+  type Equipment,
+  type Profile,
+  type Skill,
+  type SpecialCard,
+  type Spell,
+} from "@core";
 import { loadCatalog } from "@data";
 
 const STORAGE_KEY = "kharn-admin-catalog-v1";
@@ -113,6 +121,52 @@ export function useCatalogStore() {
     [apply],
   );
 
+  const updateSpecialCard = useCallback(
+    (id: string, patch: Partial<SpecialCard>) =>
+      apply((c) => ({
+        ...c,
+        specialCards: c.specialCards.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+      })),
+    [apply],
+  );
+
+  const addSpecialCard = useCallback((): string => {
+    const id = `card-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      specialCards: [
+        ...c.specialCards,
+        { id, name: "Nouvelle carte", cost: 0, scope: {}, rulesText: [], constraints: [], effects: [], cardImage: "" },
+      ],
+    }));
+    return id;
+  }, [apply]);
+
+  const removeSpecialCard = useCallback(
+    (id: string) => apply((c) => ({ ...c, specialCards: c.specialCards.filter((s) => s.id !== id) })),
+    [apply],
+  );
+
+  const updateSpell = useCallback(
+    (id: string, patch: Partial<Spell>) =>
+      apply((c) => ({ ...c, spells: c.spells.map((s) => (s.id === id ? { ...s, ...patch } : s)) })),
+    [apply],
+  );
+
+  const addSpell = useCallback((): string => {
+    const id = `spell-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      spells: [...c.spells, { id, name: "Nouveau sort", kind: "generique", target: "", difficulties: [] }],
+    }));
+    return id;
+  }, [apply]);
+
+  const removeSpell = useCallback(
+    (id: string) => apply((c) => ({ ...c, spells: c.spells.filter((s) => s.id !== id) })),
+    [apply],
+  );
+
   const toggleUnverified = useCallback(
     (id: string, key: string) =>
       apply((c) =>
@@ -200,6 +254,12 @@ export function useCatalogStore() {
     updateSkill,
     addSkill,
     removeSkill,
+    updateSpecialCard,
+    addSpecialCard,
+    removeSpecialCard,
+    updateSpell,
+    addSpell,
+    removeSpell,
     toggleUnverified,
     reset,
     exportJson,

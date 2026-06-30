@@ -30,4 +30,13 @@ describe("AdminCatalog (rendu)", () => {
     expect(screen.getByText(/Effets \(verbatim/i)).toBeTruthy();
     expect(screen.getByText(/\+ équipement/i)).toBeTruthy();
   });
+
+  it("ouvre les onglets Cartes spéciales et Sorts", () => {
+    render(<AdminCatalog />);
+    fireEvent.click(screen.getByRole("button", { name: "Cartes spé." }));
+    expect(screen.getByText(/\+ carte spéciale/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Sorts" }));
+    expect(screen.getByText(/Difficultés/i)).toBeTruthy();
+    expect(screen.getByText(/\+ sort/i)).toBeTruthy();
+  });
 });

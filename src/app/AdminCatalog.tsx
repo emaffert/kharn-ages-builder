@@ -10,6 +10,8 @@ import type {
   RuleText,
   Skill,
   SkillRef,
+  SpecialCard,
+  Spell,
 } from "@core";
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
 import { useCatalogStore, type FieldValue } from "./useCatalogStore";
@@ -658,7 +660,7 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
       <Section title="Effets / octrois du profil (modifiables)">
         <EffectListEditor
           effects={profile.effects ?? []}
-          profileId={profile.id}
+          newSource={{ kind: "profile", id: profile.id }}
           cat={cat}
           onChange={(e) => patch({ effects: e.length ? e : undefined })}
         />
@@ -970,13 +972,303 @@ function SkillCatalogDetail({
   );
 }
 
+function ProfileMultiSelect({
+  label,
+  ids,
+  cat,
+  onChange,
+}: {
+  label: string;
+  ids: string[];
+  cat: Catalog;
+  onChange: (ids: string[]) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-xs text-slate-400">{label}</span>
+      {ids.map((id, i) => (
+        <span key={i} className="flex items-center gap-0.5">
+          <select value={id} onChange={(e) => onChange(replaceAt(ids, i, e.target.value))} className={INPUT}>
+            {cat.profiles.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+                {p.level ? ` ${LEVEL_LABEL[p.level]}` : ""}
+              </option>
+            ))}
+          </select>
+          <RemoveButton onClick={() => onChange(removeAt(ids, i))} />
+        </span>
+      ))}
+      <AddButton onClick={() => onChange([...ids, cat.profiles[0]?.id ?? ""])}>+ profil</AddButton>
+    </div>
+  );
+}
+
+function SpecialCardDetail({
+  card,
+  cat,
+  onChange,
+  onRemove,
+}: {
+  card: SpecialCard;
+  cat: Catalog;
+  onChange: (patch: Partial<SpecialCard>) => void;
+  onRemove: () => void;
+}) {
+  const scope = card.scope;
+  return (
+    <div className="space-y-5">
+      <header className="flex items-center gap-3">
+        <input
+          value={card.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+          className="flex-1 rounded bg-slate-800 px-2 py-1 text-2xl font-bold text-slate-50 outline-none ring-1 ring-transparent focus:ring-amber-600"
+        />
+        <label className="flex items-center gap-1 text-amber-300">
+          <input
+            type="number"
+            value={card.cost}
+            onChange={(e) => onChange({ cost: Number(e.target.value) })}
+            className="w-16 rounded bg-slate-800 px-2 py-1 text-right text-xl font-semibold outline-none focus:ring-1 focus:ring-amber-600"
+          />
+          <span className="text-sm">Ko</span>
+        </label>
+        <button type="button" onClick={onRemove} title="Supprimer cette carte" className="text-slate-500 hover:text-red-400">
+          ✕
+        </button>
+      </header>
+      <p className="text-xs text-slate-500">
+        Coût 0 = carte intrinsèque (auto). Coût &gt; 0 = amélioration payante (sélectionnée par la figurine).
+      </p>
+
+      <Section title="Portée (à qui s'applique la carte)">
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-xs text-slate-400">
+            trait
+            <input
+              value={scope.trait ?? ""}
+              onChange={(e) => onChange({ scope: { ...scope, trait: e.target.value || undefined } })}
+              className={`${INPUT} w-40`}
+              placeholder="ex. fille-de-nyx"
+            />
+          </label>
+          <ProfileMultiSelect
+            label="profils"
+            ids={scope.profileIds ?? []}
+            cat={cat}
+            onChange={(v) => onChange({ scope: { ...scope, profileIds: v.length ? v : undefined } })}
+          />
+        </div>
+      </Section>
+
+      <Section title="Règles (verbatim — fait foi)">
+        <RulesEditor rules={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
+      </Section>
+
+      <Section title="Contraintes">
+        <ConstraintListEditor constraints={card.constraints} cat={cat} onChange={(c) => onChange({ constraints: c })} />
+      </Section>
+
+      <Section title="Effets / octrois">
+        <EffectListEditor
+          effects={card.effects}
+          newSource={{ kind: "special-card", id: card.id }}
+          cat={cat}
+          onChange={(e) => onChange({ effects: e })}
+        />
+      </Section>
+
+      <Section title="Image (optionnel)">
+        <input
+          value={card.cardImage}
+          placeholder="cards/..."
+          onChange={(e) => onChange({ cardImage: e.target.value })}
+          className={`${INPUT} w-full max-w-md`}
+        />
+      </Section>
+    </div>
+  );
+}
+
+function SpellDetail({
+  spell: s,
+  cat,
+  onChange,
+  onRemove,
+}: {
+  spell: Spell;
+  cat: Catalog;
+  onChange: (patch: Partial<Spell>) => void;
+  onRemove: () => void;
+}) {
+  const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
+  const reserved = s.reservedTo ?? {};
+  return (
+    <div className="space-y-5">
+      <header className="flex items-center gap-3">
+        <input
+          value={s.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+          className="flex-1 rounded bg-slate-800 px-2 py-1 text-2xl font-bold text-slate-50 outline-none ring-1 ring-transparent focus:ring-amber-600"
+        />
+        <label className="flex items-center gap-1 text-amber-300">
+          <input
+            type="number"
+            value={s.cost ?? ""}
+            onChange={(e) => onChange({ cost: numOrUndef(e.target.value) })}
+            className="w-16 rounded bg-slate-800 px-2 py-1 text-right text-xl font-semibold outline-none focus:ring-1 focus:ring-amber-600"
+          />
+          <span className="text-sm">Ko</span>
+        </label>
+        <button type="button" onClick={onRemove} title="Supprimer ce sort" className="text-slate-500 hover:text-red-400">
+          ✕
+        </button>
+      </header>
+
+      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+        <label className="flex items-center gap-1">
+          type
+          <select
+            value={s.kind}
+            onChange={(e) => onChange({ kind: e.target.value as Spell["kind"] })}
+            className={INPUT}
+          >
+            <option value="generique">générique</option>
+            <option value="grimoire">grimoire</option>
+            <option value="reserve-profil">réservé à un profil</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-1">
+          voie
+          <select
+            value={s.magicWayId ?? ""}
+            onChange={(e) => onChange({ magicWayId: e.target.value || undefined })}
+            className={INPUT}
+          >
+            <option value="">—</option>
+            {cat.magicWays.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-1">
+          pages
+          <input
+            type="number"
+            value={s.pages ?? ""}
+            onChange={(e) => onChange({ pages: numOrUndef(e.target.value) })}
+            className={`${INPUT} w-16`}
+          />
+        </label>
+      </div>
+
+      <Section title="Réservé à">
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-xs text-slate-400">
+            trait
+            <input
+              value={reserved.trait ?? ""}
+              onChange={(e) =>
+                onChange({ reservedTo: cleanReserved({ ...reserved, trait: e.target.value || undefined }) })
+              }
+              className={`${INPUT} w-40`}
+            />
+          </label>
+          <ProfileMultiSelect
+            label="profils"
+            ids={reserved.profileIds ?? []}
+            cat={cat}
+            onChange={(v) =>
+              onChange({ reservedTo: cleanReserved({ ...reserved, profileIds: v.length ? v : undefined }) })
+            }
+          />
+        </div>
+      </Section>
+
+      <div className="flex flex-wrap gap-3 text-xs text-slate-300">
+        <label className="flex items-center gap-1">
+          cible
+          <input value={s.target} onChange={(e) => onChange({ target: e.target.value })} className={`${INPUT} w-48`} />
+        </label>
+        <label className="flex items-center gap-1">
+          cadence
+          <input
+            value={s.cadence ?? ""}
+            onChange={(e) => onChange({ cadence: e.target.value || undefined })}
+            className={`${INPUT} w-32`}
+          />
+        </label>
+        <label className="flex items-center gap-1">
+          durée
+          <input
+            value={s.duration ?? ""}
+            onChange={(e) => onChange({ duration: e.target.value || undefined })}
+            className={`${INPUT} w-40`}
+          />
+        </label>
+      </div>
+
+      <Section title="Difficultés (seuil → effet)">
+        <div className="space-y-2">
+          {s.difficulties.map((d, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <input
+                type="number"
+                value={d.threshold}
+                onChange={(e) =>
+                  onChange({ difficulties: replaceAt(s.difficulties, i, { ...d, threshold: Number(e.target.value) }) })
+                }
+                className={`${INPUT} w-20`}
+              />
+              <textarea
+                value={d.effectText}
+                rows={2}
+                onChange={(e) =>
+                  onChange({ difficulties: replaceAt(s.difficulties, i, { ...d, effectText: e.target.value }) })
+                }
+                className={`${INPUT} flex-1`}
+              />
+              <RemoveButton onClick={() => onChange({ difficulties: removeAt(s.difficulties, i) })} />
+            </div>
+          ))}
+          <AddButton onClick={() => onChange({ difficulties: [...s.difficulties, { threshold: 0, effectText: "" }] })}>
+            + difficulté
+          </AddButton>
+        </div>
+      </Section>
+
+      <Section title="Image (optionnel)">
+        <input
+          value={s.cardImage ?? ""}
+          placeholder="cards/..."
+          onChange={(e) => onChange({ cardImage: e.target.value || undefined })}
+          className={`${INPUT} w-full max-w-md`}
+        />
+      </Section>
+    </div>
+  );
+}
+
+function cleanReserved(r: { profileIds?: string[]; trait?: string }) {
+  const out: { profileIds?: string[]; trait?: string } = {};
+  if (r.trait) out.trait = r.trait;
+  if (r.profileIds?.length) out.profileIds = r.profileIds;
+  return Object.keys(out).length ? out : undefined;
+}
+
 export function AdminCatalog() {
   const store = useCatalogStore();
   const { catalog } = store;
-  const [view, setView] = useState<"profiles" | "equipment" | "skills">("profiles");
+  const [view, setView] = useState<"profiles" | "equipment" | "skills" | "special-cards" | "spells">(
+    "profiles",
+  );
   const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
   const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
   const [selectedSkillId, setSelectedSkillId] = useState(catalog.skills[0]?.id ?? "");
+  const [selectedCardId, setSelectedCardId] = useState(catalog.specialCards[0]?.id ?? "");
+  const [selectedSpellId, setSelectedSpellId] = useState(catalog.spells[0]?.id ?? "");
   const [query, setQuery] = useState("");
   const [zoom, setZoom] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -1012,12 +1304,23 @@ export function AdminCatalog() {
     [catalog, q],
   );
 
+  const filteredCards = useMemo(
+    () => catalog.specialCards.filter((s) => !q || s.name.toLowerCase().includes(q)),
+    [catalog, q],
+  );
+  const filteredSpells = useMemo(
+    () => catalog.spells.filter((s) => !q || s.name.toLowerCase().includes(q)),
+    [catalog, q],
+  );
+
   const selectedProfile = catalog.profiles.find((p) => p.id === selectedProfileId);
   const selectedEquip = catalog.equipment.find((e) => e.id === selectedEquipId);
   const selectedSkill = catalog.skills.find((s) => s.id === selectedSkillId);
+  const selectedCard = catalog.specialCards.find((s) => s.id === selectedCardId);
+  const selectedSpell = catalog.spells.find((s) => s.id === selectedSpellId);
 
   const tabClass = (active: boolean) =>
-    `flex-1 rounded px-2 py-1 text-xs font-medium ${
+    `rounded px-2 py-1 text-xs font-medium ${
       active ? "bg-amber-600/30 text-amber-100" : "bg-slate-800 text-slate-400 hover:text-slate-200"
     }`;
   const itemClass = (active: boolean) =>
@@ -1030,7 +1333,7 @@ export function AdminCatalog() {
       <aside className="flex w-72 shrink-0 flex-col border-r border-slate-800 bg-slate-900/50">
         <div className="space-y-2 border-b border-slate-800 p-3">
           <h1 className="text-sm font-bold text-amber-300">Khârn-Âges — Admin catalogue</h1>
-          <div className="flex gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             <button onClick={() => setView("profiles")} className={tabClass(view === "profiles")}>
               Profils
             </button>
@@ -1039,6 +1342,12 @@ export function AdminCatalog() {
             </button>
             <button onClick={() => setView("skills")} className={tabClass(view === "skills")}>
               Compétences
+            </button>
+            <button onClick={() => setView("special-cards")} className={tabClass(view === "special-cards")}>
+              Cartes spé.
+            </button>
+            <button onClick={() => setView("spells")} className={tabClass(view === "spells")}>
+              Sorts
             </button>
           </div>
           <input
@@ -1088,6 +1397,8 @@ export function AdminCatalog() {
               `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`}
             {view === "equipment" && `${filteredEquipment.length} équipement(s)`}
             {view === "skills" && `${filteredSkills.length} compétence(s)`}
+            {view === "special-cards" && `${filteredCards.length} carte(s) spéciale(s)`}
+            {view === "spells" && `${filteredSpells.length} sort(s)`}
             {store.dirty && <span className="text-amber-400"> · modifié</span>}
           </p>
         </div>
@@ -1151,6 +1462,46 @@ export function AdminCatalog() {
               </li>
             </>
           )}
+          {view === "special-cards" && (
+            <>
+              {filteredCards.map((s) => (
+                <li key={s.id}>
+                  <button onClick={() => setSelectedCardId(s.id)} className={itemClass(s.id === selectedCardId)}>
+                    <span>{s.name}</span>
+                    <span className="text-xs text-slate-500">{s.cost > 0 ? s.cost : "auto"}</span>
+                  </button>
+                </li>
+              ))}
+              <li className="mt-2">
+                <button
+                  onClick={() => setSelectedCardId(store.addSpecialCard())}
+                  className="w-full rounded border border-dashed border-slate-600 px-2 py-1.5 text-xs text-slate-400 hover:border-amber-600 hover:text-amber-300"
+                >
+                  + carte spéciale
+                </button>
+              </li>
+            </>
+          )}
+          {view === "spells" && (
+            <>
+              {filteredSpells.map((s) => (
+                <li key={s.id}>
+                  <button onClick={() => setSelectedSpellId(s.id)} className={itemClass(s.id === selectedSpellId)}>
+                    <span>{s.name}</span>
+                    {s.cost != null && <span className="text-xs text-slate-500">{s.cost}</span>}
+                  </button>
+                </li>
+              ))}
+              <li className="mt-2">
+                <button
+                  onClick={() => setSelectedSpellId(store.addSpell())}
+                  className="w-full rounded border border-dashed border-slate-600 px-2 py-1.5 text-xs text-slate-400 hover:border-amber-600 hover:text-amber-300"
+                >
+                  + sort
+                </button>
+              </li>
+            </>
+          )}
         </ul>
       </aside>
 
@@ -1200,6 +1551,38 @@ export function AdminCatalog() {
               </div>
             ) : (
               <p className="text-slate-500">Sélectionnez une compétence.</p>
+            ))}
+          {view === "special-cards" &&
+            (selectedCard ? (
+              <div className="mx-auto max-w-2xl">
+                <SpecialCardDetail
+                  card={selectedCard}
+                  cat={catalog}
+                  onChange={(patch) => store.updateSpecialCard(selectedCard.id, patch)}
+                  onRemove={() => {
+                    store.removeSpecialCard(selectedCard.id);
+                    setSelectedCardId(catalog.specialCards.find((x) => x.id !== selectedCard.id)?.id ?? "");
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-slate-500">Sélectionnez une carte spéciale.</p>
+            ))}
+          {view === "spells" &&
+            (selectedSpell ? (
+              <div className="mx-auto max-w-2xl">
+                <SpellDetail
+                  spell={selectedSpell}
+                  cat={catalog}
+                  onChange={(patch) => store.updateSpell(selectedSpell.id, patch)}
+                  onRemove={() => {
+                    store.removeSpell(selectedSpell.id);
+                    setSelectedSpellId(catalog.spells.find((x) => x.id !== selectedSpell.id)?.id ?? "");
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-slate-500">Sélectionnez un sort.</p>
             ))}
         </div>
 

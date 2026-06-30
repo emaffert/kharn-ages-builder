@@ -562,12 +562,12 @@ export function ConstraintListEditor({
 
 export function EffectListEditor({
   effects,
-  profileId,
+  newSource,
   cat,
   onChange,
 }: {
   effects: Effect[];
-  profileId: string;
+  newSource: Effect["source"];
   cat: Catalog;
   onChange: (e: Effect[]) => void;
 }) {
@@ -616,7 +616,7 @@ export function EffectListEditor({
             ...effects,
             {
               id: `e-${Date.now()}`,
-              source: { kind: "profile", id: profileId },
+              source: newSource,
               scope: "fer-de-lance",
               target: { self: true },
               operation: { kind: "cost-delta", amount: 0 },

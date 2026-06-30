@@ -19,8 +19,18 @@ représenté dans le moteur `evaluateList`.
 ## 2. Faction [v1] [+]
 
 - Une **unique faction** par Fer de Lance → filtre les profils disponibles.
-- Exceptions de recrutement : **apatride**, **allié des X**, profils **sans logo**, **Guilde Noire**
-  (via Sceau, +10 Ko). Le moteur valide l'appartenance.
+- Exceptions de recrutement :
+  - **apatride** : recrutable par toutes les factions ;
+  - **allié des X** : recrutable par X ou sa faction d'origine ;
+  - profils **sans logo** : recrutables partout ;
+  - **Sceau de la Guilde Noire** (source : FAQ + carte des règles de base) : une figurine **Guilde
+    Noire** peut rejoindre un FdL d'une autre faction pour **+10 Ko**. *(Concept Guilde Noire, hors Fangs.)*
+  - **Frères d'armes** (carte de Mathys, Guilde Noire) : dès qu'il y a **≥ 2** figurines « frère
+    d'armes » dans un même FdL, elles deviennent **apatrides**. Conséquence pour le builder : on
+    doit pouvoir les **ajouter dans n'importe quel FdL** (comme apatrides), mais la liste n'est
+    **valide que s'il y en a au moins 2** (sinon erreur tant que la condition n'est pas remplie).
+- Le moteur valide l'appartenance (`faction-membership`, + `grant-trait` conditionnel pour les
+  frères d'armes).
 
 ## 3. Recrutement des unités (profils) [v1] [+]
 
@@ -28,13 +38,23 @@ représenté dans le moteur `evaluateList`.
 - Le joueur ajoute des exemplaires ; respect des **limitations** (X = max, U = 1, P = 1 + occupe un
   emplacement d'un (modèle, niveau)).
 - Coût cumulé en direct.
+- **Unités dépendantes (recrutement lié)** : certaines unités ne se recrutent **pas seules** :
+  - **Aliénés** (Likans) : uniquement **rattachés à un porteur** (femelle Fang), somme des niveaux
+    ≤ niveau du porteur ;
+  - **Muskh** : uniquement **via Xayìn** (`requires-present`).
+  - UI : les ajouter **via leur dépendance** (bouton « + Likan » sur le porteur, Muskh proposé avec
+    Xayìn), ou ajoutables mais **liste marquée invalide** tant que la dépendance n'est pas satisfaite.
+- **Ordre des figurines** : le joueur peut **réordonner** sa liste (drag and drop) ; l'ordre est
+  **conservé** dans le document de liste.
 - UI : liste des profils disponibles (filtrés faction), recherche, ajout/retrait, compteur vs limitation.
 
 ## 4. Désignation du leader [v1]
 
 - Choisir le **leader** parmi les deux plus hauts niveaux, ou un personnage.
 - **[Bataille]** : un **Vassal** par FdL + un **Seigneur de guerre** pour l'Ost.
-- Impact en jeu (aura, marqueurs SDG) ; pas d'impact de coût. UI : sélection du leader.
+- Impact en jeu (aura, marqueurs SDG) ; pas d'impact de coût.
+- UI : le leader ayant un impact en jeu, le **mettre en avant** — épinglé en tête de liste, **icône
+  dédiée**, et/ou section à part. Sélection/changement du leader explicite.
 
 ## 5. Équipement par figurine [v1] [+]
 
@@ -91,9 +111,13 @@ représenté dans le moteur `evaluateList`.
 
 ## 11. Choix dynamiques & exclusifs [+ partiel]
 
-- **Effets optionnels (`optIn`)** : choix du joueur, non auto-appliqués. Ex. réduction « garde
-  rapproché » de Djouked, **exclusive** avec un Larbin gratuit (budget partagé « Fille de Nyx »,
-  max 2/FdL). L'UI doit proposer le choix et résoudre le budget partagé.
+- **Garde rapproché (Fille de Nyx)** : chaque Fille de Nyx assigne **un** garde rapproché — en
+  général un **Larbin gratuit**, mais **Broutcha** peut l'assigner à **Djouked** (qui obtient alors
+  −35). Choix **exclusif**, budget partagé, **max 2 par FdL**. Deux approches UI possibles :
+  - (a) **choix explicite** du garde rapproché par chaque Fille de Nyx ;
+  - (b) **calcul automatique** (optimisation), MAIS la **cause** de chaque gratuité/réduction doit
+    rester **visible** (quel Larbin est gratuit grâce à quelle Fille de Nyx ; pourquoi Djouked est réduit).
+- **Effets optionnels (`optIn`)** plus généralement : choix du joueur, non auto-appliqués par le moteur.
 - **Effets conditionnels à la composition** (octrois de trait/compétence, modificateurs de coût)
   recalculés en continu par le moteur.
 

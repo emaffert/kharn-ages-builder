@@ -1,11 +1,13 @@
 # Khârn-Âges — Constructeur de listes
 
 Application web (PWA, local-first) de création de listes pour le jeu de figurines
-**Khârn-Âges**.
+**Khârn-Âges**. Aucune dépendance serveur : tout fonctionne dans le navigateur ;
+l'authentification et la synchronisation cloud sont prévues comme couche additive ultérieure.
 
 ## Stack
 
-React + TypeScript + Vite + Tailwind CSS. Voir [`docs/stack-technique.md`](docs/stack-technique.md).
+TypeScript + React + Vite + Tailwind CSS, validation par Zod, tests avec Vitest.
+Cible mobile : PWA installable. Voir [`docs/stack-technique.md`](docs/stack-technique.md).
 
 ## Documentation
 
@@ -13,23 +15,95 @@ React + TypeScript + Vite + Tailwind CSS. Voir [`docs/stack-technique.md`](docs/
 - [`docs/schema-donnees.md`](docs/schema-donnees.md) — modèle de données et architecture.
 - [`docs/stack-technique.md`](docs/stack-technique.md) — choix techniques.
 
-## Développement
+## Prérequis
 
-Prérequis : Node 20+ (le projet est développé sous Node 26).
+Node 20+ (le projet est développé et validé sous **Node 26**, géré par `nvm`).
+Le `Makefile` charge automatiquement la bonne version de Node ; aucune activation manuelle
+de `nvm` n'est nécessaire.
+
+## Commandes
 
 ```bash
-npm install      # installer les dépendances
-npm run dev      # serveur de développement
-npm run build    # build de production
-npm run typecheck
+make install      # installer les dépendances
+make dev          # serveur de développement (puis ouvrir l'URL locale affichée)
+make test         # lancer les tests une fois
+make test-watch   # tests en mode watch
+make build        # build de production
+make typecheck    # vérification TypeScript
+make preview      # prévisualiser le build de production
+make help         # liste des cibles
 ```
 
 ## Structure
 
 ```text
 src/
-  core/   # cœur métier (TS pur) : modèle, moteur de contraintes/effets, calcul de coût
-  data/   # catalogue JSON
-  ui/     # composants React
-  app/    # écrans + navigation
+  core/   # cœur métier (TypeScript pur, sans dépendance UI)
+    model/    # types + schémas Zod (catalogue, liste portable)
+    engine/   # validation des contraintes, résolution des effets, calcul de coût
+  data/   # catalogue (JSON) + chargement validé
+  ui/     # composants et helpers de présentation
+  app/    # écrans + état de l'éditeur
+docs/     # documentation de conception
+cards/    # images des cartes (gitignoré — copyright ; servi en dev uniquement)
 ```
+
+Règle d'or : `src/core` ne dépend de rien ; tout le reste dépend de `core`.
+
+## Données du catalogue
+
+La **source de vérité du catalogue est `src/data/catalog.fangs.json`** (faction Fang).
+Il est **validé par Zod** au chargement (`parseCatalog`). On ne l'édite pas à la main :
+on passe par l'éditeur admin, qui exporte un JSON à recommiter.
+
+Cycle de mise à jour des données :
+
+1. lancer `make dev` et ouvrir l'éditeur ;
+2. corriger les profils dans l'interface ;
+3. cliquer **Exporter JSON** ;
+4. remplacer `src/data/catalog.fangs.json` par le fichier exporté, puis commiter.
+
+## L'éditeur admin
+
+Au lancement, l'application ouvre l'éditeur de catalogue. À gauche, la liste des profils
+(recherche, indicateur ⚠ pour les profils ayant des champs à vérifier). À droite, le détail
+du profil sélectionné.
+
+Champs modifiables :
+
+- **identité** : nom, coût, niveau, faction, limitation (type + valeur), personnage, mage ;
+- **caractéristiques** : V, P, A, C, T, I, stature, PA, PV ;
+- **compétences** (depuis le dictionnaire), **traits**, **équipement de base** ;
+- **règles de carte** (texte verbatim — fait foi).
+
+Les **contraintes et effets** sont affichés en **lecture seule**, traduits en français lisible
+à côté de leur wording officiel, avec des badges (sévérité, auto-vérifiée ou simple note,
+calculé par l'éditeur ou effet en jeu, et via quelle carte spéciale). Cela permet de vérifier
+que le moteur comprend et applique correctement chaque règle.
+
+### Données à vérifier
+
+Certaines valeurs lues sur les cartes sont incertaines (échelle de stature peu lisible,
+domaines des dés de maîtrise, quelques caractéristiques). Elles sont **marquées « à vérifier »**
+(champ `unverifiedFields`), surlignées en ambre, avec un bouton **⚠** sur chaque champ pour
+basculer entre « à vérifier » et « validé ». Un compteur global est affiché.
+
+### Boutons
+
+- **Exporter JSON** : télécharge le catalogue édité.
+- **Importer** : recharge un catalogue depuis un fichier JSON (validé par Zod ; un message
+  d'erreur s'affiche si le JSON est invalide).
+- **Réinitialiser** : revient à la donnée d'origine (annule les modifications locales).
+
+Les modifications sont conservées dans le navigateur (localStorage) entre les sessions.
+
+### Aperçu des cartes (dev uniquement)
+
+En développement, le détail d'un profil affiche l'**image de la carte source** (servie par un
+middleware Vite depuis `cards/`, actif seulement avec `make dev`). Ces images ne sont jamais
+incluses dans le build de production.
+
+## Tests
+
+`make test` exécute la suite Vitest : validation du catalogue, moteur d'évaluation
+(coût, contraintes, effets), traduction des règles, et rendu de l'éditeur.

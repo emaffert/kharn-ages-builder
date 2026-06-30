@@ -2235,7 +2235,8 @@
           },
           "appliesToListBuilding": true,
           "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha.",
-          "autoEnforced": true
+          "autoEnforced": true,
+          "optIn": true
         }
       ],
       "rules": [
@@ -2250,6 +2251,9 @@
       "unverifiedFields": [
         "stature",
         "masteryDice"
+      ],
+      "notes": [
+        "Réduction « garde rapproché » : Broutcha (Fille de Nyx) peut dépenser SON allocation de garde rapproché sur Djouked (-35 Ko) au lieu de recruter un Larbin gratuit. Choix exclusif, à résoudre dans le constructeur de liste (budget partagé avec « Fille de Nyx », max 2 par Fer de Lance)."
       ]
     }
   ]

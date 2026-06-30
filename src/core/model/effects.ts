@@ -33,6 +33,8 @@ export const EffectSchema = z.object({
   operation: EffectOperationSchema,
   /** false => effet en jeu uniquement (affiché verbatim, non calculé par l'éditeur). */
   appliesToListBuilding: z.boolean(),
+  /** true => effet optionnel (choix du joueur) : NON appliqué automatiquement par le moteur. */
+  optIn: z.boolean().optional(),
   sourceText: z.string(),
   autoEnforced: z.boolean(),
 });

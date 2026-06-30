@@ -97,6 +97,7 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       break;
   }
   if (e.condition) base += ` — si ${describeSelector(e.condition, cat)}`;
+  if (e.optIn) base += " (au choix du joueur)";
   if (!e.appliesToListBuilding) base += " (effet en jeu uniquement)";
   return base;
 }

@@ -123,9 +123,11 @@ function collectEffectOccurrences(
 ): EffectOccurrence[] {
   const occurrences: EffectOccurrence[] = [];
 
-  // Effets portés par les profils présents.
+  // Effets portés par les profils présents (les effets optionnels « optIn » ne sont
+  // pas appliqués automatiquement : ils relèvent d'un choix du joueur).
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
+      if (effect.optIn) continue;
       occurrences.push({
         effect,
         ferDeLanceId: ri.ferDeLanceId,
@@ -146,6 +148,7 @@ function collectEffectOccurrences(
       const matchCount = inFdl.filter((ri) => specialCardScopeMatches(card, ri)).length;
       if (matchCount > 0) {
         for (const effect of card.effects) {
+          if (effect.optIn) continue;
           occurrences.push({ effect, ferDeLanceId: fdlId, sourceCount: matchCount });
         }
       }

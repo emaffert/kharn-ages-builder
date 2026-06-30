@@ -63,14 +63,13 @@ describe("calcul de coût", () => {
     expect(res.totalCost).toBe(295);
   });
 
-  it("Djouked coûte 35 de moins en présence de Broutcha", () => {
-    const withBroutcha = evalFang([inst("fangs-djouked-2"), inst("fangs-broutcha-2")]);
+  it("La réduction « garde rapproché » de Djouked est optionnelle (non auto-appliquée)", () => {
     const djoukedCost = (l: ReturnType<typeof evalFang>) =>
       Object.entries(l.costByInstance).find(([id]) => id.startsWith("fangs-djouked-2"))![1];
-    expect(djoukedCost(withBroutcha)).toBe(55);
-
-    const alone = evalFang([inst("fangs-djouked-2")]);
-    expect(djoukedCost(alone)).toBe(90);
+    // Même en présence de Broutcha, le -35 n'est PAS appliqué d'office (choix du joueur,
+    // exclusif avec un Larbin gratuit) : Djouked reste à 90.
+    expect(djoukedCost(evalFang([inst("fangs-djouked-2"), inst("fangs-broutcha-2")]))).toBe(90);
+    expect(djoukedCost(evalFang([inst("fangs-djouked-2")]))).toBe(90);
   });
 
   it("Exécuteur II paye 10 de moins son arbalète de poing", () => {

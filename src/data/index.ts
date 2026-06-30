@@ -1,17 +1,16 @@
 /**
- * Catalogue de données. Pour l'instant : faction Fang (fixture de référence).
+ * Catalogue de données. Source de vérité : `catalog.fangs.json` (round-trip avec l'éditeur admin).
+ * Le JSON est validé par Zod au chargement (`parseCatalog`).
  * Référence : docs/schema-donnees.md.
- *
- * Le catalogue est typé `Catalog` à la compilation. `loadCatalog()` rejoue en plus
- * la validation Zod au runtime (utile quand la donnée viendra de JSON / de l'éditeur admin).
  */
 
 import { parseCatalog, type Catalog } from "@core";
-import { fangsCatalog } from "./fangs";
+import catalogJson from "./catalog.fangs.json";
 
-export { fangsCatalog };
+/** Catalogue Fang, chargé depuis le JSON canonique et validé. */
+export const fangsCatalog: Catalog = parseCatalog(catalogJson);
 
-/** Catalogue actif de l'application (validé au runtime). */
+/** Retourne le catalogue actif de l'application. */
 export function loadCatalog(): Catalog {
-  return parseCatalog(fangsCatalog);
+  return fangsCatalog;
 }

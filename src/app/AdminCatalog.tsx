@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { Catalog, Constraint, Effect, Level, Limitation, Profile, RuleText, SkillRef } from "@core";
 import { describeConstraint, describeEffect, specialCardsForProfile } from "@ui/explain";
 import { useCatalogStore, type FieldValue } from "./useCatalogStore";
@@ -518,6 +518,15 @@ export function AdminCatalog() {
   const { catalog } = store;
   const [selectedId, setSelectedId] = useState(catalog.profiles[0]?.id ?? "");
   const [query, setQuery] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const err = store.importJson(await file.text());
+    if (err) alert(`Import impossible : ${err}`);
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -545,12 +554,25 @@ export function AdminCatalog() {
               Exporter JSON
             </button>
             <button
+              onClick={() => fileRef.current?.click()}
+              className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-600"
+            >
+              Importer
+            </button>
+            <button
               onClick={store.reset}
               disabled={!store.dirty}
               className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-600 disabled:opacity-40"
             >
               Réinitialiser
             </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={onImport}
+              className="hidden"
+            />
           </div>
           <p className="text-xs text-slate-500">
             {filtered.length} profil(s) · {store.unverifiedCount} champ(s) ⚠

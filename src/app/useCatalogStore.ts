@@ -85,6 +85,20 @@ export function useCatalogStore() {
     setDirty(false);
   }, []);
 
+  /** Charge un catalogue depuis du JSON (validé). Retourne un message d'erreur, ou null si OK. */
+  const importJson = useCallback(
+    (text: string): string | null => {
+      try {
+        const next = parseCatalog(JSON.parse(text));
+        apply(() => next);
+        return null;
+      } catch (e) {
+        return e instanceof Error ? e.message : "JSON invalide";
+      }
+    },
+    [apply],
+  );
+
   const exportJson = useCallback(() => {
     const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -109,5 +123,6 @@ export function useCatalogStore() {
     toggleUnverified,
     reset,
     exportJson,
+    importJson,
   };
 }

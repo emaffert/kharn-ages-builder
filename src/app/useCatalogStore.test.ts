@@ -48,6 +48,26 @@ describe("useCatalogStore", () => {
     ]);
   });
 
+  it("importe un catalogue JSON valide (round-trip)", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    const json = JSON.stringify({ ...result.current.catalog, version: "importe" });
+    let err: string | null = "non exécuté";
+    act(() => {
+      err = result.current.importJson(json);
+    });
+    expect(err).toBeNull();
+    expect(result.current.catalog.version).toBe("importe");
+  });
+
+  it("rejette un JSON invalide à l'import", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    let err: string | null = null;
+    act(() => {
+      err = result.current.importJson("{ ceci n'est pas du json");
+    });
+    expect(err).not.toBeNull();
+  });
+
   it("réinitialise les modifications locales", () => {
     const { result } = renderHook(() => useCatalogStore());
     const id = result.current.catalog.profiles[0]!.id;

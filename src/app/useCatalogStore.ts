@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { parseCatalog, type Catalog, type Equipment, type Profile } from "@core";
+import { parseCatalog, type Catalog, type Equipment, type Profile, type Skill } from "@core";
 import { loadCatalog } from "@data";
 
 const STORAGE_KEY = "kharn-admin-catalog-v1";
@@ -93,6 +93,26 @@ export function useCatalogStore() {
     [apply],
   );
 
+  const updateSkill = useCallback(
+    (id: string, patch: Partial<Skill>) =>
+      apply((c) => ({ ...c, skills: c.skills.map((s) => (s.id === id ? { ...s, ...patch } : s)) })),
+    [apply],
+  );
+
+  const addSkill = useCallback((): string => {
+    const id = `skill-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      skills: [...c.skills, { id, keyword: "Nouvelle compétence", hasValue: false, sourceText: "" }],
+    }));
+    return id;
+  }, [apply]);
+
+  const removeSkill = useCallback(
+    (id: string) => apply((c) => ({ ...c, skills: c.skills.filter((s) => s.id !== id) })),
+    [apply],
+  );
+
   const toggleUnverified = useCallback(
     (id: string, key: string) =>
       apply((c) =>
@@ -177,6 +197,9 @@ export function useCatalogStore() {
     updateEquipment,
     addEquipment,
     removeEquipment,
+    updateSkill,
+    addSkill,
+    removeSkill,
     toggleUnverified,
     reset,
     exportJson,

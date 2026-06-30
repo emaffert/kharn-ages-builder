@@ -8,6 +8,7 @@ import type {
   Limitation,
   Profile,
   RuleText,
+  Skill,
   SkillRef,
 } from "@core";
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
@@ -914,12 +915,68 @@ function EquipmentDetail({
   );
 }
 
+function SkillCatalogDetail({
+  skill: s,
+  onChange,
+  onRemove,
+}: {
+  skill: Skill;
+  onChange: (patch: Partial<Skill>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <header className="flex items-center gap-3">
+        <input
+          value={s.keyword}
+          onChange={(e) => onChange({ keyword: e.target.value })}
+          className="flex-1 rounded bg-slate-800 px-2 py-1 text-2xl font-bold text-slate-50 outline-none ring-1 ring-transparent focus:ring-amber-600"
+        />
+        <button
+          type="button"
+          onClick={onRemove}
+          title="Supprimer cette compétence"
+          className="text-slate-500 hover:text-red-400"
+        >
+          ✕
+        </button>
+      </header>
+      <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
+        <span className="text-slate-500">
+          id : <code>{s.id}</code>
+        </span>
+        <label className="flex items-center gap-1">
+          <input type="checkbox" checked={s.hasValue} onChange={(e) => onChange({ hasValue: e.target.checked })} />
+          a une valeur (X)
+        </label>
+        <label className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={s.obligatory ?? false}
+            onChange={(e) => onChange({ obligatory: e.target.checked || undefined })}
+          />
+          obligatoire
+        </label>
+      </div>
+      <Section title="Description">
+        <textarea
+          value={s.sourceText}
+          rows={3}
+          onChange={(e) => onChange({ sourceText: e.target.value })}
+          className={`${INPUT} w-full`}
+        />
+      </Section>
+    </div>
+  );
+}
+
 export function AdminCatalog() {
   const store = useCatalogStore();
   const { catalog } = store;
-  const [view, setView] = useState<"profiles" | "equipment">("profiles");
+  const [view, setView] = useState<"profiles" | "equipment" | "skills">("profiles");
   const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
   const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
+  const [selectedSkillId, setSelectedSkillId] = useState(catalog.skills[0]?.id ?? "");
   const [query, setQuery] = useState("");
   const [zoom, setZoom] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -947,8 +1004,17 @@ export function AdminCatalog() {
     [catalog, q],
   );
 
+  const filteredSkills = useMemo(
+    () =>
+      [...catalog.skills]
+        .filter((s) => !q || s.keyword.toLowerCase().includes(q))
+        .sort((a, b) => a.keyword.localeCompare(b.keyword)),
+    [catalog, q],
+  );
+
   const selectedProfile = catalog.profiles.find((p) => p.id === selectedProfileId);
   const selectedEquip = catalog.equipment.find((e) => e.id === selectedEquipId);
+  const selectedSkill = catalog.skills.find((s) => s.id === selectedSkillId);
 
   const tabClass = (active: boolean) =>
     `flex-1 rounded px-2 py-1 text-xs font-medium ${
@@ -970,6 +1036,9 @@ export function AdminCatalog() {
             </button>
             <button onClick={() => setView("equipment")} className={tabClass(view === "equipment")}>
               Équipement
+            </button>
+            <button onClick={() => setView("skills")} className={tabClass(view === "skills")}>
+              Compétences
             </button>
           </div>
           <input
@@ -1015,9 +1084,10 @@ export function AdminCatalog() {
             />
           </div>
           <p className="text-xs text-slate-500">
-            {view === "profiles"
-              ? `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`
-              : `${filteredEquipment.length} équipement(s)`}
+            {view === "profiles" &&
+              `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`}
+            {view === "equipment" && `${filteredEquipment.length} équipement(s)`}
+            {view === "skills" && `${filteredSkills.length} compétence(s)`}
             {store.dirty && <span className="text-amber-400"> · modifié</span>}
           </p>
         </div>
@@ -1061,13 +1131,33 @@ export function AdminCatalog() {
               </li>
             </>
           )}
+          {view === "skills" && (
+            <>
+              {filteredSkills.map((s) => (
+                <li key={s.id}>
+                  <button onClick={() => setSelectedSkillId(s.id)} className={itemClass(s.id === selectedSkillId)}>
+                    <span>{s.keyword}</span>
+                    {s.hasValue && <span className="text-xs text-slate-600">X</span>}
+                  </button>
+                </li>
+              ))}
+              <li className="mt-2">
+                <button
+                  onClick={() => setSelectedSkillId(store.addSkill())}
+                  className="w-full rounded border border-dashed border-slate-600 px-2 py-1.5 text-xs text-slate-400 hover:border-amber-600 hover:text-amber-300"
+                >
+                  + compétence
+                </button>
+              </li>
+            </>
+          )}
         </ul>
       </aside>
 
       <main className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-8">
-          {view === "profiles" ? (
-            selectedProfile ? (
+          {view === "profiles" &&
+            (selectedProfile ? (
               <div className="mx-auto max-w-2xl">
                 <ProfileDetail
                   profile={selectedProfile}
@@ -1079,22 +1169,38 @@ export function AdminCatalog() {
               </div>
             ) : (
               <p className="text-slate-500">Sélectionnez un profil.</p>
-            )
-          ) : selectedEquip ? (
-            <div className="mx-auto max-w-2xl">
-              <EquipmentDetail
-                equipment={selectedEquip}
-                cat={catalog}
-                onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
-                onRemove={() => {
-                  store.removeEquipment(selectedEquip.id);
-                  setSelectedEquipId(catalog.equipment.find((x) => x.id !== selectedEquip.id)?.id ?? "");
-                }}
-              />
-            </div>
-          ) : (
-            <p className="text-slate-500">Sélectionnez un équipement.</p>
-          )}
+            ))}
+          {view === "equipment" &&
+            (selectedEquip ? (
+              <div className="mx-auto max-w-2xl">
+                <EquipmentDetail
+                  equipment={selectedEquip}
+                  cat={catalog}
+                  onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
+                  onRemove={() => {
+                    store.removeEquipment(selectedEquip.id);
+                    setSelectedEquipId(catalog.equipment.find((x) => x.id !== selectedEquip.id)?.id ?? "");
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-slate-500">Sélectionnez un équipement.</p>
+            ))}
+          {view === "skills" &&
+            (selectedSkill ? (
+              <div className="mx-auto max-w-2xl">
+                <SkillCatalogDetail
+                  skill={selectedSkill}
+                  onChange={(patch) => store.updateSkill(selectedSkill.id, patch)}
+                  onRemove={() => {
+                    store.removeSkill(selectedSkill.id);
+                    setSelectedSkillId(catalog.skills.find((x) => x.id !== selectedSkill.id)?.id ?? "");
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-slate-500">Sélectionnez une compétence.</p>
+            ))}
         </div>
 
         {view === "profiles" && import.meta.env.DEV && selectedProfile && (

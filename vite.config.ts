@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { defineConfig, type Plugin } from "vite";
+import type { Plugin } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -73,5 +74,8 @@ export default defineConfig({
       "@ui": resolve(__dirname, "src/ui"),
       "@app": resolve(__dirname, "src/app"),
     },
+  },
+  test: {
+    environment: "jsdom",
   },
 });

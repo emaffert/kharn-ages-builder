@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { Catalog, Constraint, Effect, Profile } from "@core";
-import { loadCatalog } from "@data";
 import { describeConstraint, describeEffect, specialCardsForProfile } from "@ui/explain";
+import { useCatalogStore, type FieldValue } from "./useCatalogStore";
 
 const STAT_LABELS: [keyof Profile["stats"], string][] = [
   ["v", "V"],
@@ -38,6 +38,50 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+function FlagButton({ active, onClick }: { active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={active ? "Lecture incertaine (cliquer pour valider)" : "Marquer comme « à vérifier »"}
+      className={`leading-none ${active ? "text-amber-400" : "text-slate-600 hover:text-slate-400"}`}
+    >
+      ⚠
+    </button>
+  );
+}
+
+function EditableNumber({
+  label,
+  value,
+  unverified,
+  onChange,
+  onToggle,
+}: {
+  label: string;
+  value: number | null;
+  unverified: boolean;
+  onChange: (v: FieldValue) => void;
+  onToggle: () => void;
+}) {
+  return (
+    <label
+      className={`flex items-center gap-1 rounded px-2 py-1 ${
+        unverified ? "bg-amber-950/40 ring-1 ring-amber-600/60" : "bg-slate-800"
+      }`}
+    >
+      <span className="text-xs text-slate-400">{label}</span>
+      <input
+        type="number"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+        className="w-12 bg-transparent font-semibold text-slate-100 outline-none"
+      />
+      <FlagButton active={unverified} onClick={onToggle} />
+    </label>
+  );
+}
+
 function RuleCard({
   human,
   sourceText,
@@ -58,9 +102,19 @@ function RuleCard({
   );
 }
 
-function ProfileDetail({ profile, cat }: { profile: Profile; cat: Catalog }) {
+interface DetailProps {
+  profile: Profile;
+  cat: Catalog;
+  updateField: (id: string, path: string, value: FieldValue) => void;
+  toggleUnverified: (id: string, key: string) => void;
+}
+
+function ProfileDetail({ profile, cat, updateField, toggleUnverified }: DetailProps) {
   const equipById = useMemo(() => new Map(cat.equipment.map((e) => [e.id, e])), [cat]);
   const cards = specialCardsForProfile(profile, cat);
+  const uv = (key: string) => profile.unverifiedFields?.includes(key) ?? false;
+  const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
+  const flag = (key: string) => toggleUnverified(profile.id, key);
 
   const constraints: { c: Constraint; via?: string }[] = [
     ...profile.recruitment.map((c) => ({ c })),
@@ -73,13 +127,25 @@ function ProfileDetail({ profile, cat }: { profile: Profile; cat: Catalog }) {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <div className="flex items-baseline gap-3">
-          <h2 className="text-2xl font-bold text-slate-50">{profile.name}</h2>
-          {profile.level && <Badge tone="violet">Niveau {LEVEL_LABEL[profile.level]}</Badge>}
-          <span className="ml-auto text-xl font-semibold text-amber-300">{profile.cost} Ko</span>
+      <header className="space-y-2">
+        <div className="flex items-center gap-3">
+          <input
+            value={profile.name}
+            onChange={(e) => upd("name", e.target.value)}
+            className="flex-1 rounded bg-slate-800 px-2 py-1 text-2xl font-bold text-slate-50 outline-none ring-1 ring-transparent focus:ring-amber-600"
+          />
+          <label className="flex items-center gap-1 text-amber-300">
+            <input
+              type="number"
+              value={profile.cost}
+              onChange={(e) => upd("cost", Number(e.target.value))}
+              className="w-16 rounded bg-slate-800 px-2 py-1 text-right text-xl font-semibold outline-none focus:ring-1 focus:ring-amber-600"
+            />
+            <span className="text-sm">Ko</span>
+          </label>
         </div>
         <div className="flex flex-wrap gap-1.5">
+          {profile.level && <Badge tone="violet">Niveau {LEVEL_LABEL[profile.level]}</Badge>}
           <Badge>{profile.factionId ?? "sans logo"}</Badge>
           <Badge tone="amber">
             Limitation {profile.limitation.kind}
@@ -91,26 +157,52 @@ function ProfileDetail({ profile, cat }: { profile: Profile; cat: Catalog }) {
         </div>
       </header>
 
-      <Section title="Caractéristiques">
-        <div className="flex flex-wrap gap-2 text-sm">
+      <Section title="Caractéristiques (modifiables — ⚠ = lecture à vérifier)">
+        <div className="flex flex-wrap gap-2">
           {STAT_LABELS.map(([k, label]) => (
-            <span key={label} className="rounded bg-slate-800 px-2 py-1">
-              <span className="text-slate-400">{label}</span>{" "}
-              <span className="font-semibold text-slate-100">{profile.stats[k] ?? "—"}</span>
-            </span>
+            <EditableNumber
+              key={label}
+              label={label}
+              value={profile.stats[k]}
+              unverified={uv(`stats.${k}`)}
+              onChange={(v) => upd(`stats.${k}`, v)}
+              onToggle={() => flag(`stats.${k}`)}
+            />
           ))}
-          <span className="rounded bg-slate-800 px-2 py-1">
-            <span className="text-slate-400">Stature</span>{" "}
-            <span className="font-semibold text-slate-100">{profile.stature}</span>
+          <EditableNumber
+            label="Stature"
+            value={profile.stature}
+            unverified={uv("stature")}
+            onChange={(v) => upd("stature", v ?? 0)}
+            onToggle={() => flag("stature")}
+          />
+          <EditableNumber
+            label="PA"
+            value={profile.pa}
+            unverified={uv("pa")}
+            onChange={(v) => upd("pa", v ?? 0)}
+            onToggle={() => flag("pa")}
+          />
+          <EditableNumber
+            label="PV"
+            value={profile.pv}
+            unverified={uv("pv")}
+            onChange={(v) => upd("pv", v ?? 0)}
+            onToggle={() => flag("pv")}
+          />
+        </div>
+      </Section>
+
+      <Section title="Dés de maîtrise">
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded px-2 py-1 text-sm ${
+              uv("masteryDice") ? "bg-amber-950/40 ring-1 ring-amber-600/60" : "bg-slate-800"
+            }`}
+          >
+            {profile.masteryDice.join(", ") || "—"}
           </span>
-          <span className="rounded bg-slate-800 px-2 py-1">
-            <span className="text-slate-400">PA</span>{" "}
-            <span className="font-semibold text-slate-100">{profile.pa}</span>
-          </span>
-          <span className="rounded bg-slate-800 px-2 py-1">
-            <span className="text-slate-400">PV</span>{" "}
-            <span className="font-semibold text-slate-100">{profile.pv}</span>
-          </span>
+          <FlagButton active={uv("masteryDice")} onClick={() => flag("masteryDice")} />
         </div>
       </Section>
 
@@ -220,30 +312,47 @@ function ProfileDetail({ profile, cat }: { profile: Profile; cat: Catalog }) {
 }
 
 export function AdminCatalog() {
-  const cat = useMemo(() => loadCatalog(), []);
-  const [selectedId, setSelectedId] = useState(cat.profiles[0]?.id ?? "");
+  const { catalog, dirty, unverifiedCount, updateField, toggleUnverified, reset, exportJson } =
+    useCatalogStore();
+  const [selectedId, setSelectedId] = useState(catalog.profiles[0]?.id ?? "");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return cat.profiles.filter((p) => !q || p.name.toLowerCase().includes(q));
-  }, [cat, query]);
+    return catalog.profiles.filter((p) => !q || p.name.toLowerCase().includes(q));
+  }, [catalog, query]);
 
-  const selected = cat.profiles.find((p) => p.id === selectedId);
+  const selected = catalog.profiles.find((p) => p.id === selectedId);
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100">
       <aside className="flex w-72 shrink-0 flex-col border-r border-slate-800 bg-slate-900/50">
-        <div className="border-b border-slate-800 p-3">
-          <h1 className="mb-2 text-sm font-bold text-amber-300">Khârn-Âges — Admin catalogue</h1>
+        <div className="space-y-2 border-b border-slate-800 p-3">
+          <h1 className="text-sm font-bold text-amber-300">Khârn-Âges — Admin catalogue</h1>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Rechercher un profil…"
             className="w-full rounded bg-slate-800 px-2 py-1.5 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600"
           />
-          <p className="mt-2 text-xs text-slate-500">
-            {filtered.length} profil(s) — faction Fang
+          <div className="flex gap-1.5">
+            <button
+              onClick={exportJson}
+              className="flex-1 rounded bg-amber-600/80 px-2 py-1 text-xs font-medium text-amber-50 hover:bg-amber-600"
+            >
+              Exporter JSON
+            </button>
+            <button
+              onClick={reset}
+              disabled={!dirty}
+              className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-600 disabled:opacity-40"
+            >
+              Réinitialiser
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">
+            {filtered.length} profil(s) · {unverifiedCount} champ(s) ⚠
+            {dirty && <span className="text-amber-400"> · modifié</span>}
           </p>
         </div>
         <ul className="flex-1 overflow-y-auto p-2">
@@ -259,7 +368,10 @@ export function AdminCatalog() {
                   {p.name}
                   {p.level && <span className="ml-1 text-slate-500">{LEVEL_LABEL[p.level]}</span>}
                 </span>
-                <span className="text-xs text-slate-500">{p.cost}</span>
+                <span className="flex items-center gap-1 text-xs text-slate-500">
+                  {(p.unverifiedFields?.length ?? 0) > 0 && <span className="text-amber-500">⚠</span>}
+                  {p.cost}
+                </span>
               </button>
             </li>
           ))}
@@ -269,7 +381,12 @@ export function AdminCatalog() {
       <main className="flex-1 overflow-y-auto p-8">
         {selected ? (
           <div className="mx-auto max-w-2xl">
-            <ProfileDetail profile={selected} cat={cat} />
+            <ProfileDetail
+              profile={selected}
+              cat={catalog}
+              updateField={updateField}
+              toggleUnverified={toggleUnverified}
+            />
           </div>
         ) : (
           <p className="text-slate-500">Sélectionnez un profil.</p>

@@ -1013,3 +1013,20 @@ export const fangsCatalog: Catalog = {
     },
   ],
 };
+
+// Champs dont la lecture sur la carte est incertaine (à confirmer via l'éditeur admin).
+// `stature` et les domaines de `masteryDice` sont provisoires sur TOUS les profils
+// (échelle de stature peu lisible ; domaines des dés non décodés avec certitude).
+const PROVISIONAL_STATS: Record<string, string[]> = {
+  "fangs-goulue-1": ["stats.i"],
+  "fangs-goulue-2": ["stats.i"],
+  "fangs-meneuse-1": ["stats.i"],
+  "fangs-meneuse-2": ["stats.c", "stats.t"],
+  "fangs-executeur-2": ["stats.t"],
+  "fangs-executeur-3": ["stats.t"],
+  "fangs-broutcha-2": ["stats.c", "stats.t", "stats.i"],
+  "fangs-xayin-2": ["stats.i"],
+};
+for (const profile of fangsCatalog.profiles) {
+  profile.unverifiedFields = ["stature", "masteryDice", ...(PROVISIONAL_STATS[profile.id] ?? [])];
+}

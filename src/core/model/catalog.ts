@@ -115,6 +115,8 @@ export const ProfileSchema = z.object({
   /** Code imprimé sur la carte (ex. "KAFALA1") — non unique, traçabilité seulement. */
   cardCode: z.string().optional(),
   mountEligible: z.boolean().optional(),
+  /** Champs dont la lecture sur la carte est incertaine (chemins, ex. "stature", "stats.t"). */
+  unverifiedFields: z.array(z.string()).optional(),
 });
 export type Profile = z.infer<typeof ProfileSchema>;
 

@@ -384,7 +384,7 @@ interface Effect {
 
 type EffectOperation =
   | { kind: "cost-delta"; amount: number }                              // Ogodeï : -10 sur les armes à 2 mains
-  | { kind: "cost-set"; amount: number; maxCount?: number }             // Apathée : Larbin à 0 Ko, max 2
+  | { kind: "cost-set"; amount: number; maxCount?: number }             // 1 cible/source, plafonné par maxCount (ex. Larbins gratuits)
   | { kind: "unlock-upgrade"; upgradeId: string; perItemCost: number }  // Forgeronne : amélioration « Borax »
   | { kind: "grant-skill"; skillId: string }
   | { kind: "grant-trait"; trait: string }                             // Mathys : « apatride »
@@ -404,7 +404,7 @@ interface Selector {
 Exemples (le `sourceText` porte le wording verbatim) :
 
 - **Ogodeï** — « Paye 10 [Ko] de moins les armes à deux mains » → `cost-delta -10`, `target.self`, filtre armes à 2 mains.
-- **Apathée / Fille de Nyx** — « recruter 1 Larbin sans en payer le coût (maximum 2 gratuits, sans dépasser la limitation totale de 5) » → `cost-set 0`, `maxCount 2`, cible `fangs-larbin-1`, en interaction avec sa LIM 5.
+- **Apathée / Fille de Nyx** — « recruter 1 Larbin sans en payer le coût (maximum 2 gratuits, sans dépasser la limitation totale de 5) » → `cost-set 0` **par Fille de Nyx présente** (1 chacune), `maxCount 2` comme plafond, cible `fangs-larbin-1`, en interaction avec sa LIM 5.
 - **Forgeronne / Borax** — « 5 [Ko]/arme … 10 [Ko]/armure … confèrent … aux guerriers équipés » → `unlock-upgrade`, débloqué si Forgeronne présente, ciblant les « guerriers ».
 - **Commandant** — « les guerriers khérops paient moins cher leurs armes » → `cost-delta`, cible `traits: ["guerrier-kherops"]` (wording à confirmer, carte non fournie).
 - **Mathys / Frères d'Armes** — « Dès lors qu'ils sont au moins 2 frères d'armes dans un Fer de Lance, ils gagnent tous le trait apatride » → `grant-trait "apatride"`, `condition.countAtLeast 2` sur `traits: ["frere-d-armes"]`.
@@ -469,6 +469,7 @@ interface ProfileInstance {
   };
   attachedInstanceIds?: string[];  // ex. Likans rattachés à cette Fang
   orderIds?: string[];             // ordres (Vassal/SDG, mode bataille)
+  specialCardIds?: string[];       // cartes spéciales payantes sélectionnées (ex. « Apprentie de Nyx »)
   note?: string;
 }
 ```

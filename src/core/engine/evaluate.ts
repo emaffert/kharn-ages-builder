@@ -33,11 +33,14 @@ export interface EvaluationResult {
   costByFerDeLance: Record<string, number>;
   /** Traits octroyés par effet, par instance (en plus des traits de base du profil). */
   grantedTraits: Record<string, string[]>;
+  /** Compétences octroyées par effet, par instance. */
+  grantedSkills: Record<string, string[]>;
   issues: Issue[];
 }
 
 interface CatalogIndex {
   profile: Map<string, Profile>;
+  specialCard: Map<string, SpecialCard>;
   equipmentCost: Map<string, number>;
   equipmentCategory: Map<string, string>;
   grimoireCost: Map<string, number>;
@@ -61,11 +64,14 @@ interface EffectOccurrence {
   ferDeLanceId: string;
   /** Pour les effets sourcés par un profil : l'instance source (pour `self`). */
   sourceInstanceId?: string;
+  /** Nombre de figurines à l'origine de l'effet (module les effets « par source »). */
+  sourceCount?: number;
 }
 
 function indexCatalog(cat: Catalog): CatalogIndex {
   return {
     profile: new Map(cat.profiles.map((p) => [p.id, p])),
+    specialCard: new Map(cat.specialCards.map((s) => [s.id, s])),
     equipmentCost: new Map(cat.equipment.map((e) => [e.id, e.cost])),
     equipmentCategory: new Map(cat.equipment.map((e) => [e.id, e.category])),
     grimoireCost: new Map(cat.grimoires.map((g) => [g.id, g.cost])),
@@ -113,27 +119,51 @@ function conditionHolds(
 function collectEffectOccurrences(
   resolved: ResolvedInstance[],
   cat: Catalog,
+  idx: CatalogIndex,
 ): EffectOccurrence[] {
   const occurrences: EffectOccurrence[] = [];
 
   // Effets portés par les profils présents.
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
-      occurrences.push({ effect, ferDeLanceId: ri.ferDeLanceId, sourceInstanceId: ri.instance.instanceId });
+      occurrences.push({
+        effect,
+        ferDeLanceId: ri.ferDeLanceId,
+        sourceInstanceId: ri.instance.instanceId,
+        sourceCount: 1,
+      });
     }
   }
 
-  // Effets des cartes spéciales « intrinsèques » (coût 0) dont la portée correspond
-  // à un profil présent dans un Fer de Lance.
+  // Effets des cartes spéciales « intrinsèques » (coût 0). Le nombre de figurines
+  // concernées (`sourceCount`) module les effets « par source »
+  // (ex. 1 Larbin gratuit PAR Fille de Nyx, plafonné à 2).
   const fdlIds = [...new Set(resolved.map((ri) => ri.ferDeLanceId))];
   for (const card of cat.specialCards) {
-    if (card.cost !== 0) continue; // les cartes payantes sont opt-in (non encore modélisées)
+    if (card.cost !== 0) continue;
     for (const fdlId of fdlIds) {
       const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdlId);
-      if (inFdl.some((ri) => specialCardScopeMatches(card, ri))) {
+      const matchCount = inFdl.filter((ri) => specialCardScopeMatches(card, ri)).length;
+      if (matchCount > 0) {
         for (const effect of card.effects) {
-          occurrences.push({ effect, ferDeLanceId: fdlId });
+          occurrences.push({ effect, ferDeLanceId: fdlId, sourceCount: matchCount });
         }
+      }
+    }
+  }
+
+  // Effets des cartes spéciales « payantes » sélectionnées par une instance.
+  for (const ri of resolved) {
+    for (const cardId of ri.instance.specialCardIds ?? []) {
+      const card = idx.specialCard.get(cardId);
+      if (!card) continue;
+      for (const effect of card.effects) {
+        occurrences.push({
+          effect,
+          ferDeLanceId: ri.ferDeLanceId,
+          sourceInstanceId: ri.instance.instanceId,
+          sourceCount: 1,
+        });
       }
     }
   }
@@ -199,6 +229,7 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex): number {
     for (const id of inst.mount.optionIds) cost += idx.mountOptionCost.get(id) ?? 0;
   }
   for (const id of inst.orderIds ?? []) cost += idx.orderCost.get(id) ?? 0;
+  for (const id of inst.specialCardIds ?? []) cost += idx.specialCard.get(id)?.cost ?? 0;
   return cost;
 }
 
@@ -239,8 +270,10 @@ function computeCosts(
     const matches = resolveTargets(occ, resolved)
       .slice()
       .sort((a, b) => (cost.get(b.instance.instanceId) ?? 0) - (cost.get(a.instance.instanceId) ?? 0));
-    const limit = op.maxCount ?? matches.length;
-    for (const ri of matches.slice(0, limit)) {
+    // « par source » : 1 cible par figurine source (sourceCount), plafonnée par maxCount.
+    const cap = op.maxCount ?? matches.length;
+    const freed = Math.min(cap, occ.sourceCount ?? matches.length, matches.length);
+    for (const ri of matches.slice(0, freed)) {
       cost.set(ri.instance.instanceId, op.amount);
     }
   }
@@ -286,8 +319,35 @@ function validate(
   validateForbiddenEquipment(cat, resolved, idx, issues);
   validateRequiresPresent(cat, resolved, issues);
   validateAttachments(cat, list, resolved, issues);
+  validateSpecialCardScope(idx, resolved, issues);
 
   return issues;
+}
+
+function validateSpecialCardScope(
+  idx: CatalogIndex,
+  resolved: ResolvedInstance[],
+  issues: Issue[],
+): void {
+  for (const ri of resolved) {
+    for (const cardId of ri.instance.specialCardIds ?? []) {
+      const card = idx.specialCard.get(cardId);
+      if (!card) continue;
+      const matches =
+        (card.scope.profileIds?.includes(ri.profile.id) ?? false) ||
+        (card.scope.trait ? ri.traits.has(card.scope.trait) : false);
+      if (!matches) {
+        issues.push({
+          severity: "error",
+          ferDeLanceId: ri.ferDeLanceId,
+          instanceId: ri.instance.instanceId,
+          ruleId: `special-card-scope:${cardId}`,
+          message: `La carte « ${card.name} » ne peut pas être attribuée à « ${ri.profile.name} ».`,
+          sourceText: `Réservée à ${card.scope.trait ?? "des profils spécifiques"}.`,
+        });
+      }
+    }
+  }
 }
 
 function validateLimitations(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
@@ -476,7 +536,7 @@ function validateAttachments(
 export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult {
   const idx = indexCatalog(cat);
   const resolved = buildResolved(list, idx);
-  const occurrences = collectEffectOccurrences(resolved, cat);
+  const occurrences = collectEffectOccurrences(resolved, cat, idx);
 
   applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe
   const cost = computeCosts(resolved, occurrences, idx); // 4 : coûts
@@ -492,11 +552,13 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const totalCost = Object.values(costByInstance).reduce((s, c) => s + c, 0);
 
   const grantedTraits: Record<string, string[]> = {};
+  const grantedSkills: Record<string, string[]> = {};
   for (const ri of resolved) {
     const base = new Set(ri.profile.traits);
     const granted = [...ri.traits].filter((t) => !base.has(t));
     if (granted.length > 0) grantedTraits[ri.instance.instanceId] = granted;
+    if (ri.grantedSkills.size > 0) grantedSkills[ri.instance.instanceId] = [...ri.grantedSkills];
   }
 
-  return { totalCost, costByInstance, costByFerDeLance, grantedTraits, issues };
+  return { totalCost, costByInstance, costByFerDeLance, grantedTraits, grantedSkills, issues };
 }

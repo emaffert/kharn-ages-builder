@@ -6,8 +6,8 @@ describe("catalogue Fang", () => {
     expect(() => loadCatalog()).not.toThrow();
   });
 
-  it("contient les 21 profils transcrits", () => {
-    expect(fangsCatalog.profiles).toHaveLength(21);
+  it("contient les 20 profils transcrits", () => {
+    expect(fangsCatalog.profiles).toHaveLength(20);
   });
 
   it("a des identifiants de profil uniques", () => {

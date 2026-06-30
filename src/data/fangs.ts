@@ -16,10 +16,7 @@ export const fangsCatalog: Catalog = {
   version: "0.1.0-fangs",
   rulesVersion: "FAQ 2026-01",
 
-  factions: [
-    { id: "fangs", name: "Fangs", logo: "fangs" },
-    { id: "guilde-noire", name: "Guilde Noire", logo: "guilde-noire" },
-  ],
+  factions: [{ id: "fangs", name: "Fangs", logo: "fangs" }],
 
   magicWays: [
     {
@@ -53,9 +50,6 @@ export const fangsCatalog: Catalog = {
     { id: "maitre", keyword: "Maître", hasValue: true, sourceText: "Peut relancer gratuitement tout ou partie d'un jet une fois par tour lors des actions du domaine X." },
     { id: "receptif", keyword: "Réceptif", hasValue: true, obligatory: true, sourceText: "Les sorts de la voie de magie X sont automatiquement réussis lorsqu'ils ciblent ce guerrier." },
     { id: "immunise-effroi-terreur", keyword: "Immunisé à l'effroi et à la terreur", hasValue: false, sourceText: "N'effectue jamais de test d'effroi ni de témérité ; insensible à la terreur et à l'effroi." },
-    { id: "allie-des-fangs", keyword: "Allié des Fangs", hasValue: false, sourceText: "Peut être recruté au sein d'un Fer de Lance fang ou de sa faction d'origine." },
-    { id: "cape-d-ombre", keyword: "Cape d'ombre", hasValue: false, sourceText: "Compétence de carte (Voleur de la Guilde)." },
-    { id: "rossignol", keyword: "Rossignol", hasValue: false, sourceText: "Compétence de carte (Voleur de la Guilde) : crochetage facilité." },
   ],
 
   models: [
@@ -71,7 +65,6 @@ export const fangsCatalog: Catalog = {
     { id: "xayin", name: "Xayìn", factionId: "fangs", profileIds: ["fangs-xayin-2"] },
     { id: "muskh", name: "Muskh", factionId: "fangs", profileIds: ["fangs-muskh-1"] },
     { id: "djouked", name: "Djouked", factionId: "fangs", profileIds: ["fangs-djouked-2"] },
-    { id: "voleur-guilde", name: "Voleur de la Guilde", factionId: "guilde-noire", profileIds: ["guilde-voleur-1"] },
   ],
 
   equipment: [
@@ -152,14 +145,6 @@ export const fangsCatalog: Catalog = {
       cost: 0,
       hands: 1,
       effectsText: "Arme de tir entraînant plusieurs jets de défense (voir FAQ).",
-      restrictions: [],
-    },
-    {
-      id: "ombre",
-      name: "Ombre",
-      category: "objet",
-      cost: 20,
-      effectsText: "Équipement du Voleur de la Guilde.",
       restrictions: [],
     },
   ],
@@ -1025,49 +1010,6 @@ export const fangsCatalog: Catalog = {
       ],
       cardImage: "cards/fangs-djouked-3.jpg",
       cardCode: "KAFADI1",
-    },
-
-    {
-      id: "guilde-voleur-1",
-      modelId: "voleur-guilde",
-      name: "Voleur de la Guilde",
-      level: 1,
-      factionId: "guilde-noire",
-      cost: 100,
-      limitation: { kind: "X", value: 2 },
-      stats: { v: 4, p: 2, a: 6, c: 3, t: 3, i: 5 },
-      stature: 2,
-      pa: 8,
-      pv: 21,
-      skills: [
-        { skillId: "allie-des-fangs" },
-        { skillId: "morsure" },
-        { skillId: "endurance" },
-        { skillId: "independant" },
-        { skillId: "instinct-de-survie" },
-        { skillId: "bond", value: 3 },
-        { skillId: "cape-d-ombre" },
-        { skillId: "rossignol" },
-      ],
-      baseEquipmentIds: ["ombre"],
-      masteryDice: ["objectif"],
-      traits: ["allie-des-fangs"],
-      recruitment: [
-        {
-          id: "voleur-allie-fangs",
-          type: "faction-membership",
-          params: { allowedFactions: ["guilde-noire", "fangs"] },
-          scope: "fer-de-lance",
-          sourceText: "Allié des Fangs.",
-          severity: "error",
-          autoEnforced: true,
-        },
-      ],
-      rules: [
-        { text: "Génère son propre marqueur d'activation en mode Bataille." },
-      ],
-      cardImage: "cards/fangs-djouked-3.jpg",
-      cardCode: "KAGNV01",
     },
   ],
 };

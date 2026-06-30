@@ -46,13 +46,21 @@ describe("calcul de coût", () => {
     expect(res.issues.filter((i) => i.severity === "error")).toEqual([]);
   });
 
-  it("Apathée rend gratuits jusqu'à 2 Larbins (Fille de Nyx)", () => {
+  it("une Fille de Nyx rend gratuit 1 seul Larbin", () => {
     const larbins = [inst("fangs-larbin-1"), inst("fangs-larbin-1"), inst("fangs-larbin-1")];
     const res = evalFang([inst("fangs-apathee-3"), ...larbins]);
-    // 140 (Apathée) + 2 Larbins à 0 + 1 Larbin à 35 = 175
-    expect(res.totalCost).toBe(175);
-    const free = Object.values(res.costByInstance).filter((c) => c === 0).length;
-    expect(free).toBe(2);
+    // 140 (Apathée) + 1 Larbin à 0 + 2 Larbins à 35 = 210
+    expect(res.totalCost).toBe(210);
+    expect(Object.values(res.costByInstance).filter((c) => c === 0)).toHaveLength(1);
+  });
+
+  it("deux Filles de Nyx rendent gratuits 2 Larbins (plafond)", () => {
+    const larbins = [inst("fangs-larbin-1"), inst("fangs-larbin-1"), inst("fangs-larbin-1")];
+    // Apathée + Broutcha sont toutes deux « Fille de Nyx »
+    const res = evalFang([inst("fangs-apathee-3"), inst("fangs-broutcha-2"), ...larbins]);
+    expect(Object.values(res.costByInstance).filter((c) => c === 0)).toHaveLength(2);
+    // 140 + 120 + 0 + 0 + 35 = 295
+    expect(res.totalCost).toBe(295);
   });
 
   it("Djouked coûte 35 de moins en présence de Broutcha", () => {
@@ -114,8 +122,18 @@ describe("validation des contraintes", () => {
     expect(tooMany.issues.some((i) => i.ruleId === "likan-attachment")).toBe(true);
   });
 
-  it("Voleur de la Guilde (Allié des Fangs) est recrutable en Fer de Lance fang", () => {
-    const res = evalFang([inst("guilde-voleur-1")]);
-    expect(res.issues.some((i) => i.ruleId?.startsWith("faction:"))).toBe(false);
+});
+
+describe("cartes spéciales payantes", () => {
+  it("« Apprentie de Nyx » coûte 15 Ko et octroie l'ostéomancie à la Goulue", () => {
+    const goulue = inst("fangs-goulue-1", { specialCardIds: ["apprentie-de-nyx"] });
+    const res = evalFang([goulue]);
+    expect(res.totalCost).toBe(60); // 45 + 15
+    expect(res.grantedSkills[goulue.instanceId]).toContain("osteomancie");
+  });
+
+  it("« Apprentie de Nyx » ne peut pas être attribuée à un non-Goulue", () => {
+    const res = evalFang([inst("fangs-larbin-1", { specialCardIds: ["apprentie-de-nyx"] })]);
+    expect(res.issues.some((i) => i.ruleId === "special-card-scope:apprentie-de-nyx")).toBe(true);
   });
 });

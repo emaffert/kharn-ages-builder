@@ -16,6 +16,8 @@ export const ProfileInstanceSchema = z.object({
   /** Instances rattachées (ex. Likans liés à cette Fang). */
   attachedInstanceIds: z.array(z.string()).optional(),
   orderIds: z.array(z.string()).optional(),
+  /** Cartes spéciales payantes sélectionnées (opt-in), ex. « Apprentie de Nyx ». */
+  specialCardIds: z.array(z.string()).optional(),
   note: z.string().optional(),
 });
 export type ProfileInstance = z.infer<typeof ProfileInstanceSchema>;

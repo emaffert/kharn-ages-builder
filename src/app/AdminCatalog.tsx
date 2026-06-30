@@ -200,6 +200,20 @@ function ProfileDetail({ profile, cat }: { profile: Profile; cat: Catalog }) {
         </ul>
       </Section>
 
+      {import.meta.env.DEV && (
+        <Section title="Carte (aperçu — dev uniquement)">
+          <img
+            src={`/${profile.cardImage}`}
+            alt={`Carte de ${profile.name}`}
+            loading="lazy"
+            className="max-h-[460px] w-auto rounded border border-slate-700"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        </Section>
+      )}
+
       <p className="text-xs text-slate-600">Carte : {profile.cardImage}</p>
     </div>
   );

@@ -10,133 +10,10 @@
   ],
   "skills": [
     {
-      "id": "morsure",
-      "keyword": "Morsure",
-      "hasValue": false,
-      "sourceText": "Attaque spéciale : 2 PA / ZDC / 1 fois par activation / 2 caractéristiques + ND10. Inflige 1D5 dégâts et provoque un test de témérité (seuil 10). Saignement 2 en cas de RC."
-    },
-    {
-      "id": "le-sang-m-attire",
-      "keyword": "Le sang m'attire",
+      "id": "affinite",
+      "keyword": "Affinité",
       "hasValue": true,
-      "obligatory": true,
-      "sourceText": "+ X en attaque contre une cible affligée de saignement (effet non cumulable)."
-    },
-    {
-      "id": "endurance",
-      "keyword": "Endurance",
-      "hasValue": false,
-      "sourceText": "Lors de chaque activation, les 2 premières actions de mouvement après le déplacement gratuit ne coûtent qu'1 PA."
-    },
-    {
-      "id": "harcelement",
-      "keyword": "Harcèlement",
-      "hasValue": false,
-      "sourceText": "Une fois par activation, bénéficie gratuitement de l'effet de V pour l'une de ses attaques réussies, en addition des autres effets."
-    },
-    {
-      "id": "osteomancie",
-      "keyword": "Ostéomancie",
-      "hasValue": false,
-      "sourceText": "Voie de magie des Fangs : le magicien maîtrise l'ostéomancie."
-    },
-    {
-      "id": "embuscade",
-      "keyword": "Embuscade",
-      "hasValue": false,
-      "sourceText": "Peut se déployer n'importe où sur la surface de jeu. N'est pris en compte qu'à sa première action ; peut se révéler en interruption pour une unique action offensive."
-    },
-    {
-      "id": "instinct-de-survie",
-      "keyword": "Instinct de survie",
-      "hasValue": false,
-      "sourceText": "Lors d'une défense réussie, peut utiliser l'effet de V en plus, quel que soit le nombre de PA engagés."
-    },
-    {
-      "id": "heroique",
-      "keyword": "Héroïque",
-      "hasValue": true,
-      "sourceText": "Peut gratuitement lancer un dé de plus que son niveau lors des actions du domaine « X »."
-    },
-    {
-      "id": "rusee",
-      "keyword": "Rusé",
-      "hasValue": false,
-      "sourceText": "Peut dépenser 1 PA supplémentaire après son jet de défense pour s'ajouter un dé ou la valeur d'une caractéristique (max 2 identiques)."
-    },
-    {
-      "id": "sadique",
-      "keyword": "Sadique",
-      "hasValue": true,
-      "sourceText": "Peut dépenser X PA en plus d'une attaque non défendue pour ajouter X dégâts (après le jet de défense, avant le jet d'armure)."
-    },
-    {
-      "id": "ambidextre",
-      "keyword": "Ambidextre",
-      "hasValue": false,
-      "sourceText": "Permet d'attaquer avec deux armes à une main lors d'une même action (voir FAQ)."
-    },
-    {
-      "id": "brutalite",
-      "keyword": "Brutalité",
-      "hasValue": true,
-      "sourceText": "Ajoute X dégâts supplémentaires à chaque utilisation de l'effet de P."
-    },
-    {
-      "id": "sauvage",
-      "keyword": "Sauvage",
-      "hasValue": false,
-      "sourceText": "Ne peut pas gérer d'objectif de scénario, mais bénéficie toujours du bonus de charge (pas seulement à la première attaque)."
-    },
-    {
-      "id": "executeur",
-      "keyword": "Exécuteur",
-      "hasValue": false,
-      "sourceText": "Peut ajouter 1D10 dégâts lors d'une attaque à 3 PA, une fois par activation."
-    },
-    {
-      "id": "independant",
-      "keyword": "Indépendant",
-      "hasValue": false,
-      "sourceText": "N'est pas désorienté loin de ses alliés : récupère l'intégralité de ses PA même loin de son Seigneur de guerre ou Vassal."
-    },
-    {
-      "id": "bond",
-      "keyword": "Bond",
-      "hasValue": true,
-      "sourceText": "Peut enjamber des obstacles de X toises de haut/long ou des Safars de stature ≤ X."
-    },
-    {
-      "id": "en-eveil",
-      "keyword": "En éveil",
-      "hasValue": false,
-      "obligatory": true,
-      "sourceText": "Ajoute toujours une fois son I à ses jets de défense contre la magie."
-    },
-    {
-      "id": "autorite",
-      "keyword": "Autorité",
-      "hasValue": true,
-      "sourceText": "Peut dépenser ses dés de maîtrise à la place de ses alliés tant que les domaines sont respectés."
-    },
-    {
-      "id": "maitre",
-      "keyword": "Maître",
-      "hasValue": true,
-      "sourceText": "Peut relancer gratuitement tout ou partie d'un jet une fois par tour lors des actions du domaine X."
-    },
-    {
-      "id": "receptif",
-      "keyword": "Réceptif",
-      "hasValue": true,
-      "obligatory": true,
-      "sourceText": "Les sorts de la voie de magie X sont automatiquement réussis lorsqu'ils ciblent ce guerrier."
-    },
-    {
-      "id": "immunise-effroi-terreur",
-      "keyword": "Immunisé à l'effroi et à la terreur",
-      "hasValue": false,
-      "sourceText": "N'effectue jamais de test d'effroi ni de témérité ; insensible à la terreur et à l'effroi."
+      "sourceText": "Le magicien peut mettre dans son grimoire des sorts réservés normalement à la faction X."
     },
     {
       "id": "aliene",
@@ -145,16 +22,119 @@
       "sourceText": "La compétence « aliéné X » définit les Aliénés sur leur carte de profil, où X est le « Maître » auquel elles sont liées. Une figurine aliénée n'effectue jamais de test de témérité ni d'effroi."
     },
     {
-      "id": "seigneur-de-guerre",
-      "keyword": "Seigneur de guerre",
+      "id": "allonge",
+      "keyword": "Allonge",
       "hasValue": true,
-      "sourceText": "Présent sur le champ de bataille et leader de l'Ost, génère autant de marqueurs d'activation que sa valeur (dont un réservé)."
+      "sourceText": "Le combattant doté de cette compétence peut réaliser toutes les actions à une distance X. Si cette compétence est dans le descriptif d'une arme de corps à corps, le combattant qui en est équipé peut effectuer des attaques et des défenses en infligeant des dégâts et des effets jusqu'à une distance de X."
+    },
+    {
+      "id": "ambidextre",
+      "keyword": "Ambidextre",
+      "hasValue": false,
+      "sourceText": "Permet d'attaquer avec deux armes à une main lors d'une même action (voir FAQ)."
+    },
+    {
+      "id": "archimage",
+      "keyword": "Archimage",
+      "hasValue": false,
+      "sourceText": "Maîtrise toutes les formes de magie, peut choisir parmi tous les sorts disponibles."
+    },
+    {
+      "id": "autorite",
+      "keyword": "Autorité",
+      "hasValue": true,
+      "sourceText": "Un Safar (non terrorisé ou effrayé) possédant « autorité » peut dépenser ses dés de maîtrise à la place de ses alliés tant que les domaines de maîtrise sont respectés."
+    },
+    {
+      "id": "berserk",
+      "keyword": "Berserk",
+      "hasValue": true,
+      "sourceText": "Cet état est déclenché dès que la condition « X » est respectée. Une figurine dans cet état ajoute toujours sa P à ses jets de dégâts et gagne la compétence « endurance ». En contrepartie, elle ne peut pas dépenser de PA en défense, et attaque systématiquement la figurine la plus proche dans sa ligne de vue, amie comme ennemie. « Sonner » ou « assommer » une figurine en état « berserk » met fin à l'effet."
+    },
+    {
+      "id": "bond",
+      "keyword": "Bond",
+      "hasValue": true,
+      "sourceText": "Un Safar doté de cette compétence peut enjamber des obstacles de X toises de haut ou de long ou des Safars de stature inférieure ou égale à X."
+    },
+    {
+      "id": "bretteur",
+      "keyword": "Bretteur",
+      "hasValue": true,
+      "sourceText": "Peut obliger un adversaire dans sa ZDC à relancer X dés d'un jet d'attaque ou de défense au corps à corps, une fois par tour."
+    },
+    {
+      "id": "brutalite",
+      "keyword": "Brutalité",
+      "hasValue": true,
+      "sourceText": "Le Safar ajoute X dégâts supplémentaires à chaque fois qu'il utilise l'effet de P."
+    },
+    {
+      "id": "carnivore",
+      "keyword": "Carnivore",
+      "hasValue": false,
+      "sourceText": "Permet d'utiliser l'action « dévorer ». Tous les combattants khârns et fangs sont par nature « carnivores », ce n'est pas écrit sur leur carte de profil, mais c'est un fait."
+    },
+    {
+      "id": "charge-brutale",
+      "keyword": "Charge brutale",
+      "hasValue": true,
+      "sourceText": "Lors d'un assaut, la figurine gagne X toises sur le mouvement qui l'amènera au contact de son adversaire."
+    },
+    {
+      "id": "chef-de-guerre",
+      "keyword": "Chef de guerre",
+      "hasValue": true,
+      "sourceText": "Au début de l'un des tours, au choix du joueur, un Chef de guerre gagne 1 PA par allié présent dans son aura, dans la limite de X."
+    },
+    {
+      "id": "corpulent",
+      "keyword": "Corpulent",
+      "hasValue": false,
+      "sourceText": "Une figurine « corpulente » a plus de difficulté à effectuer des déplacements explosifs : elle devra utiliser deux fois l'effet de V en attaque ou en défense pour se déplacer de la moitié de son mouvement (non arrondie) ; avec un seul effet de V elle ne se déplace que de 0.5 toise. Elle n'est pas impactée par les terrains meubles, glissants et difficiles. Toutes les figurines « Tembo » sont automatiquement corpulentes."
+    },
+    {
+      "id": "eclaireur",
+      "keyword": "Éclaireur",
+      "hasValue": true,
+      "sourceText": "Le Safar peut être déployé à X toises en dehors de sa zone de déploiement, à moins que le scénario n'interdise le déploiement des éclaireurs, auquel cas il est déployé normalement."
     },
     {
       "id": "effroi",
       "keyword": "Effroi",
       "hasValue": true,
       "sourceText": "Provoque un test d'effroi (T + I + 1D10 ≥ valeur) chez la figurine qui interagit avec elle au corps à corps."
+    },
+    {
+      "id": "embuscade",
+      "keyword": "Embuscade",
+      "hasValue": false,
+      "sourceText": "Un Safar doté de la compétence « embuscade » peut se déployer n'importe où sur la surface de jeu sans tenir compte des impositions du scénario. La carte de cette figurine n'est prise en compte qu'à la première action qu'elle réalise. Si un Safar ennemi entre dans la zone de déploiement d'un embusqué, il peut se révéler en interruption pour réaliser une unique action offensive pendant l'activation adverse, puis s'activer normalement durant le tour ; sinon il s'active normalement quand le joueur le décide."
+    },
+    {
+      "id": "empathie",
+      "keyword": "Empathie",
+      "hasValue": false,
+      "sourceText": "Un combattant ou une Monture dotée de cette compétence permettra d'ajouter sa stature à celle de son partenaire en toute circonstance (RC, charge, etc.)."
+    },
+    {
+      "id": "en-eveil",
+      "keyword": "En éveil",
+      "hasValue": false,
+      "obligatory": true,
+      "sourceText": "Un Safar doté de cette compétence ajoute toujours une fois son I à ses jets de défense contre la magie."
+    },
+    {
+      "id": "endurance",
+      "keyword": "Endurance",
+      "hasValue": false,
+      "sourceText": "Lors de chaque activation, les 2 premières actions de mouvement (quels que soient ces mouvements) après le déplacement gratuit ne coûtent qu'1 PA. Le coût des actions de mouvement suivantes suit la règle classique."
+    },
+    {
+      "id": "executeur",
+      "keyword": "Exécuteur",
+      "hasValue": false,
+      "sourceText": "Un Safar doté de cette compétence peut ajouter 1D10 dégâts lors d'une attaque à 3 PA, une fois par activation."
     },
     {
       "id": "fine-lame",
@@ -164,10 +144,203 @@
       "sourceText": "Le défenseur ne peut pas dépenser plus de PA que le Safar doté de « fine lame » qui l'attaque."
     },
     {
+      "id": "fluet",
+      "keyword": "Fluet",
+      "hasValue": false,
+      "sourceText": "Lorsqu'elle utilise l'effet de C son adversaire n'est repoussé que d'une seule toise ; utiliser 2 fois l'effet de C n'augmente pas la distance mais permet de repousser un adversaire de plus grande stature. En revanche, elle ajoute +1 au seuil de base de son attaque ou de sa défense à chaque fois qu'elle utilise l'effet de V (en plus des effets classiques)."
+    },
+    {
+      "id": "foi-inebranlable",
+      "keyword": "Foi inébranlable",
+      "hasValue": false,
+      "sourceText": "Le Safar considère tous ses tests d'effroi comme réussis.",
+      "obligatory": true
+    },
+    {
+      "id": "furtivite",
+      "keyword": "Furtivité",
+      "hasValue": false,
+      "sourceText": "Ils ajoutent à leur défense un bonus d'une valeur égale à leur niveau dès qu'ils sont à couvert."
+    },
+    {
+      "id": "harcelement",
+      "keyword": "Harcèlement",
+      "hasValue": false,
+      "sourceText": "Le Safar peut, une fois par activation, bénéficier gratuitement de l'effet de V pour l'une de ses attaques réussies en addition des autres effets de l'attaque."
+    },
+    {
+      "id": "hermetisme",
+      "keyword": "Hermétisme",
+      "hasValue": true,
+      "sourceText": "Permet d'augmenter sa défense face à la magie de X. Si le sort cible un Safar hermétique allié, la difficulté du sort est augmentée de X. Les sorts bénéfiques sont donc plus difficiles à faire accepter aux cibles résistantes.",
+      "obligatory": true
+    },
+    {
+      "id": "heroique",
+      "keyword": "Héroïque",
+      "hasValue": true,
+      "sourceText": "Un combattant doté de cette compétence peut gratuitement lancer un dé de plus que son niveau lors des actions qu'il entreprend dans le domaine « X ». Il aura donc le choix parmi (N + 1)D10."
+    },
+    {
+      "id": "hors-norme",
+      "keyword": "Hors-norme",
+      "hasValue": false,
+      "sourceText": "Sa force est si grande que le combattant doté de cette compétence peut utiliser un bouclier ou une arme à une main en complément d'une arme à deux mains."
+    },
+    {
+      "id": "immunise-effroi-terreur",
+      "keyword": "Immunisé à l'effroi et à la terreur",
+      "hasValue": false,
+      "sourceText": "N'effectue jamais de test d'effroi ni de témérité ; insensible à la terreur et à l'effroi."
+    },
+    {
+      "id": "immunite",
+      "keyword": "Immunité",
+      "hasValue": true,
+      "sourceText": "Empêche de subir ou de bénéficier des effets d'un sort de la voie de magie X.",
+      "obligatory": true
+    },
+    {
+      "id": "independant",
+      "keyword": "Indépendant",
+      "hasValue": false,
+      "sourceText": "Un Safar doté de cette compétence n'est pas désorienté loin de ses alliés. Il s'activera et récupérera l'intégralité de ses points d'action normalement même s'il est loin de son Seigneur de guerre ou de son Vassal."
+    },
+    {
+      "id": "instinct-de-survie",
+      "keyword": "Instinct de survie",
+      "hasValue": false,
+      "sourceText": "Lors d'une défense réussie, le Safar doté de cette compétence peut utiliser l'effet de V, en plus, quel que soit le nombre de PA qu'il a engagé pour la réaliser."
+    },
+    {
+      "id": "le-sang-m-attire",
+      "keyword": "Le sang m'attire",
+      "hasValue": true,
+      "obligatory": true,
+      "sourceText": "+ X en attaque contre une cible affligée de saignement (effet non cumulable)."
+    },
+    {
+      "id": "maitre",
+      "keyword": "Maître",
+      "hasValue": true,
+      "sourceText": "Un Safar doté de cette compétence peut relancer gratuitement tout ou partie d'un jet une fois par tour lors des actions entreprises dans ce domaine."
+    },
+    {
+      "id": "maitre-archer",
+      "keyword": "Maître archer",
+      "hasValue": false,
+      "sourceText": "Un tireur doté de cette compétence augmente de 1 les dégâts qu'il inflige à l'aide d'un arc."
+    },
+    {
+      "id": "maitre-papegai",
+      "keyword": "Maître Papegai",
+      "hasValue": false,
+      "sourceText": "Un tireur doté de cette compétence ne subit pas les malus de dénivelés lors d'un tir."
+    },
+    {
+      "id": "merci",
+      "keyword": "Merci",
+      "hasValue": false,
+      "sourceText": "Un combattant doté de cette compétence peut décider, lorsqu'il réussit une action qui inflige suffisamment de dégâts pour « terrasser » son adversaire, de ne pas lui infliger ces dégâts. En contrepartie, ce combattant perd ses PA restants, de plus il ne peut plus être attaqué ni récupérer ses PA jusqu'à la fin de sa prochaine activation. Cette compétence n'est utilisable qu'une seule fois par tour et quoi qu'il en soit une seule fois par ennemi par partie."
+    },
+    {
+      "id": "moringa",
+      "keyword": "Moringa",
+      "hasValue": true,
+      "sourceText": "Une figurine dotée de cette compétence peut transférer les dégâts qu'elle subit lors de chaque blessure jusqu'à un maximum de « X » à une unique autre figurine alliée possédant aussi cette compétence et se trouvant dans son aura. Seuls les dégâts sont transférés, pas les effets."
+    },
+    {
+      "id": "morsure",
+      "keyword": "Morsure",
+      "hasValue": false,
+      "sourceText": "Attaque spéciale : 2 PA / ZDC / 1 fois par activation / 2 caractéristiques + ND10. Inflige 1D5 dégâts et provoque un test de témérité (seuil 10). Saignement 2 en cas de RC."
+    },
+    {
+      "id": "osteomancie",
+      "keyword": "Ostéomancie",
+      "hasValue": false,
+      "sourceText": "Voie de magie des Fangs : le magicien maîtrise l'ostéomancie."
+    },
+    {
+      "id": "peau-dure",
+      "keyword": "Peau dure",
+      "hasValue": false,
+      "sourceText": "Chaque effet de saignement agit une et unique fois puis disparaît.",
+      "obligatory": true
+    },
+    {
+      "id": "ralliement",
+      "keyword": "Ralliement",
+      "hasValue": false,
+      "sourceText": "Peut à tout moment dépenser un dé de maîtrise définitivement (au choix du joueur), le combattant réussit alors automatiquement son test de témérité. Peut aussi être effectué immédiatement après un test raté."
+    },
+    {
+      "id": "receptif",
+      "keyword": "Réceptif",
+      "hasValue": true,
+      "obligatory": true,
+      "sourceText": "Les sorts de la voie de magie X sont automatiquement réussis lorsqu'ils prennent ce guerrier pour cible."
+    },
+    {
+      "id": "repoussement",
+      "keyword": "Repoussement",
+      "hasValue": false,
+      "sourceText": "Un Safar doté de « repoussement » peut choisir de repousser sa cible de sa corpulence (en toises) au lieu de C / 2. N'a aucun effet sur une figurine « stable »."
+    },
+    {
       "id": "riposte",
       "keyword": "Riposte",
       "hasValue": false,
-      "sourceText": "Ajoute un effet supplémentaire lors d'une défense à 3 PA, ou bénéficie des dégâts et de l'effet d'une caractéristique lors d'une défense à 2 PA."
+      "sourceText": "Un combattant doté de cette compétence peut ajouter l'effet d'une caractéristique supplémentaire parmi celles qu'il a utilisées lors d'une défense à 3 PA (soit un total de 2 effets + des dégâts), ou bénéficier des dégâts et de l'effet de la caractéristique choisie parmi celles qu'il a utilisées lors d'une défense à 2 PA (soit dégâts et effet d'une unique caractéristique)."
+    },
+    {
+      "id": "rusee",
+      "keyword": "Rusé",
+      "hasValue": false,
+      "sourceText": "Un combattant doté de cette compétence peut tenter d'améliorer sa défense après qu'il ait effectué son jet et les relances éventuelles. Il peut dépenser un PA supplémentaire pour s'ajouter un dé ou la valeur d'une caractéristique (sans dépasser un maximum de 2 identiques) au total qu'il avait initialement obtenu. Si le résultat de l'attaque est alors égalé ou surpassé, elle est défendue et les dégâts et/ou l'effet de la défense sont appliqués."
+    },
+    {
+      "id": "sacrifice",
+      "keyword": "Sacrifice",
+      "hasValue": true,
+      "sourceText": "Un Safar doté de « sacrifice X » peut, une fois par tour, perdre X PV pour qu'un allié gagne immédiatement 1 PA. Le sacrifice doit être effectué au début de l'activation de cet allié. Les PV perdus par le biais du sacrifice ne peuvent être récupérés d'aucune manière."
+    },
+    {
+      "id": "sadique",
+      "keyword": "Sadique",
+      "hasValue": true,
+      "sourceText": "Un Safar doté de cette compétence peut dépenser X PA en plus des PA d'une attaque non défendue pour ajouter X dégâts à celle-ci. L'effet est appliqué une fois le jet de défense connu, mais avant le jet d'armure."
+    },
+    {
+      "id": "sauvage",
+      "keyword": "Sauvage",
+      "hasValue": false,
+      "sourceText": "Un combattant doté de cette compétence ne peut pas résoudre d'action de scénario ni gérer les objectifs de scénario. En revanche, il bénéficie toujours du bonus lié à la charge et pas seulement lors de la première attaque de son activation."
+    },
+    {
+      "id": "seigneur-de-guerre",
+      "keyword": "Seigneur de guerre",
+      "hasValue": true,
+      "sourceText": "Un Safar doté de cette compétence, présent sur le champ de bataille et leader de l'Ost, génère autant de marqueurs que la valeur de X. Un de ces marqueurs lui est réservé."
+    },
+    {
+      "id": "specialiste",
+      "keyword": "Spécialiste",
+      "hasValue": true,
+      "sourceText": "Un Safar spécialiste dans un domaine X ne considère pas les 1 naturels comme des EC lors des actions entreprises dans ce domaine."
+    },
+    {
+      "id": "stable",
+      "keyword": "Stable",
+      "hasValue": false,
+      "sourceText": "Ne peut être physiquement repoussé que par un combattant ayant une stature strictement supérieure à la sienne. De plus, « repoussement » n'a pas d'effet.",
+      "obligatory": true
+    },
+    {
+      "id": "vivacite",
+      "keyword": "Vivacité",
+      "hasValue": false,
+      "sourceText": "Lorsqu'elles utilisent l'effet de l'agilité, elles peuvent si elles le souhaitent ajouter une 2ème caractéristique pour 1 PA lors de l'attaque gratuite générée par l'effet de A. Cette compétence augmente la valeur d'attaque et les dégâts (soit une caractéristique complète en dégâts) mais ne permet pas d'ajouter un effet comme lors d'une attaque standard à 2 PA."
     }
   ],
   "magicWays": [

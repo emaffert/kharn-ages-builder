@@ -310,10 +310,9 @@ interface DetailProps {
   updateField: (id: string, path: string, value: FieldValue) => void;
   updateProfile: (id: string, patch: Partial<Profile>) => void;
   toggleUnverified: (id: string, key: string) => void;
-  onZoom: (src: string) => void;
 }
 
-function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverified, onZoom }: DetailProps) {
+function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverified }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   const uv = (key: string) => profile.unverifiedFields?.includes(key) ?? false;
   const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
@@ -596,23 +595,6 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
         </Section>
       )}
 
-      {import.meta.env.DEV && (
-        <Section title="Carte (aperçu — dev uniquement)">
-          <img
-            src={`/${profile.cardImage}`}
-            alt={`Carte de ${profile.name}`}
-            loading="lazy"
-            title="Cliquer pour agrandir"
-            onClick={() => onZoom(`/${profile.cardImage}`)}
-            className="max-h-[460px] w-auto cursor-zoom-in rounded border border-slate-700"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        </Section>
-      )}
-
-      <p className="text-xs text-slate-600">Carte : {profile.cardImage}</p>
     </div>
   );
 }
@@ -707,20 +689,41 @@ export function AdminCatalog() {
         </ul>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-8">
-        {selected ? (
-          <div className="mx-auto max-w-2xl">
-            <ProfileDetail
-              profile={selected}
-              cat={catalog}
-              updateField={store.updateField}
-              updateProfile={store.updateProfile}
-              toggleUnverified={store.toggleUnverified}
-              onZoom={setZoom}
+      <main className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-8">
+          {selected ? (
+            <div className="mx-auto max-w-2xl">
+              <ProfileDetail
+                profile={selected}
+                cat={catalog}
+                updateField={store.updateField}
+                updateProfile={store.updateProfile}
+                toggleUnverified={store.toggleUnverified}
+              />
+            </div>
+          ) : (
+            <p className="text-slate-500">Sélectionnez un profil.</p>
+          )}
+        </div>
+
+        {import.meta.env.DEV && selected && (
+          <aside className="hidden w-[600px] shrink-0 overflow-y-auto border-l border-slate-800 p-4 xl:block">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-300/80">
+              Carte (dev) — cliquer pour agrandir
+            </p>
+            <img
+              key={selected.id}
+              src={`/${selected.cardImage}`}
+              alt={`Carte de ${selected.name}`}
+              loading="lazy"
+              onClick={() => setZoom(`/${selected.cardImage}`)}
+              className="w-full cursor-zoom-in rounded border border-slate-700"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
             />
-          </div>
-        ) : (
-          <p className="text-slate-500">Sélectionnez un profil.</p>
+            <p className="mt-2 break-all text-xs text-slate-600">{selected.cardImage}</p>
+          </aside>
         )}
       </main>
 

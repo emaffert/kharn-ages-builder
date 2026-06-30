@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
@@ -48,9 +48,40 @@ function devCardsPlugin(): Plugin {
   };
 }
 
+/**
+ * Endpoint de DÉVELOPPEMENT pour enregistrer le catalogue édité directement dans
+ * `src/data/catalog.fangs.json`. `apply: "serve"` => absent du build de production.
+ */
+function devSaveCatalogPlugin(): Plugin {
+  const target = resolve(__dirname, "src/data/catalog.fangs.json");
+  return {
+    name: "dev-save-catalog",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use("/__save-catalog", async (req, res, next) => {
+        if (req.method !== "POST") return next();
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk as Buffer);
+          const data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+          await writeFile(target, JSON.stringify(data, null, 2) + "\n");
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true }));
+        } catch (e) {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: false, error: e instanceof Error ? e.message : "erreur" }));
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     devCardsPlugin(),
+    devSaveCatalogPlugin(),
     react(),
     tailwindcss(),
     VitePWA({

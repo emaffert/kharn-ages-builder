@@ -125,6 +125,34 @@ export function useCatalogStore() {
     [apply],
   );
 
+  /**
+   * DEV uniquement : enregistre le catalogue directement dans `src/data/catalog.fangs.json`
+   * via l'endpoint du serveur Vite. Retourne un message d'erreur, ou null si OK.
+   */
+  const saveToProject = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await fetch("/__save-catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(catalog),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        return j.error ?? `HTTP ${res.status}`;
+      }
+      // Le fichier devient la source ; on abandonne la copie locale pour éviter toute divergence.
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+      setDirty(false);
+      return null;
+    } catch (e) {
+      return e instanceof Error ? e.message : "échec de l'enregistrement";
+    }
+  }, [catalog]);
+
   const exportJson = useCallback(() => {
     const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -153,5 +181,6 @@ export function useCatalogStore() {
     reset,
     exportJson,
     importJson,
+    saveToProject,
   };
 }

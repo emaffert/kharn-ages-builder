@@ -923,6 +923,11 @@ export function AdminCatalog() {
     if (err) alert(`Import impossible : ${err}`);
   };
 
+  const onSave = async () => {
+    const err = await store.saveToProject();
+    alert(err ? `Enregistrement impossible : ${err}` : "Catalogue enregistré dans le projet.");
+  };
+
   const q = query.trim().toLowerCase();
   const filteredProfiles = useMemo(
     () => catalog.profiles.filter((p) => !q || p.name.toLowerCase().includes(q)),
@@ -964,12 +969,20 @@ export function AdminCatalog() {
             placeholder="Rechercher…"
             className="w-full rounded bg-slate-800 px-2 py-1.5 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600"
           />
-          <div className="flex gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
+            {import.meta.env.DEV && (
+              <button
+                onClick={onSave}
+                className="flex-1 rounded bg-emerald-600/80 px-2 py-1 text-xs font-medium text-emerald-50 hover:bg-emerald-600"
+              >
+                Enregistrer
+              </button>
+            )}
             <button
               onClick={store.exportJson}
-              className="flex-1 rounded bg-amber-600/80 px-2 py-1 text-xs font-medium text-amber-50 hover:bg-amber-600"
+              className="rounded bg-amber-600/80 px-2 py-1 text-xs font-medium text-amber-50 hover:bg-amber-600"
             >
-              Exporter JSON
+              Exporter
             </button>
             <button
               onClick={() => fileRef.current?.click()}
@@ -982,7 +995,7 @@ export function AdminCatalog() {
               disabled={!store.dirty}
               className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-600 disabled:opacity-40"
             >
-              Réinitialiser
+              Réinit.
             </button>
             <input
               ref={fileRef}

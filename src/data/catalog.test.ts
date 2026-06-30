@@ -10,6 +10,12 @@ describe("catalogue Fang", () => {
     expect(fangsCatalog.profiles).toHaveLength(20);
   });
 
+  it("inclut la compétence générique « Aliéné » et l'attribue aux Likans", () => {
+    expect(fangsCatalog.skills.some((s) => s.id === "aliene")).toBe(true);
+    const likan = fangsCatalog.profiles.find((p) => p.id === "fangs-likan-1")!;
+    expect(likan.skills.find((s) => s.skillId === "aliene")?.value).toBe("femelle Fang");
+  });
+
   it("a des identifiants de profil uniques", () => {
     const ids = fangsCatalog.profiles.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);

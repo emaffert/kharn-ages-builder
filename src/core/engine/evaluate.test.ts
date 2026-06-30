@@ -96,6 +96,11 @@ describe("validation des contraintes", () => {
     expect(res.issues.some((i) => i.ruleId === "larbin-eprouve")).toBe(true);
   });
 
+  it("Likan équipé est invalide (aliéné : pas d'ajout d'équipement)", () => {
+    const res = evalFang([inst("fangs-likan-1", { addedEquipmentIds: ["couteau"] })]);
+    expect(res.issues.some((i) => i.ruleId === "likan-no-equipment")).toBe(true);
+  });
+
   it("respecte la limitation de recrutement (Goulue I, Lim 4)", () => {
     const four = evalFang(Array.from({ length: 4 }, () => inst("fangs-goulue-1")));
     expect(four.issues.some((i) => i.ruleId?.startsWith("limitation:"))).toBe(false);

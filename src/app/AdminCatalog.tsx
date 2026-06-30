@@ -260,18 +260,19 @@ function SkillsEditor({
             ))}
           </select>
           <input
-            type="number"
-            placeholder="val"
+            type="text"
+            placeholder="valeur"
             value={s.value ?? ""}
-            onChange={(e) =>
+            onChange={(e) => {
+              const v = e.target.value;
               onChange(
                 replaceAt(skills, i, {
                   ...s,
-                  value: e.target.value === "" ? undefined : Number(e.target.value),
+                  value: v === "" ? undefined : /^\d+$/.test(v) ? Number(v) : v,
                 }),
-              )
-            }
-            className={`${INPUT} w-16`}
+              );
+            }}
+            className={`${INPUT} w-28`}
           />
           <RemoveButton onClick={() => onChange(removeAt(skills, i))} />
         </div>

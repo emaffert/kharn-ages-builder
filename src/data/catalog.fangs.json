@@ -145,6 +145,12 @@
       "keyword": "Immunisé à l'effroi et à la terreur",
       "hasValue": false,
       "sourceText": "N'effectue jamais de test d'effroi ni de témérité ; insensible à la terreur et à l'effroi."
+    },
+    {
+      "id": "aliene",
+      "keyword": "Aliéné",
+      "hasValue": true,
+      "sourceText": "La compétence « aliéné X » définit les Aliénés sur leur carte de profil, où X est le « Maître » auquel elles sont liées. Une figurine aliénée n'effectue jamais de test de témérité ni d'effroi."
     }
   ],
   "models": [
@@ -680,6 +686,10 @@
         {
           "skillId": "bond",
           "value": 4
+        },
+        {
+          "skillId": "aliene",
+          "value": "femelle Fang"
         }
       ],
       "baseEquipmentIds": [],
@@ -688,10 +698,7 @@
           "objectif"
         ]
       ],
-      "traits": [
-        "aliene",
-        "femelle-fang-aliene"
-      ],
+      "traits": [],
       "recruitment": [
         {
           "id": "likan-attachment",
@@ -704,6 +711,25 @@
           },
           "scope": "fer-de-lance",
           "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
+          "severity": "error",
+          "autoEnforced": true
+        },
+        {
+          "id": "likan-no-equipment",
+          "type": "forbids-equipment",
+          "params": {
+            "categories": [
+              "arme-cac",
+              "arme-tir",
+              "bouclier",
+              "armure",
+              "munition",
+              "objet",
+              "monture-option"
+            ]
+          },
+          "scope": "profil",
+          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
           "severity": "error",
           "autoEnforced": true
         }
@@ -755,6 +781,10 @@
         {
           "skillId": "bond",
           "value": 3
+        },
+        {
+          "skillId": "aliene",
+          "value": "femelle Fang"
         }
       ],
       "baseEquipmentIds": [],
@@ -766,10 +796,7 @@
           "offensive"
         ]
       ],
-      "traits": [
-        "aliene",
-        "femelle-fang-aliene"
-      ],
+      "traits": [],
       "recruitment": [
         {
           "id": "likan-attachment",
@@ -782,6 +809,25 @@
           },
           "scope": "fer-de-lance",
           "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
+          "severity": "error",
+          "autoEnforced": true
+        },
+        {
+          "id": "likan-no-equipment",
+          "type": "forbids-equipment",
+          "params": {
+            "categories": [
+              "arme-cac",
+              "arme-tir",
+              "bouclier",
+              "armure",
+              "munition",
+              "objet",
+              "monture-option"
+            ]
+          },
+          "scope": "profil",
+          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
           "severity": "error",
           "autoEnforced": true
         }
@@ -836,6 +882,10 @@
         },
         {
           "skillId": "harcelement"
+        },
+        {
+          "skillId": "aliene",
+          "value": "femelle Fang"
         }
       ],
       "baseEquipmentIds": [],
@@ -850,10 +900,7 @@
           "offensive"
         ]
       ],
-      "traits": [
-        "aliene",
-        "femelle-fang-aliene"
-      ],
+      "traits": [],
       "recruitment": [
         {
           "id": "likan-attachment",
@@ -866,6 +913,25 @@
           },
           "scope": "fer-de-lance",
           "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
+          "severity": "error",
+          "autoEnforced": true
+        },
+        {
+          "id": "likan-no-equipment",
+          "type": "forbids-equipment",
+          "params": {
+            "categories": [
+              "arme-cac",
+              "arme-tir",
+              "bouclier",
+              "armure",
+              "munition",
+              "objet",
+              "monture-option"
+            ]
+          },
+          "scope": "profil",
+          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
           "severity": "error",
           "autoEnforced": true
         }
@@ -1565,8 +1631,7 @@
         ]
       ],
       "traits": [
-        "femelle-fang",
-        "decatie"
+        "femelle-fang"
       ],
       "magic": {
         "canCast": true,
@@ -1648,8 +1713,7 @@
         ]
       ],
       "traits": [
-        "femelle-fang",
-        "decatie"
+        "femelle-fang"
       ],
       "magic": {
         "canCast": true,

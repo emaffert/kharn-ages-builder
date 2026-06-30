@@ -41,10 +41,10 @@ export const RuleTextSchema = z.object({
 });
 export type RuleText = z.infer<typeof RuleTextSchema>;
 
-/** Référence à une compétence, avec sa valeur éventuelle (ex. « Allonge 2 »). */
+/** Référence à une compétence, avec sa valeur éventuelle (numérique « Allonge 2 » ou textuelle « Aliéné femelle Fang »). */
 export const SkillRefSchema = z.object({
   skillId: z.string(),
-  value: z.number().optional(),
+  value: z.union([z.number(), z.string()]).optional(),
 });
 export type SkillRef = z.infer<typeof SkillRefSchema>;
 

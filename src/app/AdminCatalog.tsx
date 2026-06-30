@@ -17,6 +17,57 @@ const LEVEL_LABEL = ["", "I", "II", "III"];
 
 const MASTERY_DOMAINS = ["offensive", "defensive", "objectif", "tir", "esoterique"] as const;
 
+/** Icônes originales évoquant les 5 domaines de maîtrise (cf. livret p.7). */
+function DomainIcon({ domain, className = "h-4 w-4" }: { domain: string; className?: string }) {
+  const common = {
+    viewBox: "0 0 16 16",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.5,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    className,
+  };
+  switch (domain) {
+    case "offensive": // épées croisées
+      return (
+        <svg {...common}>
+          <path d="M3 13 13 3" />
+          <path d="M13 13 3 3" />
+        </svg>
+      );
+    case "defensive": // bouclier
+      return (
+        <svg {...common}>
+          <path d="M8 2l5 2v4c0 3-2 5-5 6-3-1-5-3-5-6V4z" />
+        </svg>
+      );
+    case "objectif": // fanion
+      return (
+        <svg {...common}>
+          <path d="M5 2v12" />
+          <path d="M5 3h7l-2 2 2 2H5" />
+        </svg>
+      );
+    case "tir": // arc et flèche
+      return (
+        <svg {...common}>
+          <path d="M4 3a8 8 0 0 1 0 10" />
+          <path d="M2 8h11" />
+          <path d="M11 6l2 2-2 2" />
+        </svg>
+      );
+    case "esoterique": // étincelle
+      return (
+        <svg {...common}>
+          <path d="M8 2l1.2 4.8L14 8l-4.8 1.2L8 14l-1.2-4.8L2 8l4.8-1.2z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 const INPUT = "rounded bg-slate-800 px-2 py-1 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600";
 
 const replaceAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
@@ -432,16 +483,26 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
       </Section>
 
       <Section title="Dés de maîtrise (chaque dé porte 1 à 5 domaines)">
-        <div className="group space-y-1.5">
+        <div className="group space-y-2">
+          <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+            {MASTERY_DOMAINS.map((d) => (
+              <span key={d} className="flex items-center gap-1">
+                <DomainIcon domain={d} className="h-3.5 w-3.5" />
+                {d}
+              </span>
+            ))}
+          </div>
           {profile.masteryDice.map((die, i) => (
             <div key={i} className="flex flex-wrap items-center gap-1.5">
-              <span className="w-10 text-xs text-slate-500">dé {i + 1}</span>
+              <span className="w-10 text-xs font-semibold text-slate-300">Dé {i + 1}</span>
               {MASTERY_DOMAINS.map((dom) => {
                 const on = die.includes(dom);
                 return (
                   <button
                     key={dom}
                     type="button"
+                    title={dom}
+                    aria-label={dom}
                     onClick={() =>
                       patch({
                         masteryDice: replaceAt(
@@ -451,13 +512,13 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
                         ),
                       })
                     }
-                    className={`rounded px-1.5 py-0.5 text-xs ${
+                    className={`flex h-7 w-7 items-center justify-center rounded ${
                       on
                         ? "bg-amber-600/40 text-amber-100 ring-1 ring-amber-600/60"
                         : "bg-slate-800 text-slate-500 hover:text-slate-300"
                     }`}
                   >
-                    {dom}
+                    <DomainIcon domain={dom} />
                   </button>
                 );
               })}

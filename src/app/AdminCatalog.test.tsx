@@ -17,4 +17,10 @@ describe("AdminCatalog (rendu)", () => {
     expect(screen.getAllByText(/Effets/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/verbatim/i).length).toBeGreaterThan(0);
   });
+
+  it("affiche les éditeurs de contraintes et d'effets (boutons d'ajout)", () => {
+    render(<AdminCatalog />);
+    expect(screen.getByText(/\+ contrainte/i)).toBeTruthy();
+    expect(screen.getByText(/\+ effet/i)).toBeTruthy();
+  });
 });

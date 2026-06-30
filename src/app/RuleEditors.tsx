@@ -1,0 +1,573 @@
+import type {
+  Catalog,
+  Constraint,
+  ConstraintType,
+  Effect,
+  EffectOperation,
+  Selector,
+} from "@core";
+import { describeConstraint, describeEffect } from "@ui/explain";
+
+/** Éditeurs structurés des contraintes et effets (propres à un profil). */
+
+const INPUT =
+  "rounded bg-slate-800 px-2 py-1 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600";
+
+const EQUIPMENT_CATEGORIES = [
+  "arme-cac",
+  "arme-tir",
+  "bouclier",
+  "armure",
+  "munition",
+  "objet",
+  "monture-option",
+];
+
+const CONSTRAINT_TYPES: ConstraintType[] = [
+  "forbids-equipment",
+  "requires-present",
+  "faction-membership",
+  "equipment-reserved",
+  "consumes-slot",
+  "attachment",
+  "count-relative",
+  "mount-eligibility",
+  "pact-composition",
+  "mutual-exclusion",
+  "limitation",
+  "custom",
+];
+
+const replaceAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
+const removeAt = <T,>(arr: T[], i: number): T[] => arr.filter((_, j) => j !== i);
+
+function AddButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded border border-dashed border-slate-600 px-2 py-0.5 text-xs text-slate-400 hover:border-amber-600 hover:text-amber-300"
+    >
+      {children}
+    </button>
+  );
+}
+
+function RemoveButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} title="Supprimer" className="text-slate-500 hover:text-red-400">
+      ✕
+    </button>
+  );
+}
+
+type Option = { value: string; label: string };
+
+function StringList({
+  label,
+  values,
+  onChange,
+  options,
+  placeholder,
+}: {
+  label: string;
+  values: string[];
+  onChange: (v: string[]) => void;
+  options?: Option[];
+  placeholder?: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      <span className="text-xs text-slate-400">{label}</span>
+      {values.map((v, i) => (
+        <span key={i} className="flex items-center gap-0.5">
+          {options ? (
+            <select value={v} onChange={(e) => onChange(replaceAt(values, i, e.target.value))} className={INPUT}>
+              {options.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={v}
+              placeholder={placeholder}
+              onChange={(e) => onChange(replaceAt(values, i, e.target.value))}
+              className={`${INPUT} w-32`}
+            />
+          )}
+          <RemoveButton onClick={() => onChange(removeAt(values, i))} />
+        </span>
+      ))}
+      <AddButton onClick={() => onChange([...values, options?.[0]?.value ?? ""])}>+</AddButton>
+    </div>
+  );
+}
+
+function profileOptions(cat: Catalog): Option[] {
+  return cat.profiles.map((p) => ({ value: p.id, label: p.name + (p.level ? ` ${p.level}` : "") }));
+}
+
+// ── Sélecteur (cible / condition) ─────────────────────────────────────────────
+
+function cleanSelector(sel: Selector): Selector {
+  const out: Selector = {};
+  if (sel.self) out.self = true;
+  if (sel.profileIds?.length) out.profileIds = sel.profileIds;
+  if (sel.modelIds?.length) out.modelIds = sel.modelIds;
+  if (sel.traits?.length) out.traits = sel.traits;
+  if (sel.factionIds?.length) out.factionIds = sel.factionIds;
+  if (sel.equipmentCategories?.length) out.equipmentCategories = sel.equipmentCategories;
+  if (sel.countAtLeast != null) out.countAtLeast = sel.countAtLeast;
+  return out;
+}
+
+function SelectorEditor({
+  selector,
+  cat,
+  onChange,
+  allowSelf = true,
+}: {
+  selector: Selector;
+  cat: Catalog;
+  onChange: (s: Selector) => void;
+  allowSelf?: boolean;
+}) {
+  const set = (patch: Partial<Selector>) => onChange(cleanSelector({ ...selector, ...patch }));
+  return (
+    <div className="space-y-1.5 rounded border border-slate-700/60 p-2">
+      {allowSelf && (
+        <label className="flex items-center gap-1 text-xs text-slate-300">
+          <input type="checkbox" checked={selector.self ?? false} onChange={(e) => set({ self: e.target.checked })} />
+          lui-même (self)
+        </label>
+      )}
+      <StringList
+        label="profils"
+        values={selector.profileIds ?? []}
+        onChange={(v) => set({ profileIds: v })}
+        options={profileOptions(cat)}
+      />
+      <StringList label="traits" values={selector.traits ?? []} onChange={(v) => set({ traits: v })} placeholder="trait" />
+      <StringList
+        label="équip."
+        values={selector.equipmentCategories ?? []}
+        onChange={(v) => set({ equipmentCategories: v as Selector["equipmentCategories"] })}
+        options={EQUIPMENT_CATEGORIES.map((c) => ({ value: c, label: c }))}
+      />
+      <label className="flex items-center gap-1 text-xs text-slate-400">
+        au moins
+        <input
+          type="number"
+          value={selector.countAtLeast ?? ""}
+          onChange={(e) => set({ countAtLeast: e.target.value === "" ? undefined : Number(e.target.value) })}
+          className={`${INPUT} w-16`}
+        />
+      </label>
+    </div>
+  );
+}
+
+// ── Opération d'un effet ──────────────────────────────────────────────────────
+
+function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
+  switch (kind) {
+    case "cost-delta":
+      return { kind, amount: 0 };
+    case "cost-set":
+      return { kind, amount: 0 };
+    case "unlock-upgrade":
+      return { kind, upgradeId: "", perItemCost: 0 };
+    case "grant-skill":
+      return { kind, skillId: "" };
+    case "grant-trait":
+      return { kind, trait: "" };
+    case "cap":
+      return { kind, value: 0 };
+  }
+}
+
+function OperationEditor({
+  op,
+  cat,
+  onChange,
+}: {
+  op: EffectOperation;
+  cat: Catalog;
+  onChange: (op: EffectOperation) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <select
+        value={op.kind}
+        onChange={(e) => onChange(defaultOperation(e.target.value as EffectOperation["kind"]))}
+        className={INPUT}
+      >
+        {(["cost-delta", "cost-set", "unlock-upgrade", "grant-skill", "grant-trait", "cap"] as const).map(
+          (k) => (
+            <option key={k} value={k}>
+              {k}
+            </option>
+          ),
+        )}
+      </select>
+      {op.kind === "cost-delta" && (
+        <Num label="montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
+      )}
+      {op.kind === "cost-set" && (
+        <>
+          <Num label="coût" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
+          <Num
+            label="max"
+            value={op.maxCount ?? null}
+            onChange={(v) => onChange({ ...op, maxCount: v ?? undefined })}
+          />
+        </>
+      )}
+      {op.kind === "unlock-upgrade" && (
+        <>
+          <Txt label="upgradeId" value={op.upgradeId} onChange={(v) => onChange({ ...op, upgradeId: v })} />
+          <Num label="coût/objet" value={op.perItemCost} onChange={(v) => onChange({ ...op, perItemCost: v })} />
+        </>
+      )}
+      {op.kind === "grant-skill" && (
+        <select
+          value={op.skillId}
+          onChange={(e) => onChange({ ...op, skillId: e.target.value })}
+          className={INPUT}
+        >
+          {cat.skills.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.keyword}
+            </option>
+          ))}
+        </select>
+      )}
+      {op.kind === "grant-trait" && (
+        <Txt label="trait" value={op.trait} onChange={(v) => onChange({ ...op, trait: v })} />
+      )}
+      {op.kind === "cap" && <Num label="valeur" value={op.value} onChange={(v) => onChange({ ...op, value: v })} />}
+    </div>
+  );
+}
+
+function Num({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number) => void }) {
+  return (
+    <label className="flex items-center gap-1 text-xs text-slate-400">
+      {label}
+      <input
+        type="number"
+        value={value ?? ""}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className={`${INPUT} w-20`}
+      />
+    </label>
+  );
+}
+
+function Txt({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="flex items-center gap-1 text-xs text-slate-400">
+      {label}
+      <input value={value} onChange={(e) => onChange(e.target.value)} className={`${INPUT} w-32`} />
+    </label>
+  );
+}
+
+// ── Params d'une contrainte (selon le type) ───────────────────────────────────
+
+function ParamsEditor({
+  type,
+  params,
+  cat,
+  onChange,
+}: {
+  type: ConstraintType;
+  params: Record<string, unknown>;
+  cat: Catalog;
+  onChange: (p: Record<string, unknown>) => void;
+}) {
+  const set = (patch: Record<string, unknown>) => onChange({ ...params, ...patch });
+  const arr = (k: string): string[] => (Array.isArray(params[k]) ? (params[k] as string[]) : []);
+  const str = (k: string): string => (typeof params[k] === "string" ? (params[k] as string) : "");
+
+  switch (type) {
+    case "forbids-equipment":
+      return (
+        <div className="space-y-1.5">
+          <StringList
+            label="catégories interdites"
+            values={arr("categories")}
+            onChange={(v) => set({ categories: v })}
+            options={EQUIPMENT_CATEGORIES.map((c) => ({ value: c, label: c }))}
+          />
+          <Txt label="profil (sujet, optionnel)" value={str("profileId")} onChange={(v) => set({ profileId: v || undefined })} />
+        </div>
+      );
+    case "requires-present":
+      return (
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            label="sujet"
+            value={str("subjectProfileId")}
+            onChange={(v) => set({ subjectProfileId: v })}
+            options={profileOptions(cat)}
+          />
+          <Select
+            label="requiert"
+            value={str("requiredProfileId")}
+            onChange={(v) => set({ requiredProfileId: v })}
+            options={profileOptions(cat)}
+          />
+        </div>
+      );
+    case "faction-membership":
+      return (
+        <StringList
+          label="factions autorisées"
+          values={arr("allowedFactions")}
+          onChange={(v) => set({ allowedFactions: v })}
+          options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+        />
+      );
+    case "equipment-reserved":
+      return (
+        <div className="space-y-1.5">
+          <Txt label="réservé au trait" value={str("trait")} onChange={(v) => set({ trait: v || undefined })} />
+          <StringList
+            label="grimoires interdits"
+            values={arr("forbidGrimoires")}
+            onChange={(v) => set({ forbidGrimoires: v })}
+            options={[
+              { value: "petit", label: "petit" },
+              { value: "grand", label: "grand" },
+            ]}
+          />
+        </div>
+      );
+    case "consumes-slot":
+      return (
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            label="modèle"
+            value={str("modelId")}
+            onChange={(v) => set({ modelId: v })}
+            options={cat.models.map((m) => ({ value: m.id, label: m.name }))}
+          />
+          <Num
+            label="niveau"
+            value={typeof params.level === "number" ? (params.level as number) : null}
+            onChange={(v) => set({ level: v })}
+          />
+        </div>
+      );
+    default:
+      return (
+        <label className="block text-xs text-slate-400">
+          params (JSON)
+          <textarea
+            defaultValue={JSON.stringify(params, null, 2)}
+            onBlur={(e) => {
+              try {
+                onChange(JSON.parse(e.target.value));
+              } catch {
+                /* JSON invalide : ignoré jusqu'à correction */
+              }
+            }}
+            className={`${INPUT} mt-1 block w-full font-mono`}
+            rows={3}
+          />
+        </label>
+      );
+  }
+}
+
+function Select({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: Option[];
+}) {
+  return (
+    <label className="flex items-center gap-1 text-xs text-slate-400">
+      {label}
+      <select value={value} onChange={(e) => onChange(e.target.value)} className={INPUT}>
+        <option value="">—</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+// ── Carte d'édition (commune) ─────────────────────────────────────────────────
+
+function EditorCard({ children, preview, onRemove }: { children: React.ReactNode; preview: string; onRemove: () => void }) {
+  return (
+    <div className="space-y-2 rounded-md border border-slate-700/60 bg-slate-800/40 p-3">
+      <div className="flex items-start justify-between gap-2">
+        <p className="flex-1 text-sm text-emerald-200/90">↳ {preview}</p>
+        <RemoveButton onClick={onRemove} />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Listes éditables ──────────────────────────────────────────────────────────
+
+export function ConstraintListEditor({
+  constraints,
+  cat,
+  onChange,
+}: {
+  constraints: Constraint[];
+  cat: Catalog;
+  onChange: (c: Constraint[]) => void;
+}) {
+  const update = (i: number, c: Constraint) => onChange(replaceAt(constraints, i, c));
+  return (
+    <div className="space-y-2">
+      {constraints.map((c, i) => (
+        <EditorCard key={i} preview={describeConstraint(c, cat)} onRemove={() => onChange(removeAt(constraints, i))}>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex items-center gap-1 text-xs text-slate-400">
+              type
+              <select value={c.type} onChange={(e) => update(i, { ...c, type: e.target.value as ConstraintType, params: {} })} className={INPUT}>
+                {CONSTRAINT_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-1 text-xs text-slate-400">
+              portée
+              <select value={c.scope} onChange={(e) => update(i, { ...c, scope: e.target.value as Constraint["scope"] })} className={INPUT}>
+                <option value="profil">profil</option>
+                <option value="fer-de-lance">fer-de-lance</option>
+                <option value="ost">ost</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1 text-xs text-slate-400">
+              sévérité
+              <select value={c.severity} onChange={(e) => update(i, { ...c, severity: e.target.value as Constraint["severity"] })} className={INPUT}>
+                <option value="error">error</option>
+                <option value="warning">warning</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1 text-xs text-slate-300">
+              <input type="checkbox" checked={c.autoEnforced} onChange={(e) => update(i, { ...c, autoEnforced: e.target.checked })} />
+              auto-vérifiée
+            </label>
+          </div>
+          <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} />
+          <label className="block text-xs text-slate-400">
+            wording verbatim (fait foi)
+            <textarea value={c.sourceText} onChange={(e) => update(i, { ...c, sourceText: e.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />
+          </label>
+        </EditorCard>
+      ))}
+      <AddButton
+        onClick={() =>
+          onChange([
+            ...constraints,
+            {
+              id: `c-${Date.now()}`,
+              type: "custom",
+              params: {},
+              scope: "profil",
+              sourceText: "",
+              severity: "error",
+              autoEnforced: false,
+            },
+          ])
+        }
+      >
+        + contrainte
+      </AddButton>
+    </div>
+  );
+}
+
+export function EffectListEditor({
+  effects,
+  profileId,
+  cat,
+  onChange,
+}: {
+  effects: Effect[];
+  profileId: string;
+  cat: Catalog;
+  onChange: (e: Effect[]) => void;
+}) {
+  const update = (i: number, e: Effect) => onChange(replaceAt(effects, i, e));
+  return (
+    <div className="space-y-2">
+      {effects.map((e, i) => (
+        <EditorCard key={i} preview={describeEffect(e, cat)} onRemove={() => onChange(removeAt(effects, i))}>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1 text-xs text-slate-400">
+              portée
+              <select value={e.scope} onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })} className={INPUT}>
+                <option value="fer-de-lance">fer-de-lance</option>
+                <option value="ost">ost</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1 text-xs text-slate-300">
+              <input type="checkbox" checked={e.appliesToListBuilding} onChange={(ev) => update(i, { ...e, appliesToListBuilding: ev.target.checked })} />
+              calculé par l'éditeur
+            </label>
+          </div>
+          <div className="text-xs text-slate-400">opération</div>
+          <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, { ...e, operation: op })} />
+          <div className="text-xs text-slate-400">cible</div>
+          <SelectorEditor selector={e.target} cat={cat} onChange={(s) => update(i, { ...e, target: s })} />
+          <details>
+            <summary className="cursor-pointer text-xs text-slate-400">condition (optionnelle)</summary>
+            <div className="mt-1">
+              <SelectorEditor
+                selector={e.condition ?? {}}
+                cat={cat}
+                allowSelf={false}
+                onChange={(s) => update(i, { ...e, condition: Object.keys(s).length ? s : undefined })}
+              />
+            </div>
+          </details>
+          <label className="block text-xs text-slate-400">
+            wording verbatim (fait foi)
+            <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />
+          </label>
+        </EditorCard>
+      ))}
+      <AddButton
+        onClick={() =>
+          onChange([
+            ...effects,
+            {
+              id: `e-${Date.now()}`,
+              source: { kind: "profile", id: profileId },
+              scope: "fer-de-lance",
+              target: { self: true },
+              operation: { kind: "cost-delta", amount: 0 },
+              appliesToListBuilding: true,
+              sourceText: "",
+              autoEnforced: true,
+            },
+          ])
+        }
+      >
+        + effet
+      </AddButton>
+    </div>
+  );
+}

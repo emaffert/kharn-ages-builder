@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { Catalog, Constraint, Effect, Level, Limitation, Profile, RuleText, SkillRef } from "@core";
 import { describeConstraint, describeEffect, specialCardsForProfile } from "@ui/explain";
 import { useCatalogStore, type FieldValue } from "./useCatalogStore";
+import { ConstraintListEditor, EffectListEditor } from "./RuleEditors";
 
 const STAT_LABELS: [keyof Profile["stats"], string][] = [
   ["v", "V"],
@@ -314,14 +315,12 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
   const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
   const flag = (key: string) => toggleUnverified(profile.id, key);
 
-  const constraints: { c: Constraint; via?: string }[] = [
-    ...profile.recruitment.map((c) => ({ c })),
-    ...cards.flatMap((card) => card.constraints.map((c) => ({ c, via: card.name }))),
-  ];
-  const effects: { e: Effect; via?: string }[] = [
-    ...(profile.effects ?? []).map((e) => ({ e })),
-    ...cards.flatMap((card) => card.effects.map((e) => ({ e, via: card.name }))),
-  ];
+  const inheritedConstraints: { c: Constraint; via: string }[] = cards.flatMap((card) =>
+    card.constraints.map((c) => ({ c, via: card.name })),
+  );
+  const inheritedEffects: { e: Effect; via: string }[] = cards.flatMap((card) =>
+    card.effects.map((e) => ({ e, via: card.name })),
+  );
 
   return (
     <div className="space-y-6">
@@ -449,50 +448,66 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
         <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
       </Section>
 
-      <Section title="Contraintes (lecture seule — validées par le moteur)">
-        {constraints.length === 0 && <p className="text-sm text-slate-500">Aucune.</p>}
-        <div className="space-y-2">
-          {constraints.map(({ c, via }, idx) => (
-            <RuleCard
-              key={`${c.id}-${idx}`}
-              human={describeConstraint(c, cat)}
-              sourceText={c.sourceText}
-              badges={
-                <>
-                  <Badge tone={c.severity === "error" ? "red" : "amber"}>{c.severity}</Badge>
-                  <Badge tone={c.autoEnforced ? "green" : "slate"}>
-                    {c.autoEnforced ? "auto-vérifiée" : "note (non vérifiée)"}
-                  </Badge>
-                  <Badge>{c.type}</Badge>
-                  {via && <Badge tone="violet">via « {via} »</Badge>}
-                </>
-              }
-            />
-          ))}
-        </div>
+      <Section title="Contraintes du profil (modifiables)">
+        <ConstraintListEditor
+          constraints={profile.recruitment}
+          cat={cat}
+          onChange={(c) => patch({ recruitment: c })}
+        />
       </Section>
 
-      <Section title="Effets / octrois (lecture seule)">
-        {effects.length === 0 && <p className="text-sm text-slate-500">Aucun.</p>}
-        <div className="space-y-2">
-          {effects.map(({ e, via }, idx) => (
-            <RuleCard
-              key={`${e.id}-${idx}`}
-              human={describeEffect(e, cat)}
-              sourceText={e.sourceText}
-              badges={
-                <>
-                  <Badge tone={e.appliesToListBuilding ? "green" : "slate"}>
-                    {e.appliesToListBuilding ? "calculé par l'éditeur" : "en jeu seulement"}
-                  </Badge>
-                  <Badge>{e.operation.kind}</Badge>
-                  {via && <Badge tone="violet">via « {via} »</Badge>}
-                </>
-              }
-            />
-          ))}
-        </div>
+      {inheritedConstraints.length > 0 && (
+        <Section title="Contraintes héritées des cartes spéciales (lecture seule)">
+          <div className="space-y-2">
+            {inheritedConstraints.map(({ c, via }, idx) => (
+              <RuleCard
+                key={`${c.id}-${idx}`}
+                human={describeConstraint(c, cat)}
+                sourceText={c.sourceText}
+                badges={
+                  <>
+                    <Badge tone={c.severity === "error" ? "red" : "amber"}>{c.severity}</Badge>
+                    <Badge>{c.type}</Badge>
+                    <Badge tone="violet">via « {via} »</Badge>
+                  </>
+                }
+              />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      <Section title="Effets / octrois du profil (modifiables)">
+        <EffectListEditor
+          effects={profile.effects ?? []}
+          profileId={profile.id}
+          cat={cat}
+          onChange={(e) => patch({ effects: e.length ? e : undefined })}
+        />
       </Section>
+
+      {inheritedEffects.length > 0 && (
+        <Section title="Effets hérités des cartes spéciales (lecture seule)">
+          <div className="space-y-2">
+            {inheritedEffects.map(({ e, via }, idx) => (
+              <RuleCard
+                key={`${e.id}-${idx}`}
+                human={describeEffect(e, cat)}
+                sourceText={e.sourceText}
+                badges={
+                  <>
+                    <Badge tone={e.appliesToListBuilding ? "green" : "slate"}>
+                      {e.appliesToListBuilding ? "calculé par l'éditeur" : "en jeu seulement"}
+                    </Badge>
+                    <Badge>{e.operation.kind}</Badge>
+                    <Badge tone="violet">via « {via} »</Badge>
+                  </>
+                }
+              />
+            ))}
+          </div>
+        </Section>
+      )}
 
       {import.meta.env.DEV && (
         <Section title="Carte (aperçu — dev uniquement)">

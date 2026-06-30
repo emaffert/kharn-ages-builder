@@ -1003,16 +1003,15 @@
         "goulue"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "text": "Acquiert « Rusé » via les Règles de bataille (non imprimé sur les cartes antérieures)."
-        }
-      ],
+      "rules": [],
       "cardImage": "cards/fangs-goulue-1-fr.jpg",
       "unverifiedFields": [
         "stature",
         "masteryDice",
         "stats.i"
+      ],
+      "notes": [
+        "Acquiert « Rusé » via les Règles de bataille (non imprimé sur les cartes antérieures)."
       ]
     },
     {
@@ -1816,9 +1815,6 @@
         {
           "label": "Ennemi juré",
           "text": "Inflige +2 dégâts en défense contre un Khérops."
-        },
-        {
-          "text": "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
         }
       ],
       "cardImage": "cards/fangs-broutcha.jpg",
@@ -1828,6 +1824,9 @@
         "stats.c",
         "stats.t",
         "stats.i"
+      ],
+      "notes": [
+        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
       ]
     },
     {
@@ -1908,15 +1907,15 @@
       "rules": [
         {
           "text": "Convaincre / négocier automatique."
-        },
-        {
-          "text": "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
         }
       ],
       "cardImage": "cards/fangs-apathee.jpg",
       "unverifiedFields": [
         "stature",
         "masteryDice"
+      ],
+      "notes": [
+        "Seigneur de guerre 1 via les Règles de bataille (non imprimé)."
       ]
     },
     {

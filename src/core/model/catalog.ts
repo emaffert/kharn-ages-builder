@@ -112,6 +112,8 @@ export const ProfileSchema = z.object({
   effects: z.array(EffectSchema).optional(),
   /** Tout le texte de règles de la carte, verbatim. */
   rules: z.array(RuleTextSchema),
+  /** Notes éditoriales hors carte (non verbatim) : ex. compétences ajoutées par le livre de bataille. */
+  notes: z.array(z.string()).optional(),
   cardImage: z.string(),
   mountEligible: z.boolean().optional(),
   /** Champs dont la lecture sur la carte est incertaine (chemins, ex. "stature", "stats.t"). */

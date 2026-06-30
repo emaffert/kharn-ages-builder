@@ -101,6 +101,50 @@ export function describeEffect(e: Effect, cat: Catalog): string {
   return base;
 }
 
+/**
+ * Où un trait (tag interne) est-il référencé par les règles du catalogue ?
+ * Permet, dans l'éditeur, de remonter d'un trait à la/les règle(s) qui l'utilisent.
+ */
+export function explainTraitUsage(trait: string, cat: Catalog): string[] {
+  const out: string[] = [];
+  const selUses = (sel?: Selector) => Boolean(sel?.traits?.includes(trait));
+  const constraintUses = (c: Constraint) => {
+    const p = c.params as { carrier?: { trait?: string }; trait?: string };
+    if (c.type === "attachment" && p.carrier?.trait === trait) return true;
+    if (c.type === "equipment-reserved" && p.trait === trait) return true;
+    return false;
+  };
+
+  for (const p of cat.profiles) {
+    for (const c of p.recruitment) {
+      if (constraintUses(c)) out.push(`« ${p.name} » — ${describeConstraint(c, cat)}`);
+    }
+    for (const e of p.effects ?? []) {
+      if (selUses(e.target) || selUses(e.condition)) out.push(`« ${p.name} » — ${describeEffect(e, cat)}`);
+    }
+  }
+  for (const card of cat.specialCards) {
+    if (card.scope.trait === trait) out.push(`carte « ${card.name} » — portée de la carte`);
+    for (const c of card.constraints) {
+      if (constraintUses(c)) out.push(`carte « ${card.name} » — ${describeConstraint(c, cat)}`);
+    }
+    for (const e of card.effects) {
+      if (selUses(e.target) || selUses(e.condition)) {
+        out.push(`carte « ${card.name} » — ${describeEffect(e, cat)}`);
+      }
+    }
+  }
+  for (const s of cat.spells) {
+    if (s.reservedTo?.trait === trait) out.push(`sort « ${s.name} » — réservé à ce trait`);
+  }
+  for (const eq of cat.equipment) {
+    for (const c of eq.restrictions) {
+      if (constraintUses(c)) out.push(`équipement « ${eq.name} » — ${describeConstraint(c, cat)}`);
+    }
+  }
+  return [...new Set(out)];
+}
+
 /** Cartes spéciales dont la portée correspond à un profil donné. */
 export function specialCardsForProfile(profile: Profile, cat: Catalog): SpecialCard[] {
   return cat.specialCards.filter(

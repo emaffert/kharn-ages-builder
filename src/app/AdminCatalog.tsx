@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { Catalog, Constraint, Effect, Level, Limitation, Profile, RuleText, SkillRef } from "@core";
-import { describeConstraint, describeEffect, specialCardsForProfile } from "@ui/explain";
+import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
 import { useCatalogStore, type FieldValue } from "./useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "./RuleEditors";
 
@@ -105,7 +105,7 @@ function EditableNumber({
         unverified ? "bg-amber-950/40 ring-1 ring-amber-600/60" : "bg-slate-800"
       }`}
     >
-      <span className="text-xs text-slate-400">{label}</span>
+      <span className="text-xs font-bold uppercase tracking-wide text-amber-200/90">{label}</span>
       <input
         type="number"
         value={value ?? ""}
@@ -310,9 +310,10 @@ interface DetailProps {
   updateField: (id: string, path: string, value: FieldValue) => void;
   updateProfile: (id: string, patch: Partial<Profile>) => void;
   toggleUnverified: (id: string, key: string) => void;
+  onZoom: (src: string) => void;
 }
 
-function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverified }: DetailProps) {
+function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverified, onZoom }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   const uv = (key: string) => profile.unverifiedFields?.includes(key) ?? false;
   const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
@@ -477,8 +478,27 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
         <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
       </Section>
 
-      <Section title="Traits">
+      <Section title="Traits (tags internes — non imprimés sur les cartes)">
         <TraitsEditor traits={profile.traits} onChange={(t) => patch({ traits: t })} />
+        <div className="space-y-1 text-xs">
+          {profile.traits.map((t) => {
+            const usages = explainTraitUsage(t, cat);
+            return (
+              <div key={t}>
+                <span className="font-semibold text-slate-300">{t}</span>
+                {usages.length === 0 ? (
+                  <span className="text-slate-500"> — tag interne, non référencé par une règle</span>
+                ) : (
+                  <ul className="ml-4 list-disc text-slate-400">
+                    {usages.map((u, i) => (
+                      <li key={i}>{u}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </Section>
 
       <Section title="Équipement de base">
@@ -491,6 +511,28 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
 
       <Section title="Règles de la carte (verbatim — fait foi)">
         <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
+      </Section>
+
+      <Section title="Notes (hors carte — non verbatim)">
+        <div className="space-y-2">
+          {(profile.notes ?? []).map((n, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <textarea
+                value={n}
+                rows={2}
+                onChange={(e) => patch({ notes: replaceAt(profile.notes ?? [], i, e.target.value) })}
+                className={`${INPUT} flex-1`}
+              />
+              <RemoveButton
+                onClick={() => {
+                  const next = removeAt(profile.notes ?? [], i);
+                  patch({ notes: next.length ? next : undefined });
+                }}
+              />
+            </div>
+          ))}
+          <AddButton onClick={() => patch({ notes: [...(profile.notes ?? []), ""] })}>+ note</AddButton>
+        </div>
       </Section>
 
       <Section title="Contraintes du profil (modifiables)">
@@ -560,7 +602,9 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
             src={`/${profile.cardImage}`}
             alt={`Carte de ${profile.name}`}
             loading="lazy"
-            className="max-h-[460px] w-auto rounded border border-slate-700"
+            title="Cliquer pour agrandir"
+            onClick={() => onZoom(`/${profile.cardImage}`)}
+            className="max-h-[460px] w-auto cursor-zoom-in rounded border border-slate-700"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
@@ -578,6 +622,7 @@ export function AdminCatalog() {
   const { catalog } = store;
   const [selectedId, setSelectedId] = useState(catalog.profiles[0]?.id ?? "");
   const [query, setQuery] = useState("");
+  const [zoom, setZoom] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -671,12 +716,22 @@ export function AdminCatalog() {
               updateField={store.updateField}
               updateProfile={store.updateProfile}
               toggleUnverified={store.toggleUnverified}
+              onZoom={setZoom}
             />
           </div>
         ) : (
           <p className="text-slate-500">Sélectionnez un profil.</p>
         )}
       </main>
+
+      {zoom && (
+        <div
+          onClick={() => setZoom(null)}
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-4"
+        >
+          <img src={zoom} alt="Carte agrandie" className="max-h-[95vh] max-w-[95vw] rounded shadow-2xl" />
+        </div>
+      )}
     </div>
   );
 }

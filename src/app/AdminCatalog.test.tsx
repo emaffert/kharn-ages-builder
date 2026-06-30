@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { AdminCatalog } from "./AdminCatalog";
 
 afterEach(cleanup);
@@ -22,5 +22,12 @@ describe("AdminCatalog (rendu)", () => {
     render(<AdminCatalog />);
     expect(screen.getByText(/\+ contrainte/i)).toBeTruthy();
     expect(screen.getByText(/\+ effet/i)).toBeTruthy();
+  });
+
+  it("bascule sur l'onglet Équipement et permet d'éditer un équipement", () => {
+    render(<AdminCatalog />);
+    fireEvent.click(screen.getByRole("button", { name: "Équipement" }));
+    expect(screen.getByText(/Effets \(verbatim/i)).toBeTruthy();
+    expect(screen.getByText(/\+ équipement/i)).toBeTruthy();
   });
 });

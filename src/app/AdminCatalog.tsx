@@ -1,5 +1,15 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
-import type { Catalog, Constraint, Effect, Level, Limitation, Profile, RuleText, SkillRef } from "@core";
+import type {
+  Catalog,
+  Constraint,
+  Effect,
+  Equipment,
+  Level,
+  Limitation,
+  Profile,
+  RuleText,
+  SkillRef,
+} from "@core";
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
 import { useCatalogStore, type FieldValue } from "./useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "./RuleEditors";
@@ -16,6 +26,16 @@ const STAT_LABELS: [keyof Profile["stats"], string][] = [
 const LEVEL_LABEL = ["", "I", "II", "III"];
 
 const MASTERY_DOMAINS = ["offensive", "defensive", "objectif", "tir", "esoterique"] as const;
+
+const EQUIPMENT_CATEGORIES = [
+  "arme-cac",
+  "arme-tir",
+  "bouclier",
+  "armure",
+  "munition",
+  "objet",
+  "monture-option",
+] as const;
 
 /** Icônes originales évoquant les 5 domaines de maîtrise (cf. livret p.7). */
 function DomainIcon({ domain, className = "h-4 w-4" }: { domain: string; className?: string }) {
@@ -660,10 +680,236 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
   );
 }
 
+function EquipmentDetail({
+  equipment: e,
+  cat,
+  onChange,
+  onRemove,
+}: {
+  equipment: Equipment;
+  cat: Catalog;
+  onChange: (patch: Partial<Equipment>) => void;
+  onRemove: () => void;
+}) {
+  const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
+
+  return (
+    <div className="space-y-5">
+      <header className="flex items-center gap-3">
+        <input
+          value={e.name}
+          onChange={(ev) => onChange({ name: ev.target.value })}
+          className="flex-1 rounded bg-slate-800 px-2 py-1 text-2xl font-bold text-slate-50 outline-none ring-1 ring-transparent focus:ring-amber-600"
+        />
+        <label className="flex items-center gap-1 text-amber-300">
+          <input
+            type="number"
+            value={e.cost}
+            onChange={(ev) => onChange({ cost: Number(ev.target.value) })}
+            className="w-16 rounded bg-slate-800 px-2 py-1 text-right text-xl font-semibold outline-none focus:ring-1 focus:ring-amber-600"
+          />
+          <span className="text-sm">Ko</span>
+        </label>
+        <button
+          type="button"
+          onClick={onRemove}
+          title="Supprimer cet équipement"
+          className="text-slate-500 hover:text-red-400"
+        >
+          ✕
+        </button>
+      </header>
+
+      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+        <label className="flex items-center gap-1">
+          catégorie
+          <select
+            value={e.category}
+            onChange={(ev) => onChange({ category: ev.target.value as Equipment["category"] })}
+            className={INPUT}
+          >
+            {EQUIPMENT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-1">
+          mains
+          <select
+            value={e.hands ?? ""}
+            onChange={(ev) =>
+              onChange({ hands: ev.target.value === "" ? undefined : (Number(ev.target.value) as 1 | 2) })
+            }
+            className={INPUT}
+          >
+            <option value="">—</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={e.isFree ?? false}
+            onChange={(ev) => onChange({ isFree: ev.target.checked || undefined })}
+          />
+          arme gratuite
+        </label>
+        <label className="flex items-center gap-1">
+          allonge
+          <input
+            type="number"
+            value={e.allonge ?? ""}
+            onChange={(ev) => onChange({ allonge: numOrUndef(ev.target.value) })}
+            className={`${INPUT} w-16`}
+          />
+        </label>
+        <label className="flex items-center gap-1">
+          durabilité
+          <input
+            type="number"
+            value={e.durability ?? ""}
+            onChange={(ev) => onChange({ durability: numOrUndef(ev.target.value) })}
+            className={`${INPUT} w-16`}
+          />
+        </label>
+      </div>
+
+      <Section title="Effets (verbatim — fait foi)">
+        <textarea
+          value={e.effectsText}
+          rows={2}
+          onChange={(ev) => onChange({ effectsText: ev.target.value })}
+          className={`${INPUT} w-full`}
+        />
+      </Section>
+
+      <Section title="Compétences conférées">
+        <SkillsEditor
+          skills={e.grantsSkills ?? []}
+          cat={cat}
+          onChange={(s) => onChange({ grantsSkills: s.length ? s : undefined })}
+        />
+      </Section>
+
+      <Section title="Restrictions">
+        <ConstraintListEditor
+          constraints={e.restrictions}
+          cat={cat}
+          onChange={(c) => onChange({ restrictions: c })}
+        />
+      </Section>
+
+      <details>
+        <summary className="cursor-pointer text-xs text-slate-400">
+          Champs avancés (portée, recharge, perce-armure, image)
+        </summary>
+        <div className="mt-2 space-y-2 text-xs text-slate-300">
+          <div className="flex flex-wrap items-center gap-2">
+            <span>Portée (tir) :</span>
+            <input
+              type="number"
+              placeholder="courte"
+              value={e.range?.short ?? ""}
+              onChange={(ev) =>
+                onChange({
+                  range:
+                    ev.target.value === "" && e.range?.long == null
+                      ? undefined
+                      : { short: Number(ev.target.value || 0), long: e.range?.long ?? 0, max: e.range?.max },
+                })
+              }
+              className={`${INPUT} w-20`}
+            />
+            <input
+              type="number"
+              placeholder="longue"
+              value={e.range?.long ?? ""}
+              onChange={(ev) =>
+                onChange({
+                  range: { short: e.range?.short ?? 0, long: Number(ev.target.value || 0), max: e.range?.max },
+                })
+              }
+              className={`${INPUT} w-20`}
+            />
+            <input
+              type="number"
+              placeholder="max"
+              value={e.range?.max ?? ""}
+              onChange={(ev) =>
+                onChange({
+                  range: { short: e.range?.short ?? 0, long: e.range?.long ?? 0, max: numOrUndef(ev.target.value) },
+                })
+              }
+              className={`${INPUT} w-20`}
+            />
+            {e.range && (
+              <button type="button" onClick={() => onChange({ range: undefined })} className="text-slate-500 hover:text-red-400">
+                ✕ portée
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span>Recharge :</span>
+            <input
+              type="number"
+              placeholder="cadence"
+              value={e.reload?.cadence ?? ""}
+              onChange={(ev) =>
+                onChange({
+                  reload:
+                    ev.target.value === ""
+                      ? undefined
+                      : { cadence: Number(ev.target.value), paCost: e.reload?.paCost ?? 0 },
+                })
+              }
+              className={`${INPUT} w-24`}
+            />
+            <input
+              type="number"
+              placeholder="PA"
+              value={e.reload?.paCost ?? ""}
+              onChange={(ev) =>
+                onChange({ reload: { cadence: e.reload?.cadence ?? 0, paCost: Number(ev.target.value || 0) } })
+              }
+              className={`${INPUT} w-20`}
+            />
+          </div>
+          <label className="flex items-center gap-2">
+            Perce-armure :
+            <input
+              value={e.perceArmure == null ? "" : String(e.perceArmure)}
+              placeholder='nombre ou "1D5"'
+              onChange={(ev) => {
+                const v = ev.target.value.trim();
+                onChange({ perceArmure: v === "" ? undefined : v === "1D5" ? "1D5" : Number(v) });
+              }}
+              className={`${INPUT} w-32`}
+            />
+          </label>
+          <label className="flex items-center gap-2">
+            Image :
+            <input
+              value={e.cardImage ?? ""}
+              placeholder="cards/..."
+              onChange={(ev) => onChange({ cardImage: ev.target.value || undefined })}
+              className={`${INPUT} w-full max-w-md`}
+            />
+          </label>
+        </div>
+      </details>
+    </div>
+  );
+}
+
 export function AdminCatalog() {
   const store = useCatalogStore();
   const { catalog } = store;
-  const [selectedId, setSelectedId] = useState(catalog.profiles[0]?.id ?? "");
+  const [view, setView] = useState<"profiles" | "equipment">("profiles");
+  const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
+  const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
   const [query, setQuery] = useState("");
   const [zoom, setZoom] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -676,22 +922,45 @@ export function AdminCatalog() {
     if (err) alert(`Import impossible : ${err}`);
   };
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return catalog.profiles.filter((p) => !q || p.name.toLowerCase().includes(q));
-  }, [catalog, query]);
+  const q = query.trim().toLowerCase();
+  const filteredProfiles = useMemo(
+    () => catalog.profiles.filter((p) => !q || p.name.toLowerCase().includes(q)),
+    [catalog, q],
+  );
+  const filteredEquipment = useMemo(
+    () => catalog.equipment.filter((e) => !q || e.name.toLowerCase().includes(q)),
+    [catalog, q],
+  );
 
-  const selected = catalog.profiles.find((p) => p.id === selectedId);
+  const selectedProfile = catalog.profiles.find((p) => p.id === selectedProfileId);
+  const selectedEquip = catalog.equipment.find((e) => e.id === selectedEquipId);
+
+  const tabClass = (active: boolean) =>
+    `flex-1 rounded px-2 py-1 text-xs font-medium ${
+      active ? "bg-amber-600/30 text-amber-100" : "bg-slate-800 text-slate-400 hover:text-slate-200"
+    }`;
+  const itemClass = (active: boolean) =>
+    `flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm ${
+      active ? "bg-amber-600/20 text-amber-100" : "hover:bg-slate-800"
+    }`;
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100">
       <aside className="flex w-72 shrink-0 flex-col border-r border-slate-800 bg-slate-900/50">
         <div className="space-y-2 border-b border-slate-800 p-3">
           <h1 className="text-sm font-bold text-amber-300">Khârn-Âges — Admin catalogue</h1>
+          <div className="flex gap-1.5">
+            <button onClick={() => setView("profiles")} className={tabClass(view === "profiles")}>
+              Profils
+            </button>
+            <button onClick={() => setView("equipment")} className={tabClass(view === "equipment")}>
+              Équipement
+            </button>
+          </div>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher un profil…"
+            placeholder="Rechercher…"
             className="w-full rounded bg-slate-800 px-2 py-1.5 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600"
           />
           <div className="flex gap-1.5">
@@ -723,67 +992,105 @@ export function AdminCatalog() {
             />
           </div>
           <p className="text-xs text-slate-500">
-            {filtered.length} profil(s) · {store.unverifiedCount} champ(s) ⚠
+            {view === "profiles"
+              ? `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`
+              : `${filteredEquipment.length} équipement(s)`}
             {store.dirty && <span className="text-amber-400"> · modifié</span>}
           </p>
         </div>
+
         <ul className="flex-1 overflow-y-auto p-2">
-          {filtered.map((p) => (
-            <li key={p.id}>
-              <button
-                onClick={() => setSelectedId(p.id)}
-                className={`flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm ${
-                  p.id === selectedId ? "bg-amber-600/20 text-amber-100" : "hover:bg-slate-800"
-                }`}
-              >
-                <span>
-                  {p.name}
-                  {p.level && <span className="ml-1 text-slate-500">{LEVEL_LABEL[p.level]}</span>}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-slate-500">
-                  {(p.unverifiedFields?.length ?? 0) > 0 && <span className="text-amber-500">⚠</span>}
-                  {p.cost}
-                </span>
-              </button>
-            </li>
-          ))}
+          {view === "profiles" &&
+            filteredProfiles.map((p) => (
+              <li key={p.id}>
+                <button onClick={() => setSelectedProfileId(p.id)} className={itemClass(p.id === selectedProfileId)}>
+                  <span>
+                    {p.name}
+                    {p.level && <span className="ml-1 text-slate-500">{LEVEL_LABEL[p.level]}</span>}
+                  </span>
+                  <span className="flex items-center gap-1 text-xs text-slate-500">
+                    {(p.unverifiedFields?.length ?? 0) > 0 && <span className="text-amber-500">⚠</span>}
+                    {p.cost}
+                  </span>
+                </button>
+              </li>
+            ))}
+          {view === "equipment" && (
+            <>
+              {filteredEquipment.map((e) => (
+                <li key={e.id}>
+                  <button onClick={() => setSelectedEquipId(e.id)} className={itemClass(e.id === selectedEquipId)}>
+                    <span>
+                      {e.name}
+                      <span className="ml-1 text-slate-600">{e.category}</span>
+                    </span>
+                    <span className="text-xs text-slate-500">{e.cost}</span>
+                  </button>
+                </li>
+              ))}
+              <li className="mt-2">
+                <button
+                  onClick={() => setSelectedEquipId(store.addEquipment())}
+                  className="w-full rounded border border-dashed border-slate-600 px-2 py-1.5 text-xs text-slate-400 hover:border-amber-600 hover:text-amber-300"
+                >
+                  + équipement
+                </button>
+              </li>
+            </>
+          )}
         </ul>
       </aside>
 
       <main className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-8">
-          {selected ? (
+          {view === "profiles" ? (
+            selectedProfile ? (
+              <div className="mx-auto max-w-2xl">
+                <ProfileDetail
+                  profile={selectedProfile}
+                  cat={catalog}
+                  updateField={store.updateField}
+                  updateProfile={store.updateProfile}
+                  toggleUnverified={store.toggleUnverified}
+                />
+              </div>
+            ) : (
+              <p className="text-slate-500">Sélectionnez un profil.</p>
+            )
+          ) : selectedEquip ? (
             <div className="mx-auto max-w-2xl">
-              <ProfileDetail
-                profile={selected}
+              <EquipmentDetail
+                equipment={selectedEquip}
                 cat={catalog}
-                updateField={store.updateField}
-                updateProfile={store.updateProfile}
-                toggleUnverified={store.toggleUnverified}
+                onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
+                onRemove={() => {
+                  store.removeEquipment(selectedEquip.id);
+                  setSelectedEquipId(catalog.equipment.find((x) => x.id !== selectedEquip.id)?.id ?? "");
+                }}
               />
             </div>
           ) : (
-            <p className="text-slate-500">Sélectionnez un profil.</p>
+            <p className="text-slate-500">Sélectionnez un équipement.</p>
           )}
         </div>
 
-        {import.meta.env.DEV && selected && (
+        {view === "profiles" && import.meta.env.DEV && selectedProfile && (
           <aside className="hidden w-[600px] shrink-0 overflow-y-auto border-l border-slate-800 p-4 xl:block">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-300/80">
               Carte (dev) — cliquer pour agrandir
             </p>
             <img
-              key={selected.id}
-              src={`/${selected.cardImage}`}
-              alt={`Carte de ${selected.name}`}
+              key={selectedProfile.id}
+              src={`/${selectedProfile.cardImage}`}
+              alt={`Carte de ${selectedProfile.name}`}
               loading="lazy"
-              onClick={() => setZoom(`/${selected.cardImage}`)}
+              onClick={() => setZoom(`/${selectedProfile.cardImage}`)}
               className="w-full cursor-zoom-in rounded border border-slate-700"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
             />
-            <p className="mt-2 break-all text-xs text-slate-600">{selected.cardImage}</p>
+            <p className="mt-2 break-all text-xs text-slate-600">{selectedProfile.cardImage}</p>
           </aside>
         )}
       </main>

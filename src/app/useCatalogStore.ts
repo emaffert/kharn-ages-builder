@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { parseCatalog, type Catalog, type Profile } from "@core";
+import { parseCatalog, type Catalog, type Equipment, type Profile } from "@core";
 import { loadCatalog } from "@data";
 
 const STORAGE_KEY = "kharn-admin-catalog-v1";
@@ -67,6 +67,32 @@ export function useCatalogStore() {
     [apply],
   );
 
+  const updateEquipment = useCallback(
+    (id: string, patch: Partial<Equipment>) =>
+      apply((c) => ({
+        ...c,
+        equipment: c.equipment.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+      })),
+    [apply],
+  );
+
+  const addEquipment = useCallback((): string => {
+    const id = `equip-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      equipment: [
+        ...c.equipment,
+        { id, name: "Nouvel équipement", category: "arme-cac", cost: 0, effectsText: "", restrictions: [] },
+      ],
+    }));
+    return id;
+  }, [apply]);
+
+  const removeEquipment = useCallback(
+    (id: string) => apply((c) => ({ ...c, equipment: c.equipment.filter((e) => e.id !== id) })),
+    [apply],
+  );
+
   const toggleUnverified = useCallback(
     (id: string, key: string) =>
       apply((c) =>
@@ -120,6 +146,9 @@ export function useCatalogStore() {
     unverifiedCount,
     updateField,
     updateProfile,
+    updateEquipment,
+    addEquipment,
+    removeEquipment,
     toggleUnverified,
     reset,
     exportJson,

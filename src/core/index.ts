@@ -4,4 +4,4 @@
  * Tout le reste de l'application dépend de ce module ; lui ne dépend de rien d'autre.
  */
 
-export type { Faction } from "./model/catalog";
+export * from "./model";

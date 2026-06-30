@@ -21,9 +21,13 @@
     "noUncheckedSideEffectImports": true,
 
     "paths": {
+      "@core": ["./src/core/index.ts"],
       "@core/*": ["./src/core/*"],
+      "@data": ["./src/data/index.ts"],
       "@data/*": ["./src/data/*"],
+      "@ui": ["./src/ui/index.ts"],
       "@ui/*": ["./src/ui/*"],
+      "@app": ["./src/app/*"],
       "@app/*": ["./src/app/*"]
     }
   },

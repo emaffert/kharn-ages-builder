@@ -609,7 +609,9 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "offensive"
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "femelle-fang"
@@ -641,7 +643,6 @@
         }
       ],
       "cardImage": "cards/fangs-larbin-1-fr.jpg",
-      "cardCode": "KAFALA1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -683,7 +684,9 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "objectif"
+        [
+          "objectif"
+        ]
       ],
       "traits": [
         "aliene",
@@ -715,7 +718,6 @@
         }
       ],
       "cardImage": "cards/fangs-likans.jpg",
-      "cardCode": "KAFALI1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -757,8 +759,12 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "objectif",
-        "offensive"
+        [
+          "objectif"
+        ],
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "aliene",
@@ -790,7 +796,6 @@
         }
       ],
       "cardImage": "cards/fangs-likans.jpg",
-      "cardCode": "KAFALI1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -835,9 +840,15 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "objectif",
-        "offensive",
-        "offensive"
+        [
+          "objectif"
+        ],
+        [
+          "offensive"
+        ],
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "aliene",
@@ -873,7 +884,6 @@
         }
       ],
       "cardImage": "cards/fangs-likans.jpg",
-      "cardCode": "KAFALI1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -920,7 +930,9 @@
         "couteau"
       ],
       "masteryDice": [
-        "offensive"
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -929,7 +941,6 @@
       "recruitment": [],
       "rules": [],
       "cardImage": "cards/fangs-goulue-1-fr.jpg",
-      "cardCode": "KAFAG01",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -980,8 +991,12 @@
         "couteau"
       ],
       "masteryDice": [
-        "offensive",
-        "defensive"
+        [
+          "offensive"
+        ],
+        [
+          "defensive"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -994,7 +1009,6 @@
         }
       ],
       "cardImage": "cards/fangs-goulue-1-fr.jpg",
-      "cardCode": "KAFAG01",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -1042,7 +1056,9 @@
         "couteau"
       ],
       "masteryDice": [
-        "offensive"
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "femelle-fang"
@@ -1055,7 +1071,6 @@
         }
       ],
       "cardImage": "cards/fangs-executeur-fr.jpg",
-      "cardCode": "KAFAEXI",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -1105,8 +1120,12 @@
         "couteau"
       ],
       "masteryDice": [
-        "offensive",
-        "offensive"
+        [
+          "offensive"
+        ],
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "femelle-fang"
@@ -1146,7 +1165,6 @@
         }
       ],
       "cardImage": "cards/fangs-executeur-fr.jpg",
-      "cardCode": "KAFAEXI",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -1196,9 +1214,15 @@
         "couteau"
       ],
       "masteryDice": [
-        "offensive",
-        "offensive",
-        "offensive"
+        [
+          "offensive"
+        ],
+        [
+          "offensive"
+        ],
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "femelle-fang"
@@ -1238,7 +1262,6 @@
         }
       ],
       "cardImage": "cards/fangs-executeur-fr.jpg",
-      "cardCode": "KAFAEXI",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -1286,7 +1309,9 @@
         "couteau"
       ],
       "masteryDice": [
-        "esoterique"
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1323,7 +1348,6 @@
         }
       ],
       "cardImage": "cards/fangs-meneuse-fr.jpg",
-      "cardCode": "KAFAME1",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -1371,8 +1395,12 @@
         "couteau"
       ],
       "masteryDice": [
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1392,7 +1420,6 @@
         }
       ],
       "cardImage": "cards/fangs-meneuse-fr.jpg",
-      "cardCode": "KAFAME2",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -1444,9 +1471,15 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "esoterique",
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1474,7 +1507,6 @@
         }
       ],
       "cardImage": "cards/fangs-meneuse-niv-3.jpg",
-      "cardCode": "KAFAME3",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -1526,8 +1558,12 @@
         "baton-relique"
       ],
       "masteryDice": [
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1551,7 +1587,6 @@
         }
       ],
       "cardImage": "cards/fangs-decatie-fr-1.jpg",
-      "cardCode": "KAFADE1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -1603,9 +1638,15 @@
         "baton-relique"
       ],
       "masteryDice": [
-        "esoterique",
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1629,7 +1670,6 @@
         }
       ],
       "cardImage": "cards/fangs-decatie-fr-1.jpg",
-      "cardCode": "KAFADE1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -1678,7 +1718,9 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "offensive"
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "femelle-fang"
@@ -1694,7 +1736,6 @@
         }
       ],
       "cardImage": "cards/fangs-affame.jpg",
-      "cardCode": "KAFAAF1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -1747,8 +1788,12 @@
         "paire-poignards"
       ],
       "masteryDice": [
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1777,7 +1822,6 @@
         }
       ],
       "cardImage": "cards/fangs-broutcha.jpg",
-      "cardCode": "KAFABR1",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -1837,9 +1881,15 @@
         "croc-de-fiel"
       ],
       "masteryDice": [
-        "esoterique",
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1864,7 +1914,6 @@
         }
       ],
       "cardImage": "cards/fangs-apathee.jpg",
-      "cardCode": "KAFAAP1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -1925,8 +1974,12 @@
         "faucille-os"
       ],
       "masteryDice": [
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang",
@@ -1946,7 +1999,6 @@
         }
       ],
       "cardImage": "cards/fangs-xayin-muskh.jpg",
-      "cardCode": "KAFAXA1",
       "unverifiedFields": [
         "stature",
         "masteryDice",
@@ -2009,7 +2061,9 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "offensive"
+        [
+          "offensive"
+        ]
       ],
       "traits": [
         "femelle-fang"
@@ -2025,7 +2079,6 @@
         }
       ],
       "cardImage": "cards/fangs-xayin-muskh.jpg",
-      "cardCode": "KAFAXA1",
       "unverifiedFields": [
         "stature",
         "masteryDice"
@@ -2079,8 +2132,12 @@
       ],
       "baseEquipmentIds": [],
       "masteryDice": [
-        "esoterique",
-        "esoterique"
+        [
+          "esoterique"
+        ],
+        [
+          "esoterique"
+        ]
       ],
       "traits": [
         "femelle-fang"
@@ -2127,7 +2184,6 @@
         }
       ],
       "cardImage": "cards/fangs-djouked-3.jpg",
-      "cardCode": "KAFADI1",
       "unverifiedFields": [
         "stature",
         "masteryDice"

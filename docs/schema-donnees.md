@@ -111,7 +111,7 @@ interface Profile {
 
   skills: SkillRef[];         // mots-clés + valeur éventuelle
   baseEquipmentIds: string[]; // équipement de base (coût déjà inclus dans `cost`)
-  masteryDice: MasteryDomain[];
+  masteryDice: MasteryDomain[][]; // un dé par entrée ; chaque dé porte 1 à 5 domaines
 
   magic?: {
     canCast: boolean;

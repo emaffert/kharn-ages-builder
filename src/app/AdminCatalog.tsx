@@ -15,6 +15,8 @@ const STAT_LABELS: [keyof Profile["stats"], string][] = [
 
 const LEVEL_LABEL = ["", "I", "II", "III"];
 
+const MASTERY_DOMAINS = ["offensive", "defensive", "objectif", "tir", "esoterique"] as const;
+
 const INPUT = "rounded bg-slate-800 px-2 py-1 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600";
 
 const replaceAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
@@ -75,7 +77,9 @@ function FlagButton({ active, onClick }: { active: boolean; onClick: () => void 
       type="button"
       onClick={onClick}
       title={active ? "Lecture incertaine (cliquer pour valider)" : "Marquer comme « à vérifier »"}
-      className={`leading-none ${active ? "text-amber-400" : "text-slate-600 hover:text-slate-400"}`}
+      className={`leading-none transition-opacity ${
+        active ? "text-amber-400" : "text-slate-500 opacity-0 group-hover:opacity-100"
+      }`}
     >
       ⚠
     </button>
@@ -97,7 +101,7 @@ function EditableNumber({
 }) {
   return (
     <label
-      className={`flex items-center gap-1 rounded px-2 py-1 ${
+      className={`group flex items-center gap-1 rounded px-2 py-1 ${
         unverified ? "bg-amber-950/40 ring-1 ring-amber-600/60" : "bg-slate-800"
       }`}
     >
@@ -388,7 +392,6 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
             />
             Mage
           </label>
-          {profile.cardCode && <Badge>{profile.cardCode}</Badge>}
         </div>
       </header>
 
@@ -425,6 +428,48 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
             onChange={(v) => upd("pv", v ?? 0)}
             onToggle={() => flag("pv")}
           />
+        </div>
+      </Section>
+
+      <Section title="Dés de maîtrise (chaque dé porte 1 à 5 domaines)">
+        <div className="group space-y-1.5">
+          {profile.masteryDice.map((die, i) => (
+            <div key={i} className="flex flex-wrap items-center gap-1.5">
+              <span className="w-10 text-xs text-slate-500">dé {i + 1}</span>
+              {MASTERY_DOMAINS.map((dom) => {
+                const on = die.includes(dom);
+                return (
+                  <button
+                    key={dom}
+                    type="button"
+                    onClick={() =>
+                      patch({
+                        masteryDice: replaceAt(
+                          profile.masteryDice,
+                          i,
+                          on ? die.filter((x) => x !== dom) : [...die, dom],
+                        ),
+                      })
+                    }
+                    className={`rounded px-1.5 py-0.5 text-xs ${
+                      on
+                        ? "bg-amber-600/40 text-amber-100 ring-1 ring-amber-600/60"
+                        : "bg-slate-800 text-slate-500 hover:text-slate-300"
+                    }`}
+                  >
+                    {dom}
+                  </button>
+                );
+              })}
+              <RemoveButton onClick={() => patch({ masteryDice: removeAt(profile.masteryDice, i) })} />
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
+            <AddButton onClick={() => patch({ masteryDice: [...profile.masteryDice, []] })}>
+              + dé
+            </AddButton>
+            <FlagButton active={uv("masteryDice")} onClick={() => flag("masteryDice")} />
+          </div>
         </div>
       </Section>
 

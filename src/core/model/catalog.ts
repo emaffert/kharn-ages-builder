@@ -103,7 +103,8 @@ export const ProfileSchema = z.object({
   skills: z.array(SkillRefSchema),
   /** Équipement de base (coût déjà inclus dans `cost`). */
   baseEquipmentIds: z.array(z.string()),
-  masteryDice: z.array(MasteryDomainSchema),
+  /** Un tableau de dés de maîtrise ; chaque dé porte 1 à 5 domaines. */
+  masteryDice: z.array(z.array(MasteryDomainSchema)),
   magic: ProfileMagicSchema.optional(),
   /** Vocabulaire ouvert (ex. "apatride", "tembo", "femelle-fang", "frere-d-armes"…). */
   traits: z.array(z.string()),
@@ -112,8 +113,6 @@ export const ProfileSchema = z.object({
   /** Tout le texte de règles de la carte, verbatim. */
   rules: z.array(RuleTextSchema),
   cardImage: z.string(),
-  /** Code imprimé sur la carte (ex. "KAFALA1") — non unique, traçabilité seulement. */
-  cardCode: z.string().optional(),
   mountEligible: z.boolean().optional(),
   /** Champs dont la lecture sur la carte est incertaine (chemins, ex. "stature", "stats.t"). */
   unverifiedFields: z.array(z.string()).optional(),

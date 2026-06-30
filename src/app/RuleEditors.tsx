@@ -413,13 +413,25 @@ function Select({
 
 function EditorCard({ children, preview, onRemove }: { children: React.ReactNode; preview: string; onRemove: () => void }) {
   return (
-    <div className="space-y-2 rounded-md border border-slate-700/60 bg-slate-800/40 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <p className="flex-1 text-sm text-emerald-200/90">↳ {preview}</p>
-        <RemoveButton onClick={onRemove} />
-      </div>
-      {children}
-    </div>
+    <details className="rounded-md border border-slate-700/60 bg-slate-800/40">
+      <summary className="flex cursor-pointer list-none items-center gap-2 p-3 hover:bg-slate-800/60 [&::-webkit-details-marker]:hidden">
+        <span className="flex-1 text-sm text-emerald-200/90">↳ {preview}</span>
+        <span className="text-xs text-slate-500">modifier ▾</span>
+        <button
+          type="button"
+          title="Supprimer"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="text-slate-500 hover:text-red-400"
+        >
+          ✕
+        </button>
+      </summary>
+      <div className="space-y-2 border-t border-slate-700/60 p-3">{children}</div>
+    </details>
   );
 }
 

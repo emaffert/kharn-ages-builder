@@ -1360,7 +1360,7 @@ export function AdminCatalog() {
     }`;
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100">
+    <div className="flex h-full bg-slate-950 text-slate-100">
       <aside className="flex w-72 shrink-0 flex-col border-r border-slate-800 bg-slate-900/50">
         <div className="space-y-2 border-b border-slate-800 p-3">
           <h1 className="text-sm font-bold text-amber-300">Khârn-Âges — Admin catalogue</h1>

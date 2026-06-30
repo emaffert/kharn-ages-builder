@@ -134,6 +134,18 @@ représenté dans le moteur `evaluateList`.
 - Sauvegarde locale (IndexedDB/Dexie), nom, document de liste **portable et versionné** (`snapshot`).
 - **Export** : texte (lisible) + code/lien portable. **Import** des deux. Ré-hydratation par id/nom.
 
+## Décisions UX (v1)
+
+- **Disposition** : **deux colonnes** — roster de la faction (gauche) ↔ liste en cours (droite),
+  coût/validation en direct.
+- **Édition des options d'une figurine** : **panneau latéral (drawer)** ouvert au clic sur la figurine.
+- **Validation** : **stricte** — on empêche l'action qui viole une règle dure (limitation atteinte,
+  arme sur un Larbin, mains, etc.). Les cas **conditionnels à la composition** (frères d'armes ≥ 2,
+  rattachement des Aliénés) restent validés au **niveau liste** (ajout possible, liste invalide tant
+  que la condition n'est pas remplie). Dépendances simples (Muskh→Xayìn) gérées par activation
+  conditionnelle du bouton d'ajout.
+- **Leader** mis en avant (épinglé en tête + icône). **Réordonnancement** des figurines (drag & drop).
+
 ## Périmètre proposé pour la v1 (Fangs / escarmouche)
 
 Concepts **1–7, 9, 11, 12, 13** (hors montures, pactes/PIONs/ordres réservés à la bataille).

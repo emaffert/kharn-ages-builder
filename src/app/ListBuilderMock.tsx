@@ -36,7 +36,36 @@ const SAMPLE = [
 
 const isDependent = (p: Profile) => p.modelId === "likan" || p.id === "fangs-muskh-1";
 
-type Modal = null | { kind: "preview"; profileId: string } | { kind: "edit"; index: number };
+const TRAIT_LABEL: Record<string, string> = { "femelle-fang": "une femelle Fang" };
+
+/** Modèle/figurine exact via lequel se recrute un profil dépendant (Likan → femelle Fang, Muskh → Xayìn). */
+function carrierLabel(p: Profile, cat: Catalog): string | null {
+  const name = (id?: string) =>
+    cat.profiles.find((x) => x.id === id)?.name ?? cat.models.find((m) => m.id === id)?.name;
+  // Attachment : porteur désigné par trait ou par identifiants.
+  for (const c of p.recruitment as { type: string; params?: Record<string, unknown> }[]) {
+    if (c.type !== "attachment") continue;
+    const car = c.params?.carrier as { trait?: string; profileIds?: string[]; modelIds?: string[] } | undefined;
+    if (car?.trait) return TRAIT_LABEL[car.trait] ?? car.trait;
+    const names = [...(car?.profileIds ?? []), ...(car?.modelIds ?? [])].map(name).filter(Boolean);
+    if (names.length) return names.join(" / ");
+  }
+  // requires-present : sur le profil ou porté par une carte spéciale (ex. Muskh via Xayìn).
+  const constraints = [...p.recruitment, ...cat.specialCards.flatMap((s) => s.constraints)] as {
+    type: string;
+    params?: Record<string, unknown>;
+  }[];
+  for (const c of constraints) {
+    if (c.type === "requires-present" && c.params?.subjectProfileId === p.id) {
+      const req = name(c.params?.requiredProfileId as string | undefined);
+      if (req) return req;
+    }
+  }
+  return null;
+}
+
+type ModelEntry = { id: string; name: string; profiles: Profile[] };
+type Modal = null | { kind: "preview"; modelId: string } | { kind: "edit"; index: number };
 
 export function ListBuilderMock() {
   const [step, setStep] = useState<"select" | "build">("select");
@@ -123,22 +152,34 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
   const { accent, deep } = fac;
   const [modal, setModal] = useState<Modal>(null);
 
-  const byName = (a: Profile, b: Profile) => a.name.localeCompare(b.name);
-  const personnages = cat.profiles.filter((p) => p.isNamed && !isDependent(p)).sort(byName);
-  const troupes = cat.profiles.filter((p) => !p.isNamed && !isDependent(p)).sort(byName);
-  const conditionnels = cat.profiles.filter(isDependent).sort(byName);
+  const models: ModelEntry[] = cat.models
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      profiles: m.profileIds
+        .map((id) => cat.profiles.find((p) => p.id === id))
+        .filter((p): p is Profile => Boolean(p))
+        .sort((a, b) => (a.level ?? 0) - (b.level ?? 0)),
+    }))
+    .filter((m) => m.profiles.length > 0);
+  const kindOf = (m: ModelEntry) => {
+    const p0 = m.profiles[0];
+    if (isDependent(p0)) return "cond";
+    if (p0.isNamed || p0.limitation.kind === "U" || p0.limitation.kind === "P") return "perso";
+    return "troupe";
+  };
+  const byName = (a: ModelEntry, b: ModelEntry) => a.name.localeCompare(b.name);
+  const personnages = models.filter((m) => kindOf(m) === "perso").sort(byName);
+  const troupes = models.filter((m) => kindOf(m) === "troupe").sort(byName);
+  const conditionnels = models.filter((m) => kindOf(m) === "cond").sort(byName);
 
   const items = SAMPLE.map((s) => ({ ...s, p: cat.profiles.find((x) => x.id === s.id)! })).filter((x) => x.p);
   const total = items.reduce((n, x) => n + (x.free ? 0 : x.p.cost), 0);
   const limit = 300;
   const ratio = Math.min(100, (total / limit) * 100);
 
-  const modalProfile =
-    modal?.kind === "preview"
-      ? cat.profiles.find((p) => p.id === modal.profileId)
-      : modal?.kind === "edit"
-        ? items[modal.index]?.p
-        : undefined;
+  const modalModel = modal?.kind === "preview" ? models.find((m) => m.id === modal.modelId) : undefined;
+  const editProfile = modal?.kind === "edit" ? items[modal.index]?.p : undefined;
 
   return (
     <div className="kh-builder kh-parchment flex h-full flex-col">
@@ -189,13 +230,13 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
             </p>
           </div>
           <div className="flex-1 overflow-y-auto p-2">
-            <RosterGroup label="Personnages" items={personnages} onOpen={(id) => setModal({ kind: "preview", profileId: id })} />
-            <RosterGroup label="Troupes" items={troupes} onOpen={(id) => setModal({ kind: "preview", profileId: id })} />
+            <RosterGroup label="Personnages" items={personnages} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup label="Troupes" items={troupes} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
             <RosterGroup
               label="Recrutement conditionnel"
               hint="se recrutent via un porteur dans la liste"
               items={conditionnels}
-              onOpen={(id) => setModal({ kind: "preview", profileId: id })}
+              onOpen={(id) => setModal({ kind: "preview", modelId: id })}
               conditional
             />
           </div>
@@ -255,13 +296,14 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
       </footer>
 
       {/* Modale : aperçu ou édition */}
-      {modal && modalProfile && (
+      {modal?.kind === "preview" && modalModel && (
         <Overlay onClose={() => setModal(null)}>
-          {modal.kind === "preview" ? (
-            <CardPreview profile={modalProfile} cat={cat} accent={accent} deep={deep} onClose={() => setModal(null)} />
-          ) : (
-            <EditDrawer profile={modalProfile} accent={accent} deep={deep} onClose={() => setModal(null)} />
-          )}
+          <CardPreview profiles={modalModel.profiles} cat={cat} accent={accent} deep={deep} onClose={() => setModal(null)} />
+        </Overlay>
+      )}
+      {modal?.kind === "edit" && editProfile && (
+        <Overlay onClose={() => setModal(null)}>
+          <EditDrawer profile={editProfile} accent={accent} deep={deep} onClose={() => setModal(null)} />
         </Overlay>
       )}
     </div>
@@ -290,7 +332,7 @@ function RosterGroup({
 }: {
   label: string;
   hint?: string;
-  items: Profile[];
+  items: ModelEntry[];
   onOpen: (id: string) => void;
   conditional?: boolean;
 }) {
@@ -299,20 +341,34 @@ function RosterGroup({
       <p className="kh-display px-2 text-[11px] font-semibold uppercase tracking-wider opacity-70">{label}</p>
       {hint && <p className="px-2 pb-1 text-[10px] italic opacity-50">{hint}</p>}
       <ul>
-        {items.map((p) => (
-          <li key={p.id}>
-            <button
-              onClick={() => onOpen(p.id)}
-              className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-sm hover:bg-white/60"
-            >
-              <span className={conditional ? "opacity-70" : ""}>
-                {p.name}
-                {p.level && <span className="ml-1 opacity-50">{LEVEL[p.level]}</span>}
-              </span>
-              <span className="text-xs opacity-70">{conditional ? "🔗" : p.cost}</span>
-            </button>
-          </li>
-        ))}
+        {items.map((m) => {
+          const first = m.profiles[0];
+          const last = m.profiles[m.profiles.length - 1];
+          const multi = m.profiles.length > 1;
+          const minCost = Math.min(...m.profiles.map((p) => p.cost));
+          return (
+            <li key={m.id}>
+              <button
+                onClick={() => onOpen(m.id)}
+                className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-sm hover:bg-white/60"
+              >
+                <span className={conditional ? "opacity-70" : ""}>
+                  {m.name}
+                  {multi ? (
+                    <span className="ml-1.5 text-xs opacity-40">
+                      {LEVEL[first.level ?? 0]}–{LEVEL[last.level ?? 0]}
+                    </span>
+                  ) : (
+                    first.level && <span className="ml-1 opacity-40">{LEVEL[first.level]}</span>
+                  )}
+                </span>
+                <span className="text-xs opacity-70">
+                  {conditional ? "🔗" : multi ? `${minCost}+` : `${first.cost}`}
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -345,6 +401,17 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
   );
 }
 
+function Tag({ children, accent }: { children: React.ReactNode; accent: string }) {
+  return (
+    <span
+      className="rounded px-1.5 py-0.5 font-medium uppercase tracking-wide"
+      style={{ background: `${accent}1a`, color: accent }}
+    >
+      {children}
+    </span>
+  );
+}
+
 function SectionTitle({ children, accent }: { children: React.ReactNode; accent: string }) {
   return (
     <h4
@@ -357,21 +424,56 @@ function SectionTitle({ children, accent }: { children: React.ReactNode; accent:
 }
 
 function CardPreview({
-  profile: p,
+  profiles,
   cat,
   accent,
   deep,
   onClose,
 }: {
-  profile: Profile;
+  profiles: Profile[];
   cat: Catalog;
   accent: string;
   deep: string;
   onClose: () => void;
 }) {
+  const [idx, setIdx] = useState(0);
+  const p = profiles[idx];
   const cards = specialCardsForProfile(p, cat);
+  const dependent = isDependent(p);
+  const carrier = carrierLabel(p, cat);
+  const precisions = p.skills.filter((s) => s.precision);
+  const [info, setInfo] = useState<{ title: string; text: string } | null>(null);
+  const showSkill = (skillId: string, label: string) => {
+    const sk = cat.skills.find((x) => x.id === skillId);
+    setInfo({ title: label, text: sk?.sourceText ?? "Description indisponible." });
+  };
+  const limLabel =
+    p.limitation.kind === "special"
+      ? "Limitation •"
+      : `Limitation ${p.limitation.kind}${p.limitation.value != null ? ` ${p.limitation.value}` : ""}`;
   return (
-    <div className="grid gap-5 md:grid-cols-[1fr_240px]">
+    <div className="space-y-4">
+      {profiles.length > 1 && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs opacity-60">Niveau</span>
+          <div className="inline-flex overflow-hidden rounded-md" style={{ boxShadow: `inset 0 0 0 1px ${accent}66` }}>
+            {profiles.map((pf, i) => (
+              <button
+                key={pf.id}
+                onClick={() => {
+                  setIdx(i);
+                  setInfo(null);
+                }}
+                className="px-3 py-1 text-sm transition"
+                style={i === idx ? { background: accent, color: "#f5ecd6" } : { color: accent }}
+              >
+                {LEVEL[pf.level ?? 0]} · {pf.cost}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="grid gap-5 md:grid-cols-[1fr_240px]">
       <div className="rounded-lg border-2 bg-white/40 p-4" style={{ borderColor: accent }}>
         <div className="flex items-start justify-between gap-2">
           <h3 className="kh-display text-2xl font-bold leading-tight" style={{ color: deep }}>
@@ -381,6 +483,10 @@ function CardPreview({
           <span className="rounded px-2 py-0.5 text-sm font-semibold text-white" style={{ background: accent }}>
             {p.cost} Ko
           </span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1 text-[11px]">
+          <Tag accent={accent}>{limLabel}</Tag>
+          {p.magic?.canCast && <Tag accent={accent}>Mage</Tag>}
         </div>
         <div className="mt-3 flex flex-wrap gap-1">
           {STATS.map(([k, label]) => (
@@ -399,14 +505,22 @@ function CardPreview({
           </span>
         </div>
         <div className="mt-3 flex flex-wrap gap-1">
-          {p.skills.map((s, i) => (
-            <span key={i} className="rounded-full bg-black/5 px-2 py-0.5 text-xs">
-              {cat.skills.find((sk) => sk.id === s.skillId)?.keyword ?? s.skillId}
-              {s.value != null ? ` ${s.value}` : ""}
-            </span>
-          ))}
+          {p.skills.map((s, i) => {
+            const sk = cat.skills.find((x) => x.id === s.skillId);
+            const label = `${sk?.keyword ?? s.skillId}${s.value != null ? ` ${s.value}` : ""}`;
+            return (
+              <button
+                key={i}
+                onClick={() => showSkill(s.skillId, label)}
+                className="rounded-full bg-black/5 px-2 py-0.5 text-xs transition hover:bg-black/10"
+                style={{ boxShadow: `inset 0 0 0 1px ${accent}33` }}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
-        {p.rules.length > 0 && (
+        {(p.rules.length > 0 || precisions.length > 0) && (
           <ul className="mt-3 space-y-1 text-sm">
             {p.rules.map((r, i) => (
               <li key={i}>
@@ -418,6 +532,21 @@ function CardPreview({
                 {r.text}
               </li>
             ))}
+            {precisions.map((s, i) => {
+              const kw = cat.skills.find((x) => x.id === s.skillId)?.keyword ?? s.skillId;
+              return (
+                <li key={`prec-${i}`}>
+                  <button
+                    onClick={() => showSkill(s.skillId, kw)}
+                    className="font-semibold underline decoration-dotted underline-offset-2 transition hover:opacity-70"
+                    style={{ color: deep }}
+                  >
+                    {kw}
+                  </button>{" "}
+                  : {s.precision}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -428,26 +557,53 @@ function CardPreview({
             <SectionTitle accent={accent}>Cartes liées</SectionTitle>
             <ul className="space-y-1 text-sm">
               {cards.map((c) => (
-                <li key={c.id} className="flex justify-between rounded bg-white/40 px-2 py-1">
-                  <span>{c.name}</span>
-                  <span className="opacity-60">{c.cost > 0 ? `${c.cost} Ko` : "auto"}</span>
+                <li key={c.id}>
+                  <button
+                    onClick={() =>
+                      setInfo({ title: c.name, text: c.rulesText.map((r) => r.text).join(" ") || "—" })
+                    }
+                    className="flex w-full justify-between rounded bg-white/40 px-2 py-1 text-left transition hover:bg-white/70"
+                  >
+                    <span>{c.name}</span>
+                    <span className="opacity-60">{c.cost > 0 ? `${c.cost} Ko` : "auto"}</span>
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
         )}
         <div className="mt-auto flex flex-col gap-2">
-          <button
-            className="rounded-md py-2 text-sm font-semibold text-white shadow transition hover:brightness-110"
-            style={{ background: accent }}
-          >
-            Ajouter à la liste
-          </button>
+          {dependent ? (
+            <p className="rounded-md bg-black/5 px-3 py-2 text-xs italic opacity-70">
+              Se recrute via {carrier ?? "un porteur"}, pas directement.
+            </p>
+          ) : (
+            <button
+              className="rounded-md py-2 text-sm font-semibold text-white shadow transition hover:brightness-110"
+              style={{ background: accent }}
+            >
+              Ajouter à la liste
+            </button>
+          )}
           <button onClick={onClose} className="rounded-md py-2 text-sm hover:bg-white/50">
             Fermer
           </button>
         </div>
       </div>
+      </div>
+      {info && (
+        <div className="rounded-lg border-l-4 bg-white/50 p-3" style={{ borderColor: accent }}>
+          <div className="flex items-start justify-between gap-2">
+            <span className="kh-display font-semibold" style={{ color: deep }}>
+              {info.title}
+            </span>
+            <button onClick={() => setInfo(null)} className="text-sm opacity-50 hover:opacity-100">
+              ✕
+            </button>
+          </div>
+          <p className="mt-1 text-sm leading-snug">{info.text}</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -969,7 +969,7 @@
         },
         {
           "skillId": "embuscade",
-          "value": "Sa 1ère attaque quand il est révélé bénéficie de +2 au seuil et de +1 en dégâts."
+          "precision": "Sa 1ère attaque quand il est révélé bénéficie de +2 au seuil et de +1 en dégâts."
         },
         {
           "skillId": "independant"
@@ -1029,7 +1029,7 @@
         },
         {
           "skillId": "embuscade",
-          "value": "Sa 1ère attaque quand il est révélé bénéficie de +3 au seuil et de +2 en dégâts."
+          "precision": "Sa 1ère attaque quand il est révélé bénéficie de +3 au seuil et de +2 en dégâts."
         },
         {
           "skillId": "independant"
@@ -1121,7 +1121,7 @@
         },
         {
           "skillId": "embuscade",
-          "value": "Sa 1ère attaque quand il est révélé bénéficie de +4 au seuil et de +3 en dégâts."
+          "precision": "Sa 1ère attaque quand il est révélé bénéficie de +4 au seuil et de +3 en dégâts."
         },
         {
           "skillId": "independant"
@@ -1377,7 +1377,7 @@
         },
         {
           "skillId": "harcelement",
-          "value": "Ajoute l'effet de V lors des attaques de corps à corps à 2 et 3 PA."
+          "precision": "Ajoute l'effet de V lors des attaques de corps à corps à 2 et 3 PA."
         }
       ],
       "baseEquipmentIds": [],
@@ -1972,7 +1972,7 @@
         },
         {
           "skillId": "morsure",
-          "value": "Récupère en plus autant de PV qu'il en inflige."
+          "precision": "Récupère en plus autant de PV qu'il en inflige."
         },
         {
           "skillId": "effroi",

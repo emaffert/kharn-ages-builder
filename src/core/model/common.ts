@@ -45,6 +45,12 @@ export type RuleText = z.infer<typeof RuleTextSchema>;
 export const SkillRefSchema = z.object({
   skillId: z.string(),
   value: z.union([z.number(), z.string()]).optional(),
+  /**
+   * Précision propre à ce profil qui complète la description générique de la compétence
+   * (ex. « embuscade » de l'Exécuteur : bonus au seuil/dégâts sur sa 1ʳᵉ attaque révélée).
+   * N'apparaît pas dans le tag — seulement dans la description dépliée.
+   */
+  precision: z.string().optional(),
 });
 export type SkillRef = z.infer<typeof SkillRefSchema>;
 

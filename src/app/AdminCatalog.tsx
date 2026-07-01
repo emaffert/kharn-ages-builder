@@ -250,36 +250,61 @@ function SkillsEditor({
   return (
     <div className="space-y-1.5">
       {skills.map((s, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <select
-            value={s.skillId}
-            onChange={(e) => onChange(replaceAt(skills, i, { ...s, skillId: e.target.value }))}
-            className={`${INPUT} flex-1`}
-          >
-            {[...cat.skills]
-              .sort((a, b) => a.keyword.localeCompare(b.keyword))
-              .map((sk) => (
-                <option key={sk.id} value={sk.id}>
-                  {sk.keyword}
-                </option>
-              ))}
-          </select>
-          <input
-            type="text"
-            placeholder="valeur"
-            value={s.value ?? ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              onChange(
-                replaceAt(skills, i, {
-                  ...s,
-                  value: v === "" ? undefined : /^\d+$/.test(v) ? Number(v) : v,
-                }),
-              );
-            }}
-            className={`${INPUT} w-28`}
-          />
-          <RemoveButton onClick={() => onChange(removeAt(skills, i))} />
+        <div key={i} className="space-y-1 rounded border border-stone-700 p-1.5">
+          <div className="flex items-center gap-2">
+            <select
+              value={s.skillId}
+              onChange={(e) => onChange(replaceAt(skills, i, { ...s, skillId: e.target.value }))}
+              className={`${INPUT} flex-1`}
+            >
+              {[...cat.skills]
+                .sort((a, b) => a.keyword.localeCompare(b.keyword))
+                .map((sk) => (
+                  <option key={sk.id} value={sk.id}>
+                    {sk.keyword}
+                  </option>
+                ))}
+            </select>
+            <input
+              type="text"
+              placeholder="valeur"
+              value={s.value ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                onChange(
+                  replaceAt(skills, i, {
+                    ...s,
+                    value: v === "" ? undefined : /^\d+$/.test(v) ? Number(v) : v,
+                  }),
+                );
+              }}
+              className={`${INPUT} w-28`}
+            />
+            {s.precision === undefined && (
+              <button
+                type="button"
+                title="Ajouter une précision propre au profil"
+                onClick={() => onChange(replaceAt(skills, i, { ...s, precision: "" }))}
+                className="rounded border border-stone-600 px-2 py-1 text-xs text-stone-300 hover:bg-stone-700"
+              >
+                + précision
+              </button>
+            )}
+            <RemoveButton onClick={() => onChange(removeAt(skills, i))} />
+          </div>
+          {s.precision !== undefined && (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                autoFocus
+                placeholder="précision propre au profil (complète la description, hors tag)"
+                value={s.precision}
+                onChange={(e) => onChange(replaceAt(skills, i, { ...s, precision: e.target.value }))}
+                className={`${INPUT} flex-1`}
+              />
+              <RemoveButton onClick={() => onChange(replaceAt(skills, i, { ...s, precision: undefined }))} />
+            </div>
+          )}
         </div>
       ))}
       <AddButton onClick={() => onChange([...skills, { skillId: cat.skills[0]?.id ?? "" }])}>

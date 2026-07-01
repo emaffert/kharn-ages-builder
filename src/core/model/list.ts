@@ -12,9 +12,13 @@ export const ProfileInstanceSchema = z.object({
   removedBaseEquipmentIds: z.array(z.string()),
   spellIds: z.array(z.string()),
   grimoireId: z.enum(["petit", "grand"]).optional(),
+  /** Quantité de munitions achetée par arme (armes de tir sans recharge). */
+  munitions: z.record(z.string(), z.number()).optional(),
   mount: z.object({ mountId: z.string(), optionIds: z.array(z.string()) }).optional(),
   /** Instances rattachées (ex. Likans liés à cette Fang). */
   attachedInstanceIds: z.array(z.string()).optional(),
+  /** Si cette instance occupe un emplacement gratuit « garde du corps » offert par une autre instance. */
+  bodyguardOfInstanceId: z.string().optional(),
   orderIds: z.array(z.string()).optional(),
   /** Cartes spéciales payantes sélectionnées (opt-in), ex. « Apprentie de Nyx ». */
   specialCardIds: z.array(z.string()).optional(),

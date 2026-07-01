@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AdminCatalog } from "./AdminCatalog";
-import { ListBuilderMock } from "./ListBuilderMock";
+import { ListBuilder } from "./ListBuilder";
 
 export function App() {
   const [view, setView] = useState<"builder" | "admin">("builder");
@@ -19,7 +19,7 @@ export function App() {
           Admin
         </button>
       </nav>
-      <div className="min-h-0 flex-1">{view === "builder" ? <ListBuilderMock /> : <AdminCatalog />}</div>
+      <div className="min-h-0 flex-1">{view === "builder" ? <ListBuilder /> : <AdminCatalog />}</div>
     </div>
   );
 }

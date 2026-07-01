@@ -10,6 +10,15 @@ import type {
   Selector,
   SpecialCard,
 } from "../model";
+import {
+  armorsWorn,
+  castWays,
+  forbiddenGrimoires,
+  handCapacity,
+  handsUsed,
+  pageCapacity,
+  pagesUsed,
+} from "./magic";
 
 /**
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
@@ -43,6 +52,7 @@ interface CatalogIndex {
   specialCard: Map<string, SpecialCard>;
   equipmentCost: Map<string, number>;
   equipmentCategory: Map<string, string>;
+  munitionUnitCost: Map<string, number>;
   grimoireCost: Map<string, number>;
   spellCost: Map<string, number>;
   mountCost: Map<string, number>;
@@ -74,6 +84,9 @@ function indexCatalog(cat: Catalog): CatalogIndex {
     specialCard: new Map(cat.specialCards.map((s) => [s.id, s])),
     equipmentCost: new Map(cat.equipment.map((e) => [e.id, e.cost])),
     equipmentCategory: new Map(cat.equipment.map((e) => [e.id, e.category])),
+    munitionUnitCost: new Map(
+      cat.equipment.filter((e) => e.munition).map((e) => [e.id, e.munition!.unitCost]),
+    ),
     grimoireCost: new Map(cat.grimoires.map((g) => [g.id, g.cost])),
     spellCost: new Map(cat.spells.map((s) => [s.id, s.cost ?? 0])),
     mountCost: new Map(cat.mounts.map((m) => [m.id, m.cost])),
@@ -123,11 +136,11 @@ function collectEffectOccurrences(
 ): EffectOccurrence[] {
   const occurrences: EffectOccurrence[] = [];
 
-  // Effets portés par les profils présents (les effets optionnels « optIn » ne sont
-  // pas appliqués automatiquement : ils relèvent d'un choix du joueur).
+  // Effets portés par les profils présents. Un effet « optIn » (choix du joueur) n'est appliqué
+  // que si l'instance a explicitement opté — désignée garde du corps (ex. Djouked → −35 pour Broutcha).
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
-      if (effect.optIn) continue;
+      if (effect.optIn && ri.instance.bodyguardOfInstanceId == null) continue;
       occurrences.push({
         effect,
         ferDeLanceId: ri.ferDeLanceId,
@@ -227,6 +240,9 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex): number {
   for (const id of inst.addedEquipmentIds) cost += idx.equipmentCost.get(id) ?? 0;
   if (inst.grimoireId) cost += idx.grimoireCost.get(inst.grimoireId) ?? 0;
   for (const id of inst.spellIds) cost += idx.spellCost.get(id) ?? 0;
+  for (const [equipId, qty] of Object.entries(inst.munitions ?? {})) {
+    cost += (idx.munitionUnitCost.get(equipId) ?? 0) * qty;
+  }
   if (inst.mount) {
     cost += idx.mountCost.get(inst.mount.mountId) ?? 0;
     for (const id of inst.mount.optionIds) cost += idx.mountOptionCost.get(id) ?? 0;
@@ -267,19 +283,18 @@ function computeCosts(
     }
   }
 
-  // cost-set : fixe le coût (ex. larbins gratuits), dans la limite de maxCount.
+  // cost-set : fixe le coût (ex. larbins « garde du corps » gratuits). Seules les cibles
+  // *désignées* (bodyguardOfInstanceId) en bénéficient — le joueur choisit qui occupe l'emplacement —
+  // dans la limite de maxCount et du nombre de sources (sourceCount).
   for (const occ of occurrences) {
     const op = occ.effect.operation;
     if (op.kind !== "cost-set") continue;
     if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
 
-    const matches = resolveTargets(occ, resolved)
-      .slice()
-      .sort((a, b) => (cost.get(b.instance.instanceId) ?? 0) - (cost.get(a.instance.instanceId) ?? 0));
-    // « par source » : 1 cible par figurine source (sourceCount), plafonnée par maxCount.
-    const cap = op.maxCount ?? matches.length;
-    const freed = Math.min(cap, occ.sourceCount ?? matches.length, matches.length);
-    for (const ri of matches.slice(0, freed)) {
+    const designated = resolveTargets(occ, resolved).filter((ri) => ri.instance.bodyguardOfInstanceId != null);
+    const cap = op.maxCount ?? designated.length;
+    const freed = Math.min(cap, occ.sourceCount ?? designated.length, designated.length);
+    for (const ri of designated.slice(0, freed)) {
       cost.set(ri.instance.instanceId, op.amount);
     }
   }
@@ -320,14 +335,72 @@ function validate(
     const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdl.id);
     validateLimitations(fdl, inFdl, issues);
     validateFactionMembership(fdl, inFdl, issues);
+    validateLeader(fdl, inFdl, issues);
   }
 
   validateForbiddenEquipment(cat, resolved, idx, issues);
   validateRequiresPresent(cat, resolved, issues);
   validateAttachments(cat, list, resolved, issues);
   validateSpecialCardScope(idx, resolved, issues);
+  validateMagicAndSlots(cat, resolved, issues);
 
   return issues;
+}
+
+/** Le leader doit être désigné et éligible : personnage OU l'une des 2 figurines les plus chères. */
+function validateLeader(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
+  if (inFdl.length === 0) return;
+  const leader = inFdl.find((ri) => ri.instance.instanceId === fdl.leaderInstanceId);
+  const push = (message: string) =>
+    issues.push({ severity: "error", ferDeLanceId: fdl.id, ruleId: "leader-eligibility", message, sourceText: "Le meneur doit être un personnage ou l'une des deux figurines les plus chères." });
+  if (!leader) {
+    push("Aucun meneur éligible n'est désigné pour ce Fer de Lance.");
+    return;
+  }
+  const isChar = (p: Profile) => Boolean(p.isNamed) || p.limitation.kind === "U" || p.limitation.kind === "P";
+  const topTwo = new Set(
+    [...inFdl].sort((a, b) => b.profile.cost - a.profile.cost).slice(0, 2).map((ri) => ri.instance.instanceId),
+  );
+  if (!isChar(leader.profile) && !topTwo.has(leader.instance.instanceId)) {
+    push(`« ${leader.profile.name} » ne peut pas être meneur (ni personnage, ni parmi les deux plus chères).`);
+  }
+}
+
+/** Validations dérivées : grimoire interdit, capacité de pages, sorts sans lanceur, mains/armure. */
+function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
+  for (const ri of resolved) {
+    const { profile: p, instance: inst, traits } = ri;
+    const push = (ruleId: string, message: string) =>
+      issues.push({
+        severity: "error",
+        ferDeLanceId: ri.ferDeLanceId,
+        instanceId: inst.instanceId,
+        ruleId,
+        message,
+        sourceText: "Règles de création de liste — équipement & magie.",
+      });
+
+    if (inst.grimoireId && forbiddenGrimoires(p).has(inst.grimoireId)) {
+      push("grimoire-forbidden", `« ${p.name} » ne peut pas acquérir ce grimoire.`);
+    }
+
+    if (inst.spellIds.length > 0) {
+      if (castWays(cat, p, inst, traits).length === 0) {
+        push("spells-no-caster", `« ${p.name} » a des sorts alors qu'elle ne peut pas en lancer.`);
+      } else {
+        const cap = pageCapacity(cat, p, inst, traits);
+        const used = pagesUsed(cat, inst);
+        if (used > cap) {
+          push("pages-over-capacity", `« ${p.name} » : ${used} pages de sorts pour ${cap === Infinity ? "∞" : cap} disponibles.`);
+        }
+      }
+    }
+
+    const hands = handsUsed(cat, p, inst);
+    const cap = handCapacity(p);
+    if (hands > cap) push("hands-over-capacity", `« ${p.name} » : trop d'équipement à mains (${hands} / ${cap}).`);
+    if (armorsWorn(cat, p, inst) > 1) push("multiple-armor", `« ${p.name} » porte plusieurs armures.`);
+  }
 }
 
 function validateSpecialCardScope(
@@ -513,9 +586,12 @@ function validateAttachments(
       const carrierRi = byInstanceId.get(carrier.instanceId);
       if (!carrierRi) continue;
 
+      // Seuls les rattachés soumis à une contrainte d'attachement (les Likans) comptent dans la
+      // capacité — un Muskh rattaché à Xàyin, par ex., ne consomme pas la capacité Likan.
       const attachedRis = attached
         .map((id) => byInstanceId.get(id))
-        .filter((ri): ri is ResolvedInstance => Boolean(ri));
+        .filter((ri): ri is ResolvedInstance => Boolean(ri))
+        .filter((ri) => ri.profile.recruitment.some((c) => c.type === "attachment"));
       const attachmentConstraint = attachedRis
         .flatMap((ri) => ri.profile.recruitment)
         .find((c) => c.type === "attachment");

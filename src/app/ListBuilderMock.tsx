@@ -64,8 +64,34 @@ function carrierLabel(p: Profile, cat: Catalog): string | null {
   return null;
 }
 
+/** Catégories d'équipement qu'une figurine peut acheter (hors munition/option de monture). */
+const PURCHASE_CATS = ["arme-cac", "arme-tir", "bouclier", "armure", "objet"];
+
+/** Une figurine peut-elle acheter quelque chose ? Non si une contrainte `forbids-equipment`
+ *  (sur son profil ou une carte la ciblant) bloque toutes les catégories d'achat (ex. Likan, Muskh). */
+function canBuy(p: Profile, cat: Catalog): boolean {
+  const forbidden = new Set<string>();
+  const collect = (constraints: { type: string; params?: Record<string, unknown> }[]) => {
+    for (const c of constraints) {
+      if (c.type !== "forbids-equipment") continue;
+      const target = c.params?.profileId as string | undefined;
+      if (target && target !== p.id) continue;
+      for (const cat of (c.params?.categories as string[] | undefined) ?? []) forbidden.add(cat);
+    }
+  };
+  collect(p.recruitment);
+  collect(cat.specialCards.flatMap((s) => s.constraints));
+  return PURCHASE_CATS.some((c) => !forbidden.has(c));
+}
+
 type ModelEntry = { id: string; name: string; profiles: Profile[] };
-type Modal = null | { kind: "preview"; modelId: string } | { kind: "edit"; index: number };
+type Modal =
+  | null
+  | { kind: "preview"; modelId: string }
+  | { kind: "edit"; index: number }
+  | { kind: "guard"; index: number };
+/** Fiche courte d'un achat (arme, équipement, carte) affichée au clic depuis le résumé. */
+type ItemInfo = { title: string; price: string; lines: string[] };
 
 export function ListBuilderMock() {
   const [step, setStep] = useState<"select" | "build">("select");
@@ -173,8 +199,72 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
   const troupes = models.filter((m) => kindOf(m) === "troupe").sort(byName);
   const conditionnels = models.filter((m) => kindOf(m) === "cond").sort(byName);
 
-  const items = SAMPLE.map((s) => ({ ...s, p: cat.profiles.find((x) => x.id === s.id)! })).filter((x) => x.p);
-  const total = items.reduce((n, x) => n + (x.free ? 0 : x.p.cost), 0);
+  const items = useMemo(
+    () => SAMPLE.map((s) => ({ ...s, p: cat.profiles.find((x) => x.id === s.id)! })).filter((x) => x.p),
+    [cat],
+  );
+  const isChar = (p: Profile) => Boolean(p.isNamed) || p.limitation.kind === "U" || p.limitation.kind === "P";
+
+  // État interactif de la maquette centrale : leader unique, gardes du corps (chaque garde est
+  // lié à une Fille de Nyx précise), repli du résumé d'achats, et fiche d'un objet cliqué.
+  const [expanded, setExpanded] = useState<Set<number>>(
+    () => new Set(items.map((x, i) => (isChar(x.p) ? i : -1)).filter((i) => i >= 0)),
+  );
+  const toggleExpanded = (i: number) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  const [itemInfo, setItemInfo] = useState<ItemInfo | null>(null);
+
+  // Leader : uniquement un personnage OU l'une des deux figurines les plus chères.
+  const topTwo = new Set(
+    items
+      .map((x, i) => ({ i, c: x.p.cost }))
+      .sort((a, b) => b.c - a.c)
+      .slice(0, 2)
+      .map((o) => o.i),
+  );
+  const canLead = (p: Profile, i: number) => isChar(p) || topTwo.has(i);
+  const [leaderIdx, setLeaderIdx] = useState(() => Math.max(0, items.findIndex((x) => x.leader)));
+
+  // « Garde du corps » : emplacement gratuit offert par une Fille de Nyx (cost-set 0, max 2).
+  // Le garde est *lié* à une Fille de Nyx précise (choisie si plusieurs), pour de futures
+  // mécaniques où l'unité liée compte. Larbin → gratuit, Djouked → −35 (Broutcha).
+  const GUARD_CAP = 2;
+  const filles = items.map((x, i) => ({ idx: i, name: x.p.name })).filter((_, i) => items[i].p.traits.includes("fille-de-nyx"));
+  const hasModel = (m: string) => items.some((x) => x.p.modelId === m);
+  const guardEligible = (p: Profile) =>
+    p.modelId === "larbin" ? filles.length > 0 : p.modelId === "djouked" ? hasModel("broutcha") : false;
+  const [guards, setGuards] = useState<Record<number, number>>(() => {
+    const fdn = items.findIndex((x) => x.p.traits.includes("fille-de-nyx"));
+    const g: Record<number, number> = {};
+    items.forEach((x, i) => {
+      if (x.free && fdn >= 0) g[i] = fdn;
+    });
+    return g;
+  });
+  const guardCount = Object.keys(guards).length;
+  const setGuard = (i: number, fdnIdx: number) => setGuards((prev) => ({ ...prev, [i]: fdnIdx }));
+  const removeGuard = (i: number) =>
+    setGuards((prev) => {
+      const n = { ...prev };
+      delete n[i];
+      return n;
+    });
+  const onGuardClick = (i: number) => {
+    if (guards[i] != null) removeGuard(i);
+    else if (guardCount < GUARD_CAP) {
+      if (filles.length === 1) setGuard(i, filles[0].idx);
+      else setModal({ kind: "guard", index: i });
+    }
+  };
+  const costOf = (p: Profile, i: number) =>
+    guards[i] == null ? p.cost : p.modelId === "djouked" ? Math.max(0, p.cost - 35) : 0;
+
+  const total = items.reduce((n, x, i) => n + costOf(x.p, i), 0);
   const limit = 300;
   const ratio = Math.min(100, (total / limit) * 100);
 
@@ -251,38 +341,105 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
             >
               + ajouter depuis le roster
             </button>
-            {items.map((x, i) => (
-              <div key={i}>
-                <button
-                  onClick={() => setModal({ kind: "edit", index: i })}
-                  className="flex w-full items-center gap-3 rounded-md border-l-4 bg-white/45 px-3 py-2.5 text-left shadow-sm transition hover:bg-white/70"
-                  style={{ borderLeftColor: x.leader ? accent : "transparent" }}
+            {items.map((x, i) => {
+              const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
+              const isLeader = i === leaderIdx;
+              const guarded = guards[i] != null;
+              const eligible = guardEligible(x.p);
+              const free = guarded && x.p.modelId !== "djouked";
+              const open = expanded.has(i);
+              const leadable = canLead(x.p, i);
+              const hasActions = x.p.traits.includes("femelle-fang") || x.p.id === "fangs-xayin-2" || eligible;
+              return (
+                <div
+                  key={i}
+                  className="rounded-md border-l-4 bg-white/45 shadow-sm transition hover:bg-white/60"
+                  style={{ borderLeftColor: isLeader ? accent : "transparent" }}
                 >
-                  <span className="w-4 text-center" style={{ color: accent }}>
-                    {x.leader ? "❖" : <span className="cursor-grab opacity-40">⠿</span>}
-                  </span>
-                  <span className="flex-1">
-                    <span className="font-semibold" style={{ color: deep }}>
-                      {x.p.name}
-                    </span>
-                    {x.p.level && <span className="ml-1 opacity-50">{LEVEL[x.p.level]}</span>}
-                    {x.leader && (
-                      <span className="kh-display ml-2 text-[10px] uppercase tracking-wide" style={{ color: accent }}>
-                        Leader
-                      </span>
+                  <div className="flex items-center gap-2 px-3 py-2.5">
+                    {buyable ? (
+                      <button
+                        onClick={() => toggleExpanded(i)}
+                        title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
+                        className="w-4 text-center opacity-60 transition hover:opacity-100"
+                        style={{ color: accent }}
+                      >
+                        {open ? "▾" : "▸"}
+                      </button>
+                    ) : (
+                      <span className="w-4 cursor-grab text-center opacity-40">⠿</span>
                     )}
-                  </span>
-                  <span className={`text-sm ${x.free ? "font-semibold" : ""}`} style={{ color: x.free ? "#4a6b32" : deep }}>
-                    {x.free ? "gratuit" : `${x.p.cost} Ko`}
-                  </span>
-                  <span className="opacity-40 hover:text-red-700 hover:opacity-100">✕</span>
-                </button>
-                <div className="ml-8 mt-1 flex gap-2">
-                  {x.p.traits.includes("femelle-fang") && <RecruitPill label="+ Likan" accent={accent} />}
-                  {x.p.id === "fangs-xayin-2" && <RecruitPill label="+ Muskh" accent={accent} />}
+                    <button
+                      onClick={() => setModal({ kind: "edit", index: i })}
+                      className="flex flex-1 items-center text-left"
+                    >
+                      <span className="flex-1">
+                        <span className="font-semibold" style={{ color: deep }}>
+                          {x.p.name}
+                        </span>
+                        {x.p.level && <span className="ml-1 opacity-50">{LEVEL[x.p.level]}</span>}
+                        {guarded && (
+                          <span className="kh-display ml-2 text-[10px] uppercase tracking-wide" style={{ color: "#4a6b32" }}>
+                            Garde du corps de {items[guards[i]]?.p.name}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                    {isLeader ? (
+                      <span
+                        className="kh-display rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+                        style={{ background: accent }}
+                      >
+                        ❖ Leader
+                      </span>
+                    ) : (
+                      leadable && (
+                        <button
+                          onClick={() => setLeaderIdx(i)}
+                          title="Promouvoir en Leader"
+                          className="rounded-full border px-2.5 py-1 text-xs transition hover:bg-white/60"
+                          style={{ borderColor: `${accent}66`, color: accent }}
+                        >
+                          Définir leader
+                        </button>
+                      )
+                    )}
+                    <span className={`w-16 text-right text-sm ${free ? "font-semibold" : ""}`} style={{ color: free ? "#4a6b32" : deep }}>
+                      {free ? "gratuit" : `${costOf(x.p, i)} Ko`}
+                    </span>
+                    <button className="opacity-40 transition hover:text-red-700 hover:opacity-100" title="Retirer">
+                      ✕
+                    </button>
+                  </div>
+                  {hasActions && (
+                    <div className="flex flex-wrap gap-2 px-3 pb-2.5 pl-9">
+                      {x.p.traits.includes("femelle-fang") && <RecruitPill label="+ Likan" accent={accent} />}
+                      {x.p.id === "fangs-xayin-2" && <RecruitPill label="+ Muskh" accent={accent} />}
+                      {eligible && (
+                        <button
+                          onClick={() => onGuardClick(i)}
+                          disabled={!guarded && guardCount >= GUARD_CAP}
+                          title={
+                            x.p.modelId === "djouked"
+                              ? "Garde rapproché de Broutcha (−35 Ko)"
+                              : "Garde du corps d'une Fille de Nyx (gratuit)"
+                          }
+                          className="rounded-full border px-2 py-0.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-40"
+                          style={
+                            guarded
+                              ? { background: "#4a6b3218", borderColor: "#4a6b3255", color: "#3c5a28" }
+                              : { borderColor: `${accent}55`, color: accent }
+                          }
+                        >
+                          {guarded ? "✓ Garde du corps — retirer" : "Garde du corps"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {buyable && open && <PurchaseSummary p={x.p} cat={cat} accent={accent} onPick={setItemInfo} />}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
@@ -304,6 +461,52 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
       {modal?.kind === "edit" && editProfile && (
         <Overlay onClose={() => setModal(null)}>
           <EditDrawer profile={editProfile} accent={accent} deep={deep} onClose={() => setModal(null)} />
+        </Overlay>
+      )}
+      {modal?.kind === "guard" && (
+        <Overlay onClose={() => setModal(null)}>
+          <div className="space-y-3">
+            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
+              Garde du corps de quelle Fille de Nyx ?
+            </h3>
+            <p className="text-sm opacity-70">
+              {items[modal.index]?.p.name} devient gratuit et reste lié à la Fille de Nyx choisie.
+            </p>
+            <div className="flex flex-col gap-1.5">
+              {filles.map((f) => (
+                <button
+                  key={f.idx}
+                  onClick={() => {
+                    setGuard(modal.index, f.idx);
+                    setModal(null);
+                  }}
+                  className="rounded-md border px-3 py-2 text-left text-sm transition hover:bg-white/60"
+                  style={{ borderColor: `${accent}44`, color: deep }}
+                >
+                  {f.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Overlay>
+      )}
+      {itemInfo && (
+        <Overlay onClose={() => setItemInfo(null)}>
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="kh-display text-lg font-bold leading-tight" style={{ color: deep }}>
+                {itemInfo.title}
+              </h3>
+              <span className="rounded px-2 py-0.5 text-sm font-semibold text-white" style={{ background: accent }}>
+                {itemInfo.price}
+              </span>
+            </div>
+            {itemInfo.lines.map((l, k) => (
+              <p key={k} className="text-sm leading-snug">
+                {l}
+              </p>
+            ))}
+          </div>
         </Overlay>
       )}
     </div>
@@ -420,6 +623,95 @@ function SectionTitle({ children, accent }: { children: React.ReactNode; accent:
     >
       {children}
     </h4>
+  );
+}
+
+type SummaryChip = { name: string; info: ItemInfo };
+
+function equipInfo(e: Catalog["equipment"][number]): ItemInfo {
+  const bits: string[] = [];
+  if (e.category === "arme-cac") bits.push("Corps à corps");
+  if (e.category === "arme-tir") bits.push("Tir");
+  if (e.hands) bits.push(`${e.hands} main${e.hands > 1 ? "s" : ""}`);
+  if (e.allonge != null) bits.push(`Allonge ${e.allonge}`);
+  if (e.range) bits.push(`Portée ${e.range.short}/${e.range.long}`);
+  if (e.durability != null) bits.push(`Solidité ${e.durability}`);
+  if (e.perceArmure != null) bits.push(`Perce-armure ${e.perceArmure}`);
+  return {
+    title: e.name,
+    price: e.isFree || e.cost === 0 ? "gratuit" : `${e.cost} Ko`,
+    lines: [bits.join(" · "), e.effectsText].filter(Boolean),
+  };
+}
+
+/** Résumé compact des « achats » d'une figurine ; chaque objet ouvre sa fiche (description + prix). */
+function PurchaseSummary({
+  p,
+  cat,
+  accent,
+  onPick,
+}: {
+  p: Profile;
+  cat: Catalog;
+  accent: string;
+  onPick: (info: ItemInfo) => void;
+}) {
+  const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier", "armure"];
+  const equip = p.baseEquipmentIds
+    .map((id) => cat.equipment.find((e) => e.id === id))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e));
+  const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
+  const armes = equip.filter((e) => WEAPON_CATS.includes(e.category)).map((e) => chip(e.name, equipInfo(e)));
+  const objets = equip.filter((e) => !WEAPON_CATS.includes(e.category)).map((e) => chip(e.name, equipInfo(e)));
+  const cartes = specialCardsForProfile(p, cat).map((c) =>
+    chip(c.name, {
+      title: c.name,
+      price: c.cost > 0 ? `${c.cost} Ko` : "auto",
+      lines: c.rulesText.map((r) => r.text),
+    }),
+  );
+  const magie = p.magic?.canCast
+    ? p.magic.magicWayIds.map((id) => {
+        const w = cat.magicWays.find((mw) => mw.id === id);
+        return chip(w?.name ?? id, { title: w?.name ?? id, price: "voie", lines: [w?.castingBonusText ?? ""] });
+      })
+    : [];
+  const rows: [string, SummaryChip[]][] = [
+    ["Armes", armes],
+    ["Équip.", objets],
+    ["Cartes", cartes],
+    ["Magie", magie],
+  ];
+  const shown = rows.filter(([, v]) => v.length > 0);
+  return (
+    <div className="border-t px-3 py-2 pl-9 text-xs" style={{ borderColor: `${accent}22` }}>
+      {shown.length === 0 ? (
+        <span className="opacity-50">Aucun achat pour l'instant.</span>
+      ) : (
+        <div className="flex flex-col gap-1">
+          {shown.map(([label, vals]) => (
+            <div key={label} className="flex gap-2">
+              <span className="kh-display w-14 shrink-0 pt-0.5 uppercase tracking-wide opacity-50" style={{ color: accent }}>
+                {label}
+              </span>
+              <span className="flex flex-wrap gap-1">
+                {vals.map((v, k) => (
+                  <button
+                    key={k}
+                    onClick={() => onPick(v.info)}
+                    className="rounded bg-black/5 px-1.5 py-0.5 transition hover:bg-black/15"
+                    title="Voir la fiche et le prix"
+                  >
+                    {v.name}
+                    <span className="ml-1 opacity-50">{v.info.price}</span>
+                  </button>
+                ))}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

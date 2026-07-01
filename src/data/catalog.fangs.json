@@ -2150,6 +2150,10 @@
       "cost": 0,
       "hands": 1,
       "effectsText": "Arme de tir entraînant plusieurs jets de défense (voir FAQ).",
+      "munition": {
+        "unitCost": 2,
+        "max": 10
+      },
       "restrictions": []
     },
     {
@@ -2159,7 +2163,12 @@
       "cost": 15,
       "hands": 1,
       "effectsText": "Les Goulues dans son aura infligent +2 dégâts.",
-      "restrictions": []
+      "restrictions": [],
+      "reservedTo": {
+        "profileIds": [
+          "fangs-decatie-2"
+        ]
+      }
     },
     {
       "id": "baton-relique-decatie-3",
@@ -2168,7 +2177,12 @@
       "cost": 15,
       "hands": 1,
       "effectsText": "Les Goulues dans son aura gagnent « Réceptif (ostéomancie) ».",
-      "restrictions": []
+      "restrictions": [],
+      "reservedTo": {
+        "profileIds": [
+          "fangs-decatie-3"
+        ]
+      }
     }
   ],
   "grimoires": [
@@ -2335,6 +2349,12 @@
       "scope": {
         "trait": "goulue"
       },
+      "amelioration": true,
+      "grantsCasting": {
+        "magicWayIds": [
+          "osteomancie"
+        ]
+      },
       "rulesText": [
         {
           "text": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie."
@@ -2448,6 +2468,7 @@
       "scope": {
         "trait": "meneuse"
       },
+      "amelioration": true,
       "rulesText": [
         {
           "text": "Peut contenir 3 pages de sorts."

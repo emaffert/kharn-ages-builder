@@ -915,6 +915,39 @@ function EquipmentDetail({
               className={`${INPUT} w-20`}
             />
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span>Munitions (Ko/u · max) :</span>
+            <input
+              type="number"
+              placeholder="coût/u"
+              value={e.munition?.unitCost ?? ""}
+              onChange={(ev) =>
+                onChange({
+                  munition:
+                    ev.target.value === ""
+                      ? undefined
+                      : { unitCost: Number(ev.target.value), max: e.munition?.max },
+                })
+              }
+              className={`${INPUT} w-24`}
+            />
+            <input
+              type="number"
+              placeholder="max"
+              value={e.munition?.max ?? ""}
+              disabled={!e.munition}
+              onChange={(ev) =>
+                onChange({ munition: { unitCost: e.munition?.unitCost ?? 0, max: numOrUndef(ev.target.value) } })
+              }
+              className={`${INPUT} w-20`}
+            />
+            {e.munition && (
+              <button type="button" onClick={() => onChange({ munition: undefined })} className="text-slate-500 hover:text-red-400">
+                ✕
+              </button>
+            )}
+          </div>
+          <GrantsCastingEditor value={e.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
           <label className="flex items-center gap-2">
             Perce-armure :
             <input
@@ -1049,6 +1082,34 @@ function ProfileMultiSelect({
   );
 }
 
+function GrantsCastingEditor({
+  value,
+  cat,
+  onChange,
+}: {
+  value?: { magicWayIds: string[] };
+  cat: Catalog;
+  onChange: (v?: { magicWayIds: string[] }) => void;
+}) {
+  const ids = value?.magicWayIds ?? [];
+  const toggle = (id: string) => {
+    const next = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+    onChange(next.length ? { magicWayIds: next } : undefined);
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+      <span>Confère le lancement de sorts :</span>
+      {cat.magicWays.map((w) => (
+        <label key={w.id} className="flex items-center gap-1">
+          <input type="checkbox" checked={ids.includes(w.id)} onChange={() => toggle(w.id)} />
+          {w.name}
+        </label>
+      ))}
+      {cat.magicWays.length === 0 && <span className="text-slate-600">(aucune voie définie)</span>}
+    </div>
+  );
+}
+
 function SpecialCardDetail({
   card,
   cat,
@@ -1082,9 +1143,18 @@ function SpecialCardDetail({
           ✕
         </button>
       </header>
-      <p className="text-xs text-slate-500">
-        Coût 0 = carte intrinsèque (auto). Coût &gt; 0 = amélioration payante (sélectionnée par la figurine).
-      </p>
+      <label className="flex items-center gap-2 text-sm text-slate-300">
+        <input
+          type="checkbox"
+          checked={card.amelioration ?? false}
+          onChange={(e) => onChange({ amelioration: e.target.checked || undefined })}
+        />
+        Amélioration choisie par le joueur
+        <span className="text-xs text-slate-500">
+          (sinon carte automatique appliquée d'office, ex. Fille de Nyx)
+        </span>
+      </label>
+      <GrantsCastingEditor value={card.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
 
       <Section title="Portée (à qui s'applique la carte)">
         <div className="space-y-2">

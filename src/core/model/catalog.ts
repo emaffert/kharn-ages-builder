@@ -131,12 +131,30 @@ export const EquipmentSchema = z.object({
   allonge: z.number().optional(),
   range: z.object({ short: z.number(), long: z.number(), max: z.number().optional() }).optional(),
   reload: z.object({ cadence: z.number(), paCost: z.number() }).optional(),
+  /** Munitions achetables (armes de tir sans recharge) : coût par unité et quantité max éventuelle. */
+  munition: z.object({ unitCost: z.number(), max: z.number().optional() }).optional(),
+  /** L'objet confère la capacité de lancer des sorts dans ces voies (ex. focus/relique). */
+  grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   durability: z.number().optional(),
   perceArmure: z.union([z.number(), z.literal("1D5")]).optional(),
   effectsText: z.string(),
   /** Compétences conférées (ex. la Faucille d'Os confère « Riposte »). */
   grantsSkills: z.array(SkillRefSchema).optional(),
   restrictions: z.array(ConstraintSchema),
+  /**
+   * Réservation : l'équipement n'est portable que par les profils correspondant à *toutes* les
+   * dimensions fournies (au sein d'une dimension, l'appartenance suffit). Ex. Bâton relique →
+   * Décatie ; Arc court → niveau I ; équipement réservé à une espèce/faction.
+   */
+  reservedTo: z
+    .object({
+      profileIds: z.array(z.string()).optional(),
+      modelIds: z.array(z.string()).optional(),
+      traits: z.array(z.string()).optional(),
+      levels: z.array(LevelSchema).optional(),
+      factionIds: z.array(z.string()).optional(),
+    })
+    .optional(),
   /** Si l'équipement a sa propre carte (sinon affiché inline sur le profil). */
   cardImage: z.string().optional(),
 });
@@ -228,6 +246,13 @@ export const SpecialCardSchema = z.object({
   name: z.string(),
   cost: z.number(),
   scope: z.object({ profileIds: z.array(z.string()).optional(), trait: z.string().optional() }),
+  /**
+   * `true` : amélioration *choisie* par le joueur (achat optionnel, ex. Apprentie de Nyx, Crosse).
+   * Absent/`false` : carte automatique appliquée d'office (ex. Fille de Nyx, Xayìn & Muskh).
+   */
+  amelioration: z.boolean().optional(),
+  /** La carte confère la capacité de lancer des sorts dans ces voies (ex. Apprentie de Nyx → ostéomancie). */
+  grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   rulesText: z.array(RuleTextSchema),
   constraints: z.array(ConstraintSchema),
   effects: z.array(EffectSchema),

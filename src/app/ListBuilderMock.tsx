@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { loadCatalog } from "@data";
 import { specialCardsForProfile } from "@ui/explain";
-import type { Catalog, Profile } from "@core";
+import type { Catalog, Profile, Spell } from "@core";
 
 /**
  * Maquette VISUELLE (statique) du constructeur de liste. Flux : écran de sélection de
@@ -66,10 +66,17 @@ function carrierLabel(p: Profile, cat: Catalog): string | null {
 
 /** Catégories d'équipement qu'une figurine peut acheter (hors munition/option de monture). */
 const PURCHASE_CATS = ["arme-cac", "arme-tir", "bouclier", "armure", "objet"];
+const CAT_LABEL: Record<string, string> = {
+  "arme-cac": "Corps à corps",
+  "arme-tir": "Tir",
+  bouclier: "Bouclier",
+  armure: "Armure",
+  objet: "Objet",
+};
 
-/** Une figurine peut-elle acheter quelque chose ? Non si une contrainte `forbids-equipment`
- *  (sur son profil ou une carte la ciblant) bloque toutes les catégories d'achat (ex. Likan, Muskh). */
-function canBuy(p: Profile, cat: Catalog): boolean {
+/** Catégories d'équipement interdites à une figurine par une contrainte `forbids-equipment`
+ *  (portée par son profil ou par une carte la ciblant). */
+function forbiddenCats(p: Profile, cat: Catalog): Set<string> {
   const forbidden = new Set<string>();
   const collect = (constraints: { type: string; params?: Record<string, unknown> }[]) => {
     for (const c of constraints) {
@@ -81,7 +88,107 @@ function canBuy(p: Profile, cat: Catalog): boolean {
   };
   collect(p.recruitment);
   collect(cat.specialCards.flatMap((s) => s.constraints));
+  return forbidden;
+}
+
+/** Une figurine peut-elle acheter quelque chose ? Non si toutes les catégories d'achat sont
+ *  interdites (ex. Likan, Muskh). */
+function canBuy(p: Profile, cat: Catalog): boolean {
+  const forbidden = forbiddenCats(p, cat);
   return PURCHASE_CATS.some((c) => !forbidden.has(c));
+}
+
+/** Une figurine correspond-elle à la réservation d'un équipement ? (toutes les dimensions fournies). */
+function equipReservedOk(e: Catalog["equipment"][number], p: Profile): boolean {
+  const r = e.reservedTo;
+  if (!r) return true;
+  if (r.profileIds && !r.profileIds.includes(p.id)) return false;
+  if (r.modelIds && !(p.modelId != null && r.modelIds.includes(p.modelId))) return false;
+  if (r.traits && !r.traits.some((t) => p.traits.includes(t))) return false;
+  if (r.levels && !(p.level != null && r.levels.includes(p.level))) return false;
+  if (r.factionIds && !(p.factionId != null && r.factionIds.includes(p.factionId))) return false;
+  return true;
+}
+
+// ── Magie ──────────────────────────────────────────────────────────────────────
+
+/** Grimoires que la figurine ne peut pas acquérir (param `forbidGrimoires` d'une contrainte de profil). */
+function forbiddenGrimoires(p: Profile): Set<string> {
+  const out = new Set<string>();
+  for (const c of p.recruitment as { params?: Record<string, unknown> }[]) {
+    (c.params?.forbidGrimoires as string[] | undefined)?.forEach((g) => out.add(g));
+  }
+  return out;
+}
+
+/** Voies de magie lançables : inné + octroi par amélioration sélectionnée + par objet porté. */
+function castWays(p: Profile, cat: Catalog, selectedUpgrades: string[], wornEquipIds: string[] = p.baseEquipmentIds): string[] {
+  const ways = new Set<string>(p.magic?.canCast ? p.magic.magicWayIds : []);
+  for (const c of specialCardsForProfile(p, cat)) {
+    if (c.grantsCasting && (!c.amelioration || selectedUpgrades.includes(c.id))) {
+      c.grantsCasting.magicWayIds.forEach((w) => ways.add(w));
+    }
+  }
+  for (const id of wornEquipIds) {
+    cat.equipment.find((e) => e.id === id)?.grantsCasting?.magicWayIds.forEach((w) => ways.add(w));
+  }
+  return [...ways];
+}
+
+/** Sources de pages conférées par les cartes/améliorations applicables (Fille de Nyx +3, Crosse +3…). */
+function pageBonusSources(p: Profile, cat: Catalog, selectedUpgrades: string[]): { name: string; amount: number }[] {
+  return specialCardsForProfile(p, cat)
+    .filter((c) => !c.amelioration || selectedUpgrades.includes(c.id))
+    .flatMap((c) =>
+      c.effects
+        .filter((e) => e.operation.kind === "spell-pages")
+        .map((e) => ({ name: c.name, amount: (e.operation as { amount?: number }).amount ?? 0 })),
+    )
+    .filter((s) => s.amount > 0);
+}
+
+function pageBonus(p: Profile, cat: Catalog, selectedUpgrades: string[]): number {
+  return pageBonusSources(p, cat, selectedUpgrades).reduce((n, s) => n + s.amount, 0);
+}
+
+/** Sorts lançables par la figurine : génériques (tout lanceur) + sorts de ses voies (réservations respectées). */
+function spellsFor(p: Profile, cat: Catalog, ways: string[]): Spell[] {
+  return cat.spells.filter((s) => {
+    if (s.kind === "generique") return true;
+    if (s.magicWayId && !ways.includes(s.magicWayId)) return false;
+    if (s.reservedTo) {
+      const okTrait = s.reservedTo.trait ? p.traits.includes(s.reservedTo.trait) : false;
+      const okProfile = s.reservedTo.profileIds?.includes(p.id) ?? false;
+      if (!okTrait && !okProfile) return false;
+    }
+    return true;
+  });
+}
+
+function spellInfo(s: Spell, cat: Catalog): ItemInfo {
+  const way = cat.magicWays.find((w) => w.id === s.magicWayId)?.name;
+  return {
+    title: s.name,
+    price: s.cost != null && s.cost > 0 ? `${s.cost} Ko` : "—",
+    lines: [
+      `${s.pages ?? 0} page(s)${way ? ` · ${way}` : ""}`,
+      `Cible : ${s.target}`,
+      ...s.difficulties.map((d) => `${d.threshold}+ : ${d.effectText}`),
+    ],
+  };
+}
+
+/** Ligne de stats compacte d'un équipement pour les listes. */
+function equipBits(e: Catalog["equipment"][number]): string {
+  const bits: string[] = [];
+  if (e.category === "arme-cac") bits.push("CaC");
+  if (e.category === "arme-tir") bits.push("Tir");
+  if (e.hands) bits.push(`${e.hands}m`);
+  if (e.allonge != null) bits.push(`All.${e.allonge}`);
+  if (e.range) bits.push(`Port.${e.range.short}/${e.range.long}`);
+  if (e.durability != null) bits.push(`Sol.${e.durability}`);
+  if (e.perceArmure != null) bits.push(`PA ${e.perceArmure}`);
+  return bits.join(" · ");
 }
 
 type ModelEntry = { id: string; name: string; profiles: Profile[] };
@@ -219,6 +326,68 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
     });
   const [itemInfo, setItemInfo] = useState<ItemInfo | null>(null);
 
+  // Équipement acheté par figurine (au-delà de l'équipement de base). Piloté par la modale « deux volets ».
+  const [equip, setEquip] = useState<Record<number, string[]>>({});
+  const addEquip = (i: number, id: string) => setEquip((prev) => ({ ...prev, [i]: [...(prev[i] ?? []), id] }));
+  const removeEquip = (i: number, id: string) =>
+    setEquip((prev) => ({ ...prev, [i]: (prev[i] ?? []).filter((x) => x !== id) }));
+  const eqCost = (id: string) => cat.equipment.find((e) => e.id === id)?.cost ?? 0;
+  const equipCost = (i: number) => (equip[i] ?? []).reduce((n, id) => n + eqCost(id), 0);
+
+  // Équipement de base retiré (baisse le coût, libère un emplacement — cf. règles §Équipement).
+  const [removedBase, setRemovedBase] = useState<Record<number, string[]>>({});
+  const toggleBase = (i: number, id: string) =>
+    setRemovedBase((prev) => {
+      const cur = prev[i] ?? [];
+      return { ...prev, [i]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] };
+    });
+  const removedBaseCost = (i: number) => (removedBase[i] ?? []).reduce((n, id) => n + eqCost(id), 0);
+
+  // Améliorations choisies (cartes spéciales optionnelles payantes) par figurine.
+  const [upgrades, setUpgrades] = useState<Record<number, string[]>>({});
+  const toggleUpgrade = (i: number, id: string) =>
+    setUpgrades((prev) => {
+      const cur = prev[i] ?? [];
+      return { ...prev, [i]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] };
+    });
+  const upgradeCost = (i: number) =>
+    (upgrades[i] ?? []).reduce((n, id) => n + (cat.specialCards.find((s) => s.id === id)?.cost ?? 0), 0);
+
+  // Magie : grimoire choisi + sorts sélectionnés par figurine. Comptés seulement si la figurine lance.
+  const [grimoire, setGrimoire] = useState<Record<number, "none" | "petit" | "grand">>({});
+  const grimoireOf = (i: number) => grimoire[i] ?? "none";
+  const [spells, setSpells] = useState<Record<number, string[]>>({});
+  const toggleSpell = (i: number, id: string) =>
+    setSpells((prev) => {
+      const cur = prev[i] ?? [];
+      return { ...prev, [i]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] };
+    });
+  const grimoireCostOf = (choice: string) =>
+    choice === "none" ? 0 : (cat.grimoires.find((g) => g.id === choice)?.cost ?? 0);
+  const wornEquipOf = (p: Profile, i: number) => [
+    ...p.baseEquipmentIds.filter((id) => !(removedBase[i] ?? []).includes(id)),
+    ...(equip[i] ?? []),
+  ];
+  const magicCost = (p: Profile, i: number) => {
+    if (castWays(p, cat, upgrades[i] ?? [], wornEquipOf(p, i)).length === 0) return 0; // ne compte que si la figurine lance
+    const sCost = (spells[i] ?? []).reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.cost ?? 0), 0);
+    return grimoireCostOf(grimoireOf(i)) + sCost;
+  };
+
+  // Munitions par figurine et par arme de tir (quantité). Coût = quantité × coût unitaire.
+  const [munitions, setMunitions] = useState<Record<number, Record<string, number>>>({});
+  const munQty = (i: number, id: string) => munitions[i]?.[id] ?? 0;
+  const setMun = (i: number, id: string, qty: number) =>
+    setMunitions((prev) => ({ ...prev, [i]: { ...(prev[i] ?? {}), [id]: Math.max(0, qty) } }));
+  // Ne compte que les munitions des armes réellement portées (base non retirée + achetées).
+  const munitionCost = (p: Profile, i: number) => {
+    const worn = [...p.baseEquipmentIds.filter((id) => !(removedBase[i] ?? []).includes(id)), ...(equip[i] ?? [])];
+    return worn.reduce((n, id) => {
+      const e = cat.equipment.find((x) => x.id === id);
+      return n + (e?.munition ? munQty(i, id) * e.munition.unitCost : 0);
+    }, 0);
+  };
+
   // Leader : uniquement un personnage OU l'une des deux figurines les plus chères.
   const topTwo = new Set(
     items
@@ -261,12 +430,48 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
       else setModal({ kind: "guard", index: i });
     }
   };
-  const costOf = (p: Profile, i: number) =>
+  const baseCostOf = (p: Profile, i: number) =>
     guards[i] == null ? p.cost : p.modelId === "djouked" ? Math.max(0, p.cost - 35) : 0;
+  const costOf = (p: Profile, i: number) =>
+    baseCostOf(p, i) + equipCost(i) - removedBaseCost(i) + munitionCost(p, i) + upgradeCost(i) + magicCost(p, i);
 
   const total = items.reduce((n, x, i) => n + costOf(x.p, i), 0);
   const limit = 300;
   const ratio = Math.min(100, (total / limit) * 100);
+
+  // Capacité de pages d'une figurine (grimoire + bonus de cartes).
+  const pageCapOf = (p: Profile, i: number) => {
+    const g = grimoireOf(i);
+    const pages = g === "none" ? 0 : cat.grimoires.find((x) => x.id === g)?.pages;
+    const base = pages === "illimite" ? Infinity : ((pages as number) ?? 0);
+    return base + pageBonus(p, cat, upgrades[i] ?? []);
+  };
+
+  // Validation par figurine : capacité de pages dépassée, sorts sans lanceur, mains/armure en trop.
+  const figureIssues = (p: Profile, i: number): string[] => {
+    const issues: string[] = [];
+    const sel = spells[i] ?? [];
+    if (sel.length > 0) {
+      const ways = castWays(p, cat, upgrades[i] ?? [], wornEquipOf(p, i));
+      if (ways.length === 0) {
+        issues.push("Sorts sélectionnés mais la figurine ne peut plus lancer de sorts.");
+      } else {
+        const cap = pageCapOf(p, i);
+        const used = sel.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
+        if (used > cap) issues.push(`Pages de sorts : ${used} / ${cap === Infinity ? "∞" : cap} — capacité dépassée.`);
+      }
+    }
+    const worn = wornEquipOf(p, i)
+      .map((id) => cat.equipment.find((e) => e.id === id))
+      .filter((e): e is NonNullable<typeof e> => Boolean(e));
+    const handCap = p.skills.some((s) => s.skillId === "hors-norme") ? Infinity : 2;
+    const handsUsed = worn.reduce((n, e) => n + (e.hands ?? 0), 0);
+    if (handsUsed > handCap) issues.push(`Mains : ${handsUsed} / ${handCap} — trop d'équipement à mains.`);
+    if (worn.filter((e) => e.category === "armure").length > 1) issues.push("Plusieurs armures équipées.");
+    return issues;
+  };
+  const issuesByItem = items.map((x, i) => figureIssues(x.p, i));
+  const invalidCount = issuesByItem.filter((is) => is.length > 0).length;
 
   const modalModel = modal?.kind === "preview" ? models.find((m) => m.id === modal.modelId) : undefined;
   const editProfile = modal?.kind === "edit" ? items[modal.index]?.p : undefined;
@@ -378,6 +583,11 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
                           {x.p.name}
                         </span>
                         {x.p.level && <span className="ml-1 opacity-50">{LEVEL[x.p.level]}</span>}
+                        {issuesByItem[i].length > 0 && (
+                          <span className="ml-2" style={{ color: "#9a3b2b" }} title={issuesByItem[i].join("\n")}>
+                            ⚠
+                          </span>
+                        )}
                         {guarded && (
                           <span className="kh-display ml-2 text-[10px] uppercase tracking-wide" style={{ color: "#4a6b32" }}>
                             Garde du corps de {items[guards[i]]?.p.name}
@@ -436,7 +646,17 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
                       )}
                     </div>
                   )}
-                  {buyable && open && <PurchaseSummary p={x.p} cat={cat} accent={accent} onPick={setItemInfo} />}
+                  {buyable && open && (
+                    <PurchaseSummary
+                      p={x.p}
+                      cat={cat}
+                      accent={accent}
+                      added={equip[i] ?? []}
+                      removed={removedBase[i] ?? []}
+                      issues={issuesByItem[i]}
+                      onPick={setItemInfo}
+                    />
+                  )}
                 </div>
               );
             })}
@@ -446,9 +666,15 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
 
       {/* Barre de validation */}
       <footer className="flex items-center gap-4 border-t px-4 py-2 text-sm" style={{ borderColor: accent, background: `${accent}12` }}>
-        <span className="rounded px-2 py-0.5 font-medium" style={{ background: "#4a6b3222", color: "#3c5a28" }}>
-          ✓ Liste valide
-        </span>
+        {invalidCount === 0 ? (
+          <span className="rounded px-2 py-0.5 font-medium" style={{ background: "#4a6b3222", color: "#3c5a28" }}>
+            ✓ Liste valide
+          </span>
+        ) : (
+          <span className="rounded px-2 py-0.5 font-medium" style={{ background: "#9a3b2b22", color: "#9a3b2b" }}>
+            ⚠ {invalidCount} figurine{invalidCount > 1 ? "s" : ""} en erreur
+          </span>
+        )}
         <span className="opacity-60">{items.length} figurines · Muskh et Likans se recrutent via leur porteur.</span>
       </footer>
 
@@ -460,7 +686,27 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
       )}
       {modal?.kind === "edit" && editProfile && (
         <Overlay onClose={() => setModal(null)}>
-          <EditDrawer profile={editProfile} accent={accent} deep={deep} onClose={() => setModal(null)} />
+          <FigureEditor
+            profile={editProfile}
+            cat={cat}
+            added={equip[modal.index] ?? []}
+            removed={removedBase[modal.index] ?? []}
+            upgrades={upgrades[modal.index] ?? []}
+            grimoire={grimoireOf(modal.index)}
+            spells={spells[modal.index] ?? []}
+            accent={accent}
+            deep={deep}
+            onClose={() => setModal(null)}
+            onAdd={(id) => addEquip(modal.index, id)}
+            onRemove={(id) => removeEquip(modal.index, id)}
+            onToggleBase={(id) => toggleBase(modal.index, id)}
+            munQty={(id) => munQty(modal.index, id)}
+            onMun={(id, qty) => setMun(modal.index, id, qty)}
+            onToggleUpgrade={(id) => toggleUpgrade(modal.index, id)}
+            onGrimoire={(g) => setGrimoire((prev) => ({ ...prev, [modal.index]: g }))}
+            onToggleSpell={(id) => toggleSpell(modal.index, id)}
+            onInfo={setItemInfo}
+          />
         </Overlay>
       )}
       {modal?.kind === "guard" && (
@@ -629,18 +875,10 @@ function SectionTitle({ children, accent }: { children: React.ReactNode; accent:
 type SummaryChip = { name: string; info: ItemInfo };
 
 function equipInfo(e: Catalog["equipment"][number]): ItemInfo {
-  const bits: string[] = [];
-  if (e.category === "arme-cac") bits.push("Corps à corps");
-  if (e.category === "arme-tir") bits.push("Tir");
-  if (e.hands) bits.push(`${e.hands} main${e.hands > 1 ? "s" : ""}`);
-  if (e.allonge != null) bits.push(`Allonge ${e.allonge}`);
-  if (e.range) bits.push(`Portée ${e.range.short}/${e.range.long}`);
-  if (e.durability != null) bits.push(`Solidité ${e.durability}`);
-  if (e.perceArmure != null) bits.push(`Perce-armure ${e.perceArmure}`);
   return {
     title: e.name,
     price: e.isFree || e.cost === 0 ? "gratuit" : `${e.cost} Ko`,
-    lines: [bits.join(" · "), e.effectsText].filter(Boolean),
+    lines: [equipBits(e), e.effectsText].filter(Boolean),
   };
 }
 
@@ -649,15 +887,21 @@ function PurchaseSummary({
   p,
   cat,
   accent,
+  added,
+  removed,
+  issues,
   onPick,
 }: {
   p: Profile;
   cat: Catalog;
   accent: string;
+  added: string[];
+  removed: string[];
+  issues: string[];
   onPick: (info: ItemInfo) => void;
 }) {
   const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier", "armure"];
-  const equip = p.baseEquipmentIds
+  const equip = [...p.baseEquipmentIds.filter((id) => !removed.includes(id)), ...added]
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
@@ -685,6 +929,13 @@ function PurchaseSummary({
   const shown = rows.filter(([, v]) => v.length > 0);
   return (
     <div className="border-t px-3 py-2 pl-9 text-xs" style={{ borderColor: `${accent}22` }}>
+      {issues.length > 0 && (
+        <ul className="mb-1.5 space-y-0.5" style={{ color: "#9a3b2b" }}>
+          {issues.map((m, k) => (
+            <li key={k}>⚠ {m}</li>
+          ))}
+        </ul>
+      )}
       {shown.length === 0 ? (
         <span className="opacity-50">Aucun achat pour l'instant.</span>
       ) : (
@@ -900,57 +1151,277 @@ function CardPreview({
   );
 }
 
-function EditDrawer({
+/** Liste à cocher des améliorations disponibles (cartes spéciales optionnelles). */
+function AmeliorationsPanel({
   profile: p,
+  cat,
+  upgrades,
+  accent,
+  deep,
+  onToggleUpgrade,
+  onInfo,
+}: {
+  profile: Profile;
+  cat: Catalog;
+  upgrades: string[];
+  accent: string;
+  deep: string;
+  onToggleUpgrade: (id: string) => void;
+  onInfo: (info: ItemInfo) => void;
+}) {
+  const ameliorations = specialCardsForProfile(p, cat).filter((c) => c.amelioration);
+  return (
+    <div className="space-y-1">
+      {ameliorations.map((c) => (
+        <div key={c.id} className="flex items-center gap-2 rounded bg-white/40 px-2 py-1 text-sm">
+          <input
+            type="checkbox"
+            checked={upgrades.includes(c.id)}
+            onChange={() => onToggleUpgrade(c.id)}
+            className="accent-current"
+            style={{ color: accent }}
+          />
+          <button
+            onClick={() =>
+              onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "gratuit", lines: c.rulesText.map((r) => r.text) })
+            }
+            title="Voir le détail"
+            className="flex-1 text-left font-medium underline decoration-dotted underline-offset-2 transition hover:opacity-70"
+            style={{ color: deep }}
+          >
+            {c.name}
+          </button>
+          <span className="text-xs opacity-60">{c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}</span>
+        </div>
+      ))}
+      {ameliorations.length === 0 && <p className="text-sm opacity-50">Aucune amélioration disponible.</p>}
+    </div>
+  );
+}
+
+/** Onglet magie : choix du grimoire, compteur de pages, puis sélection des sorts (SpellPanel). */
+function MagiePanel({
+  profile: p,
+  cat,
+  upgrades,
+  grimoire,
+  spells,
+  ways,
+  accent,
+  deep,
+  onGrimoire,
+  onToggleSpell,
+  onInfo,
+}: {
+  profile: Profile;
+  cat: Catalog;
+  upgrades: string[];
+  grimoire: "none" | "petit" | "grand";
+  spells: string[];
+  ways: string[];
+  accent: string;
+  deep: string;
+  onGrimoire: (g: "none" | "petit" | "grand") => void;
+  onToggleSpell: (id: string) => void;
+  onInfo: (info: ItemInfo) => void;
+}) {
+  const forbiddenGrims = forbiddenGrimoires(p);
+  const pages = grimoire === "none" ? 0 : cat.grimoires.find((g) => g.id === grimoire)?.pages;
+  const pageCap = (pages === "illimite" ? Infinity : ((pages as number) ?? 0)) + pageBonus(p, cat, upgrades);
+  const sources = pageBonusSources(p, cat, upgrades);
+  const pagesUsed = spells.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
+  const warning =
+    ways.length === 0
+      ? "La figurine ne peut pas lancer de sorts — retire les sorts ci-dessous."
+      : pagesUsed > pageCap
+        ? `Capacité de pages dépassée (${pagesUsed} / ${pageCap === Infinity ? "∞" : pageCap}) — retire un sort ou prends un grimoire plus grand.`
+        : null;
+  return (
+    <div className="space-y-3">
+      {warning && (
+        <p className="rounded-md px-2 py-1.5 text-xs font-medium" style={{ background: "#9a3b2b18", color: "#9a3b2b" }}>
+          ⚠ {warning}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex overflow-hidden rounded-md" style={{ boxShadow: `inset 0 0 0 1px ${accent}55` }}>
+          {(["none", "petit", "grand"] as const).map((g) => {
+            const disabled = forbiddenGrims.has(g);
+            const label =
+              g === "none"
+                ? "Sans grimoire"
+                : g === "petit"
+                  ? `Petit +${cat.grimoires.find((x) => x.id === "petit")?.cost ?? 20}`
+                  : `Grand +${cat.grimoires.find((x) => x.id === "grand")?.cost ?? 40}`;
+            return (
+              <button
+                key={g}
+                onClick={() => !disabled && onGrimoire(g)}
+                disabled={disabled}
+                className="px-3 py-1 text-xs transition disabled:opacity-30"
+                style={grimoire === g ? { background: accent, color: "#f5ecd6" } : { color: accent }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        {sources.length > 0 && (
+          <span className="text-xs opacity-60">
+            Bonus pages : {sources.map((s) => `+${s.amount} ${s.name}`).join(", ")}
+          </span>
+        )}
+      </div>
+      <SpellPanel
+        profile={p}
+        cat={cat}
+        ways={ways}
+        pageCap={pageCap}
+        selected={spells}
+        accent={accent}
+        deep={deep}
+        onToggle={onToggleSpell}
+        onInfo={onInfo}
+      />
+    </div>
+  );
+}
+
+/** Éditeur d'une figurine en **onglets** (Équipement / Améliorations / Magie), sans sous-modale. */
+function FigureEditor({
+  profile: p,
+  cat,
+  added,
+  removed,
+  upgrades,
+  grimoire,
+  spells,
   accent,
   deep,
   onClose,
+  onAdd,
+  onRemove,
+  onToggleBase,
+  munQty,
+  onMun,
+  onToggleUpgrade,
+  onGrimoire,
+  onToggleSpell,
+  onInfo,
 }: {
   profile: Profile;
+  cat: Catalog;
+  added: string[];
+  removed: string[];
+  upgrades: string[];
+  grimoire: "none" | "petit" | "grand";
+  spells: string[];
   accent: string;
   deep: string;
   onClose: () => void;
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
+  onToggleBase: (id: string) => void;
+  munQty: (id: string) => number;
+  onMun: (id: string, qty: number) => void;
+  onToggleUpgrade: (id: string) => void;
+  onGrimoire: (g: "none" | "petit" | "grand") => void;
+  onToggleSpell: (id: string) => void;
+  onInfo: (info: ItemInfo) => void;
 }) {
+  const eq = (id: string) => cat.equipment.find((e) => e.id === id);
+  const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
+  const addedCost = added.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
+  const removedCost = removed.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
+  const munTotal = [...activeBase, ...added].reduce((n, id) => {
+    const e = eq(id);
+    return n + (e?.munition ? munQty(id) * e.munition.unitCost : 0);
+  }, 0);
+  const upgradeCost = upgrades.reduce((n, id) => n + (cat.specialCards.find((s) => s.id === id)?.cost ?? 0), 0);
+  const ways = castWays(p, cat, upgrades, [...activeBase, ...added]);
+  const castable = ways.length > 0;
+  const ameliorations = specialCardsForProfile(p, cat).filter((c) => c.amelioration);
+  const grimoireCost = grimoire === "none" ? 0 : (cat.grimoires.find((g) => g.id === grimoire)?.cost ?? 0);
+  const spellCost = spells.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.cost ?? 0), 0);
+  const magicCost = castable ? grimoireCost + spellCost : 0;
+  const total = p.cost + addedCost - removedCost + munTotal + upgradeCost + magicCost;
+
+  const tabs = [
+    canBuy(p, cat) && { id: "equip" as const, label: "Équipement" },
+    ameliorations.length > 0 && { id: "amelio" as const, label: "Améliorations" },
+    (castable || spells.length > 0) && { id: "magie" as const, label: "Magie" },
+  ].filter(Boolean) as { id: "equip" | "amelio" | "magie"; label: string }[];
+  const [tab, setTab] = useState<"equip" | "amelio" | "magie">(tabs[0]?.id ?? "equip");
+  const active = tabs.some((t) => t.id === tab) ? tab : (tabs[0]?.id ?? "equip");
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="kh-display text-xl font-bold" style={{ color: deep }}>
           {p.name} <span className="opacity-50">{LEVEL[p.level ?? 0]}</span>
         </h3>
-        <span className="text-sm opacity-60">{p.cost} Ko</span>
+        <span className="text-sm opacity-60">{total} Ko</span>
       </div>
 
-      <div>
-        <SectionTitle accent={accent}>Équipement</SectionTitle>
-        <div className="flex items-center justify-between rounded bg-white/40 px-2 py-1 text-sm">
-          <span>Couteau (base)</span>
-          <button className="text-xs opacity-60 hover:text-red-700 hover:opacity-100">retirer</button>
+      {tabs.length > 1 && (
+        <div className="flex gap-1 border-b" style={{ borderColor: `${accent}33` }}>
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className="kh-display -mb-px border-b-2 px-3 py-1.5 text-sm transition"
+              style={active === t.id ? { borderColor: accent, color: deep } : { borderColor: "transparent", color: `${deep}88` }}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-        <AddRow label="+ ajouter une arme" accent={accent} />
-      </div>
+      )}
 
-      <div>
-        <SectionTitle accent={accent}>Amélioration</SectionTitle>
-        <select className="w-full rounded bg-white/60 px-2 py-1 text-sm shadow-inner">
-          <option>— aucune —</option>
-          <option>Apprentie de Nyx (+15 Ko)</option>
-        </select>
-      </div>
+      {active === "equip" && (
+        <EquipPanel
+          profile={p}
+          cat={cat}
+          added={added}
+          removed={removed}
+          accent={accent}
+          deep={deep}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          onToggleBase={onToggleBase}
+          munQty={munQty}
+          onMun={onMun}
+          onInfo={onInfo}
+        />
+      )}
+      {active === "amelio" && (
+        <AmeliorationsPanel
+          profile={p}
+          cat={cat}
+          upgrades={upgrades}
+          accent={accent}
+          deep={deep}
+          onToggleUpgrade={onToggleUpgrade}
+          onInfo={onInfo}
+        />
+      )}
+      {active === "magie" && (
+        <MagiePanel
+          profile={p}
+          cat={cat}
+          upgrades={upgrades}
+          grimoire={grimoire}
+          spells={spells}
+          ways={ways}
+          accent={accent}
+          deep={deep}
+          onGrimoire={onGrimoire}
+          onToggleSpell={onToggleSpell}
+          onInfo={onInfo}
+        />
+      )}
 
-      <div>
-        <SectionTitle accent={accent}>Magie</SectionTitle>
-        <select className="mb-2 w-full rounded bg-white/60 px-2 py-1 text-sm shadow-inner">
-          <option>Sans grimoire</option>
-          <option>Petit grimoire (+20 Ko · 5 pages)</option>
-          <option>Grand grimoire (+40 Ko · ∞)</option>
-        </select>
-        <p className="mb-1 text-xs opacity-60">Sorts (0 / 5 pages)</p>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" /> Séduction du Fiel <span className="opacity-50">2 p · 10 Ko</span>
-        </label>
-      </div>
-
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex justify-end gap-2 border-t pt-2" style={{ borderColor: `${accent}22` }}>
         <button onClick={onClose} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
           Fermer
         </button>
@@ -959,13 +1430,455 @@ function EditDrawer({
   );
 }
 
-function AddRow({ label, accent }: { label: string; accent: string }) {
+/** Indicateur d'emplacement occupé (mains, armure…) : points pleins/vides ou « ∞ ». */
+function SlotChip({ label, used, cap, accent }: { label: string; used: number; cap: number; accent: string }) {
+  const full = Number.isFinite(cap) && used >= cap;
   return (
-    <button
-      className="mt-1 w-full rounded border-2 border-dashed px-2 py-1 text-xs transition hover:bg-white/40"
-      style={{ borderColor: `${accent}55`, color: accent }}
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5"
+      style={{ background: `${accent}14`, color: full ? "#9a3b2b" : accent }}
     >
-      {label}
-    </button>
+      <span className="kh-display uppercase tracking-wide opacity-70">{label}</span>
+      {Number.isFinite(cap) ? (
+        <>
+          <span className="tracking-tight">
+            {Array.from({ length: cap }, (_, k) => (k < used ? "●" : "○")).join("")}
+          </span>
+          <span className="opacity-70">
+            {used}/{cap}
+          </span>
+        </>
+      ) : (
+        <span className="opacity-70">{used} · ∞</span>
+      )}
+    </span>
+  );
+}
+
+/** Modale de choix d'équipement en deux volets : catalogue disponible (gauche) ↔ équipé (droite). */
+function EquipPanel({
+  profile: p,
+  cat,
+  added,
+  removed,
+  accent,
+  deep,
+  onAdd,
+  onRemove,
+  onToggleBase,
+  munQty,
+  onMun,
+  onInfo,
+}: {
+  profile: Profile;
+  cat: Catalog;
+  added: string[];
+  removed: string[];
+  accent: string;
+  deep: string;
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
+  onToggleBase: (id: string) => void;
+  munQty: (id: string) => number;
+  onMun: (id: string, qty: number) => void;
+  onInfo: (info: ItemInfo) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const eq = (id: string) => cat.equipment.find((e) => e.id === id);
+  const forbidden = forbiddenCats(p, cat);
+  const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
+
+  // Emplacements occupés par l'équipement porté (base non retirée + acheté).
+  const worn = [...activeBase, ...added].map(eq).filter((e): e is NonNullable<typeof e> => Boolean(e));
+  const handCap = p.skills.some((s) => s.skillId === "hors-norme") ? Infinity : 2;
+  const handsUsed = worn.reduce((n, e) => n + (e.hands ?? 0), 0);
+  const armorCap = 1;
+  const armorUsed = worn.filter((e) => e.category === "armure").length;
+  const canWearArmor = !forbidden.has("armure");
+
+  // Raison de non-équipabilité (grisage) : plus de mains, ou emplacement d'armure occupé.
+  const blockReason = (e: Catalog["equipment"][number]): string | null => {
+    if (e.hands && handsUsed + e.hands > handCap) return "Plus assez de mains libres";
+    if (e.category === "armure" && armorUsed >= armorCap) return "Emplacement d'armure déjà occupé";
+    return null;
+  };
+
+  // Recherche par nom OU mot-clé de catégorie (« corps à corps », « armure », « munitions »…).
+  const q = query.trim().toLowerCase();
+  const matches = (e: Catalog["equipment"][number]) => {
+    if (q === "") return true;
+    const hay = `${e.name} ${CAT_LABEL[e.category] ?? ""} ${e.category}`.toLowerCase();
+    return hay.includes(q) || (CAT_LABEL[e.category] ?? "").toLowerCase().includes(q);
+  };
+  // Arme *unique* = portée par une seule figurine (son équipement de base). Elle n'est pas
+  // générique : elle n'apparaît que pour sa propre figurine, jamais dans le catalogue des autres.
+  const ownerCount = (id: string) => cat.profiles.filter((pr) => pr.baseEquipmentIds.includes(id)).length;
+  const isUnique = (e: Catalog["equipment"][number]) => ownerCount(e.id) === 1;
+
+  const avail = cat.equipment.filter(
+    (e) =>
+      PURCHASE_CATS.includes(e.category) &&
+      !forbidden.has(e.category) &&
+      equipReservedOk(e, p) && // masque totalement l'équipement non portable (réservations)
+      !(isUnique(e) && !p.baseEquipmentIds.includes(e.id)) && // arme unique : réservée à sa figurine
+      // équipement de base : n'apparaît à gauche que s'il a été retiré (pour le remettre).
+      (!p.baseEquipmentIds.includes(e.id) || removed.includes(e.id)) &&
+      !added.includes(e.id) &&
+      matches(e),
+  );
+  // Une base retirée *unique* (portée par une seule figurine) ne rejoint pas « Corps à corps »/
+  // « Tir », mais un groupe à part — ce n'est pas un équipement générique disponible à tous.
+  const UNIQUE = "__unique";
+  const groupOf = (e: Catalog["equipment"][number]) => (isUnique(e) ? UNIQUE : e.category);
+  const GROUP_LABEL: Record<string, string> = { ...CAT_LABEL, [UNIQUE]: "Équipement propre (retiré)" };
+  const byCat = [UNIQUE, ...PURCHASE_CATS]
+    .map((g) => [g, avail.filter((e) => groupOf(e) === g)] as [string, typeof avail])
+    .filter(([, v]) => v.length > 0);
+  const addedCost = added.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
+  const removedCost = removed.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
+  const munTotal = worn.reduce((n, e) => n + (e.munition ? munQty(e.id) * e.munition.unitCost : 0), 0);
+
+  // Sélecteur de munitions affiché sous une arme de tir sans recharge.
+  const munitionRow = (e: Catalog["equipment"][number]) => {
+    if (!e.munition) return null;
+    const n = munQty(e.id);
+    const m = e.munition;
+    return (
+      <div className="ml-4 flex items-center gap-2 rounded bg-white/30 px-2 py-1 text-xs">
+        <span className="flex-1 opacity-70">
+          ↳ Munitions{" "}
+          <span className="opacity-60">
+            ({m.unitCost} Ko/u{m.max != null ? `, max ${m.max}` : ""})
+          </span>
+        </span>
+        <button
+          onClick={() => onMun(e.id, n - 1)}
+          disabled={n <= 0}
+          className="h-5 w-5 rounded border text-center leading-none disabled:opacity-30"
+          style={{ borderColor: `${accent}66`, color: accent }}
+        >
+          −
+        </button>
+        <span className="w-5 text-center font-semibold" style={{ color: deep }}>
+          {n}
+        </span>
+        <button
+          onClick={() => onMun(e.id, n + 1)}
+          disabled={m.max != null && n >= m.max}
+          className="h-5 w-5 rounded border text-center leading-none disabled:opacity-30"
+          style={{ borderColor: `${accent}66`, color: accent }}
+        >
+          +
+        </button>
+        <span className="w-12 text-right opacity-60">{n * m.unitCost} Ko</span>
+      </div>
+    );
+  };
+
+  const equipWarning =
+    handsUsed > handCap
+      ? `Trop d'équipement à mains (${handsUsed} / ${handCap}).`
+      : armorUsed > armorCap
+        ? "Plusieurs armures équipées."
+        : null;
+
+  return (
+    <div className="space-y-3">
+      {equipWarning && (
+        <p className="rounded-md px-2 py-1.5 text-xs font-medium" style={{ background: "#9a3b2b18", color: "#9a3b2b" }}>
+          ⚠ {equipWarning}
+        </p>
+      )}
+      {/* Emplacements occupés */}
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <SlotChip label="Mains" used={handsUsed} cap={handCap} accent={accent} />
+        {canWearArmor && <SlotChip label="Armure" used={armorUsed} cap={armorCap} accent={accent} />}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Volet disponible */}
+        <div>
+          <SectionTitle accent={accent}>Disponible</SectionTitle>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher un équipement…"
+            className="mb-2 w-full rounded bg-white/60 px-2 py-1.5 text-sm shadow-inner outline-none"
+          />
+          <div className="max-h-[46vh] space-y-2 overflow-y-auto pr-1">
+            {byCat.map(([c, list]) => (
+              <div key={c}>
+                <p className="kh-display mb-0.5 text-[11px] uppercase tracking-wide opacity-50" style={{ color: accent }}>
+                  {GROUP_LABEL[c]}
+                </p>
+                <div className="space-y-1">
+                  {list.map((e) => {
+                    const blocked = blockReason(e);
+                    const isBase = removed.includes(e.id); // base retirée : le → la remet.
+                    return (
+                      <div
+                        key={e.id}
+                        className={`flex items-center gap-2 rounded px-2 py-1 text-sm ${blocked ? "bg-black/5 opacity-45" : "bg-white/40"}`}
+                        title={blocked ?? undefined}
+                      >
+                        <span className="flex-1">
+                          <button
+                            onClick={() => onInfo(equipInfo(e))}
+                            title="Voir le détail"
+                            className="font-medium underline decoration-dotted underline-offset-2 transition hover:opacity-70"
+                            style={{ color: deep }}
+                          >
+                            {e.name}
+                          </button>
+                          {isBase && (
+                            <span className="ml-1 rounded bg-black/10 px-1 text-[10px] uppercase tracking-wide opacity-60">
+                              base
+                            </span>
+                          )}
+                          {equipBits(e) && <span className="ml-1 text-[11px] opacity-50">{equipBits(e)}</span>}
+                        </span>
+                        <span className="text-xs opacity-60">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
+                        <button
+                          onClick={() => (isBase ? onToggleBase(e.id) : onAdd(e.id))}
+                          disabled={Boolean(blocked)}
+                          title={blocked ?? (isBase ? "Remettre l'équipement de base" : "Ajouter")}
+                          className="rounded px-2 py-0.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                          style={{ background: accent }}
+                        >
+                          →
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {byCat.length === 0 && (
+              <p className="text-sm opacity-50">{q ? "Aucun résultat." : "Aucun équipement disponible."}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Volet équipé — l'équipement de base reste toujours en tête. */}
+        <div>
+          <div className="flex items-baseline justify-between">
+            <SectionTitle accent={accent}>Équipé</SectionTitle>
+            <span className="text-sm">
+              <span className="opacity-60">total </span>
+              <span className="font-semibold" style={{ color: deep }}>
+                {p.cost + addedCost - removedCost + munTotal} Ko
+              </span>
+            </span>
+          </div>
+          <div className="space-y-1">
+            {p.baseEquipmentIds.map((id) => {
+              const e = eq(id);
+              if (!e || removed.includes(id)) return null; // retirée → repart dans « Disponible »
+              return (
+                <div key={id}>
+                  <div className="flex items-center gap-2 rounded bg-black/5 px-2 py-1 text-sm">
+                    <button
+                      onClick={() => onToggleBase(id)}
+                      title="Retirer (baisse le coût, libère l'emplacement)"
+                      className="opacity-60 transition hover:text-red-700 hover:opacity-100"
+                    >
+                      ←
+                    </button>
+                    <button
+                      onClick={() => onInfo(equipInfo(e))}
+                      title="Voir le détail"
+                      className="flex-1 text-left font-medium underline decoration-dotted underline-offset-2 transition hover:opacity-70"
+                      style={{ color: deep }}
+                    >
+                      {e.name}
+                    </button>
+                    <span className="rounded bg-black/10 px-1 text-[10px] uppercase tracking-wide opacity-60">base</span>
+                    <span className="text-xs opacity-60">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
+                  </div>
+                  {e.munition && munitionRow(e)}
+                </div>
+              );
+            })}
+            {added.map((id) => {
+              const e = eq(id);
+              return (
+                e && (
+                  <div key={id}>
+                    <div className="flex items-center gap-2 rounded bg-white/50 px-2 py-1 text-sm">
+                      <button
+                        onClick={() => onRemove(id)}
+                        title="Retirer"
+                        className="opacity-60 transition hover:text-red-700 hover:opacity-100"
+                      >
+                        ←
+                      </button>
+                      <button
+                        onClick={() => onInfo(equipInfo(e))}
+                        title="Voir le détail"
+                        className="flex-1 text-left font-medium underline decoration-dotted underline-offset-2 transition hover:opacity-70"
+                        style={{ color: deep }}
+                      >
+                        {e.name}
+                      </button>
+                      <span className="text-xs opacity-60">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
+                    </div>
+                    {e.munition && munitionRow(e)}
+                  </div>
+                )
+              );
+            })}
+            {activeBase.length === 0 && added.length === 0 && (
+              <p className="text-sm opacity-50">Rien d'équipé.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Panneau de sélection des sorts (deux volets, budget de pages) — dans l'esprit du choix d'armes. */
+function SpellPanel({
+  profile: p,
+  cat,
+  ways,
+  pageCap,
+  selected,
+  accent,
+  deep,
+  onToggle,
+  onInfo,
+}: {
+  profile: Profile;
+  cat: Catalog;
+  ways: string[];
+  pageCap: number;
+  selected: string[];
+  accent: string;
+  deep: string;
+  onToggle: (id: string) => void;
+  onInfo: (info: ItemInfo) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const spellById = (id: string) => cat.spells.find((s) => s.id === id);
+  const chosen = selected.map(spellById).filter((s): s is Spell => Boolean(s));
+  const pagesUsed = chosen.reduce((n, s) => n + (s.pages ?? 0), 0);
+  const q = query.trim().toLowerCase();
+
+  const GENERIC = "Génériques";
+  const wayName = (id?: string) => cat.magicWays.find((w) => w.id === id)?.name ?? id ?? "Autres";
+  const groupOf = (s: Spell) => (s.kind === "generique" ? GENERIC : wayName(s.magicWayId));
+  const avail = spellsFor(p, cat, ways).filter(
+    (s) => !selected.includes(s.id) && (q === "" || s.name.toLowerCase().includes(q)),
+  );
+  const groupNames = [...new Set(avail.map(groupOf))].sort((a, b) =>
+    a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
+  );
+  const blocked = (s: Spell) => pagesUsed + (s.pages ?? 0) > pageCap;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <SlotChip label="Pages" used={pagesUsed} cap={pageCap} accent={accent} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Volet disponible */}
+        <div>
+          <SectionTitle accent={accent}>Disponible</SectionTitle>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher un sort…"
+            className="mb-2 w-full rounded bg-white/60 px-2 py-1.5 text-sm shadow-inner outline-none"
+          />
+          <div className="max-h-[46vh] space-y-2 overflow-y-auto pr-1">
+            {groupNames.map((g) => (
+              <div key={g}>
+                <p className="kh-display mb-0.5 text-[11px] uppercase tracking-wide opacity-50" style={{ color: accent }}>
+                  {g}
+                </p>
+                <div className="space-y-1">
+                  {avail
+                    .filter((s) => groupOf(s) === g)
+                    .map((s) => {
+                      const no = blocked(s);
+                      return (
+                        <div
+                          key={s.id}
+                          className={`flex items-center gap-2 rounded px-2 py-1 text-sm ${no ? "bg-black/5 opacity-45" : "bg-white/40"}`}
+                          title={no ? "Pas assez de pages" : undefined}
+                        >
+                          <button
+                            onClick={() => onInfo(spellInfo(s, cat))}
+                            title="Voir le détail"
+                            className="flex-1 text-left font-medium underline decoration-dotted underline-offset-2 hover:opacity-70"
+                            style={{ color: deep }}
+                          >
+                            {s.name}
+                          </button>
+                          <span className="text-[11px] opacity-60">
+                            {s.pages ?? 0} p{s.cost ? ` · ${s.cost} Ko` : ""}
+                          </span>
+                          <button
+                            onClick={() => onToggle(s.id)}
+                            disabled={no}
+                            title={no ? "Pas assez de pages" : "Ajouter"}
+                            className="rounded px-2 py-0.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                            style={{ background: accent }}
+                          >
+                            →
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            ))}
+            {avail.length === 0 && (
+              <p className="text-sm opacity-50">{q ? "Aucun résultat." : "Aucun sort disponible."}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Volet sélectionnés */}
+        <div>
+          <div className="flex items-baseline justify-between">
+            <SectionTitle accent={accent}>Sélectionnés</SectionTitle>
+            <span className="text-sm">
+              <span className="opacity-60">pages </span>
+              <span className="font-semibold" style={{ color: deep }}>
+                {pagesUsed}/{pageCap === Infinity ? "∞" : pageCap}
+              </span>
+            </span>
+          </div>
+          <div className="space-y-1">
+            {chosen.map((s) => (
+              <div key={s.id} className="flex items-center gap-2 rounded bg-white/50 px-2 py-1 text-sm">
+                <button
+                  onClick={() => onToggle(s.id)}
+                  title="Retirer"
+                  className="opacity-60 transition hover:text-red-700 hover:opacity-100"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => onInfo(spellInfo(s, cat))}
+                  title="Voir le détail"
+                  className="flex-1 text-left font-medium underline decoration-dotted underline-offset-2 hover:opacity-70"
+                  style={{ color: deep }}
+                >
+                  {s.name}
+                </button>
+                <span className="text-[11px] opacity-60">
+                  {s.pages ?? 0} p{s.cost ? ` · ${s.cost} Ko` : ""}
+                </span>
+              </div>
+            ))}
+            {chosen.length === 0 && <p className="text-sm opacity-50">Aucun sort.</p>}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

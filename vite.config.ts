@@ -78,7 +78,10 @@ function devSaveCatalogPlugin(): Plugin {
   };
 }
 
-export default defineConfig({
+// `base` : en build de production, l'app est servie sous le sous-chemin du dépôt GitHub Pages
+// (https://<user>.github.io/kharn-ages-builder/). En dev/test, on reste à la racine.
+export default defineConfig(({ command }) => ({
+  base: command === "build" ? "/kharn-ages-builder/" : "/",
   plugins: [
     devCardsPlugin(),
     devSaveCatalogPlugin(),
@@ -90,7 +93,7 @@ export default defineConfig({
         name: "Khârn-Âges — Constructeur de listes",
         short_name: "Khârn-Âges",
         lang: "fr",
-        start_url: "/",
+        start_url: ".",
         display: "standalone",
         background_color: "#1a1410",
         theme_color: "#1a1410",
@@ -109,4 +112,4 @@ export default defineConfig({
   test: {
     environment: "jsdom",
   },
-});
+}));

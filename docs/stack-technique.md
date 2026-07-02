@@ -16,29 +16,38 @@ pour le modèle de données et l'architecture en couches.
 
 ## Outils
 
-- **Zod** : validation de schéma du catalogue (et garde-fou de l'éditeur admin).
-- **Tailwind CSS** : mise en forme.
+- **Zod** : validation de schéma du catalogue et des listes (et garde-fou de l'éditeur admin).
+- **Tailwind CSS v4** : mise en forme, via le plugin Vite `@tailwindcss/vite` (pas de
+  `tailwind.config` ; configuration dans `src/index.css`).
 - **Dexie** (IndexedDB) : sauvegarde locale des listes.
-- Compression du code portable (partage de liste) : lib à choisir (impacte la longueur des liens).
+- **Vitest** (jsdom) : tests ; **ESLint** : analyse statique.
+- **PWA** : `vite-plugin-pwa` génère le service worker et le manifeste (pas de dossier `public/`).
+- **Compression du code portable** : *décidée* — API native `CompressionStream` (`deflate-raw`)
+  puis encodage base64url, **sans dépendance** (cf. `src/app/io/listCode.ts`). Le JSON étant très
+  répétitif, la compression raccourcit fortement le lien.
 
-## Structure de projet visée
+## Structure de projet
 
 ```text
 kharn-ages-builder/
-  cards/                 # images des cartes (existant)
-  rules corpus/          # PDF des règles (existant)
-  docs/                  # documentation (existant)
-  public/                # manifeste PWA, icônes, assets statiques
+  cards/                 # images des cartes (gitignoré ; servi en dev uniquement)
+  rules corpus/          # PDF des règles
+  docs/                  # documentation de conception
   src/
     core/                # CŒUR MÉTIER — TypeScript pur, aucune dépendance UI
       model/             #   types + schémas Zod (catalogue, liste portable)
-      engine/            #   validation, résolution des effets, calcul de coût
-    data/                # catalogue JSON (factions, profils, équipements, sorts…)
-    ui/                  # composants React
-    app/                 # écrans + navigation
+      engine/            #   validation, résolution des effets, calcul de coût + magie
+    data/                # catalogue JSON (factions, profils, équipements, sorts…) + chargement validé
+    ui/                  # helpers de présentation (traduction lisible des règles)
+    app/                 # écrans + état applicatif
+      builder/           #   constructeur de listes (faction, roster, éditeur de figurine)
+      io/                #   persistance Dexie + sérialisation (code/texte) + ids
     main.tsx
   index.html
-  package.json / vite.config.ts / tsconfig.json / tailwind.config.ts
+  package.json / vite.config.ts / tsconfig.json
 ```
+
+Le manifeste PWA est généré par `vite-plugin-pwa` (config dans `vite.config.ts`) ; il n'y a pas
+de dossier `public/` ni de `tailwind.config` (Tailwind v4 se configure dans `src/index.css`).
 
 Règle d'or : `src/core` ne dépend de rien d'autre ; tout le reste dépend de `core`.

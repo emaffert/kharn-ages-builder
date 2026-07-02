@@ -1,11 +1,11 @@
 # Makefile — Khârn-Âges list builder
 #
-# Charge automatiquement la version Node gérée par nvm (le Node système n'a pas npm).
-# Surcharger si besoin : make dev NVM_DIR=/autre/chemin
+# Charge automatiquement la version Node de .nvmrc via nvm (le Node système n'a pas npm),
+# la même que celle utilisée en CI. Surcharger si besoin : make dev NVM_DIR=/autre/chemin
 
 SHELL := /bin/bash
 NVM_DIR ?= $(HOME)/.nvm
-NODE = source "$(NVM_DIR)/nvm.sh" && nvm use default >/dev/null &&
+NODE = source "$(NVM_DIR)/nvm.sh" && nvm use >/dev/null &&
 
 .DEFAULT_GOAL := help
 .PHONY: help install dev test test-watch build typecheck lint preview

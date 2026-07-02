@@ -40,15 +40,43 @@ make help         # liste des cibles
 src/
   core/   # cœur métier (TypeScript pur, sans dépendance UI)
     model/    # types + schémas Zod (catalogue, liste portable)
-    engine/   # validation des contraintes, résolution des effets, calcul de coût
+    engine/   # validation des contraintes, résolution des effets, calcul de coût + magie
   data/   # catalogue (JSON) + chargement validé
-  ui/     # composants et helpers de présentation
-  app/    # écrans + état de l'éditeur
+  ui/     # helpers de présentation (traduction lisible des règles)
+  app/    # écrans + état applicatif
+    builder/  # constructeur de listes (sélection de faction, roster, éditeur de figurine)
+    io/       # persistance Dexie + sérialisation (code portable, texte) + ids
 docs/     # documentation de conception
 cards/    # images des cartes (gitignoré — copyright ; servi en dev uniquement)
 ```
 
 Règle d'or : `src/core` ne dépend de rien ; tout le reste dépend de `core`.
+
+## L'application
+
+Deux écrans, accessibles par les onglets du haut :
+
+- **Constructeur** (onglet par défaut au lancement) — la création de listes joueur ;
+- **Admin** — l'éditeur du catalogue de référence.
+
+## Le constructeur de listes
+
+Flux : **sélection de faction** (format escarmouche/bataille, budget en Ko, ou reprise d'une
+liste sauvegardée) → **écran de construction**.
+
+- **Roster** (à gauche ; en modale sur mobile) : profils de la faction groupés en Personnages,
+  Troupes et Recrutement conditionnel (unités qui se recrutent via un porteur, ex. Likan). Ajout
+  rapide, ou aperçu de la carte avant recrutement.
+- **Liste** (au centre) : figurines réordonnables par glisser-déposer, dépliables ; désignation
+  du **meneur**, du **garde du corps**, rattachement des unités dépendantes (Likan/Muskh).
+- **Éditeur de figurine** (modale, en onglets) : Carte, Équipement (achat/retrait, munitions,
+  emplacements de mains/armure), Améliorations (cartes spéciales optionnelles), Magie (grimoire,
+  budget de pages, sorts).
+- **Coût et validation** entièrement dérivés du moteur (`evaluateList`) : coût par figurine et
+  total, budget, et signalement des erreurs (limitation, faction, meneur, magie…).
+- **Sauvegarde locale** (Dexie/IndexedDB) et **import/export** en deux formats : *code portable*
+  (compact, fidèle) et *texte* (lisible, réimport best-effort). Voir
+  [`docs/schema-donnees.md`](docs/schema-donnees.md) — couche 3.
 
 ## Données du catalogue
 
@@ -65,9 +93,9 @@ Cycle de mise à jour des données :
 
 ## L'éditeur admin
 
-Au lancement, l'application ouvre l'éditeur de catalogue. À gauche, la liste des profils
-(recherche, indicateur ⚠ pour les profils ayant des champs à vérifier). À droite, le détail
-du profil sélectionné.
+Accessible par l'onglet **Admin**. À gauche, la liste des entrées du catalogue — profils,
+équipements, compétences, cartes spéciales, sorts — avec recherche et indicateur ⚠ pour les
+profils ayant des champs à vérifier. À droite, le détail de l'entrée sélectionnée.
 
 Champs modifiables :
 

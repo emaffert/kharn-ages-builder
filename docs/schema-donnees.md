@@ -1,7 +1,13 @@
 # Schéma de données — Khârn-Âges list builder
 
-Modèle de données de l'application. Notation TypeScript (conceptuelle ; sera formalisée avec
-un validateur de schéma, type Zod, au moment de l'implémentation).
+Modèle de données de l'application, présenté ici de façon **conceptuelle**.
+
+> **Schéma faisant foi :** l'implémentation de référence est constituée des schémas **Zod** de
+> [`src/core/model/`](../src/core/model/) (`catalog.ts`, `list.ts`, `effects.ts`,
+> `constraints.ts`, `common.ts`). En cas de divergence, ce sont eux la source de vérité ; ce
+> document en donne l'intention et les cas d'usage. Quelques champs ajoutés en cours de route
+> (ex. `ProfileInstance.munitions`, `Effect.operation "stat-modifier" / "spell-pages"`) sont
+> signalés ci-dessous, mais reportez-vous au code pour la liste exhaustive.
 
 Voir aussi : [`regles-creation-liste.md`](regles-creation-liste.md) pour les règles métier sous-jacentes.
 
@@ -124,9 +130,10 @@ interface Profile {
   recruitment: Constraint[];  // contraintes de recrutement (voir couche 2)
   effects?: Effect[];         // effets dynamiques émis dans la liste (coût, octroi, déblocage)
   rules: RuleText[];          // TOUT le texte de règles de la carte, verbatim
+  notes?: string[];           // notes éditoriales hors carte (ex. ajouts du livre de bataille)
   cardImage: string;          // référence d'asset
-  cardCode?: string;          // code imprimé sur la carte (ex. "KAFALA1") — non unique, traçabilité
   mountEligible?: boolean;
+  unverifiedFields?: string[]; // chemins des champs à revérifier (ex. "stature", "stats.t")
 }
 
 interface Limitation {
@@ -142,7 +149,11 @@ interface Stats { v: number|null; p: number|null; a: number|null; c: number|null
 
 type MasteryDomain = "offensive" | "defensive" | "objectif" | "tir" | "esoterique";
 
-interface SkillRef { skillId: string; value?: number; }
+interface SkillRef {
+  skillId: string;
+  value?: number | string;   // "Allonge 2" (num) ou valeur textuelle
+  precision?: string;        // complément propre au profil (affiché à la description dépliée)
+}
 
 interface Armor { sourceText: string; seuil?: number; durability?: number; natural?: boolean; }
 
@@ -162,11 +173,19 @@ interface Equipment {
   allonge?: number;           // en toises
   range?: { short: number; long: number; max?: number };  // armes de tir
   reload?: { cadence: number; paCost: number };
+  munition?: { unitCost: number; max?: number };  // munitions achetables (tir sans recharge)
+  grantsCasting?: { magicWayIds: string[] };      // objet conférant l'incantation (focus/relique)
   durability?: number;        // armures / boucliers
   perceArmure?: number | "1D5";
   effectsText: string;        // verbatim
   grantsSkills?: SkillRef[];   // ex. la Faucille d'Os confère « Riposte »
-  restrictions: Constraint[]; // réservé à faction/profil/niveau, etc.
+  restrictions: Constraint[]; // notes de restriction (verbatim + éventuel encodage)
+  // Réservation structurée : portable seulement par les profils validant TOUTES les dimensions
+  // fournies (ex. Arc court → niveau I ; Bâton relique → Décatie).
+  reservedTo?: {
+    profileIds?: string[]; modelIds?: string[]; traits?: string[];
+    levels?: Level[]; factionIds?: string[];
+  };
   cardImage?: string;          // si l'équipement a sa propre carte (sinon affiché inline)
 }
 ```
@@ -258,6 +277,10 @@ interface SpecialCard {
   name: string;
   cost: number;                                       // souvent 0
   scope: { profileIds?: string[]; trait?: string };   // « Réservée à Xayìn et Muskh » / « aux Filles de Nyx »
+  // true : amélioration CHOISIE par le joueur (achat optionnel, appliquée via instance.specialCardIds).
+  // absent/false : carte automatique appliquée d'office (ex. Fille de Nyx, Xayìn & Muskh).
+  amelioration?: boolean;
+  grantsCasting?: { magicWayIds: string[] };          // ex. Apprentie de Nyx → ostéomancie
   rulesText: RuleText[];                              // verbatim, fait foi
   constraints: Constraint[];                          // ex. Muskh requires-present Xayìn
   effects: Effect[];                                  // ex. Forgeronne déverrouille « Borax », Mathys octroie « apatride »
@@ -378,6 +401,8 @@ interface Effect {
   target: Selector;           // cible (peut être self)
   operation: EffectOperation;
   appliesToListBuilding: boolean; // false = effet en jeu seulement (affiché verbatim, non calculé)
+  optIn?: boolean;            // true = effet optionnel (choix du joueur), non appliqué d'office
+                             //        (ex. réduction « garde du corps » : Djouked pour Broutcha)
   sourceText: string;         // verbatim, fait foi
   autoEnforced: boolean;
 }
@@ -388,7 +413,13 @@ type EffectOperation =
   | { kind: "unlock-upgrade"; upgradeId: string; perItemCost: number }  // Forgeronne : amélioration « Borax »
   | { kind: "grant-skill"; skillId: string }
   | { kind: "grant-trait"; trait: string }                             // Mathys : « apatride »
-  | { kind: "cap"; value: number };
+  | { kind: "cap"; value: number }
+  | { kind: "stat-modifier"; stat: "v"|"p"|"a"|"c"|"t"|"i"|"stature"|"pa"|"pv"; amount: number | "level" } // Apprentie de Nyx : +niveau en I
+  | { kind: "spell-pages"; amount: number };                           // Fille de Nyx +3 ; Crosse +3
+
+// Appliqués par le moteur (src/core/engine) : cost-delta, cost-set, grant-trait, grant-skill,
+// et spell-pages (capacité de pages, via engine/magic.ts). PAS ENCORE appliqués : stat-modifier,
+// unlock-upgrade, cap — cf. le TODO en tête de engine/evaluate.ts.
 
 interface Selector {
   self?: boolean;
@@ -463,11 +494,13 @@ interface ProfileInstance {
   removedBaseEquipmentIds: string[];
   spellIds: string[];
   grimoireId?: "petit" | "grand";
+  munitions?: Record<string, number>; // quantité de munitions par arme de tir (sans recharge)
   mount?: {
     mountId: string;
     optionIds: string[];
   };
   attachedInstanceIds?: string[];  // ex. Likans rattachés à cette Fang
+  bodyguardOfInstanceId?: string;  // occupe un emplacement « garde du corps » offert par une autre instance
   orderIds?: string[];             // ordres (Vassal/SDG, mode bataille)
   specialCardIds?: string[];       // cartes spéciales payantes sélectionnées (ex. « Apprentie de Nyx »)
   note?: string;

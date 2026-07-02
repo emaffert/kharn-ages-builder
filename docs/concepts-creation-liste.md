@@ -86,7 +86,8 @@ représenté dans le moteur `evaluateList`.
   (Un grand grimoire étant illimité, les bonus de pages y sont sans objet.)
 - UI : par mage, choisir grimoire (ou aucun), sélectionner sorts (générique : ≤ niveau ; grimoire :
   ≤ budget de pages + bonne voie) ; coût.
-- À implémenter dans le moteur : le **budget de pages** (l'opération `spell-pages` est posée, pas encore enforce).
+- Moteur : le **budget de pages** est appliqué (`spell-pages` → capacité, dépassement signalé par
+  `pages-over-capacity`), de même que grimoire interdit, mains/armure et absence de lanceur.
 
 ## 8. Montures & cavaliers [Bataille]
 
@@ -138,7 +139,8 @@ représenté dans le moteur `evaluateList`.
 
 - **Disposition** : **deux colonnes** — roster de la faction (gauche) ↔ liste en cours (droite),
   coût/validation en direct.
-- **Édition des options d'une figurine** : **panneau latéral (drawer)** ouvert au clic sur la figurine.
+- **Édition des options d'une figurine** : **modale en onglets** (Carte / Équipement / Améliorations /
+  Magie) ouverte au clic sur la figurine.
 - **Validation** : **stricte** — on empêche l'action qui viole une règle dure (limitation atteinte,
   arme sur un Larbin, mains, etc.). Les cas **conditionnels à la composition** (frères d'armes ≥ 2,
   rattachement des Aliénés) restent validés au **niveau liste** (ajout possible, liste invalide tant

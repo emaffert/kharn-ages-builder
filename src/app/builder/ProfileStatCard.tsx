@@ -1,20 +1,17 @@
 import { specialCardsForProfile } from "@ui/explain";
+import { Tag } from "@ui";
 import type { Catalog, Profile } from "@core";
-import { SectionTitle, Tag } from "./components";
+import { SectionTitle } from "./components";
 import { LEVEL, STATS, type ItemInfo } from "./shared";
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
 export function ProfileStatCard({
   p,
   cat,
-  accent,
-  deep,
   onInfo,
 }: {
   p: Profile;
   cat: Catalog;
-  accent: string;
-  deep: string;
   onInfo: (info: ItemInfo) => void;
 }) {
   const cards = specialCardsForProfile(p, cat);
@@ -28,102 +25,86 @@ export function ProfileStatCard({
       ? "Limitation •"
       : `Limitation ${p.limitation.kind}${p.limitation.value != null ? ` ${p.limitation.value}` : ""}`;
   return (
-    <div className="grid gap-5 md:grid-cols-[1fr_240px]">
-      <div className="rounded-lg border-2 bg-white/40 p-4" style={{ borderColor: accent }}>
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="kh-display text-2xl font-bold leading-tight" style={{ color: deep }}>
+    <div className="fe-statcard">
+      <div className="fe-card">
+        <div className="fe-card-head">
+          <h3 className="fe-card-name">
             {p.name}
-            {p.level && <span className="ml-2 text-lg opacity-60">{LEVEL[p.level]}</span>}
+            {p.level ? <span className="lvl">{LEVEL[p.level]}</span> : null}
           </h3>
-          <span className="rounded px-2 py-0.5 text-sm font-semibold text-white" style={{ background: accent }}>
-            {p.cost} Ko
-          </span>
+          <span className="fe-cost-chip">{p.cost} Ko</span>
         </div>
-        <div className="mt-2 flex flex-wrap gap-1 text-[11px]">
-          <Tag accent={accent}>{limLabel}</Tag>
-          {p.magic?.canCast && <Tag accent={accent}>Mage</Tag>}
+        <div className="fe-taglist">
+          <Tag>{limLabel}</Tag>
+          {p.magic?.canCast && <Tag tone="amber">Mage</Tag>}
         </div>
-        <div className="mt-3 flex flex-wrap gap-1">
+        <div className="fe-stats">
           {STATS.map(([k, label]) => (
-            <span key={label} className="rounded bg-black/5 px-2 py-1 text-sm">
-              <span className="opacity-50">{label} </span>
-              <span className="font-semibold">{p.stats[k] ?? "—"}</span>
+            <span key={label} className="fe-stat">
+              <span className="k">{label} </span>
+              <span className="v">{p.stats[k] ?? "—"}</span>
             </span>
           ))}
-          <span className="rounded bg-black/5 px-2 py-1 text-sm">
-            <span className="opacity-50">PA </span>
-            <span className="font-semibold">{p.pa}</span>
+          <span className="fe-stat">
+            <span className="k">PA </span>
+            <span className="v">{p.pa}</span>
           </span>
-          <span className="rounded bg-black/5 px-2 py-1 text-sm">
-            <span className="opacity-50">PV </span>
-            <span className="font-semibold">{p.pv}</span>
+          <span className="fe-stat">
+            <span className="k">PV </span>
+            <span className="v">{p.pv}</span>
           </span>
         </div>
-        <div className="mt-3 flex flex-wrap gap-1">
+        <div className="fe-skills">
           {p.skills.map((s, i) => {
             const sk = cat.skills.find((x) => x.id === s.skillId);
             const label = `${sk?.keyword ?? s.skillId}${s.value != null ? ` ${s.value}` : ""}`;
             return (
-              <button
-                key={i}
-                onClick={() => showSkill(s.skillId, label)}
-                className="rounded-full bg-black/5 px-2 py-0.5 text-xs transition hover:bg-black/10"
-                style={{ boxShadow: `inset 0 0 0 1px ${accent}33` }}
-              >
+              <button key={i} className="fe-skill" onClick={() => showSkill(s.skillId, label)}>
                 {label}
               </button>
             );
           })}
         </div>
         {(p.rules.length > 0 || precisions.length > 0) && (
-          <ul className="mt-3 space-y-1 text-sm">
+          <div className="fe-rules">
             {p.rules.map((r, i) => (
-              <li key={i}>
-                {r.label && (
-                  <span className="font-semibold" style={{ color: deep }}>
-                    {r.label} :{" "}
-                  </span>
-                )}
+              <div key={i}>
+                {r.label && <b>{r.label} : </b>}
                 {r.text}
-              </li>
+              </div>
             ))}
             {precisions.map((s, i) => {
               const kw = cat.skills.find((x) => x.id === s.skillId)?.keyword ?? s.skillId;
               return (
-                <li key={`prec-${i}`}>
-                  <button
-                    onClick={() => showSkill(s.skillId, kw)}
-                    className="font-semibold underline decoration-dotted underline-offset-2 transition hover:opacity-70"
-                    style={{ color: deep }}
-                  >
+                <div key={`prec-${i}`}>
+                  <button className="fe-rule-btn" onClick={() => showSkill(s.skillId, kw)}>
                     {kw}
                   </button>{" "}
                   : {s.precision}
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
 
       {cards.length > 0 && (
         <div>
-          <SectionTitle accent={accent}>Cartes liées</SectionTitle>
-          <ul className="space-y-1 text-sm">
+          <SectionTitle>Cartes liées</SectionTitle>
+          <div className="fe-linked">
             {cards.map((c) => (
-              <li key={c.id}>
-                <button
-                  onClick={() =>
-                    onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: c.rulesText.map((r) => r.text) })
-                  }
-                  className="flex w-full justify-between rounded bg-white/40 px-2 py-1 text-left transition hover:bg-white/70"
-                >
-                  <span>{c.name}</span>
-                  <span className="opacity-60">{c.cost > 0 ? `${c.cost} Ko` : "auto"}</span>
-                </button>
-              </li>
+              <button
+                key={c.id}
+                className="fe-linked-item"
+                onClick={() =>
+                  onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: c.rulesText.map((r) => r.text) })
+                }
+              >
+                <span>{c.name}</span>
+                <span className="px">{c.cost > 0 ? `${c.cost} Ko` : "auto"}</span>
+              </button>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { ListDocument, Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
-import { Overlay } from "../Overlay";
 import { Button, Tag, Dialog, SegmentedControl } from "@ui";
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
@@ -22,7 +21,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const { evaluation, fdl } = store;
   const factionId = fdl.factionId;
   const fac = FACTIONS.find((f) => f.id === factionId) ?? FACTIONS[0];
-  const { accent, deep } = fac; // legacy : encore utilisé par les modales beige (à migrer en 2d)
   const factionVars = {
     "--faction": fac.color,
     "--faction-2": fac.colorBright,
@@ -465,12 +463,10 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
       {/* Modale : aperçu ou édition */}
       {modal?.kind === "preview" && modalModel && (
-        <Overlay onClose={() => setModal(null)}>
+        <Dialog open onOpenChange={(o) => !o && setModal(null)} title={modalModel.name} size="lg">
           <CardPreview
             profiles={modalModel.profiles}
             cat={cat}
-            accent={accent}
-            deep={deep}
             onClose={() => setModal(null)}
             onAdd={(profileId) => store.addMember(profileId)}
             onInfo={setItemInfo}
@@ -479,10 +475,24 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               return p ? atLimit(p) : false;
             }}
           />
-        </Overlay>
+        </Dialog>
       )}
       {modal?.kind === "edit" && editItem && (
-        <Overlay onClose={() => setModal(null)}>
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setModal(null)}
+          title={`${editItem.p.name} ${LEVEL[editItem.p.level ?? 0]}`.trim()}
+          size="lg"
+          footer={
+            <>
+              <span className="bld-ucost" style={{ fontSize: 15 }}>
+                {costOf(editItem.inst.instanceId)} <span className="ko">Ko</span>
+              </span>
+              <span style={{ flex: 1 }} />
+              <Button variant="ghost" onClick={() => setModal(null)}>Fermer</Button>
+            </>
+          }
+        >
           <FigureEditor
             profile={editItem.p}
             cat={cat}
@@ -491,9 +501,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             upgrades={editItem.inst.specialCardIds ?? []}
             grimoire={editItem.inst.grimoireId ?? "none"}
             spells={editItem.inst.spellIds}
-            accent={accent}
-            deep={deep}
-            onClose={() => setModal(null)}
             onAdd={(eid) => store.addEquip(editItem.inst.instanceId, eid)}
             onRemove={(eid) => store.removeEquip(editItem.inst.instanceId, eid)}
             onToggleBase={(eid) => store.toggleBase(editItem.inst.instanceId, eid)}
@@ -504,7 +511,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onToggleSpell={(sid) => store.toggleSpell(editItem.inst.instanceId, sid)}
             onInfo={setItemInfo}
           />
-        </Overlay>
+        </Dialog>
       )}
       {modal?.kind === "guard" && (
         <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Garde du corps" size="sm">

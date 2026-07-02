@@ -8,8 +8,8 @@ import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { RosterGroup } from "./RosterGroup";
 import { PurchaseSummary } from "./PurchaseSummary";
-import { encodeList } from "../listCode";
-import { exportText } from "../listText";
+import { encodeList } from "../io/listCode";
+import { exportText } from "../io/listText";
 import { resolveImport } from "./importList";
 
 /** Écran 2 : construction de la liste (roster à gauche, liste au centre, barre d'actions, modales). */

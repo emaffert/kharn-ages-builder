@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { evaluateList, type Catalog, type EvaluationResult, type ListDocument, type ProfileInstance } from "@core";
 import { loadCatalog } from "@data";
-import { allSavedLists, deleteSavedList, saveList } from "./listsDb";
+import { allSavedLists, deleteSavedList, saveList } from "./io/listsDb";
 
 /**
  * Store maison du constructeur de liste joueur : détient un `ListDocument`, expose des

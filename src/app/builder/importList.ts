@@ -1,6 +1,6 @@
 import type { Catalog, ListDocument } from "@core";
-import { checkImportedList, decodeList } from "../listCode";
-import { importText as parseTextList } from "../listText";
+import { checkImportedList, decodeList } from "../io/listCode";
+import { importText as parseTextList } from "../io/listText";
 
 export interface ImportResolution {
   doc: ListDocument;

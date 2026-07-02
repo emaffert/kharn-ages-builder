@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { specialCardsForProfile } from "@ui/explain";
 import {
   castWays as coreCastWays,
@@ -6,8 +6,9 @@ import {
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
 } from "@core";
-import type { Catalog, Profile, ProfileInstance, Spell } from "@core";
-import { useListStore } from "./useListStore";
+import type { Catalog, ListDocument, Profile, ProfileInstance, Spell } from "@core";
+import { useListStore, type ListStore } from "./useListStore";
+import { decodeList, encodeList } from "./listCode";
 
 /**
  * Constructeur de liste joueur. Flux : écran de sélection de faction → écran de construction
@@ -180,24 +181,43 @@ type Modal =
 type ItemInfo = { title: string; price: string; lines: string[] };
 
 export function ListBuilder() {
+  const store = useListStore();
   const [step, setStep] = useState<"select" | "build">("select");
-  const [factionId, setFactionId] = useState("fangs");
   if (step === "select") {
     return (
       <FactionSelect
-        onStart={(id) => {
-          setFactionId(id);
+        store={store}
+        onStart={(id, format, pointsLimit) => {
+          store.newList(id, { format, pointsLimit });
+          setStep("build");
+        }}
+        onLoad={(doc) => {
+          store.loadSaved(doc);
           setStep("build");
         }}
       />
     );
   }
-  return <BuilderScreen factionId={factionId} onNew={() => setStep("select")} />;
+  return <BuilderScreen store={store} onNew={() => setStep("select")} />;
 }
 
 // ── Écran 1 : sélection de la faction ─────────────────────────────────────────
 
-function FactionSelect({ onStart }: { onStart: (id: string) => void }) {
+function FactionSelect({
+  store,
+  onStart,
+  onLoad,
+}: {
+  store: ListStore;
+  onStart: (id: string, format: ListDocument["format"], pointsLimit: number) => void;
+  onLoad: (doc: ListDocument) => void;
+}) {
+  const [showLoad, setShowLoad] = useState(false);
+  const [format, setFormat] = useState<ListDocument["format"]>("escarmouche");
+  const [points, setPoints] = useState(300);
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
   return (
     <div className="kh-builder kh-parchment h-full overflow-y-auto">
       <div className="mx-auto max-w-4xl px-6 py-12">
@@ -209,14 +229,26 @@ function FactionSelect({ onStart }: { onStart: (id: string) => void }) {
         <div className="mt-6 flex flex-wrap items-end gap-6 text-sm">
           <label className="flex flex-col gap-1">
             <span className="opacity-60">Format</span>
-            <select className="rounded bg-white/60 px-3 py-1.5 shadow-inner">
-              <option>Escarmouche (1 Fer de Lance)</option>
-              <option>Bataille (Ost)</option>
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value as ListDocument["format"])}
+              className="rounded bg-white/60 px-3 py-1.5 shadow-inner"
+            >
+              <option value="escarmouche">Escarmouche (1 Fer de Lance)</option>
+              <option value="bataille" disabled>
+                Bataille (Ost) — bientôt
+              </option>
             </select>
           </label>
           <label className="flex flex-col gap-1">
             <span className="opacity-60">Points (Ko)</span>
-            <input type="number" defaultValue={300} className="w-28 rounded bg-white/60 px-3 py-1.5 shadow-inner" />
+            <input
+              type="number"
+              value={points}
+              min={0}
+              onChange={(e) => setPoints(Math.max(0, Number(e.target.value) || 0))}
+              className="w-28 rounded bg-white/60 px-3 py-1.5 shadow-inner"
+            />
           </label>
         </div>
 
@@ -225,7 +257,7 @@ function FactionSelect({ onStart }: { onStart: (id: string) => void }) {
           {FACTIONS.map((f) => (
             <button
               key={f.id}
-              onClick={() => onStart(f.id)}
+              onClick={() => onStart(f.id, format, points)}
               className="group flex items-center gap-4 rounded-xl border-2 bg-white/40 p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               style={{ borderColor: `${f.accent}66` }}
             >
@@ -249,8 +281,82 @@ function FactionSelect({ onStart }: { onStart: (id: string) => void }) {
         </div>
 
         <p className="mt-10 text-sm opacity-60">
-          ou <button className="underline">charger une liste existante</button>
+          ou{" "}
+          <button className="underline" onClick={() => setShowLoad((v) => !v)}>
+            charger une liste existante
+          </button>
+          {store.savedLists.length > 0 && <span className="opacity-50"> ({store.savedLists.length})</span>}
+          {" · "}
+          <button className="underline" onClick={() => { setShowImport((v) => !v); setImportError(null); }}>
+            importer un code
+          </button>
         </p>
+
+        {showImport && (
+          <div className="mt-3 rounded-lg border bg-white/40 p-3" style={{ borderColor: "#7a4a2b44" }}>
+            <textarea
+              value={importText}
+              onChange={(e) => { setImportText(e.target.value); setImportError(null); }}
+              placeholder="Colle un code de liste (KA1:…)"
+              className="h-24 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
+            />
+            {importError && <p className="mt-1 text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
+            <div className="mt-2 flex justify-end">
+              <button
+                onClick={async () => {
+                  try {
+                    onLoad(await decodeList(importText));
+                  } catch {
+                    setImportError("Code invalide ou illisible.");
+                  }
+                }}
+                disabled={importText.trim() === ""}
+                className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow disabled:opacity-40"
+                style={{ background: "#7a4a2b" }}
+              >
+                Importer
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showLoad && (
+          <div className="mt-3 rounded-lg border bg-white/40 p-3" style={{ borderColor: "#7a4a2b44" }}>
+            {store.savedLists.length === 0 ? (
+              <p className="text-sm opacity-60">Aucune liste sauvegardée.</p>
+            ) : (
+              <ul className="space-y-1">
+                {store.savedLists.map((doc) => {
+                  const fac = FACTIONS.find((f) => f.id === doc.fersDeLance[0]?.factionId);
+                  return (
+                    <li key={doc.id} className="flex items-center gap-2 rounded px-2 py-1 hover:bg-white/50">
+                      <button className="flex flex-1 items-center gap-2 text-left" onClick={() => onLoad(doc)}>
+                        <span className="kh-display font-semibold" style={{ color: fac?.deep ?? "#2e2418" }}>
+                          {doc.name}
+                        </span>
+                        {fac && (
+                          <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white" style={{ background: fac.accent }}>
+                            {fac.name}
+                          </span>
+                        )}
+                        <span className="text-xs opacity-50">
+                          {doc.snapshot.totalCost} Ko · {new Date(doc.updatedAt).toLocaleDateString("fr-FR")}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => store.removeSaved(doc.id)}
+                        title="Supprimer"
+                        className="opacity-40 transition hover:text-red-700 hover:opacity-100"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -258,15 +364,28 @@ function FactionSelect({ onStart }: { onStart: (id: string) => void }) {
 
 // ── Écran 2 : construction ────────────────────────────────────────────────────
 
-function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => void }) {
-  const store = useListStore(factionId);
+function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () => void }) {
   const cat = store.catalog;
   const { evaluation, fdl } = store;
-  const fac = FACTIONS.find((f) => f.id === factionId)!;
+  const factionId = fdl.factionId;
+  const fac = FACTIONS.find((f) => f.id === factionId) ?? FACTIONS[0];
   const { accent, deep } = fac;
   const [modal, setModal] = useState<Modal>(null);
   const [rosterQuery, setRosterQuery] = useState("");
   const [dragId, setDragId] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const onSave = async () => {
+    await store.saveCurrent();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+  const [io, setIo] = useState<null | "export" | "import">(null);
+  const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [exportCode, setExportCode] = useState("");
+  useEffect(() => {
+    if (io === "export") encodeList(store.list).then(setExportCode);
+  }, [io, store.list]);
 
   const models: ModelEntry[] = cat.models
     .map((m) => ({
@@ -422,10 +541,14 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
               <div className="h-full rounded-full" style={{ width: `${ratio}%`, background: accent }} />
             </div>
           </div>
-          <ActionBtn accent={accent}>Importer</ActionBtn>
-          <ActionBtn accent={accent}>Exporter</ActionBtn>
-          <ActionBtn accent={accent} primary>
-            Sauvegarder
+          <ActionBtn accent={accent} onClick={() => { setImportText(""); setImportError(null); setIo("import"); }}>
+            Importer
+          </ActionBtn>
+          <ActionBtn accent={accent} onClick={() => setIo("export")}>
+            Exporter
+          </ActionBtn>
+          <ActionBtn accent={accent} primary onClick={onSave}>
+            {saved ? "✓ Enregistré" : "Sauvegarder"}
           </ActionBtn>
         </div>
       </header>
@@ -825,15 +948,95 @@ function BuilderScreen({ factionId, onNew }: { factionId: string; onNew: () => v
           </div>
         </Overlay>
       )}
+      {io === "export" && (
+        <Overlay onClose={() => setIo(null)}>
+          <div className="space-y-3">
+            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
+              Exporter — code portable
+            </h3>
+            <p className="text-sm opacity-70">
+              Copie ce code pour partager ta liste ou l'importer sur un autre appareil.
+            </p>
+            <textarea
+              readOnly
+              value={exportCode}
+              onFocus={(e) => e.currentTarget.select()}
+              className="h-32 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => navigator.clipboard?.writeText(exportCode)}
+                className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow" style={{ background: accent }}
+              >
+                Copier
+              </button>
+              <button onClick={() => setIo(null)} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
+                Fermer
+              </button>
+            </div>
+          </div>
+        </Overlay>
+      )}
+      {io === "import" && (
+        <Overlay onClose={() => setIo(null)}>
+          <div className="space-y-3">
+            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
+              Importer — code portable
+            </h3>
+            <p className="text-sm opacity-70">Colle un code de liste (remplace la liste en cours).</p>
+            <textarea
+              value={importText}
+              onChange={(e) => {
+                setImportText(e.target.value);
+                setImportError(null);
+              }}
+              placeholder="KA1:…"
+              className="h-32 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
+            />
+            {importError && <p className="text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    store.loadSaved(await decodeList(importText));
+                    setIo(null);
+                  } catch {
+                    setImportError("Code invalide ou illisible.");
+                  }
+                }}
+                disabled={importText.trim() === ""}
+                className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow disabled:opacity-40"
+                style={{ background: accent }}
+              >
+                Charger
+              </button>
+              <button onClick={() => setIo(null)} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
+                Annuler
+              </button>
+            </div>
+          </div>
+        </Overlay>
+      )}
     </div>
   );
 }
 
 // ── Sous-composants ───────────────────────────────────────────────────────────
 
-function ActionBtn({ children, accent, primary }: { children: React.ReactNode; accent: string; primary?: boolean }) {
+function ActionBtn({
+  children,
+  accent,
+  primary,
+  onClick,
+}: {
+  children: React.ReactNode;
+  accent: string;
+  primary?: boolean;
+  onClick?: () => void;
+}) {
   return (
     <button
+      onClick={onClick}
       className="rounded-md px-3 py-1.5 text-sm font-medium shadow-sm transition hover:brightness-105"
       style={primary ? { background: accent, color: "#f5ecd6" } : { boxShadow: `inset 0 0 0 1px ${accent}66`, color: accent }}
     >

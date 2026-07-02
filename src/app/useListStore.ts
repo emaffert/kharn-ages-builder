@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { evaluateList, type Catalog, type EvaluationResult, type ListDocument, type ProfileInstance } from "@core";
 import { loadCatalog } from "@data";
+import { allSavedLists, deleteSavedList, saveList } from "./listsDb";
 
 /**
  * Store maison du constructeur de liste joueur : détient un `ListDocument`, expose des
@@ -54,7 +55,7 @@ export interface ListStore {
   setName: (name: string) => void;
   setFormat: (format: ListDocument["format"]) => void;
   setPointsLimit: (n: number | undefined) => void;
-  newList: (factionId: string) => void;
+  newList: (factionId: string, opts?: { format?: ListDocument["format"]; pointsLimit?: number }) => void;
   addMember: (profileId: string) => void;
   addAttached: (carrierInstanceId: string, profileId: string) => void;
   removeMember: (instanceId: string) => void;
@@ -68,6 +69,11 @@ export interface ListStore {
   toggleUpgrade: (instanceId: string, cardId: string) => void;
   setMunition: (instanceId: string, equipId: string, qty: number) => void;
   setGuard: (instanceId: string, ofInstanceId: string | null) => void;
+  // Persistance locale (Dexie).
+  savedLists: ListDocument[];
+  saveCurrent: () => Promise<void>;
+  loadSaved: (doc: ListDocument) => void;
+  removeSaved: (id: string) => Promise<void>;
 }
 
 export function useListStore(initialFactionId = "fangs"): ListStore {
@@ -88,6 +94,13 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     [patchFdl],
   );
 
+  // Bibliothèque des listes sauvegardées (IndexedDB).
+  const [savedLists, setSavedLists] = useState<ListDocument[]>([]);
+  const refreshSaved = useCallback(() => {
+    allSavedLists().then(setSavedLists).catch(() => setSavedLists([]));
+  }, []);
+  useEffect(() => refreshSaved(), [refreshSaved]);
+
   return {
     catalog,
     list,
@@ -96,7 +109,12 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     setName: (name) => setList((l) => touch({ ...l, name })),
     setFormat: (format) => setList((l) => touch({ ...l, format })),
     setPointsLimit: (pointsLimit) => setList((l) => touch({ ...l, pointsLimit })),
-    newList: (factionId) => setList(emptyList(catalog, factionId)),
+    newList: (factionId, opts) =>
+      setList({
+        ...emptyList(catalog, factionId),
+        ...(opts?.format ? { format: opts.format } : {}),
+        ...(opts?.pointsLimit != null ? { pointsLimit: opts.pointsLimit } : {}),
+      }),
     addMember: (profileId) =>
       patchFdl((f) => {
         const m = newInstance(profileId);
@@ -166,5 +184,25 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
       patchMember(instanceId, (m) => ({ ...m, munitions: { ...(m.munitions ?? {}), [equipId]: Math.max(0, qty) } })),
     setGuard: (instanceId, ofInstanceId) =>
       patchMember(instanceId, (m) => ({ ...m, bodyguardOfInstanceId: ofInstanceId ?? undefined })),
+    savedLists,
+    saveCurrent: async () => {
+      // On fige l'instantané dénormalisé (coût total + entrées) pour l'affichage « Mes listes ».
+      const entries = list.fersDeLance.flatMap((f) =>
+        f.members.map((m) => ({
+          instanceId: m.instanceId,
+          displayName: catalog.profiles.find((p) => p.id === m.profileId)?.name ?? m.profileId,
+          cost: evaluation.costByInstance[m.instanceId] ?? 0,
+        })),
+      );
+      const doc = touch({ ...list, snapshot: { totalCost: evaluation.totalCost, entries } });
+      setList(doc);
+      await saveList(doc);
+      refreshSaved();
+    },
+    loadSaved: (doc) => setList(doc),
+    removeSaved: async (id) => {
+      await deleteSavedList(id);
+      refreshSaved();
+    },
   };
 }

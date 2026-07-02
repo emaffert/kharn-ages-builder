@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { AdminCatalog } from "./AdminCatalog";
+import { Suspense, lazy, useState } from "react";
 import { ListBuilder } from "./ListBuilder";
+
+// L'écran Admin (éditeur de catalogue, volumineux) n'est pas sur le chemin critique du
+// constructeur : on le charge à la demande pour alléger le bundle initial.
+const AdminCatalog = lazy(() => import("./AdminCatalog").then((m) => ({ default: m.AdminCatalog })));
 
 export function App() {
   const [view, setView] = useState<"builder" | "admin">("builder");
@@ -19,7 +22,17 @@ export function App() {
           Admin
         </button>
       </nav>
-      <div className="min-h-0 flex-1">{view === "builder" ? <ListBuilder /> : <AdminCatalog />}</div>
+      <div className="min-h-0 flex-1">
+        {view === "builder" ? (
+          <ListBuilder />
+        ) : (
+          <Suspense
+            fallback={<div className="flex h-full items-center justify-center text-sm text-stone-400">Chargement de l'éditeur…</div>}
+          >
+            <AdminCatalog />
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 }

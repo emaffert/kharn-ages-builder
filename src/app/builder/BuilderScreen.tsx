@@ -2,9 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 import type { ListDocument, Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Button, Tag, Dialog, SegmentedControl } from "@ui";
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
+import { SortableUnit } from "./SortableUnit";
 import { EditIcon, TrashIcon, SearchIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
@@ -29,8 +44,16 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const [modal, setModal] = useState<Modal>(null);
   const [rosterQuery, setRosterQuery] = useState("");
   const [showRoster, setShowRoster] = useState(false); // tiroir roster (mobile : aside masqué)
-  const [dragId, setDragId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  // Réordonnancement : glisser depuis la poignée (petite distance d'activation pour préserver les clics).
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (over && active.id !== over.id) store.moveMember(String(active.id), String(over.id));
+  };
   const onSave = async () => {
     await store.saveCurrent();
     setSaved(true);
@@ -114,17 +137,19 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const isChar = (p: Profile) => Boolean(p.isNamed) || p.limitation.kind === "U" || p.limitation.kind === "P";
   const memberOf = (id: string) => items.find((x) => x.inst.instanceId === id);
 
-  // Ordre d'affichage : les unités rattachées (Likan/Muskh) apparaissent juste sous leur porteur.
+  // Ordre d'affichage : chaque figurine de premier niveau porte ses unités rattachées (Likan/Muskh),
+  // rendues juste sous elle. Seuls les groupes de premier niveau sont réordonnables (drag & drop).
+  type Item = NonNullable<ReturnType<typeof memberOf>>;
   const attachedIds = new Set(items.flatMap((x) => x.inst.attachedInstanceIds ?? []));
-  const ordered = items
+  const groups: { x: Item; children: Item[] }[] = items
     .filter((x) => !attachedIds.has(x.inst.instanceId))
-    .flatMap((x) => [
-      { x, attached: false },
-      ...(x.inst.attachedInstanceIds ?? [])
+    .map((x) => ({
+      x,
+      children: (x.inst.attachedInstanceIds ?? [])
         .map((cid) => memberOf(cid))
-        .filter((c): c is NonNullable<typeof c> => Boolean(c))
-        .map((c) => ({ x: c, attached: true })),
-    ]);
+        .filter((c): c is Item => Boolean(c)),
+    }));
+  const topLevelIds = groups.map((g) => g.x.inst.instanceId);
 
   // UI locale (non persistée). Repli : déplié par défaut → on suit les figurines *repliées*.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
@@ -232,6 +257,123 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     </>
   );
 
+  // Rendu d'une ligne d'unité. `handle` (poignée dnd-kit) n'est fourni que pour les figurines
+  // de premier niveau ; les rattachées suivent leur porteur et ne se glissent pas seules.
+  const renderUnit = (
+    x: Item,
+    attached: boolean,
+    handle?: { isDragging: boolean; handleProps: Record<string, unknown> },
+  ) => {
+    const id = x.inst.instanceId;
+    const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
+    const isLeader = id === fdl.leaderInstanceId;
+    const guarded = x.inst.bodyguardOfInstanceId != null;
+    const eligible = guardEligible(x.p) || guarded; // reste dispo pour se dé-désigner
+    const free = costOf(id) === 0 && (guarded || x.p.modelId === "larbin");
+    const open = !collapsed.has(id);
+    const leadable = canLead(x.p, id);
+    const rowIssues = issuesOf(id);
+    const hasActions = x.p.traits.includes("femelle-fang") || x.p.id === "fangs-xayin-2" || eligible;
+    return (
+      <div
+        key={id}
+        className={`bld-unit${isLeader ? " is-leader" : ""}${rowIssues.length > 0 ? " is-error" : ""}${attached ? " is-attached" : ""}${handle?.isDragging ? " is-dragging" : ""}`}
+      >
+        <div className="bld-unit-main">
+          {!attached && (
+            <button type="button" className="bld-grip" title="Glisser pour réordonner" {...(handle?.handleProps ?? {})}>
+              ⠿
+            </button>
+          )}
+          <div className={`bld-thumb${attached ? " sm" : ""}`}>
+            <FactionEmblem kind={fac.emblem} className="sig" />
+            <span className="lvl">{LEVEL[x.p.level ?? 0] || "·"}</span>
+          </div>
+          <div className="bld-uinfo">
+            <div className="bld-uname">
+              <button className="nm" onClick={() => setModal({ kind: "edit", instanceId: id })}>
+                {x.p.name}
+              </button>
+              {x.p.level ? <span className="lvltag">{LEVEL[x.p.level]}</span> : null}
+              {isLeader && <span className="bld-crest-badge">❖ Meneur</span>}
+              {attached && <Tag>rattaché</Tag>}
+            </div>
+            {guarded && (
+              <div className="bld-tags">
+                <Tag tone="moss">Garde du corps de {memberOf(x.inst.bodyguardOfInstanceId!)?.p.name}</Tag>
+              </div>
+            )}
+            {rowIssues.length > 0 && <div className="bld-urow-msg">⚠ {rowIssues.join(" · ")}</div>}
+          </div>
+          {free ? (
+            <div className="bld-ucost free">gratuit</div>
+          ) : (
+            <div className="bld-ucost">
+              {costOf(id)} <span className="ko">Ko</span>
+            </div>
+          )}
+          <div className="bld-uactions">
+            {buyable && (
+              <button
+                className="bld-toggle"
+                onClick={() => toggleCollapsed(id)}
+                title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
+              >
+                {open ? "▾" : "▸"}
+              </button>
+            )}
+            {!attached && !isLeader && leadable && (
+              <button className="bld-setleader" onClick={() => store.setLeader(id)} title="Promouvoir en meneur">
+                Définir meneur
+              </button>
+            )}
+            {!attached && (
+              <button className="bld-icon" title="Éditer" onClick={() => setModal({ kind: "edit", instanceId: id })}>
+                <EditIcon />
+              </button>
+            )}
+            <button className="bld-icon danger" title="Retirer" onClick={() => store.removeMember(id)}>
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
+
+        {hasActions && (
+          <div className="bld-pills">
+            {x.p.traits.includes("femelle-fang") && (
+              <RecruitPill label="+ Likan" onClick={() => setModal({ kind: "recruit-likan", carrierInstanceId: id })} />
+            )}
+            {x.p.id === "fangs-xayin-2" && (
+              <RecruitPill label="+ Muskh" onClick={() => store.addAttached(id, "fangs-muskh-1")} />
+            )}
+            {eligible && (
+              <button
+                className={`bld-pill${guarded ? " on" : ""}`}
+                onClick={() => onGuardClick(id)}
+                title={x.p.modelId === "djouked" ? "Garde rapproché de Broutcha" : "Garde du corps d'une Fille de Nyx"}
+              >
+                {guarded ? "✓ Garde du corps — retirer" : "Garde du corps"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {buyable && open && (
+          <PurchaseSummary
+            p={x.p}
+            cat={cat}
+            added={x.inst.addedEquipmentIds}
+            removed={x.inst.removedBaseEquipmentIds}
+            grimoireId={x.inst.grimoireId}
+            spellIds={x.inst.spellIds}
+            issues={rowIssues}
+            onPick={setItemInfo}
+          />
+        )}
+      </div>
+    );
+  };
+
   const formatLabel = store.list.format === "bataille" ? "Bataille" : "Escarmouche";
   const errorTotal = invalidCount + listErrors.length;
   const validityTitle = [
@@ -308,133 +450,23 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             <button className="bld-add-mobile" onClick={() => setShowRoster(true)}>
               + Ajouter depuis le roster
             </button>
-            {ordered.length === 0 && (
+            {groups.length === 0 && (
               <p className="bld-empty">Liste vide — ajoute des figurines depuis le roster.</p>
             )}
-            {ordered.map(({ x, attached }) => {
-              const id = x.inst.instanceId;
-              const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
-              const isLeader = id === fdl.leaderInstanceId;
-              const guarded = x.inst.bodyguardOfInstanceId != null;
-              const eligible = guardEligible(x.p) || guarded; // reste dispo pour se dé-désigner
-              const free = costOf(id) === 0 && (guarded || x.p.modelId === "larbin");
-              const open = !collapsed.has(id);
-              const leadable = canLead(x.p, id);
-              const rowIssues = issuesOf(id);
-              const hasActions = x.p.traits.includes("femelle-fang") || x.p.id === "fangs-xayin-2" || eligible;
-              return (
-                <div
-                  key={id}
-                  draggable={!attached}
-                  onDragStart={attached ? undefined : () => setDragId(id)}
-                  onDragOver={attached ? undefined : (e) => e.preventDefault()}
-                  onDrop={
-                    attached
-                      ? undefined
-                      : () => {
-                          if (dragId && dragId !== id) store.moveMember(dragId, id);
-                          setDragId(null);
-                        }
-                  }
-                  onDragEnd={() => setDragId(null)}
-                  className={`bld-unit${isLeader ? " is-leader" : ""}${rowIssues.length > 0 ? " is-error" : ""}${attached ? " is-attached" : ""}${dragId === id ? " is-dragging" : ""}`}
-                >
-                  <div className="bld-unit-main">
-                    {!attached && (
-                      <span className="bld-grip" title="Glisser pour réordonner">
-                        ⠿
-                      </span>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext items={topLevelIds} strategy={verticalListSortingStrategy}>
+                {groups.map(({ x, children }) => (
+                  <SortableUnit key={x.inst.instanceId} id={x.inst.instanceId}>
+                    {(handle) => (
+                      <>
+                        {renderUnit(x, false, handle)}
+                        {children.map((c) => renderUnit(c, true))}
+                      </>
                     )}
-                    <div className={`bld-thumb${attached ? " sm" : ""}`}>
-                      <FactionEmblem kind={fac.emblem} className="sig" />
-                      <span className="lvl">{LEVEL[x.p.level ?? 0] || "·"}</span>
-                    </div>
-                    <div className="bld-uinfo">
-                      <div className="bld-uname">
-                        <button className="nm" onClick={() => setModal({ kind: "edit", instanceId: id })}>
-                          {x.p.name}
-                        </button>
-                        {x.p.level ? <span className="lvltag">{LEVEL[x.p.level]}</span> : null}
-                        {isLeader && <span className="bld-crest-badge">❖ Meneur</span>}
-                        {attached && <Tag>rattaché</Tag>}
-                      </div>
-                      {guarded && (
-                        <div className="bld-tags">
-                          <Tag tone="moss">
-                            Garde du corps de {memberOf(x.inst.bodyguardOfInstanceId!)?.p.name}
-                          </Tag>
-                        </div>
-                      )}
-                      {rowIssues.length > 0 && <div className="bld-urow-msg">⚠ {rowIssues.join(" · ")}</div>}
-                    </div>
-                    {free ? (
-                      <div className="bld-ucost free">gratuit</div>
-                    ) : (
-                      <div className="bld-ucost">
-                        {costOf(id)} <span className="ko">Ko</span>
-                      </div>
-                    )}
-                    <div className="bld-uactions">
-                      {buyable && (
-                        <button
-                          className="bld-toggle"
-                          onClick={() => toggleCollapsed(id)}
-                          title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
-                        >
-                          {open ? "▾" : "▸"}
-                        </button>
-                      )}
-                      {!attached && !isLeader && leadable && (
-                        <button className="bld-setleader" onClick={() => store.setLeader(id)} title="Promouvoir en meneur">
-                          Définir meneur
-                        </button>
-                      )}
-                      {!attached && (
-                        <button className="bld-icon" title="Éditer" onClick={() => setModal({ kind: "edit", instanceId: id })}>
-                          <EditIcon />
-                        </button>
-                      )}
-                      <button className="bld-icon danger" title="Retirer" onClick={() => store.removeMember(id)}>
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </div>
-
-                  {hasActions && (
-                    <div className="bld-pills">
-                      {x.p.traits.includes("femelle-fang") && (
-                        <RecruitPill label="+ Likan" onClick={() => setModal({ kind: "recruit-likan", carrierInstanceId: id })} />
-                      )}
-                      {x.p.id === "fangs-xayin-2" && (
-                        <RecruitPill label="+ Muskh" onClick={() => store.addAttached(id, "fangs-muskh-1")} />
-                      )}
-                      {eligible && (
-                        <button
-                          className={`bld-pill${guarded ? " on" : ""}`}
-                          onClick={() => onGuardClick(id)}
-                          title={x.p.modelId === "djouked" ? "Garde rapproché de Broutcha" : "Garde du corps d'une Fille de Nyx"}
-                        >
-                          {guarded ? "✓ Garde du corps — retirer" : "Garde du corps"}
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {buyable && open && (
-                    <PurchaseSummary
-                      p={x.p}
-                      cat={cat}
-                      added={x.inst.addedEquipmentIds}
-                      removed={x.inst.removedBaseEquipmentIds}
-                      grimoireId={x.inst.grimoireId}
-                      spellIds={x.inst.spellIds}
-                      issues={rowIssues}
-                      onPick={setItemInfo}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                  </SortableUnit>
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
         </section>
       </div>

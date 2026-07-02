@@ -20,10 +20,28 @@ const SIGILS: Record<EmblemKind, React.JSX.Element> = {
       <circle cx="29" cy="16" r="1.6" fill="var(--gold)" />
     </>
   ),
+  gouns: (
+    <>
+      <path
+        d="M20 13 c-6 0 -8 4 -8 9 c0 6 4 9 8 9 c4 0 8 -3 8 -9 c0 -5 -2 -9 -8 -9 Z"
+        fill="#f4e6c8"
+        opacity=".9"
+      />
+      <circle cx="16.5" cy="21" r="1.6" fill="var(--faction-deep)" />
+      <circle cx="23.5" cy="21" r="1.6" fill="var(--faction-deep)" />
+      <path d="M20 24 v4" stroke="var(--faction-deep)" strokeWidth="1.6" strokeLinecap="round" />
+    </>
+  ),
   kherops: (
     <>
       <path d="M8 22 C12 16 28 16 32 22 C28 28 12 28 8 22 Z" fill="#f4e6c8" opacity=".92" />
       <circle cx="20" cy="22" r="3.4" fill="var(--faction-deep)" />
+    </>
+  ),
+  tembos: (
+    <>
+      <path d="M15 13 c-3 6 -3 12 1 17 c1 -1 2 -2 2 -4 c-2 -4 -2 -8 0 -13 Z" fill="#f4e6c8" opacity=".9" />
+      <path d="M25 13 c3 6 3 12 -1 17 c-1 -1 -2 -2 -2 -4 c2 -4 2 -8 0 -13 Z" fill="#f4e6c8" opacity=".9" />
     </>
   ),
   guilde: (

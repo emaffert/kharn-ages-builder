@@ -207,7 +207,7 @@ body {
   color: transparent; }
 .fs-sub { margin: 0; color: var(--bone-dim); font-size: 15px; }
 
-.fs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+.fs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
 .fs-tile { position: relative; padding: 24px 18px 20px; border-radius: var(--radius-lg); text-align: center; cursor: pointer;
   border: 0; font: inherit; color: inherit; width: 100%;
   background: linear-gradient(180deg, var(--soot-2), var(--forge-2)); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair);

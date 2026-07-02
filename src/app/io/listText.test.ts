@@ -45,6 +45,19 @@ describe("export/import texte", () => {
     expect(unresolved).toEqual([]);
   });
 
+  it("round-trip d'un équipement de base retiré", () => {
+    const doc = makeDoc();
+    // L'Exécuteur retire son couteau de base ; le round-trip texte doit le préserver.
+    doc.fersDeLance[0].members = doc.fersDeLance[0].members.map((m) =>
+      m.profileId === "fangs-executeur-2" ? { ...m, removedBaseEquipmentIds: ["couteau"] } : m,
+    );
+    const txt = exportText(fangsCatalog, doc);
+    expect(txt).toContain("Couteau [retiré]");
+    const { doc: back } = importText(fangsCatalog, txt);
+    const exec = back.fersDeLance[0].members.find((m) => m.profileId === "fangs-executeur-2")!;
+    expect(exec.removedBaseEquipmentIds).toContain("couteau");
+  });
+
   it("signale les lignes non reconnues", () => {
     const { unresolved } = importText(fangsCatalog, "Ma liste\nFangs · Escarmouche · 300 Ko\n\n• Profil Inexistant — 10 Ko");
     expect(unresolved.length).toBeGreaterThan(0);

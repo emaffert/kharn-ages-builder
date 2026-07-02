@@ -5,6 +5,7 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { parseCatalog } from "./src/core";
 
 /** Type MIME d'une image d'après ses octets de tête. */
 function sniffImageType(buf: Buffer): string {
@@ -63,7 +64,9 @@ function devSaveCatalogPlugin(): Plugin {
         try {
           const chunks: Buffer[] = [];
           for await (const chunk of req) chunks.push(chunk as Buffer);
-          const data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+          // Validation Zod avant écriture : on refuse d'écraser le fichier source avec un
+          // catalogue invalide (garde-fou contre une corruption ou un POST externe malveillant).
+          const data = parseCatalog(JSON.parse(Buffer.concat(chunks).toString("utf8")));
           await writeFile(target, JSON.stringify(data, null, 2) + "\n");
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");

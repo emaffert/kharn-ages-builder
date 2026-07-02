@@ -1,4 +1,5 @@
 import { evaluateList, type Catalog, type ListDocument, type ProfileInstance } from "@core";
+import { newListId } from "./ids";
 
 /**
  * Format TEXTE lisible d'une liste (partage/impression) + import best-effort par nom.
@@ -27,7 +28,10 @@ export function exportText(cat: Catalog, doc: ListDocument): string {
   const details = (m: ProfileInstance): string[] => {
     const out: string[] = [];
     const active = new Set(m.removedBaseEquipmentIds);
-    for (const id of profile(m.profileId)?.baseEquipmentIds ?? []) if (!active.has(id)) out.push(equipItem(m, id, "de base"));
+    const base = profile(m.profileId)?.baseEquipmentIds ?? [];
+    for (const id of base) if (!active.has(id)) out.push(equipItem(m, id, "de base"));
+    // Base retirée : listée explicitement pour un round-trip fidèle (sinon réimportée par défaut).
+    for (const id of base) if (active.has(id)) out.push(equipItem(m, id, "retiré"));
     for (const id of m.addedEquipmentIds) out.push(equipItem(m, id));
     if (m.grimoireId) out.push(`    grimoire · ${cat.grimoires.find((g) => g.id === m.grimoireId)?.name ?? m.grimoireId}`);
     for (const id of m.spellIds) out.push(`    sort · ${cat.spells.find((s) => s.id === id)?.name ?? id}`);
@@ -136,10 +140,15 @@ export function importText(cat: Catalog, text: string): TextImportResult {
       let val = detail[2].trim();
       if (kind.startsWith("equip") || kind === "arme") {
         const mun = val.match(/\(×?\s*(\d+)\s*munitions?\)/i);
+        const tag = norm(val.match(/\[([^\]]*)\]\s*$/)?.[1] ?? ""); // "de base" | "retire" | ""
         val = val.replace(/\s*\(×?\s*\d+\s*munitions?\)\s*/i, "").replace(/\s*\[.*\]\s*$/, "").trim();
         const e = byName(cat.equipment, val);
+        const isBase = e != null && cat.profiles.find((p) => p.id === current!.profileId)?.baseEquipmentIds.includes(e.id);
         if (!e) unresolved.push(raw);
-        else if (!(current.profileId && cat.profiles.find((p) => p.id === current!.profileId)?.baseEquipmentIds.includes(e.id))) {
+        else if (isBase) {
+          // Base explicitement retirée → on la marque comme telle (round-trip du coût).
+          if (tag === "retire") current.removedBaseEquipmentIds.push(e.id);
+        } else {
           current.addedEquipmentIds.push(e.id);
           if (mun) current.munitions = { ...(current.munitions ?? {}), [e.id]: Number(mun[1]) };
         }
@@ -189,7 +198,7 @@ export function importText(cat: Catalog, text: string): TextImportResult {
   const doc: ListDocument = {
     schemaVersion: "1",
     catalogVersion: cat.version,
-    id: `list-${Date.now().toString(36)}`,
+    id: newListId(),
     name,
     format,
     pointsLimit,

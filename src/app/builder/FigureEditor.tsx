@@ -217,8 +217,9 @@ export function FigureEditor({
   const ameliorations = specialCardsForProfile(p, cat).filter((c) => c.amelioration);
   const grimoireCost = grimoire === "none" ? 0 : (cat.grimoires.find((g) => g.id === grimoire)?.cost ?? 0);
   const spellCost = spells.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.cost ?? 0), 0);
-  const magicCost = castable ? grimoireCost + spellCost : 0;
-  const total = p.cost + addedCost - removedCost + munTotal + upgradeCost + magicCost;
+  // Grimoire + sorts sont toujours facturés (comme le moteur, cf. baseInstanceCost) : l'aperçu
+  // ne doit pas diverger du coût autoritaire même si la figurine ne peut pas (ou plus) lancer.
+  const total = p.cost + addedCost - removedCost + munTotal + upgradeCost + grimoireCost + spellCost;
 
   const tabs = [
     { id: "carte" as const, label: "Carte" },

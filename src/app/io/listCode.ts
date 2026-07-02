@@ -19,16 +19,25 @@ function fromBase64Url(s: string): Uint8Array {
 
 async function pipe(bytes: Uint8Array, stream: CompressionStream | DecompressionStream): Promise<Uint8Array> {
   const writer = stream.writable.getWriter();
-  void writer.write(bytes as Uint8Array<ArrayBuffer>);
-  void writer.close();
+  // Le côté écriture est piloté en parallèle de la lecture. On rattache un `.catch` pour
+  // qu'une erreur de flux (ex. données invalides à la décompression) ne devienne pas un rejet
+  // non géré : elle est déjà remontée par `reader.read()` ci-dessous, source unique de vérité.
+  const writeDone = writer
+    .write(bytes as Uint8Array<ArrayBuffer>)
+    .then(() => writer.close())
+    .catch(() => {});
   const reader = stream.readable.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    total += value.length;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      total += value.length;
+    }
+  } finally {
+    await writeDone;
   }
   const out = new Uint8Array(total);
   let offset = 0;

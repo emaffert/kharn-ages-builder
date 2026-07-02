@@ -2,15 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { evaluateList, type Catalog, type EvaluationResult, type ListDocument, type ProfileInstance } from "@core";
 import { loadCatalog } from "@data";
 import { allSavedLists, deleteSavedList, saveList } from "./io/listsDb";
+import { newInstanceId, newListId } from "./io/ids";
 
 /**
  * Store maison du constructeur de liste joueur : détient un `ListDocument`, expose des
  * mutations par `instanceId`, et dérive l'évaluation (coût + validation) via `evaluateList`.
  * Local-first : la persistance (Dexie) et l'import/export viendront se brancher par-dessus.
  */
-
-let idCounter = 0;
-const newInstanceId = (profileId: string) => `${profileId}#${Date.now().toString(36)}-${idCounter++}`;
 
 function newInstance(profileId: string): ProfileInstance {
   return {
@@ -27,7 +25,7 @@ function emptyList(cat: Catalog, factionId: string): ListDocument {
   return {
     schemaVersion: "1",
     catalogVersion: cat.version,
-    id: `list-${Date.now().toString(36)}`,
+    id: newListId(),
     name: "Nouvelle liste",
     format: "escarmouche",
     pointsLimit: 300,

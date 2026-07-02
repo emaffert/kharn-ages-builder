@@ -17,13 +17,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # Qualité : lint + typecheck + tests. Le déploiement est bloqué si un contrôle échoue.
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: "22"
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run build

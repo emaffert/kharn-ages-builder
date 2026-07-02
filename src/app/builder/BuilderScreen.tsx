@@ -22,6 +22,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const { accent, deep } = fac;
   const [modal, setModal] = useState<Modal>(null);
   const [rosterQuery, setRosterQuery] = useState("");
+  const [showRoster, setShowRoster] = useState(false); // tiroir roster (mobile : aside masqué)
   const [dragId, setDragId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const onSave = async () => {
@@ -188,6 +189,44 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const modalModel = modal?.kind === "preview" ? models.find((m) => m.id === modal.modelId) : undefined;
   const editItem = modal?.kind === "edit" ? memberOf(modal.instanceId) : undefined;
 
+  // Contenu du roster, partagé entre l'aside desktop et la modale mobile.
+  const rosterInner = (
+    <>
+      <div className="border-b px-3 py-2.5" style={{ borderColor: `${accent}33` }}>
+        <input
+          value={rosterQuery}
+          onChange={(e) => setRosterQuery(e.target.value)}
+          placeholder="Rechercher un profil…"
+          className="w-full rounded bg-white/60 px-2 py-1.5 text-sm outline-none shadow-inner"
+        />
+        <p className="kh-display mt-2 text-sm font-semibold" style={{ color: deep }}>
+          Roster · {fac.name}
+        </p>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2">
+        {models.length === 0 ? (
+          <p className="px-2 py-4 text-sm opacity-60">
+            {rosterQuery.trim() !== ""
+              ? "Aucun profil ne correspond à la recherche."
+              : `Aucune figurine à recruter pour la faction ${fac.name} pour l'instant.`}
+          </p>
+        ) : (
+          <>
+            <RosterGroup label="Personnages" items={personnages} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup
+              label="Recrutement conditionnel"
+              hint="se recrutent via un porteur dans la liste"
+              items={conditionnels}
+              onOpen={(id) => setModal({ kind: "preview", modelId: id })}
+              conditional
+            />
+          </>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <div className="kh-builder kh-parchment flex h-full flex-col">
       {/* Barre d'actions */}
@@ -232,44 +271,14 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       <div className="flex min-h-0 flex-1">
         {/* Roster */}
         <aside className="kh-panel hidden w-72 shrink-0 flex-col border-r md:flex" style={{ borderColor: `${accent}44` }}>
-          <div className="border-b px-3 py-2.5" style={{ borderColor: `${accent}33` }}>
-            <input
-              value={rosterQuery}
-              onChange={(e) => setRosterQuery(e.target.value)}
-              placeholder="Rechercher un profil…"
-              className="w-full rounded bg-white/60 px-2 py-1.5 text-sm outline-none shadow-inner"
-            />
-            <p className="kh-display mt-2 text-sm font-semibold" style={{ color: deep }}>
-              Roster · {fac.name}
-            </p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2">
-            {models.length === 0 ? (
-              <p className="px-2 py-4 text-sm opacity-60">
-                {rosterQuery.trim() !== ""
-                  ? "Aucun profil ne correspond à la recherche."
-                  : `Aucune figurine à recruter pour la faction ${fac.name} pour l'instant.`}
-              </p>
-            ) : (
-              <>
-                <RosterGroup label="Personnages" items={personnages} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-                <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-                <RosterGroup
-                  label="Recrutement conditionnel"
-                  hint="se recrutent via un porteur dans la liste"
-                  items={conditionnels}
-                  onOpen={(id) => setModal({ kind: "preview", modelId: id })}
-                  conditional
-                />
-              </>
-            )}
-          </div>
+          {rosterInner}
         </aside>
 
         {/* Liste */}
         <section className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-2xl space-y-2">
             <button
+              onClick={() => setShowRoster(true)}
               className="mb-2 rounded-md px-3 py-1.5 text-sm font-medium text-white shadow md:hidden"
               style={{ background: accent }}
             >
@@ -448,6 +457,23 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         )}
         <span className="opacity-60">{items.length} figurines</span>
       </footer>
+
+      {/* Modale roster (mobile) : l'aside étant masqué sous `md`. */}
+      {showRoster && (
+        <Overlay onClose={() => setShowRoster(false)}>
+          <div className="kh-panel flex max-h-[80vh] flex-col">
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
+                Recruter · {fac.name}
+              </h3>
+              <button onClick={() => setShowRoster(false)} className="rounded px-2 py-1 text-sm hover:bg-black/5">
+                Fermer
+              </button>
+            </div>
+            {rosterInner}
+          </div>
+        </Overlay>
+      )}
 
       {/* Modale : aperçu ou édition */}
       {modal?.kind === "preview" && modalModel && (

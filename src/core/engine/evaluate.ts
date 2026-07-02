@@ -24,6 +24,12 @@ import {
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
  * des effets dynamiques (octrois, déblocages, modificateurs de coût).
  * Référence : docs/schema-donnees.md — couche 2 (ordre de résolution).
+ *
+ * Opérations d'effet prises en charge ici : `cost-delta`, `cost-set`, `grant-trait`,
+ * `grant-skill` (`spell-pages` est traité par engine/magic.ts pour la capacité de pages).
+ * TODO — opérations définies au schéma mais PAS encore appliquées à l'évaluation :
+ *   `stat-modifier` (ex. Apprentie de Nyx : +niveau en I), `unlock-upgrade`, `cap`.
+ *   Tant qu'elles ne sont pas implémentées, ces effets sont sans incidence sur coût/stats.
  */
 
 export interface Issue {
@@ -138,8 +144,10 @@ function collectEffectOccurrences(
 
   // Effets portés par les profils présents. Un effet « optIn » (choix du joueur) n'est appliqué
   // que si l'instance a explicitement opté — désignée garde du corps (ex. Djouked → −35 pour Broutcha).
+  // Les effets `appliesToListBuilding: false` sont « en jeu seulement » : jamais calculés ici.
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
+      if (!effect.appliesToListBuilding) continue;
       if (effect.optIn && ri.instance.bodyguardOfInstanceId == null) continue;
       occurrences.push({
         effect,
@@ -163,7 +171,7 @@ function collectEffectOccurrences(
       const matchCount = inFdl.filter((ri) => specialCardScopeMatches(card, ri)).length;
       if (matchCount > 0) {
         for (const effect of card.effects) {
-          if (effect.optIn) continue;
+          if (!effect.appliesToListBuilding || effect.optIn) continue;
           occurrences.push({ effect, ferDeLanceId: fdlId, sourceCount: matchCount });
         }
       }
@@ -176,6 +184,7 @@ function collectEffectOccurrences(
       const card = idx.specialCard.get(cardId);
       if (!card) continue;
       for (const effect of card.effects) {
+        if (!effect.appliesToListBuilding) continue;
         occurrences.push({
           effect,
           ferDeLanceId: ri.ferDeLanceId,

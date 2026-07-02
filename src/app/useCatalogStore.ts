@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   parseCatalog,
   type Catalog,
@@ -46,8 +46,10 @@ function toggle(list: string[], key: string): string[] {
  * (localStorage) et peuvent être exportées en JSON pour être commitées par un mainteneur.
  */
 export function useCatalogStore() {
-  const [catalog, setCatalog] = useState<Catalog>(() => readStored() ?? loadCatalog());
-  const [dirty, setDirty] = useState<boolean>(() => readStored() != null);
+  // Une seule lecture/validation Zod du catalogue stocké au montage (évite un double parse).
+  const stored = useMemo(() => readStored(), []);
+  const [catalog, setCatalog] = useState<Catalog>(() => stored ?? loadCatalog());
+  const [dirty, setDirty] = useState<boolean>(() => stored != null);
 
   const apply = useCallback((updater: (c: Catalog) => Catalog) => {
     setCatalog((prev) => {

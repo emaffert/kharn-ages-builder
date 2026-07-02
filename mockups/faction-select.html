@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Khârn-Âges — Sélection de faction (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="forge.css" />
+<style>
+/* Fond atmosphérique : lueur de faction + vignette, sous le grain partagé */
+.scene{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;
+  background:
+    radial-gradient(90% 70% at 50% -10%, color-mix(in srgb,var(--faction) 22%,transparent), transparent 60%),
+    radial-gradient(70% 60% at 50% 120%, rgba(0,0,0,.6), transparent 55%);
+  transition:background .5s var(--ease)}
+
+.wrap{width:100%;max-width:1000px;margin:0 auto;padding:44px 24px 64px;flex:1}
+
+.hero{text-align:center;margin-bottom:34px}
+.eyebrow{font-family:Cinzel;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--ember);margin-bottom:12px}
+.hero h1{font-family:Cinzel;font-weight:700;font-size:40px;margin:0 0 10px;letter-spacing:.01em;
+  background:linear-gradient(180deg,var(--bone),var(--bone-dim));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin:0;color:var(--bone-dim);font-size:15px}
+
+/* Tuiles de faction */
+.fac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+.tile{position:relative;padding:24px 18px 20px;border-radius:var(--radius-lg);text-align:center;cursor:pointer;
+  background:linear-gradient(180deg,var(--soot-2),var(--forge-2));
+  box-shadow:var(--shadow), inset 0 0 0 1px var(--hair);
+  transition:transform .18s var(--ease), box-shadow .18s var(--ease)}
+.tile:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift), inset 0 0 0 1px color-mix(in srgb,var(--faction) 45%,transparent)}
+.tile.sel{box-shadow:var(--shadow-lift), inset 0 0 0 1.5px var(--faction-2), 0 0 40px -10px color-mix(in srgb,var(--faction) 80%,transparent)}
+.tile.sel::after{content:"✓ Choisie";position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-accent);background:linear-gradient(180deg,var(--ember-bright),var(--ember));padding:3px 8px;border-radius:999px}
+.tile.soon{opacity:.5;cursor:not-allowed}
+.tile.soon:hover{transform:none;box-shadow:var(--shadow), inset 0 0 0 1px var(--hair)}
+.tile.soon::after{content:"Bientôt";position:absolute;top:12px;right:12px;font-size:10px;font-weight:600;letter-spacing:.06em;
+  color:var(--bone-faint);box-shadow:inset 0 0 0 1px var(--hair-strong);padding:3px 8px;border-radius:999px}
+.emblem{width:74px;height:80px;margin:0 auto 14px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6));
+  transition:transform .18s var(--ease)}
+.tile:hover .emblem{transform:scale(1.05)}
+.tile h3{font-family:Cinzel;font-weight:600;font-size:19px;margin:0 0 6px;color:var(--bone)}
+.tile p{margin:0 0 12px;font-size:12.5px;color:var(--bone-dim);line-height:1.4;min-height:34px}
+.tile .count{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faction-2);font-weight:600}
+.tile.soon .count{color:var(--bone-faint)}
+
+/* Panneau de mise en route */
+.setup{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:20px 24px;border-radius:var(--radius-lg);
+  background:
+    radial-gradient(120% 200% at 0% 0%, var(--header-glow), transparent 55%),
+    linear-gradient(180deg,var(--soot-2),var(--forge-2));
+  box-shadow:var(--shadow), inset 0 0 0 1px var(--hair)}
+.setup .grp{display:flex;flex-direction:column;gap:8px}
+.setup .glabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-faint);font-weight:600}
+.seg{display:inline-flex;padding:3px;border-radius:11px;background:var(--forge);box-shadow:inset 0 0 0 1px var(--hair)}
+.seg button{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;color:var(--bone-dim);transition:.16s var(--ease)}
+.seg button:hover{color:var(--bone)}
+.seg .on{color:var(--ink-accent);background:linear-gradient(180deg,var(--ember-bright),var(--ember));font-weight:600;box-shadow:0 0 18px -6px var(--ember-glow)}
+.setup .go{margin-left:auto;display:flex;align-items:center;gap:14px}
+.chosen{font-family:Cinzel;color:var(--faction-2);font-weight:600}
+
+/* Mes listes */
+.saved{margin-top:44px}
+.saved-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.saved-head h2{font-family:Cinzel;font-weight:600;font-size:18px;margin:0;color:var(--bone)}
+.saved-head .line{flex:1;height:1px;background:var(--hair)}
+.slist{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.scard{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--radius);
+  background:linear-gradient(180deg,var(--soot-2),var(--forge-2));box-shadow:var(--shadow), inset 0 0 0 1px var(--hair);
+  transition:transform .16s var(--ease), box-shadow .16s var(--ease);cursor:pointer}
+.scard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+.scard .em{width:38px;height:42px;flex:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,.6))}
+.scard .info{flex:1;min-width:0}
+.scard .nm{font-weight:600;font-size:15px;color:var(--bone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scard .mt{font-size:12px;color:var(--bone-dim);margin-top:2px;display:flex;align-items:center;gap:7px;flex-wrap:nowrap;white-space:nowrap}
+.scard .ko{font-family:Cinzel;color:var(--gold);font-weight:600;font-size:15px;white-space:nowrap}
+
+@media (max-width:820px){
+  .fac-grid{grid-template-columns:repeat(2,1fr)}
+  .slist{grid-template-columns:1fr}
+  .setup .go{margin-left:0;width:100%}
+  .hero h1{font-size:32px}
+}
+</style>
+</head>
+<body>
+<!-- Emblèmes héraldiques (placeholders — remplaçables par les vraies icônes de faction) -->
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="em-fangs" viewBox="0 0 40 44">
+    <path d="M20 2 L37 8 V22 C37 33 29 40 20 43 C11 40 3 33 3 22 V8 Z" fill="var(--faction)" stroke="var(--gold)" stroke-width="2"/>
+    <path d="M20 11 C15 15 12 15 11 23 C15 20 17 21 20 27 C23 21 25 20 29 23 C28 15 25 15 20 11 Z" fill="#f4e6c8" opacity=".9"/>
+  </symbol>
+  <symbol id="em-kharns" viewBox="0 0 40 44">
+    <path d="M20 2 L37 8 V22 C37 33 29 40 20 43 C11 40 3 33 3 22 V8 Z" fill="var(--faction)" stroke="var(--gold)" stroke-width="2"/>
+    <path d="M11 18 L15 24 L20 16 L25 24 L29 18 L27 30 H13 Z" fill="#f4e6c8" opacity=".9"/>
+    <circle cx="11" cy="16" r="1.6" fill="var(--gold)"/><circle cx="20" cy="13" r="1.6" fill="var(--gold)"/><circle cx="29" cy="16" r="1.6" fill="var(--gold)"/>
+  </symbol>
+  <symbol id="em-kherops" viewBox="0 0 40 44">
+    <path d="M20 2 L37 8 V22 C37 33 29 40 20 43 C11 40 3 33 3 22 V8 Z" fill="var(--faction)" stroke="var(--gold)" stroke-width="2"/>
+    <path d="M8 22 C12 16 28 16 32 22 C28 28 12 28 8 22 Z" fill="#f4e6c8" opacity=".92"/>
+    <circle cx="20" cy="22" r="3.4" fill="var(--faction-deep)"/>
+  </symbol>
+  <symbol id="em-guilde" viewBox="0 0 40 44">
+    <path d="M20 2 L37 8 V22 C37 33 29 40 20 43 C11 40 3 33 3 22 V8 Z" fill="var(--faction)" stroke="var(--gold)" stroke-width="2"/>
+    <circle cx="20" cy="22" r="8" fill="none" stroke="#f4e6c8" stroke-width="2.2" opacity=".9"/>
+    <path d="M20 16 L22 21 L27 21 L23 24 L24.5 29 L20 26 L15.5 29 L17 24 L13 21 L18 21 Z" fill="#f4e6c8" opacity=".9"/>
+  </symbol>
+</defs></svg>
+
+<!-- data-fac pilote --faction/--faction-2/--faction-deep sur la scène (teinte le fond) -->
+<div class="scene" style="--faction:#b0472b;--faction-2:#e0553f;--faction-deep:#5e1a13">
+  <header class="topbar">
+    <span class="brand">Khârn‑Âges</span>
+    <nav class="nav"><button class="on">Constructeur</button><button>Admin</button></nav>
+    <span class="spacer"></span>
+    <div class="mode-toggle"><button class="on">Sombre</button><button>Clair</button></div>
+  </header>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Constructeur de listes</div>
+      <h1>Choisis ta faction</h1>
+      <p>Une seule faction par Fer de Lance. Elle déterminera les figurines recrutables.</p>
+    </div>
+
+    <div class="fac-grid">
+      <div class="tile sel" style="--faction:#b0472b;--faction-2:#e0553f;--faction-deep:#5e1a13" tabindex="0">
+        <svg class="emblem"><use href="#em-fangs"/></svg>
+        <h3>Fangs</h3>
+        <p>Enfants de Nyx, sorcellerie d'os.</p>
+        <div class="count">12 profils</div>
+      </div>
+      <div class="tile soon" style="--faction:#3d5f95;--faction-2:#7aa0d6;--faction-deep:#16223d">
+        <svg class="emblem"><use href="#em-kharns"/></svg>
+        <h3>Khârns</h3>
+        <p>La Couronne et ses vassaux.</p>
+        <div class="count">à venir</div>
+      </div>
+      <div class="tile soon" style="--faction:#9a2f2f;--faction-2:#d15a4e;--faction-deep:#3a1010">
+        <svg class="emblem"><use href="#em-kherops"/></svg>
+        <h3>Khérops</h3>
+        <p>Les soldats de l'Empereur.</p>
+        <div class="count">à venir</div>
+      </div>
+      <div class="tile soon" style="--faction:#736784;--faction-2:#a99bbd;--faction-deep:#241f2d">
+        <svg class="emblem"><use href="#em-guilde"/></svg>
+        <h3>Guilde Noire</h3>
+        <p>Renégats et mercenaires.</p>
+        <div class="count">à venir</div>
+      </div>
+    </div>
+
+    <div class="setup">
+      <div class="grp">
+        <span class="glabel">Format</span>
+        <div class="seg"><button class="on">Escarmouche</button><button>Bataille</button></div>
+      </div>
+      <div class="grp">
+        <span class="glabel">Budget</span>
+        <div class="seg"><button class="on">300 Ko</button><button>400 Ko</button><button>Libre</button></div>
+      </div>
+      <div class="go">
+        <span>Faction : <span class="chosen">Fangs</span></span>
+        <button class="btn primary lg">Commencer →</button>
+      </div>
+    </div>
+
+    <div class="saved">
+      <div class="saved-head">
+        <h2>Reprendre une liste</h2><span class="line"></span>
+      </div>
+      <div class="slist">
+        <div class="scard" style="--faction:#b0472b;--faction-2:#e0553f;--faction-deep:#5e1a13">
+          <svg class="em"><use href="#em-fangs"/></svg>
+          <div class="info"><div class="nm">La Tanière de Nyx</div>
+            <div class="mt">Escarmouche<span class="dot"></span>hier</div></div>
+          <span class="ko">310 Ko</span>
+        </div>
+        <div class="scard" style="--faction:#b0472b;--faction-2:#e0553f;--faction-deep:#5e1a13">
+          <svg class="em"><use href="#em-fangs"/></svg>
+          <div class="info"><div class="nm">Meute d'os</div>
+            <div class="mt">Escarmouche<span class="dot"></span>il y a 3 j</div></div>
+          <span class="ko">275 Ko</span>
+        </div>
+        <div class="scard" style="--faction:#b0472b;--faction-2:#e0553f;--faction-deep:#5e1a13">
+          <svg class="em"><use href="#em-fangs"/></svg>
+          <div class="info"><div class="nm">Chœur des Filles</div>
+            <div class="mt">Bataille<span class="dot"></span>il y a 7 j</div></div>
+          <span class="ko">840 Ko</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="mockups.js"></script>
+</body>
+</html>

@@ -9,6 +9,7 @@ import {
 import type { Catalog, ListDocument, Profile, ProfileInstance, Spell } from "@core";
 import { useListStore, type ListStore } from "./useListStore";
 import { decodeList, encodeList } from "./listCode";
+import { exportText, importText as parseTextList } from "./listText";
 
 /**
  * Constructeur de liste joueur. Flux : écran de sélection de faction → écran de construction
@@ -218,6 +219,8 @@ function FactionSelect({
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
+  const [importUnresolved, setImportUnresolved] = useState<string[]>([]);
+  const [pendingImport, setPendingImport] = useState<ListDocument | null>(null);
   return (
     <div className="kh-builder kh-parchment h-full overflow-y-auto">
       <div className="mx-auto max-w-4xl px-6 py-12">
@@ -296,25 +299,51 @@ function FactionSelect({
           <div className="mt-3 rounded-lg border bg-white/40 p-3" style={{ borderColor: "#7a4a2b44" }}>
             <textarea
               value={importText}
-              onChange={(e) => { setImportText(e.target.value); setImportError(null); }}
-              placeholder="Colle un code de liste (KA1:…)"
+              onChange={(e) => {
+                setImportText(e.target.value);
+                setImportError(null);
+                setImportUnresolved([]);
+                setPendingImport(null);
+              }}
+              placeholder="Code (KA1:…) ou roster texte"
               className="h-24 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
             />
             {importError && <p className="mt-1 text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
+            {importUnresolved.length > 0 && (
+              <div className="mt-1 rounded-md bg-black/5 p-2 text-xs" style={{ color: "#9a3b2b" }}>
+                <p className="font-semibold">Lignes non reconnues (ignorées) :</p>
+                <ul className="mt-1 space-y-0.5">
+                  {importUnresolved.map((l, k) => (
+                    <li key={k}>· {l.trim()}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="mt-2 flex justify-end">
               <button
                 onClick={async () => {
+                  if (pendingImport) return onLoad(pendingImport);
+                  setImportError(null);
+                  setImportUnresolved([]);
                   try {
                     onLoad(await decodeList(importText));
                   } catch {
-                    setImportError("Code invalide ou illisible.");
+                    const r = parseTextList(store.catalog, importText);
+                    if (r.doc.fersDeLance[0].members.length === 0) {
+                      setImportError("Ni code valide, ni figurine reconnue dans le texte.");
+                    } else if (r.unresolved.length > 0) {
+                      setImportUnresolved(r.unresolved);
+                      setPendingImport(r.doc);
+                    } else {
+                      onLoad(r.doc);
+                    }
                   }
                 }}
                 disabled={importText.trim() === ""}
                 className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow disabled:opacity-40"
                 style={{ background: "#7a4a2b" }}
               >
-                Importer
+                {pendingImport ? "Charger quand même" : "Importer"}
               </button>
             </div>
           </div>
@@ -383,9 +412,36 @@ function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () => void }
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [exportCode, setExportCode] = useState("");
+  const [exportMode, setExportMode] = useState<"code" | "texte">("code");
   useEffect(() => {
     if (io === "export") encodeList(store.list).then(setExportCode);
   }, [io, store.list]);
+  const exportValue = exportMode === "code" ? exportCode : exportText(cat, store.list);
+  // Import unifié : code portable d'abord, sinon texte best-effort.
+  const [importUnresolved, setImportUnresolved] = useState<string[]>([]);
+  const [pendingImport, setPendingImport] = useState<ListDocument | null>(null);
+  const runImport = async () => {
+    setImportError(null);
+    setImportUnresolved([]);
+    setPendingImport(null);
+    try {
+      store.loadSaved(await decodeList(importText));
+      setIo(null);
+    } catch {
+      const r = parseTextList(cat, importText);
+      if (r.doc.fersDeLance[0].members.length === 0) {
+        setImportError("Aucune figurine reconnue.");
+        return;
+      }
+      if (r.unresolved.length > 0) {
+        setImportUnresolved(r.unresolved);
+        setPendingImport(r.doc);
+      } else {
+        store.loadSaved(r.doc);
+        setIo(null);
+      }
+    }
+  };
 
   const models: ModelEntry[] = cat.models
     .map((m) => ({
@@ -951,21 +1007,37 @@ function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () => void }
       {io === "export" && (
         <Overlay onClose={() => setIo(null)}>
           <div className="space-y-3">
-            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-              Exporter — code portable
-            </h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
+                Exporter
+              </h3>
+              <div className="inline-flex overflow-hidden rounded-md text-xs" style={{ boxShadow: `inset 0 0 0 1px ${accent}55` }}>
+                {(["code", "texte"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setExportMode(m)}
+                    className="px-3 py-1 transition"
+                    style={exportMode === m ? { background: accent, color: "#f5ecd6" } : { color: accent }}
+                  >
+                    {m === "code" ? "Code portable" : "Texte"}
+                  </button>
+                ))}
+              </div>
+            </div>
             <p className="text-sm opacity-70">
-              Copie ce code pour partager ta liste ou l'importer sur un autre appareil.
+              {exportMode === "code"
+                ? "Code compact à partager ou réimporter sur un autre appareil."
+                : "Roster lisible (partage/impression). Réimportable en best-effort."}
             </p>
             <textarea
               readOnly
-              value={exportCode}
+              value={exportValue}
               onFocus={(e) => e.currentTarget.select()}
-              className="h-32 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
+              className="h-48 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
             />
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => navigator.clipboard?.writeText(exportCode)}
+                onClick={() => navigator.clipboard?.writeText(exportValue)}
                 className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow" style={{ background: accent }}
               >
                 Copier
@@ -981,35 +1053,53 @@ function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () => void }
         <Overlay onClose={() => setIo(null)}>
           <div className="space-y-3">
             <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-              Importer — code portable
+              Importer une liste
             </h3>
-            <p className="text-sm opacity-70">Colle un code de liste (remplace la liste en cours).</p>
+            <p className="text-sm opacity-70">Colle un code portable (KA1:…) ou un roster texte. Remplace la liste en cours.</p>
             <textarea
               value={importText}
               onChange={(e) => {
                 setImportText(e.target.value);
                 setImportError(null);
+                setImportUnresolved([]);
+                setPendingImport(null);
               }}
-              placeholder="KA1:…"
+              placeholder="KA1:…  ou  roster texte"
               className="h-32 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
             />
             {importError && <p className="text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
+            {importUnresolved.length > 0 && (
+              <div className="rounded-md bg-black/5 p-2 text-xs" style={{ color: "#9a3b2b" }}>
+                <p className="font-semibold">Lignes non reconnues (ignorées) :</p>
+                <ul className="mt-1 space-y-0.5">
+                  {importUnresolved.map((l, k) => (
+                    <li key={k}>· {l.trim()}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="flex justify-end gap-2">
-              <button
-                onClick={async () => {
-                  try {
-                    store.loadSaved(await decodeList(importText));
+              {pendingImport ? (
+                <button
+                  onClick={() => {
+                    store.loadSaved(pendingImport);
                     setIo(null);
-                  } catch {
-                    setImportError("Code invalide ou illisible.");
-                  }
-                }}
-                disabled={importText.trim() === ""}
-                className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow disabled:opacity-40"
-                style={{ background: accent }}
-              >
-                Charger
-              </button>
+                  }}
+                  className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow"
+                  style={{ background: accent }}
+                >
+                  Charger quand même
+                </button>
+              ) : (
+                <button
+                  onClick={runImport}
+                  disabled={importText.trim() === ""}
+                  className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow disabled:opacity-40"
+                  style={{ background: accent }}
+                >
+                  Charger
+                </button>
+              )}
               <button onClick={() => setIo(null)} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
                 Annuler
               </button>

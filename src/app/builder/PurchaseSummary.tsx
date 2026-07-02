@@ -8,7 +8,6 @@ type SummaryChip = { name: string; info: ItemInfo };
 export function PurchaseSummary({
   p,
   cat,
-  accent,
   added,
   removed,
   grimoireId,
@@ -18,7 +17,6 @@ export function PurchaseSummary({
 }: {
   p: Profile;
   cat: Catalog;
-  accent: string;
   added: string[];
   removed: string[];
   grimoireId?: string;
@@ -71,39 +69,30 @@ export function PurchaseSummary({
   ];
   const shown = rows.filter(([, v]) => v.length > 0);
   return (
-    <div className="border-t px-3 py-2 pl-9 text-xs" style={{ borderColor: `${accent}22` }}>
+    <div className="bld-summary">
       {issues.length > 0 && (
-        <ul className="mb-1.5 space-y-0.5" style={{ color: "#9a3b2b" }}>
+        <div className="bld-summary-issues">
           {issues.map((m, k) => (
-            <li key={k}>⚠ {m}</li>
-          ))}
-        </ul>
-      )}
-      {shown.length === 0 ? (
-        <span className="opacity-50">Aucun achat pour l'instant.</span>
-      ) : (
-        <div className="flex flex-col gap-1">
-          {shown.map(([label, vals]) => (
-            <div key={label} className="flex gap-2">
-              <span className="kh-display w-14 shrink-0 pt-0.5 uppercase tracking-wide opacity-50" style={{ color: accent }}>
-                {label}
-              </span>
-              <span className="flex flex-wrap gap-1">
-                {vals.map((v, k) => (
-                  <button
-                    key={k}
-                    onClick={() => onPick(v.info)}
-                    className="rounded bg-black/5 px-1.5 py-0.5 transition hover:bg-black/15"
-                    title="Voir la fiche et le prix"
-                  >
-                    {v.name}
-                    <span className="ml-1 opacity-50">{v.info.price}</span>
-                  </button>
-                ))}
-              </span>
-            </div>
+            <span key={k}>⚠ {m}</span>
           ))}
         </div>
+      )}
+      {shown.length === 0 ? (
+        <span className="bld-summary-none">Aucun achat pour l'instant.</span>
+      ) : (
+        shown.map(([label, vals]) => (
+          <div key={label} className="bld-summary-row">
+            <span className="bld-summary-label">{label}</span>
+            <span className="bld-summary-chips">
+              {vals.map((v, k) => (
+                <button key={k} className="bld-chip" onClick={() => onPick(v.info)} title="Voir la fiche et le prix">
+                  {v.name}
+                  <span className="px">{v.info.price}</span>
+                </button>
+              ))}
+            </span>
+          </div>
+        ))
       )}
     </div>
   );

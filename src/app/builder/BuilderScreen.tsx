@@ -3,7 +3,10 @@ import type { ListDocument, Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
 import { Overlay } from "../Overlay";
-import { ActionBtn, RecruitPill } from "./components";
+import { Button, Tag } from "@ui";
+import { RecruitPill } from "./components";
+import { FactionEmblem } from "./FactionEmblem";
+import { EditIcon, TrashIcon, SearchIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { RosterGroup } from "./RosterGroup";
@@ -19,7 +22,12 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const { evaluation, fdl } = store;
   const factionId = fdl.factionId;
   const fac = FACTIONS.find((f) => f.id === factionId) ?? FACTIONS[0];
-  const { accent, deep } = fac;
+  const { accent, deep } = fac; // legacy : encore utilisé par les modales beige (à migrer en 2d)
+  const factionVars = {
+    "--faction": fac.color,
+    "--faction-2": fac.colorBright,
+    "--faction-deep": fac.colorDeep,
+  } as React.CSSProperties;
   const [modal, setModal] = useState<Modal>(null);
   const [rosterQuery, setRosterQuery] = useState("");
   const [showRoster, setShowRoster] = useState(false); // tiroir roster (mobile : aside masqué)
@@ -192,31 +200,30 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   // Contenu du roster, partagé entre l'aside desktop et la modale mobile.
   const rosterInner = (
     <>
-      <div className="border-b px-3 py-2.5" style={{ borderColor: `${accent}33` }}>
-        <input
-          value={rosterQuery}
-          onChange={(e) => setRosterQuery(e.target.value)}
-          placeholder="Rechercher un profil…"
-          className="w-full rounded bg-white/60 px-2 py-1.5 text-sm outline-none shadow-inner"
-        />
-        <p className="kh-display mt-2 text-sm font-semibold" style={{ color: deep }}>
-          Roster · {fac.name}
-        </p>
+      <div className="bld-roster-head">
+        <label className="bld-search">
+          <SearchIcon />
+          <input
+            value={rosterQuery}
+            onChange={(e) => setRosterQuery(e.target.value)}
+            placeholder="Rechercher un profil…"
+          />
+        </label>
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="bld-roster-scroll">
         {models.length === 0 ? (
-          <p className="px-2 py-4 text-sm opacity-60">
+          <p className="bld-empty">
             {rosterQuery.trim() !== ""
               ? "Aucun profil ne correspond à la recherche."
-              : `Aucune figurine à recruter pour la faction ${fac.name} pour l'instant.`}
+              : `Aucune figurine à recruter pour ${fac.name} pour l'instant.`}
           </p>
         ) : (
           <>
-            <RosterGroup label="Personnages" items={personnages} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-            <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup label="Personnages" items={personnages} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
             <RosterGroup
               label="Recrutement conditionnel"
-              hint="se recrutent via un porteur dans la liste"
+              hint="via un porteur dans la liste"
               items={conditionnels}
               onOpen={(id) => setModal({ kind: "preview", modelId: id })}
               conditional
@@ -227,63 +234,85 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     </>
   );
 
+  const formatLabel = store.list.format === "bataille" ? "Bataille" : "Escarmouche";
+  const errorTotal = invalidCount + listErrors.length;
+  const validityTitle = [
+    invalidCount > 0 ? `${invalidCount} figurine${invalidCount > 1 ? "s" : ""} en erreur` : null,
+    ...listErrors,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return (
-    <div className="kh-builder kh-parchment flex h-full flex-col">
-      {/* Barre d'actions */}
-      <header className="flex flex-wrap items-center gap-3 border-b px-4 py-2.5" style={{ borderColor: accent, background: `${accent}12` }}>
-        <button onClick={onNew} className="rounded px-2 py-1 text-sm hover:bg-white/50" title="Créer une nouvelle liste">
+    <div className="bld-root" style={factionVars}>
+      {/* Bandeau de liste : identité + jauge-forge + validation + actions */}
+      <div className="bld-listbar">
+        <button className="bld-back" onClick={onNew} title="Créer une nouvelle liste">
           ← Nouvelle liste
         </button>
-        <span className="h-5 w-px" style={{ background: `${accent}44` }} />
-        <input
-          value={store.list.name}
-          onChange={(e) => store.setName(e.target.value)}
-          className="kh-display rounded bg-transparent px-1 text-lg font-semibold outline-none"
-          style={{ color: deep }}
-        />
-        <span className="rounded-full px-2.5 py-0.5 text-xs font-medium text-white" style={{ background: accent }}>
-          {fac.name}
-        </span>
-        <div className="ml-auto flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-sm">
-              <span className="kh-display font-bold" style={{ color: deep }}>
-                {total}
+        <FactionEmblem kind={fac.emblem} className="bld-crest" />
+        <div className="bld-id">
+          <input
+            className="bld-name"
+            value={store.list.name}
+            onChange={(e) => store.setName(e.target.value)}
+            aria-label="Nom de la liste"
+          />
+          <div className="bld-meta">
+            <span className="bld-faction-chip">{fac.name}</span>
+            <span className="bld-dot" />
+            <span>{formatLabel}</span>
+            <span className="bld-dot" />
+            <span>
+              {items.length} figurine{items.length > 1 ? "s" : ""}
+            </span>
+          </div>
+        </div>
+
+        <div className="bld-forge">
+          <div className="bld-gauge">
+            <div className="bld-gauge-top">
+              <span className="bld-gauge-label">Budget</span>
+              <span className="bld-gauge-val">
+                {total} <span className="lim">/ {limit} Ko</span>
               </span>
-              <span className="opacity-60"> / {limit} Ko</span>
             </div>
-            <div className="mt-0.5 h-1.5 w-32 overflow-hidden rounded-full" style={{ background: `${accent}22` }}>
-              <div className="h-full rounded-full" style={{ width: `${ratio}%`, background: accent }} />
+            <div className="bld-gauge-track">
+              <div className={`bld-gauge-fill${overLimit ? " over" : ""}`} style={{ width: `${ratio}%` }} />
             </div>
           </div>
-          <ActionBtn accent={accent} onClick={() => { setImportText(""); setImportError(null); setIo("import"); }}>
-            Importer
-          </ActionBtn>
-          <ActionBtn accent={accent} onClick={() => setIo("export")}>
-            Exporter
-          </ActionBtn>
-          <ActionBtn accent={accent} primary onClick={onSave}>
-            {saved ? "✓ Enregistré" : "Sauvegarder"}
-          </ActionBtn>
+          {isValid ? (
+            <div className="bld-validity ok">
+              <span className="big">✓</span> Liste valide
+            </div>
+          ) : (
+            <div className="bld-validity err" title={validityTitle}>
+              <span className="big">⚠</span> {errorTotal} erreur{errorTotal > 1 ? "s" : ""}
+            </div>
+          )}
+          <div className="bld-actions">
+            <Button onClick={() => { setImportText(""); setImportError(null); setIo("import"); }}>Importer</Button>
+            <Button onClick={() => setIo("export")}>Exporter</Button>
+            <Button variant="primary" onClick={onSave}>
+              {saved ? "✓ Enregistré" : "Sauvegarder"}
+            </Button>
+          </div>
         </div>
-      </header>
+      </div>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="bld-body">
         {/* Roster */}
-        <aside className="kh-panel hidden w-72 shrink-0 flex-col border-r md:flex" style={{ borderColor: `${accent}44` }}>
-          {rosterInner}
-        </aside>
+        <aside className="bld-roster">{rosterInner}</aside>
 
         {/* Liste */}
-        <section className="flex-1 overflow-y-auto p-6">
-          <div className="mx-auto max-w-2xl space-y-2">
-            <button
-              onClick={() => setShowRoster(true)}
-              className="mb-2 rounded-md px-3 py-1.5 text-sm font-medium text-white shadow md:hidden"
-              style={{ background: accent }}
-            >
-              + ajouter depuis le roster
+        <section className="bld-list">
+          <div className="bld-list-inner">
+            <button className="bld-add-mobile" onClick={() => setShowRoster(true)}>
+              + Ajouter depuis le roster
             </button>
+            {ordered.length === 0 && (
+              <p className="bld-empty">Liste vide — ajoute des figurines depuis le roster.</p>
+            )}
             {ordered.map(({ x, attached }) => {
               const id = x.inst.instanceId;
               const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
@@ -310,115 +339,93 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                         }
                   }
                   onDragEnd={() => setDragId(null)}
-                  className={`rounded-md border-l-4 bg-white/45 shadow-sm transition hover:bg-white/60 ${attached ? "ml-6" : ""} ${dragId === id ? "opacity-40" : ""}`}
-                  style={{ borderLeftColor: isLeader ? accent : attached ? `${accent}55` : "transparent" }}
+                  className={`bld-unit${isLeader ? " is-leader" : ""}${rowIssues.length > 0 ? " is-error" : ""}${attached ? " is-attached" : ""}${dragId === id ? " is-dragging" : ""}`}
                 >
-                  <div className="flex items-center gap-2 px-3 py-2.5">
-                    {attached ? (
-                      <span className="w-3 text-center opacity-50" style={{ color: accent }} title="Unité rattachée à son porteur">
-                        ↳
-                      </span>
-                    ) : (
-                      <span className="w-3 cursor-grab text-center opacity-30" title="Glisser pour réordonner">
+                  <div className="bld-unit-main">
+                    {!attached && (
+                      <span className="bld-grip" title="Glisser pour réordonner">
                         ⠿
                       </span>
                     )}
-                    {buyable ? (
-                      <button
-                        onClick={() => toggleCollapsed(id)}
-                        title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
-                        className="w-4 text-center opacity-60 transition hover:opacity-100"
-                        style={{ color: accent }}
-                      >
-                        {open ? "▾" : "▸"}
-                      </button>
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <button
-                      onClick={() => setModal({ kind: "edit", instanceId: id })}
-                      className="flex flex-1 items-center text-left"
-                    >
-                      <span className="flex-1">
-                        <span className="font-semibold" style={{ color: deep }}>
+                    <div className={`bld-thumb${attached ? " sm" : ""}`}>
+                      <FactionEmblem kind={fac.emblem} className="sig" />
+                      <span className="lvl">{LEVEL[x.p.level ?? 0] || "·"}</span>
+                    </div>
+                    <div className="bld-uinfo">
+                      <div className="bld-uname">
+                        <button className="nm" onClick={() => setModal({ kind: "edit", instanceId: id })}>
                           {x.p.name}
-                        </span>
-                        {x.p.level && <span className="ml-1 opacity-50">{LEVEL[x.p.level]}</span>}
-                        {rowIssues.length > 0 && (
-                          <span className="ml-2" style={{ color: "#9a3b2b" }} title={rowIssues.join("\n")}>
-                            ⚠
-                          </span>
-                        )}
-                        {guarded && (
-                          <span className="kh-display ml-2 text-[10px] uppercase tracking-wide" style={{ color: "#4a6b32" }}>
-                            Garde du corps de {memberOf(x.inst.bodyguardOfInstanceId!)?.p.name}
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                    {isLeader ? (
-                      <span
-                        className="kh-display rounded-full px-2.5 py-1 text-xs font-semibold text-white"
-                        style={{ background: accent }}
-                      >
-                        ❖ Leader
-                      </span>
-                    ) : (
-                      leadable && (
-                        <button
-                          onClick={() => store.setLeader(id)}
-                          title="Promouvoir en Leader"
-                          className="rounded-full border px-2.5 py-1 text-xs transition hover:bg-white/60"
-                          style={{ borderColor: `${accent}66`, color: accent }}
-                        >
-                          Définir leader
                         </button>
-                      )
+                        {x.p.level ? <span className="lvltag">{LEVEL[x.p.level]}</span> : null}
+                        {isLeader && <span className="bld-crest-badge">❖ Meneur</span>}
+                        {attached && <Tag>rattaché</Tag>}
+                      </div>
+                      {guarded && (
+                        <div className="bld-tags">
+                          <Tag tone="moss">
+                            Garde du corps de {memberOf(x.inst.bodyguardOfInstanceId!)?.p.name}
+                          </Tag>
+                        </div>
+                      )}
+                      {rowIssues.length > 0 && <div className="bld-urow-msg">⚠ {rowIssues.join(" · ")}</div>}
+                    </div>
+                    {free ? (
+                      <div className="bld-ucost free">gratuit</div>
+                    ) : (
+                      <div className="bld-ucost">
+                        {costOf(id)} <span className="ko">Ko</span>
+                      </div>
                     )}
-                    <span className={`w-16 text-right text-sm ${free ? "font-semibold" : ""}`} style={{ color: free ? "#4a6b32" : deep }}>
-                      {free ? "gratuit" : `${costOf(id)} Ko`}
-                    </span>
-                    <button
-                      onClick={() => store.removeMember(id)}
-                      className="opacity-40 transition hover:text-red-700 hover:opacity-100"
-                      title="Retirer"
-                    >
-                      ✕
-                    </button>
+                    <div className="bld-uactions">
+                      {buyable && (
+                        <button
+                          className="bld-toggle"
+                          onClick={() => toggleCollapsed(id)}
+                          title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
+                        >
+                          {open ? "▾" : "▸"}
+                        </button>
+                      )}
+                      {!attached && !isLeader && leadable && (
+                        <button className="bld-setleader" onClick={() => store.setLeader(id)} title="Promouvoir en meneur">
+                          Définir meneur
+                        </button>
+                      )}
+                      {!attached && (
+                        <button className="bld-icon" title="Éditer" onClick={() => setModal({ kind: "edit", instanceId: id })}>
+                          <EditIcon />
+                        </button>
+                      )}
+                      <button className="bld-icon danger" title="Retirer" onClick={() => store.removeMember(id)}>
+                        <TrashIcon />
+                      </button>
+                    </div>
                   </div>
+
                   {hasActions && (
-                    <div className="flex flex-wrap gap-2 px-3 pb-2.5 pl-9">
+                    <div className="bld-pills">
                       {x.p.traits.includes("femelle-fang") && (
-                        <RecruitPill label="+ Likan" accent={accent} onClick={() => setModal({ kind: "recruit-likan", carrierInstanceId: id })} />
+                        <RecruitPill label="+ Likan" onClick={() => setModal({ kind: "recruit-likan", carrierInstanceId: id })} />
                       )}
                       {x.p.id === "fangs-xayin-2" && (
-                        <RecruitPill label="+ Muskh" accent={accent} onClick={() => store.addAttached(id, "fangs-muskh-1")} />
+                        <RecruitPill label="+ Muskh" onClick={() => store.addAttached(id, "fangs-muskh-1")} />
                       )}
                       {eligible && (
                         <button
+                          className={`bld-pill${guarded ? " on" : ""}`}
                           onClick={() => onGuardClick(id)}
-                          title={
-                            x.p.modelId === "djouked"
-                              ? "Garde rapproché de Broutcha"
-                              : "Garde du corps d'une Fille de Nyx"
-                          }
-                          className="rounded-full border px-2 py-0.5 text-xs transition"
-                          style={
-                            guarded
-                              ? { background: "#4a6b3218", borderColor: "#4a6b3255", color: "#3c5a28" }
-                              : { borderColor: `${accent}55`, color: accent }
-                          }
+                          title={x.p.modelId === "djouked" ? "Garde rapproché de Broutcha" : "Garde du corps d'une Fille de Nyx"}
                         >
                           {guarded ? "✓ Garde du corps — retirer" : "Garde du corps"}
                         </button>
                       )}
                     </div>
                   )}
+
                   {buyable && open && (
                     <PurchaseSummary
                       p={x.p}
                       cat={cat}
-                      accent={accent}
                       added={x.inst.addedEquipmentIds}
                       removed={x.inst.removedBaseEquipmentIds}
                       grimoireId={x.inst.grimoireId}
@@ -434,39 +441,29 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         </section>
       </div>
 
-      {/* Barre de validation */}
-      <footer className="flex items-center gap-4 border-t px-4 py-2 text-sm" style={{ borderColor: accent, background: `${accent}12` }}>
-        {isValid ? (
-          <span className="rounded px-2 py-0.5 font-medium" style={{ background: "#4a6b3222", color: "#3c5a28" }}>
-            ✓ Liste valide
-          </span>
-        ) : (
-          <span
-            className="rounded px-2 py-0.5 font-medium"
-            style={{ background: "#9a3b2b22", color: "#9a3b2b" }}
-            title={listErrors.join("\n")}
-          >
-            ⚠{" "}
-            {[
-              invalidCount > 0 ? `${invalidCount} figurine${invalidCount > 1 ? "s" : ""} en erreur` : null,
-              ...listErrors,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        )}
-        <span className="opacity-60">{items.length} figurines</span>
+      {/* Pied : légende */}
+      <footer className="bld-foot">
+        <span>Fer de Lance · {fac.name}</span>
+        <span className="bld-dot" />
+        <span className="bld-leg"><span className="bld-swatch" style={{ background: "var(--ember)" }} /> Meneur</span>
+        <span className="bld-leg"><span className="bld-swatch" style={{ background: "var(--moss)" }} /> Gratuit</span>
+        <span className="bld-leg"><span className="bld-swatch" style={{ background: "var(--scorch)" }} /> Erreur</span>
+        <span style={{ flex: 1 }} />
+        <span>
+          {items.length} figurine{items.length > 1 ? "s" : ""}
+        </span>
       </footer>
 
       {/* Modale roster (mobile) : l'aside étant masqué sous `md`. */}
       {showRoster && (
         <Overlay onClose={() => setShowRoster(false)}>
-          <div className="kh-panel flex max-h-[80vh] flex-col">
-            <div className="mb-1 flex items-center justify-between">
-              <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                Recruter · {fac.name}
-              </h3>
-              <button onClick={() => setShowRoster(false)} className="rounded px-2 py-1 text-sm hover:bg-black/5">
+          <div
+            className="bld-root"
+            style={{ ...factionVars, width: "100%", maxHeight: "72vh", borderRadius: 12, overflow: "hidden", background: "var(--forge-2)" }}
+          >
+            <div className="bld-roster-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <span className="bld-faction-chip">Recruter · {fac.name}</span>
+              <button className="bld-back" onClick={() => setShowRoster(false)}>
                 Fermer
               </button>
             </div>

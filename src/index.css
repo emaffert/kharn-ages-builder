@@ -94,3 +94,92 @@ body {
   background-color: rgba(247, 238, 214, 0.72);
 }
 
+/* ============================================================================
+   Kit UI (primitives) — Phase 1. Sur tokens, backées Radix côté comportement.
+   ============================================================================ */
+
+/* Boutons */
+.ui-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--radius-sm); padding: 9px 15px; font: inherit; font-weight: 600; font-size: 14px;
+  line-height: 1; cursor: pointer; border: 1px solid var(--hair-strong); background: var(--tint-2);
+  color: var(--bone); transition: background .16s var(--ease), transform .06s var(--ease), border-color .16s var(--ease); }
+.ui-btn:hover { background: var(--tint-3); }
+.ui-btn:active { transform: translateY(1px); }
+.ui-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.ui-btn--sm { padding: 5px 10px; font-size: 12.5px; }
+.ui-btn--primary { border-color: transparent; color: var(--ink-accent);
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember)); box-shadow: 0 1px 0 var(--ember-deep); }
+.ui-btn--primary:hover { background: linear-gradient(180deg, var(--ember-bright), var(--ember-deep)); }
+.ui-btn--danger { color: var(--on-scorch); border-color: color-mix(in srgb, var(--scorch) 42%, transparent);
+  background: color-mix(in srgb, var(--scorch) 20%, transparent); }
+.ui-btn--danger:hover { background: color-mix(in srgb, var(--scorch) 30%, transparent); }
+.ui-btn--ghost { background: transparent; border-color: transparent; color: var(--bone-dim); }
+.ui-btn--ghost:hover { background: var(--tint-2); color: var(--bone); }
+
+/* Modale (taille fixe) */
+.ui-dialog__scrim { position: fixed; inset: 0; z-index: 60; background: rgba(8, 5, 3, .74);
+  backdrop-filter: blur(2px); }
+.ui-dialog { position: fixed; z-index: 61; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; color: var(--bone);
+  background: linear-gradient(180deg, var(--soot-2), var(--forge-2));
+  border: 1px solid var(--hair-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lift);
+  overflow: hidden; }
+.ui-dialog--sm { width: min(460px, 94vw); max-height: 86vh; }
+.ui-dialog--md { width: min(720px, 95vw); height: min(560px, 90vh); }
+.ui-dialog--lg { width: min(920px, 96vw); height: min(640px, 92vh); }
+.ui-dialog__head { display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  border-bottom: 1px solid var(--hair);
+  background: radial-gradient(120% 200% at 0% 0%, var(--header-glow), transparent 55%); }
+.ui-dialog__title { font-family: "Cinzel", Georgia, serif; font-size: 17px; letter-spacing: .02em; }
+.ui-dialog__body { flex: 1; min-height: 0; overflow: auto; padding: 18px; }
+.ui-dialog__foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  padding: 12px 18px; border-top: 1px solid var(--hair); background: var(--tint-1); }
+.ui-dialog__x { margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px; color: var(--bone-dim); cursor: pointer;
+  border: 1px solid transparent; transition: .16s var(--ease); }
+.ui-dialog__x:hover { background: var(--tint-2); color: var(--bone); }
+
+/* Onglets */
+.ui-tabs__list { display: flex; gap: 4px; border-bottom: 1px solid var(--hair); }
+.ui-tab { padding: 8px 14px; font-size: 13.5px; font-weight: 600; color: var(--bone-dim);
+  border: 0; background: transparent; cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: .16s var(--ease); }
+.ui-tab:hover { color: var(--bone); }
+.ui-tab[data-state="active"] { color: var(--ember-bright); border-bottom-color: var(--ember); }
+
+/* Infobulle & popover */
+.ui-tip { z-index: 70; max-width: 260px; padding: 7px 10px; border-radius: 8px; font-size: 12.5px;
+  color: var(--panel-ink); background: var(--panel-dark); border: 1px solid var(--hair-strong);
+  box-shadow: var(--shadow); }
+.ui-pop { z-index: 70; width: min(340px, 92vw); padding: 14px; border-radius: var(--radius);
+  color: var(--bone); background: linear-gradient(180deg, var(--soot-2), var(--forge-2));
+  border: 1px solid var(--hair-strong); box-shadow: var(--shadow-lift); }
+.ui-pop__arrow { fill: var(--forge-2); }
+
+/* Pastilles sémantiques */
+.ui-tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600; white-space: nowrap;
+  background: var(--tint-3); color: var(--bone-dim); border: 1px solid var(--hair); }
+.ui-tag--warn { background: color-mix(in srgb, var(--scorch) 20%, transparent); color: var(--on-scorch);
+  border-color: color-mix(in srgb, var(--scorch) 40%, transparent); }
+.ui-tag--moss { background: color-mix(in srgb, var(--moss) 20%, transparent); color: var(--on-moss);
+  border-color: color-mix(in srgb, var(--moss) 40%, transparent); }
+.ui-tag--amber { background: color-mix(in srgb, var(--amber) 20%, transparent); color: var(--on-amber);
+  border-color: color-mix(in srgb, var(--amber) 40%, transparent); }
+
+/* Coût (Kouronne) */
+.ui-coin { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 700; color: var(--gold); }
+.ui-coin::before { content: ""; align-self: center; width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold), var(--gold-dim));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 60%, transparent); }
+.ui-coin__unit { font-size: .8em; font-weight: 600; color: var(--gold-dim); }
+
+/* Contrôle segmenté */
+.ui-seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px;
+  background: var(--tint-2); box-shadow: inset 0 0 0 1px var(--hair); }
+.ui-seg button { padding: 5px 13px; font-size: 13px; font-weight: 600; border: 0; cursor: pointer;
+  border-radius: 999px; background: transparent; color: var(--bone-dim); transition: .16s var(--ease); }
+.ui-seg button:hover { color: var(--bone); }
+.ui-seg button[data-on="true"] { color: var(--ink-accent);
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember)); }
+

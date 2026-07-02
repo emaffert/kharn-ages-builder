@@ -8,8 +8,9 @@ import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { RosterGroup } from "./RosterGroup";
 import { PurchaseSummary } from "./PurchaseSummary";
-import { checkImportedList, decodeList, encodeList } from "../listCode";
-import { exportText, importText as parseTextList } from "../listText";
+import { encodeList } from "../listCode";
+import { exportText } from "../listText";
+import { resolveImport } from "./importList";
 
 /** Écran 2 : construction de la liste (roster à gauche, liste au centre, barre d'actions, modales). */
 
@@ -48,26 +49,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     setImportError(null);
     setImportUnresolved([]);
     setPendingImport(null);
-    let doc: ListDocument;
-    let warnings: string[] = [];
     try {
-      doc = await decodeList(importText); // code portable
-    } catch {
-      const r = parseTextList(cat, importText); // sinon texte best-effort
-      if (r.doc.fersDeLance[0].members.length === 0) {
-        setImportError("Aucune figurine reconnue.");
-        return;
+      const { doc, warnings } = await resolveImport(cat, importText);
+      if (warnings.length > 0) {
+        setImportUnresolved(warnings);
+        setPendingImport(doc);
+      } else {
+        store.loadSaved(doc);
+        setIo(null);
       }
-      doc = r.doc;
-      warnings = r.unresolved;
-    }
-    warnings = [...checkImportedList(cat, doc), ...warnings];
-    if (warnings.length > 0) {
-      setImportUnresolved(warnings);
-      setPendingImport(doc);
-    } else {
-      store.loadSaved(doc);
-      setIo(null);
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : "Import impossible.");
     }
   };
 

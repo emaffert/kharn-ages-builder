@@ -2,8 +2,7 @@ import { useState } from "react";
 import type { ListDocument } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS } from "./shared";
-import { checkImportedList, decodeList } from "../listCode";
-import { importText as parseTextList } from "../listText";
+import { resolveImport } from "./importList";
 
 /** Écran 1 : choix de la faction / format / points, ou chargement / import d'une liste existante. */
 
@@ -128,25 +127,16 @@ export function FactionSelect({
                   if (pendingImport) return onLoad(pendingImport);
                   setImportError(null);
                   setImportUnresolved([]);
-                  let doc: ListDocument;
-                  let warnings: string[] = [];
                   try {
-                    doc = await decodeList(importText); // code portable
-                  } catch {
-                    const r = parseTextList(store.catalog, importText); // sinon texte best-effort
-                    if (r.doc.fersDeLance[0].members.length === 0) {
-                      setImportError("Ni code valide, ni figurine reconnue dans le texte.");
-                      return;
+                    const { doc, warnings } = await resolveImport(store.catalog, importText);
+                    if (warnings.length > 0) {
+                      setImportUnresolved(warnings);
+                      setPendingImport(doc);
+                    } else {
+                      onLoad(doc);
                     }
-                    doc = r.doc;
-                    warnings = r.unresolved;
-                  }
-                  warnings = [...checkImportedList(store.catalog, doc), ...warnings];
-                  if (warnings.length > 0) {
-                    setImportUnresolved(warnings);
-                    setPendingImport(doc);
-                  } else {
-                    onLoad(doc);
+                  } catch (e) {
+                    setImportError(e instanceof Error ? e.message : "Import impossible.");
                   }
                 }}
                 disabled={importText.trim() === ""}

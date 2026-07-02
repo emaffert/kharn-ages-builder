@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { specialCardsForProfile } from "@ui/explain";
 import {
   castWays as coreCastWays,
@@ -416,7 +416,11 @@ function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () => void }
   useEffect(() => {
     if (io === "export") encodeList(store.list).then(setExportCode);
   }, [io, store.list]);
-  const exportValue = exportMode === "code" ? exportCode : exportText(cat, store.list);
+  // Ne calcule le texte (qui relance evaluateList) que lorsque la modale export est ouverte.
+  const exportValue = useMemo(
+    () => (io !== "export" ? "" : exportMode === "code" ? exportCode : exportText(cat, store.list)),
+    [io, exportMode, exportCode, cat, store.list],
+  );
   // Import unifié : code portable d'abord, sinon texte best-effort.
   const [importUnresolved, setImportUnresolved] = useState<string[]>([]);
   const [pendingImport, setPendingImport] = useState<ListDocument | null>(null);

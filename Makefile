@@ -8,7 +8,7 @@ NVM_DIR ?= $(HOME)/.nvm
 NODE = source "$(NVM_DIR)/nvm.sh" && nvm use default >/dev/null &&
 
 .DEFAULT_GOAL := help
-.PHONY: help install dev test test-watch build typecheck preview
+.PHONY: help install dev test test-watch build typecheck lint preview
 
 help: ## Affiche cette aide
 	@echo "Cibles disponibles :"
@@ -18,6 +18,7 @@ help: ## Affiche cette aide
 	@echo "  make test-watch  Lancer les tests en mode watch"
 	@echo "  make build       Build de production"
 	@echo "  make typecheck   Vérification TypeScript"
+	@echo "  make lint        Analyse ESLint"
 	@echo "  make preview     Prévisualiser le build de production"
 
 install: ## Installer les dépendances
@@ -37,6 +38,9 @@ build: ## Build de production
 
 typecheck: ## Vérification TypeScript
 	@$(NODE) npm run typecheck
+
+lint: ## Analyse ESLint
+	@$(NODE) npm run lint
 
 preview: ## Prévisualiser le build de production
 	@$(NODE) npm run preview

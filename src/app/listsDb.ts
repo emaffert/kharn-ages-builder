@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { ListDocument } from "@core";
+import { parseListDocument, type ListDocument } from "@core";
 
 /**
  * Persistance locale des listes joueur (IndexedDB via Dexie) — couche local-first.
@@ -23,7 +23,17 @@ export async function saveList(doc: ListDocument): Promise<void> {
 export async function allSavedLists(): Promise<ListDocument[]> {
   if (!db) return [];
   const rows = await db.lists.toArray();
-  return rows.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)); // plus récentes d'abord
+  // Revalidation Zod : on écarte une sauvegarde corrompue ou d'un schéma obsolète
+  // plutôt que de la propager (elle ferait planter l'évaluation).
+  const valid: ListDocument[] = [];
+  for (const row of rows) {
+    try {
+      valid.push(parseListDocument(row));
+    } catch {
+      /* sauvegarde ignorée */
+    }
+  }
+  return valid.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)); // plus récentes d'abord
 }
 
 export async function deleteSavedList(id: string): Promise<void> {

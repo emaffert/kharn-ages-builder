@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 /**
- * Thème visuel (sombre/clair) : applique `data-theme` sur <html>, persiste le choix,
- * et se rabat sur la préférence système au premier lancement.
+ * Thème visuel (sombre/clair) : applique `data-theme` sur <html> et persiste le choix.
+ * Défaut = sombre (thème principal) au premier lancement.
  */
 export type Theme = "dark" | "light";
 
@@ -15,9 +15,7 @@ function readInitial(): Theme {
   } catch {
     /* localStorage indisponible (mode privé) */
   }
-  const prefersLight =
-    typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: light)").matches;
-  return prefersLight ? "light" : "dark";
+  return "dark";
 }
 
 export function useTheme(): [Theme, (t: Theme) => void] {

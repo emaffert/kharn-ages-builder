@@ -1220,6 +1220,13 @@ function RecruitPill({ label, accent, onClick }: { label: string; accent: string
 }
 
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3"

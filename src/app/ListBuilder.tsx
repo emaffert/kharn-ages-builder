@@ -8,6 +8,7 @@ import {
 } from "@core";
 import type { Catalog, ListDocument, Profile, ProfileInstance, Spell } from "@core";
 import { useListStore, type ListStore } from "./useListStore";
+import { Overlay } from "./Overlay";
 import { decodeList, encodeList } from "./listCode";
 import { exportText, importText as parseTextList } from "./listText";
 
@@ -1220,29 +1221,6 @@ function RecruitPill({ label, accent, onClick }: { label: string; accent: string
     >
       {label}
     </button>
-  );
-}
-
-function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3"
-      onClick={onClose}
-    >
-      <div
-        className="kh-builder kh-parchment max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl p-6 shadow-2xl sm:w-[92vw]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
-    </div>
   );
 }
 

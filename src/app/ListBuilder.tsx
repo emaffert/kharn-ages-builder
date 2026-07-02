@@ -9,7 +9,7 @@ import {
 import type { Catalog, ListDocument, Profile, ProfileInstance, Spell } from "@core";
 import { useListStore, type ListStore } from "./useListStore";
 import { Overlay } from "./Overlay";
-import { decodeList, encodeList } from "./listCode";
+import { checkImportedList, decodeList, encodeList } from "./listCode";
 import { exportText, importText as parseTextList } from "./listText";
 
 /**
@@ -312,7 +312,7 @@ function FactionSelect({
             {importError && <p className="mt-1 text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
             {importUnresolved.length > 0 && (
               <div className="mt-1 rounded-md bg-black/5 p-2 text-xs" style={{ color: "#9a3b2b" }}>
-                <p className="font-semibold">Lignes non reconnues (ignorées) :</p>
+                <p className="font-semibold">Avertissements :</p>
                 <ul className="mt-1 space-y-0.5">
                   {importUnresolved.map((l, k) => (
                     <li key={k}>· {l.trim()}</li>
@@ -326,18 +326,25 @@ function FactionSelect({
                   if (pendingImport) return onLoad(pendingImport);
                   setImportError(null);
                   setImportUnresolved([]);
+                  let doc: ListDocument;
+                  let warnings: string[] = [];
                   try {
-                    onLoad(await decodeList(importText));
+                    doc = await decodeList(importText); // code portable
                   } catch {
-                    const r = parseTextList(store.catalog, importText);
+                    const r = parseTextList(store.catalog, importText); // sinon texte best-effort
                     if (r.doc.fersDeLance[0].members.length === 0) {
                       setImportError("Ni code valide, ni figurine reconnue dans le texte.");
-                    } else if (r.unresolved.length > 0) {
-                      setImportUnresolved(r.unresolved);
-                      setPendingImport(r.doc);
-                    } else {
-                      onLoad(r.doc);
+                      return;
                     }
+                    doc = r.doc;
+                    warnings = r.unresolved;
+                  }
+                  warnings = [...checkImportedList(store.catalog, doc), ...warnings];
+                  if (warnings.length > 0) {
+                    setImportUnresolved(warnings);
+                    setPendingImport(doc);
+                  } else {
+                    onLoad(doc);
                   }
                 }}
                 disabled={importText.trim() === ""}
@@ -429,22 +436,26 @@ function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () => void }
     setImportError(null);
     setImportUnresolved([]);
     setPendingImport(null);
+    let doc: ListDocument;
+    let warnings: string[] = [];
     try {
-      store.loadSaved(await decodeList(importText));
-      setIo(null);
+      doc = await decodeList(importText); // code portable
     } catch {
-      const r = parseTextList(cat, importText);
+      const r = parseTextList(cat, importText); // sinon texte best-effort
       if (r.doc.fersDeLance[0].members.length === 0) {
         setImportError("Aucune figurine reconnue.");
         return;
       }
-      if (r.unresolved.length > 0) {
-        setImportUnresolved(r.unresolved);
-        setPendingImport(r.doc);
-      } else {
-        store.loadSaved(r.doc);
-        setIo(null);
-      }
+      doc = r.doc;
+      warnings = r.unresolved;
+    }
+    warnings = [...checkImportedList(cat, doc), ...warnings];
+    if (warnings.length > 0) {
+      setImportUnresolved(warnings);
+      setPendingImport(doc);
+    } else {
+      store.loadSaved(doc);
+      setIo(null);
     }
   };
 
@@ -1075,7 +1086,7 @@ function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () => void }
             {importError && <p className="text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
             {importUnresolved.length > 0 && (
               <div className="rounded-md bg-black/5 p-2 text-xs" style={{ color: "#9a3b2b" }}>
-                <p className="font-semibold">Lignes non reconnues (ignorées) :</p>
+                <p className="font-semibold">Avertissements :</p>
                 <ul className="mt-1 space-y-0.5">
                   {importUnresolved.map((l, k) => (
                     <li key={k}>· {l.trim()}</li>

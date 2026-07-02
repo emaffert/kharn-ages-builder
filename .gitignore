@@ -30,3 +30,6 @@ yarn-error.log*
 # PDF : volumineux + reproduction interdite. Cartes : à héberger ailleurs / décider selon la visibilité du dépôt.
 rules corpus/
 cards/
+
+# Références visuelles (captures de sites tiers, logo) — inputs de travail, non versionnés
+graphic/

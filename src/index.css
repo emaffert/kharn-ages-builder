@@ -1,5 +1,79 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Système visuel « Forge / Braise » — socle de tokens (Phase 0).
+   :root = thème sombre (défaut) · [data-theme="light"] = thème clair.
+   Réf. : maquettes dans mockups/forge.css.
+   ============================================================================ */
+:root {
+  color-scheme: dark;
+  /* Couleur : noirs chauds pierre/os, double accent braise + faction, or = coût */
+  --forge:#120d0a; --forge-2:#191210;
+  --soot:#251b14; --soot-2:#31251b;
+  --ash:#423325; --ash-2:#55402c;
+  --bone:#f0e6ce; --bone-dim:#c6b593; --bone-faint:#95835f;
+  --ember:#ee7a2e; --ember-bright:#ffab5e; --ember-deep:#b6491a;
+  --ember-glow:rgba(238,122,46,.45);
+  --faction:#b8392a; --faction-2:#e0553f; --faction-deep:#5e1a13;
+  --gold:#d0a24a; --gold-dim:#a07d33;
+  --moss:#8aa64d; --amber:#e0a93c; --scorch:#e0532e;
+
+  /* Invariants (identiques clair/sombre) */
+  --ink-accent:#1c1207;                         /* texte sur boutons braise/or */
+  --panel-dark:#1b120c; --panel-ink:#f2e8d2;    /* médaillons de faction, toujours sombres */
+  --on-scorch:#ffd6c4; --on-amber:#ffe0b0; --on-moss:#e7f0cf; /* texte sur pastilles sémantiques */
+  --header-glow:color-mix(in srgb, var(--faction) 24%, transparent); /* halo d'en-tête : faction en sombre */
+
+  --radius:12px; --radius-sm:8px; --radius-lg:18px;
+  /* Filets & survols dérivés de --bone → s'inversent automatiquement avec le thème */
+  --hair:color-mix(in srgb, var(--bone) 12%, transparent);
+  --hair-strong:color-mix(in srgb, var(--bone) 19%, transparent);
+  --tint-1:color-mix(in srgb, var(--bone) 4%, transparent);
+  --tint-2:color-mix(in srgb, var(--bone) 7%, transparent);
+  --tint-3:color-mix(in srgb, var(--bone) 10%, transparent);
+  --shadow:0 1px 0 rgba(0,0,0,.5), 0 18px 40px -22px rgba(0,0,0,.9);
+  --shadow-lift:0 2px 0 rgba(0,0,0,.5), 0 26px 60px -26px rgba(0,0,0,.95);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --forge:#dccb9f; --forge-2:#e7d9bb;           /* page / en-têtes */
+  --soot:#f1e8d2; --soot-2:#faf3e1;             /* surfaces surélevées / cartes */
+  --ash:#cdb890; --ash-2:#bda676;
+  --bone:#2c2015; --bone-dim:#6a5942; --bone-faint:#93805f; /* textes (encre bark) */
+  --ember:#c15c1a; --ember-bright:#e5852f; --ember-deep:#8f4110;
+  --ember-glow:rgba(193,92,26,.35);
+  --faction-2:#a8352a;                          /* crimson plus profond pour le texte */
+  --gold:#8f6f22; --gold-dim:#795c19;
+  --moss:#5f7a2e; --amber:#a9761a; --scorch:#bf3f1c;
+  --on-scorch:#8a2d15; --on-amber:#77530f; --on-moss:#40561f;
+  --header-glow:color-mix(in srgb, var(--ember) 11%, transparent); /* clair : braise discret */
+  --shadow:inset 0 1px 0 rgba(255,250,238,.55), 0 1px 2px rgba(74,47,28,.13), 0 16px 34px -18px rgba(74,47,28,.5);
+  --shadow-lift:inset 0 1px 0 rgba(255,250,238,.6), 0 3px 7px rgba(74,47,28,.17), 0 28px 56px -22px rgba(74,47,28,.62);
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+}
+:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* Shell d'application (barre de navigation) — sur tokens. */
+.kh-shell { background: var(--forge); color: var(--bone); }
+.kh-topbar { background: var(--forge-2); border-bottom: 1px solid var(--hair); }
+.kh-brand { font-family: "Cinzel", Georgia, serif; letter-spacing: .04em;
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember-deep));
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.kh-tab { color: var(--bone-dim); transition: .18s var(--ease); }
+.kh-tab:hover { color: var(--bone); background: var(--tint-2); }
+.kh-tab[data-on="true"] { color: var(--ink-accent);
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember)); }
+.kh-toggle { box-shadow: inset 0 0 0 1px var(--hair-strong); }
+.kh-toggle button { color: var(--bone-dim); transition: .16s var(--ease); }
+.kh-toggle button:hover { color: var(--bone); }
+.kh-toggle button[data-on="true"] { color: var(--bone); background: var(--tint-3); }
+
 /* Direction artistique « parchemin » du constructeur (esprit livres/cartes Khârn-Âges). */
 .kh-builder {
   font-family: "EB Garamond", Georgia, "Times New Roman", serif;

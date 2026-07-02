@@ -22,11 +22,27 @@ export const STATS: [keyof Profile["stats"], string][] = [
   ["i", "I"],
 ];
 
-export const FACTIONS = [
-  { id: "fangs", name: "Fangs", accent: "#7a4a2b", deep: "#4a2f1c", blurb: "Enfants de Nyx, sorcellerie d'os." },
-  { id: "kharns", name: "Khârns", accent: "#2b3a5a", deep: "#16223d", blurb: "La Couronne et ses vassaux." },
-  { id: "kherops", name: "Khérops", accent: "#7a2b2b", deep: "#4a1c1c", blurb: "Les soldats de l'Empereur." },
-  { id: "guilde-noire", name: "Guilde Noire", accent: "#2f2a26", deep: "#141210", blurb: "Renégats et mercenaires." },
+export type EmblemKind = "fangs" | "kharns" | "kherops" | "guilde";
+
+/**
+ * Factions. `accent`/`deep` : ancienne palette (encore lue par des écrans non migrés).
+ * `color`/`colorBright`/`colorDeep`/`emblem` : identité visuelle « Forge/Braise » (blasons, teintes).
+ */
+export const FACTIONS: {
+  id: string;
+  name: string;
+  accent: string;
+  deep: string;
+  blurb: string;
+  color: string;
+  colorBright: string;
+  colorDeep: string;
+  emblem: EmblemKind;
+}[] = [
+  { id: "fangs", name: "Fangs", accent: "#7a4a2b", deep: "#4a2f1c", blurb: "Enfants de Nyx, sorcellerie d'os.", color: "#b0472b", colorBright: "#e0553f", colorDeep: "#5e1a13", emblem: "fangs" },
+  { id: "kharns", name: "Khârns", accent: "#2b3a5a", deep: "#16223d", blurb: "La Couronne et ses vassaux.", color: "#3d5f95", colorBright: "#7aa0d6", colorDeep: "#16223d", emblem: "kharns" },
+  { id: "kherops", name: "Khérops", accent: "#7a2b2b", deep: "#4a1c1c", blurb: "Les soldats de l'Empereur.", color: "#9a2f2f", colorBright: "#d15a4e", colorDeep: "#3a1010", emblem: "kherops" },
+  { id: "guilde-noire", name: "Guilde Noire", accent: "#2f2a26", deep: "#141210", blurb: "Renégats et mercenaires.", color: "#736784", colorBright: "#a99bbd", colorDeep: "#241f2d", emblem: "guilde" },
 ];
 
 /** Une figurine recrutée uniquement via un porteur (Likan, Muskh) — pas d'achat propre. */

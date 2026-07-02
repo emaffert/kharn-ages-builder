@@ -182,4 +182,104 @@ body {
 .ui-seg button:hover { color: var(--bone); }
 .ui-seg button[data-on="true"] { color: var(--ink-accent);
   background: linear-gradient(180deg, var(--ember-bright), var(--ember)); }
+.ui-seg button:disabled { opacity: .4; cursor: not-allowed; }
+.ui-seg button:disabled:hover { color: var(--bone-dim); }
+
+/* ============================================================================
+   Écran 1 — Choix de faction (Phase 2a). Teinté par la faction sélectionnée.
+   ============================================================================ */
+.fs-scene { height: 100%; overflow-y: auto; transition: background .5s var(--ease);
+  background:
+    radial-gradient(90% 70% at 50% -10%, color-mix(in srgb, var(--faction) 20%, transparent), transparent 60%),
+    radial-gradient(70% 60% at 50% 120%, color-mix(in srgb, #000 55%, transparent), transparent 55%); }
+.fs-wrap { width: 100%; max-width: 1000px; margin: 0 auto; padding: 44px 24px 64px; }
+/* En clair, la lueur de faction et le vignetage sont adoucis (le noir pur salit le parchemin). */
+[data-theme="light"] .fs-scene {
+  background:
+    radial-gradient(90% 70% at 50% -10%, color-mix(in srgb, var(--faction) 13%, transparent), transparent 60%),
+    radial-gradient(80% 55% at 50% 125%, color-mix(in srgb, #4a2f1c 12%, transparent), transparent 60%); }
+
+.fs-hero { text-align: center; margin-bottom: 34px; }
+.fs-eyebrow { font-family: "Cinzel", serif; font-size: 12px; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--ember); margin-bottom: 12px; }
+.fs-title { font-family: "Cinzel", serif; font-weight: 700; font-size: 40px; margin: 0 0 10px; letter-spacing: .01em;
+  background: linear-gradient(180deg, var(--bone), var(--bone-dim)); -webkit-background-clip: text; background-clip: text;
+  color: transparent; }
+.fs-sub { margin: 0; color: var(--bone-dim); font-size: 15px; }
+
+.fs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+.fs-tile { position: relative; padding: 24px 18px 20px; border-radius: var(--radius-lg); text-align: center; cursor: pointer;
+  border: 0; font: inherit; color: inherit; width: 100%;
+  background: linear-gradient(180deg, var(--soot-2), var(--forge-2)); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
+.fs-tile:hover { transform: translateY(-4px);
+  box-shadow: var(--shadow-lift), inset 0 0 0 1px color-mix(in srgb, var(--faction) 45%, transparent); }
+.fs-tile.is-sel { box-shadow: var(--shadow-lift), inset 0 0 0 1.5px var(--faction-2),
+  0 0 40px -10px color-mix(in srgb, var(--faction) 80%, transparent); }
+.fs-tile.is-sel::after { content: "✓ Choisie"; position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-accent);
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember)); padding: 3px 8px; border-radius: 999px; }
+.fs-tile.is-soon { opacity: .5; cursor: not-allowed; }
+.fs-tile.is-soon:hover { transform: none; box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
+.fs-tile.is-soon::after { content: "Bientôt"; position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 600;
+  letter-spacing: .06em; color: var(--bone-faint); box-shadow: inset 0 0 0 1px var(--hair-strong); padding: 3px 8px;
+  border-radius: 999px; }
+.fs-emblem { width: 74px; height: 80px; margin: 0 auto 14px; display: block;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .55)); transition: transform .18s var(--ease); }
+.fs-tile:hover .fs-emblem { transform: scale(1.05); }
+.fs-tile h3 { font-family: "Cinzel", serif; font-weight: 600; font-size: 19px; margin: 0 0 6px; color: var(--bone); }
+.fs-tile p { margin: 0 0 12px; font-size: 12.5px; color: var(--bone-dim); line-height: 1.4; min-height: 34px; }
+.fs-count { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faction-2); font-weight: 600; }
+.fs-tile.is-soon .fs-count { color: var(--bone-faint); }
+
+.fs-setup { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; padding: 20px 24px;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(120% 200% at 0% 0%, var(--header-glow), transparent 55%),
+    linear-gradient(180deg, var(--soot-2), var(--forge-2));
+  box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
+.fs-grp { display: flex; flex-direction: column; gap: 8px; }
+.fs-glabel { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-faint); font-weight: 600; }
+.fs-points { width: 92px; padding: 6px 10px; border-radius: 9px; font: inherit; font-size: 14px; color: var(--bone);
+  background: var(--forge); border: 1px solid var(--hair-strong); }
+.fs-go { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.fs-chosen { font-family: "Cinzel", serif; color: var(--faction-2); font-weight: 600; }
+
+.fs-saved { margin-top: 40px; }
+.fs-saved-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.fs-saved-head h2 { font-family: "Cinzel", serif; font-weight: 600; font-size: 18px; margin: 0; color: var(--bone);
+  white-space: nowrap; }
+.fs-saved-head .fs-line { flex: 1; height: 1px; background: var(--hair); }
+.fs-slist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.fs-scard { position: relative; padding: 14px; border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--soot-2), var(--forge-2)); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair);
+  transition: transform .16s var(--ease), box-shadow .16s var(--ease); }
+.fs-scard:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.fs-scard-main { display: flex; align-items: center; gap: 14px; width: 100%; border: 0; background: transparent;
+  font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.fs-scard-em { width: 38px; height: 42px; flex: none; filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .55)); }
+.fs-scard-info { flex: 1; min-width: 0; }
+.fs-scard-nm { font-weight: 600; font-size: 15px; color: var(--bone); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.fs-scard-mt { font-size: 12px; color: var(--bone-dim); margin-top: 2px; display: flex; align-items: center; gap: 7px;
+  white-space: nowrap; }
+.fs-scard-mt .fs-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--bone-faint); }
+.fs-scard-ko { font-family: "Cinzel", serif; color: var(--gold); font-weight: 600; font-size: 15px; white-space: nowrap; }
+.fs-scard-del { position: absolute; top: 6px; right: 8px; width: 22px; height: 22px; border-radius: 6px; border: 0;
+  background: transparent; color: var(--bone-faint); cursor: pointer; opacity: 0; transition: .16s var(--ease); }
+.fs-scard:hover .fs-scard-del { opacity: 1; }
+.fs-scard-del:hover { color: var(--scorch); background: var(--tint-2); }
+
+.fs-import { margin-top: 14px; padding: 14px; border-radius: var(--radius);
+  background: var(--tint-1); box-shadow: inset 0 0 0 1px var(--hair); }
+.fs-import textarea { width: 100%; height: 92px; resize: none; padding: 10px; border-radius: 9px;
+  font-family: ui-monospace, monospace; font-size: 12px; color: var(--bone); background: var(--forge);
+  border: 1px solid var(--hair-strong); outline: none; }
+.fs-import-msg { margin-top: 8px; font-size: 13px; color: var(--scorch); }
+
+@media (max-width: 820px) {
+  .fs-grid { grid-template-columns: repeat(2, 1fr); }
+  .fs-slist { grid-template-columns: 1fr; }
+  .fs-go { margin-left: 0; width: 100%; }
+  .fs-title { font-size: 32px; }
+}
 

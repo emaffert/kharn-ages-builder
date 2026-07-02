@@ -5,7 +5,7 @@ export function SegmentedControl<T extends string>({
   onChange,
   ariaLabel,
 }: {
-  options: ReadonlyArray<{ value: T; label: string }>;
+  options: ReadonlyArray<{ value: T; label: string; disabled?: boolean; title?: string }>;
   value: T;
   onChange: (value: T) => void;
   ariaLabel?: string;
@@ -19,7 +19,9 @@ export function SegmentedControl<T extends string>({
           role="radio"
           aria-checked={value === opt.value}
           data-on={value === opt.value}
-          onClick={() => onChange(opt.value)}
+          disabled={opt.disabled}
+          title={opt.title}
+          onClick={() => !opt.disabled && onChange(opt.value)}
         >
           {opt.label}
         </button>

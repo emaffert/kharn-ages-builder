@@ -3,7 +3,7 @@ import type { ListDocument, Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
 import { Overlay } from "../Overlay";
-import { Button, Tag } from "@ui";
+import { Button, Tag, Dialog, SegmentedControl } from "@ui";
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { EditIcon, TrashIcon, SearchIcon } from "./icons";
@@ -456,20 +456,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
       {/* Modale roster (mobile) : l'aside étant masqué sous `md`. */}
       {showRoster && (
-        <Overlay onClose={() => setShowRoster(false)}>
-          <div
-            className="bld-root"
-            style={{ ...factionVars, width: "100%", maxHeight: "72vh", borderRadius: 12, overflow: "hidden", background: "var(--forge-2)" }}
-          >
-            <div className="bld-roster-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-              <span className="bld-faction-chip">Recruter · {fac.name}</span>
-              <button className="bld-back" onClick={() => setShowRoster(false)}>
-                Fermer
-              </button>
-            </div>
+        <Dialog open onOpenChange={(o) => !o && setShowRoster(false)} title={`Recruter · ${fac.name}`} size="md">
+          <div className="bld-root" style={{ ...factionVars, background: "transparent" }}>
             {rosterInner}
           </div>
-        </Overlay>
+        </Dialog>
       )}
 
       {/* Modale : aperçu ou édition */}
@@ -516,68 +507,54 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         </Overlay>
       )}
       {modal?.kind === "guard" && (
-        <Overlay onClose={() => setModal(null)}>
-          <div className="space-y-3">
-            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-              Garde du corps de quelle Fille de Nyx ?
-            </h3>
-            <p className="text-sm opacity-70">
-              {memberOf(modal.instanceId)?.p.name} sera lié à la Fille de Nyx choisie.
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {availableFilles.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => {
-                    store.setGuard(modal.instanceId, f.id);
-                    setModal(null);
-                  }}
-                  className="rounded-md border px-3 py-2 text-left text-sm transition hover:bg-white/60"
-                  style={{ borderColor: `${accent}44`, color: deep }}
-                >
-                  {f.name}
-                </button>
-              ))}
-            </div>
+        <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Garde du corps" size="sm">
+          <p className="mdl-note">{memberOf(modal.instanceId)?.p.name} sera lié à la Fille de Nyx choisie.</p>
+          <div className="mdl-list">
+            {availableFilles.map((f) => (
+              <button
+                key={f.id}
+                className="mdl-choice"
+                onClick={() => {
+                  store.setGuard(modal.instanceId, f.id);
+                  setModal(null);
+                }}
+              >
+                {f.name}
+              </button>
+            ))}
           </div>
-        </Overlay>
+        </Dialog>
       )}
       {modal?.kind === "recruit-level" &&
         (() => {
           const m = models.find((mm) => mm.id === modal.modelId);
           if (!m) return null;
           return (
-            <Overlay onClose={() => setModal(null)}>
-              <div className="space-y-3">
-                <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                  Recruter — {m.name}
-                </h3>
-                <p className="text-sm opacity-70">Choisir le niveau :</p>
-                <div className="flex flex-col gap-1.5">
-                  {m.profiles.map((p) => {
-                    const max = atLimit(p);
-                    return (
-                      <button
-                        key={p.id}
-                        disabled={max}
-                        onClick={() => {
-                          store.addMember(p.id);
-                          setModal(null);
-                        }}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition hover:bg-white/60 disabled:cursor-not-allowed disabled:opacity-40"
-                        style={{ borderColor: `${accent}44`, color: deep }}
-                      >
-                        <span>
-                          {p.name} <span className="opacity-50">{LEVEL[p.level ?? 0]}</span>
-                          {max && <span className="ml-1.5 text-[10px] uppercase tracking-wide">· max</span>}
-                        </span>
-                        <span className="text-xs opacity-60">{p.cost} Ko</span>
-                      </button>
-                    );
-                  })}
-                </div>
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter — ${m.name}`} size="sm">
+              <p className="mdl-note">Choisir le niveau :</p>
+              <div className="mdl-list">
+                {m.profiles.map((p) => {
+                  const max = atLimit(p);
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={max}
+                      className="mdl-choice"
+                      onClick={() => {
+                        store.addMember(p.id);
+                        setModal(null);
+                      }}
+                    >
+                      <span>
+                        {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
+                        {max && <span className="max">max</span>}
+                      </span>
+                      <span className="cost">{p.cost} Ko</span>
+                    </button>
+                  );
+                })}
               </div>
-            </Overlay>
+            </Dialog>
           );
         })()}
       {modal?.kind === "recruit-likan" &&
@@ -593,162 +570,137 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             .filter((p) => p.modelId === "likan")
             .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
           return (
-            <Overlay onClose={() => setModal(null)}>
-              <div className="space-y-3">
-                <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                  Recruter un Likan
-                </h3>
-                <p className="text-sm opacity-70">
-                  Capacité restante de {carrier?.p.name} : {remaining} (somme des niveaux des Likans ≤ niveau du porteur).
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {likans.map((p) => {
-                    const ok = (p.level ?? 0) <= remaining;
-                    return (
-                      <button
-                        key={p.id}
-                        disabled={!ok}
-                        onClick={() => {
-                          store.addAttached(modal.carrierInstanceId, p.id);
-                          setModal(null);
-                        }}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition hover:bg-white/60 disabled:cursor-not-allowed disabled:opacity-40"
-                        style={{ borderColor: `${accent}44`, color: deep }}
-                      >
-                        <span>
-                          {p.name} <span className="opacity-50">{LEVEL[p.level ?? 0]}</span>
-                        </span>
-                        <span className="text-xs opacity-60">{p.cost} Ko</span>
-                      </button>
-                    );
-                  })}
-                  {remaining <= 0 && <p className="text-sm opacity-60">Capacité de rattachement atteinte.</p>}
-                </div>
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Recruter un Likan" size="sm">
+              <p className="mdl-note">
+                Capacité restante de {carrier?.p.name} : {remaining} (somme des niveaux des Likans ≤ niveau du porteur).
+              </p>
+              <div className="mdl-list">
+                {likans.map((p) => {
+                  const ok = (p.level ?? 0) <= remaining;
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={!ok}
+                      className="mdl-choice"
+                      onClick={() => {
+                        store.addAttached(modal.carrierInstanceId, p.id);
+                        setModal(null);
+                      }}
+                    >
+                      <span>
+                        {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
+                      </span>
+                      <span className="cost">{p.cost} Ko</span>
+                    </button>
+                  );
+                })}
+                {remaining <= 0 && <p className="mdl-note">Capacité de rattachement atteinte.</p>}
               </div>
-            </Overlay>
+            </Dialog>
           );
         })()}
       {itemInfo && (
-        <Overlay onClose={() => setItemInfo(null)}>
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="kh-display text-lg font-bold leading-tight" style={{ color: deep }}>
-                {itemInfo.title}
-              </h3>
-              <span className="rounded px-2 py-0.5 text-sm font-semibold text-white" style={{ background: accent }}>
-                {itemInfo.price}
-              </span>
-            </div>
+        <Dialog open onOpenChange={(o) => !o && setItemInfo(null)} title={itemInfo.title} size="sm">
+          <span className="mdl-price">{itemInfo.price}</span>
+          <div>
             {itemInfo.lines.map((l, k) => (
-              <p key={k} className="text-sm leading-snug">
+              <p key={k} className="mdl-line">
                 {l}
               </p>
             ))}
           </div>
-        </Overlay>
+        </Dialog>
       )}
       {io === "export" && (
-        <Overlay onClose={() => setIo(null)}>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                Exporter
-              </h3>
-              <div className="inline-flex overflow-hidden rounded-md text-xs" style={{ boxShadow: `inset 0 0 0 1px ${accent}55` }}>
-                {(["code", "texte"] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setExportMode(m)}
-                    className="px-3 py-1 transition"
-                    style={exportMode === m ? { background: accent, color: "#f5ecd6" } : { color: accent }}
-                  >
-                    {m === "code" ? "Code portable" : "Texte"}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="text-sm opacity-70">
-              {exportMode === "code"
-                ? "Code compact à partager ou réimporter sur un autre appareil."
-                : "Roster lisible (partage/impression). Réimportable en best-effort."}
-            </p>
-            <textarea
-              readOnly
-              value={exportValue}
-              onFocus={(e) => e.currentTarget.select()}
-              className="h-48 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setIo(null)}
+          title="Exporter"
+          size="md"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setIo(null)}>Fermer</Button>
+              <Button variant="primary" onClick={() => navigator.clipboard?.writeText(exportValue)}>Copier</Button>
+            </>
+          }
+        >
+          <div className="mb-3">
+            <SegmentedControl
+              ariaLabel="Format d'export"
+              value={exportMode}
+              onChange={setExportMode}
+              options={[
+                { value: "code", label: "Code portable" },
+                { value: "texte", label: "Texte" },
+              ]}
             />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => navigator.clipboard?.writeText(exportValue)}
-                className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow" style={{ background: accent }}
-              >
-                Copier
-              </button>
-              <button onClick={() => setIo(null)} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
-                Fermer
-              </button>
-            </div>
           </div>
-        </Overlay>
+          <p className="mdl-note">
+            {exportMode === "code"
+              ? "Code compact à partager ou réimporter sur un autre appareil."
+              : "Roster lisible (partage/impression). Réimportable en best-effort."}
+          </p>
+          <textarea
+            className="mdl-textarea"
+            style={{ height: "38vh" }}
+            readOnly
+            value={exportValue}
+            onFocus={(e) => e.currentTarget.select()}
+          />
+        </Dialog>
       )}
       {io === "import" && (
-        <Overlay onClose={() => setIo(null)}>
-          <div className="space-y-3">
-            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-              Importer une liste
-            </h3>
-            <p className="text-sm opacity-70">Colle un code portable (KA1:…) ou un roster texte. Remplace la liste en cours.</p>
-            <textarea
-              value={importText}
-              onChange={(e) => {
-                setImportText(e.target.value);
-                setImportError(null);
-                setImportUnresolved([]);
-                setPendingImport(null);
-              }}
-              placeholder="KA1:…  ou  roster texte"
-              className="h-32 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
-            />
-            {importError && <p className="text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
-            {importUnresolved.length > 0 && (
-              <div className="rounded-md bg-black/5 p-2 text-xs" style={{ color: "#9a3b2b" }}>
-                <p className="font-semibold">Avertissements :</p>
-                <ul className="mt-1 space-y-0.5">
-                  {importUnresolved.map((l, k) => (
-                    <li key={k}>· {l.trim()}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setIo(null)}
+          title="Importer une liste"
+          size="md"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setIo(null)}>Annuler</Button>
               {pendingImport ? (
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => {
                     store.loadSaved(pendingImport);
                     setIo(null);
                   }}
-                  className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow"
-                  style={{ background: accent }}
                 >
                   Charger quand même
-                </button>
+                </Button>
               ) : (
-                <button
-                  onClick={runImport}
-                  disabled={importText.trim() === ""}
-                  className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow disabled:opacity-40"
-                  style={{ background: accent }}
-                >
+                <Button variant="primary" disabled={importText.trim() === ""} onClick={runImport}>
                   Charger
-                </button>
+                </Button>
               )}
-              <button onClick={() => setIo(null)} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
-                Annuler
-              </button>
+            </>
+          }
+        >
+          <p className="mdl-note">Colle un code portable (KA1:…) ou un roster texte. Remplace la liste en cours.</p>
+          <textarea
+            className="mdl-textarea"
+            style={{ height: "26vh" }}
+            value={importText}
+            onChange={(e) => {
+              setImportText(e.target.value);
+              setImportError(null);
+              setImportUnresolved([]);
+              setPendingImport(null);
+            }}
+            placeholder="KA1:…  ou  roster texte"
+          />
+          {importError && <p className="mdl-warn">⚠ {importError}</p>}
+          {importUnresolved.length > 0 && (
+            <div className="mdl-warn-box">
+              <p className="font-semibold">Avertissements :</p>
+              <ul className="mt-1 space-y-0.5">
+                {importUnresolved.map((l, k) => (
+                  <li key={k}>· {l.trim()}</li>
+                ))}
+              </ul>
             </div>
-          </div>
-        </Overlay>
+          )}
+        </Dialog>
       )}
     </div>
   );

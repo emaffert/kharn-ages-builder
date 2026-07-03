@@ -21,6 +21,18 @@ export const STATS: [keyof Profile["stats"], string][] = [
   ["t", "T"],
   ["i", "I"],
 ];
+// Groupes de stats comme sur les cartes officielles : combat (V P A C) puis (T I).
+export const STATS_COMBAT: [keyof Profile["stats"], string][] = STATS.slice(0, 4);
+export const STATS_SECONDARY: [keyof Profile["stats"], string][] = STATS.slice(4);
+
+/** Libellés courts des 5 domaines de maîtrise (dés de maîtrise). */
+export const MASTERY_SHORT: Record<string, string> = {
+  offensive: "Off",
+  defensive: "Déf",
+  objectif: "Obj",
+  tir: "Tir",
+  esoterique: "Éso",
+};
 
 export type EmblemKind = "fangs" | "kharns" | "gouns" | "kherops" | "tembos" | "guilde";
 

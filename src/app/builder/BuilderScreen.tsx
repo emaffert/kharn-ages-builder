@@ -44,6 +44,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const [rosterQuery, setRosterQuery] = useState("");
   const [showRoster, setShowRoster] = useState(false); // tiroir roster (mobile : aside masqué)
   const [saved, setSaved] = useState(false);
+  const [confirmBack, setConfirmBack] = useState(false);
   // Réordonnancement : glisser depuis la poignée (petite distance d'activation pour préserver les clics).
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -164,6 +165,10 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   ].map((id) => ({ id, name: memberOf(id)?.p.name ?? "Figurine", messages: issuesOf(id) }));
   const scrollToUnit = (id: string) =>
     document.getElementById(`unit-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // « Non sauvegardé » : la copie en base a-t-elle le même horodatage que la liste courante ?
+  const savedCopy = store.savedLists.find((l) => l.id === store.list.id);
+  const dirty = savedCopy ? savedCopy.updatedAt !== store.list.updatedAt : items.length > 0;
+  const onBack = () => (dirty ? setConfirmBack(true) : onNew());
 
   // Leader : personnage OU l'une des deux figurines les plus chères.
   const topTwo = new Set([...items].sort((a, b) => b.p.cost - a.p.cost).slice(0, 2).map((x) => x.inst.instanceId));
@@ -231,7 +236,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
             <RosterGroup
               label="Recrutement conditionnel"
-              hint="via un porteur dans la liste"
               items={conditionnels}
               onOpen={(id) => setModal({ kind: "preview", modelId: id })}
               conditional
@@ -372,8 +376,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       <div className="bld-root" style={factionVars}>
       {/* Bandeau de liste : identité + jauge-forge + validation + actions */}
       <div className="bld-listbar">
-        <button className="bld-back" onClick={onNew} title="Créer une nouvelle liste">
-          ← Nouvelle liste
+        <button className="bld-back" onClick={onBack} title="Revenir à l'accueil">
+          ← Retour
         </button>
         <FactionEmblem kind={fac.emblem} className="bld-crest" />
         <div className="bld-id">
@@ -490,19 +494,19 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
       {/* Modale : aperçu ou édition */}
       {modal?.kind === "preview" && modalModel && (
-        <Dialog open onOpenChange={(o) => !o && setModal(null)} title={modalModel.name} size="lg">
-          <CardPreview
-            profiles={modalModel.profiles}
-            cat={cat}
-            onClose={() => setModal(null)}
-            onAdd={(profileId) => store.addMember(profileId)}
-            onInfo={setItemInfo}
-            isAtLimit={(profileId) => {
-              const p = cat.profiles.find((x) => x.id === profileId);
-              return p ? atLimit(p) : false;
-            }}
-          />
-        </Dialog>
+        <CardPreview
+          profiles={modalModel.profiles}
+          cat={cat}
+          title={modalModel.name}
+          open
+          onOpenChange={(o) => !o && setModal(null)}
+          onAdd={(profileId) => store.addMember(profileId)}
+          onInfo={setItemInfo}
+          isAtLimit={(profileId) => {
+            const p = cat.profiles.find((x) => x.id === profileId);
+            return p ? atLimit(p) : false;
+          }}
+        />
       )}
       {modal?.kind === "edit" && editItem && (
         <Dialog
@@ -681,6 +685,42 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             value={exportValue}
             onFocus={(e) => e.currentTarget.select()}
           />
+        </Dialog>
+      )}
+      {confirmBack && (
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setConfirmBack(false)}
+          title="Modifications non sauvegardées"
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setConfirmBack(false)}>
+                Annuler
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setConfirmBack(false);
+                  onNew();
+                }}
+              >
+                Quitter
+              </Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  await onSave();
+                  setConfirmBack(false);
+                  onNew();
+                }}
+              >
+                Enregistrer et quitter
+              </Button>
+            </>
+          }
+        >
+          <p className="mdl-note">Cette liste comporte des modifications non enregistrées. Elles seront perdues si tu quittes sans enregistrer.</p>
         </Dialog>
       )}
       <Toast open={saved} onOpenChange={setSaved} title="✓ Liste enregistrée" />

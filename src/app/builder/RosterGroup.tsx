@@ -33,12 +33,12 @@ export function RosterGroup({
         const isMax = maxed?.(m) ?? false;
         return (
           <div key={m.id} className={`bld-ritem${conditional ? " is-cond" : ""}${isMax ? " is-max" : ""}`}>
-            <div className="bld-rmed">{LEVEL[first.level ?? 0] || "·"}</div>
             <button
               className="bld-rmain"
               onClick={() => onOpen(m.id)}
               title={isMax ? "Limite de recrutement atteinte" : "Voir la carte"}
             >
+              <span className="bld-rmed">{LEVEL[first.level ?? 0] || "·"}</span>
               <span className="bld-rname">
                 {m.name}
                 {multi ? (
@@ -50,7 +50,7 @@ export function RosterGroup({
                 )}
                 {isMax && <span className="max">max</span>}
               </span>
-              <span className="bld-rcost">{conditional ? "🔗" : multi ? `${minCost}+` : `${first.cost}`}</span>
+              <span className="bld-rcost">{multi ? `${minCost}+` : `${first.cost}`}</span>
             </button>
             {onQuickAdd && !conditional && (
               <button

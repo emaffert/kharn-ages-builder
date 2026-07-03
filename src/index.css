@@ -348,8 +348,7 @@ body {
 .bld-grp-label .hint { color: var(--bone-faint); font-family: Inter, sans-serif; letter-spacing: .02em;
   text-transform: none; font-size: 10.5px; font-weight: 400; }
 
-.bld-ritem { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 10px; position: relative;
-  transition: .16s var(--ease); }
+.bld-ritem { display: flex; align-items: stretch; border-radius: 10px; position: relative; transition: .16s var(--ease); }
 .bld-ritem:hover { background: var(--tint-2); }
 .bld-ritem + .bld-ritem { margin-top: 2px; }
 .bld-ritem.is-cond { opacity: .72; }
@@ -359,16 +358,17 @@ body {
   background: radial-gradient(120% 120% at 30% 20%, #2c2016, var(--panel-dark));
   box-shadow: inset 0 0 0 1px var(--ash), inset 0 6px 12px -8px rgba(0, 0, 0, .9); }
 .bld-ritem.is-cond .bld-rmed { color: var(--bone-faint); }
-.bld-rmain { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; background: none; border: 0;
-  color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 0; }
+.bld-rmain { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: none; border: 0;
+  color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 7px 9px; border-radius: 10px; }
 .bld-rname { flex: 1; font-size: 14px; font-weight: 500; }
 .bld-rname .lvl { color: var(--bone-faint); font-size: 12px; margin-left: 4px; }
 .bld-rname .max { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-left: 6px; color: var(--bone-faint); }
 .bld-rcost { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--gold-dim); font-weight: 600; flex: none; }
 /* Ajout rapide : visible en permanence (indispensable au tactile, où il n'y a pas de survol). */
-.bld-radd { width: 30px; height: 30px; flex: none; border-radius: 8px; display: grid; place-items: center;
-  color: var(--ember); background: transparent; border: 0; cursor: pointer; font-size: 17px; line-height: 1;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ember) 40%, transparent); opacity: .5; transition: .16s var(--ease); }
+.bld-radd { width: 30px; height: 30px; flex: none; align-self: center; margin-right: 9px; border-radius: 8px;
+  display: grid; place-items: center; color: var(--ember); background: transparent; border: 0; cursor: pointer;
+  font-size: 17px; line-height: 1; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ember) 40%, transparent);
+  opacity: .5; transition: .16s var(--ease); }
 .bld-ritem:hover .bld-radd, .bld-radd:focus-visible { opacity: 1; }
 .bld-radd:hover { background: color-mix(in srgb, var(--ember) 14%, transparent); }
 .bld-radd:disabled { opacity: .25; cursor: not-allowed; }
@@ -534,6 +534,7 @@ body {
 
 /* Carte de stats */
 .fe-statcard { display: grid; gap: 18px; grid-template-columns: 1fr 240px; }
+.fe-eq-section { grid-column: 1; }
 .fe-card { border-radius: var(--radius); background: var(--soot-2); box-shadow: inset 0 0 0 1px var(--hair-strong);
   padding: 16px; }
 .fe-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
@@ -543,15 +544,33 @@ body {
   background: color-mix(in srgb, var(--gold) 14%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent); }
 .fe-taglist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.fe-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.fe-stat { background: var(--tint-2); padding: 5px 9px; border-radius: 7px; font-size: 13.5px; }
-.fe-stat .k { color: var(--bone-faint); }
-.fe-stat .v { font-weight: 700; color: var(--bone); }
-.fe-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.fe-stats { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 12px; }
+.fe-statrow { display: flex; align-items: stretch; gap: 6px; }
+.fe-statrow--res { padding-left: 18px; border-left: 1px solid var(--hair); }
+.fe-statsep { width: 1px; align-self: stretch; margin: 3px 5px; background: var(--hair-strong); }
+.fe-stat { display: inline-flex; align-items: baseline; gap: 5px; background: var(--tint-2); padding: 5px 9px;
+  border-radius: 7px; font-size: 13.5px; }
+.fe-stat .k { color: var(--bone-faint); font-size: 12px; }
+.fe-stat .v { font-weight: 700; color: var(--bone); font-variant-numeric: tabular-nums; }
+
+/* Étiquette de bloc dans la carte (maîtrise, équipement). */
+.fe-block-label { display: block; margin: 20px 0 6px; font-family: "Cinzel", serif; font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--bone-faint); }
+.fe-dice { display: flex; flex-wrap: wrap; gap: 6px; }
+.fe-die { padding: 4px 9px; border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--bone-dim);
+  background: var(--tint-2); box-shadow: inset 0 0 0 1px var(--hair); }
+.fe-eqrow { display: flex; flex-direction: column; gap: 4px; }
+.fe-eq { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; text-align: left;
+  padding: 6px 10px; border-radius: 8px; background: var(--tint-2); border: 0; cursor: pointer;
+  transition: background .16s var(--ease); }
+.fe-eq:hover { background: var(--tint-3); }
+.fe-eq .nm { font-size: 13.5px; font-weight: 500; color: var(--bone); }
+.fe-eq .bits { font-size: 12px; color: var(--bone-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fe-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
 .fe-skill { border-radius: 999px; background: var(--tint-2); padding: 3px 10px; font-size: 12px; color: var(--bone-dim);
   border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px var(--hair); transition: .16s var(--ease); }
 .fe-skill:hover { background: var(--tint-3); color: var(--bone); }
-.fe-rules { margin-top: 12px; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: var(--bone-dim); }
+.fe-rules { margin-top: 20px; display: flex; flex-direction: column; gap: 9px; font-size: 13.5px; color: var(--bone-dim); }
 .fe-rules b { color: var(--bone); }
 .fe-rule-btn { color: var(--bone); font-weight: 600; background: none; border: 0; cursor: pointer;
   text-decoration: underline dotted; text-underline-offset: 2px; padding: 0; }
@@ -614,7 +633,6 @@ body {
   text-decoration: underline dotted; text-underline-offset: 2px; font-weight: 500; }
 .fe-check .px { font-size: 12px; color: var(--gold-dim); }
 .fe-mag-bonus { font-size: 12px; color: var(--bone-dim); }
-.fe-preview-add { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .fe-preview-note { margin-right: auto; font-size: 12px; font-style: italic; color: var(--bone-dim); }
 
 @media (max-width: 640px) {

@@ -2,20 +2,33 @@ import { specialCardsForProfile } from "@ui/explain";
 import { Tag } from "@ui";
 import type { Catalog, Profile } from "@core";
 import { SectionTitle } from "./components";
-import { LEVEL, STATS, type ItemInfo } from "./shared";
+import {
+  LEVEL,
+  STATS_COMBAT,
+  STATS_SECONDARY,
+  MASTERY_SHORT,
+  equipInfo,
+  equipBits,
+  type ItemInfo,
+} from "./shared";
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
 export function ProfileStatCard({
   p,
   cat,
   onInfo,
+  showEquipment = false,
 }: {
   p: Profile;
   cat: Catalog;
   onInfo: (info: ItemInfo) => void;
+  showEquipment?: boolean;
 }) {
   const cards = specialCardsForProfile(p, cat);
   const precisions = p.skills.filter((s) => s.precision);
+  const baseEq = p.baseEquipmentIds
+    .map((id) => cat.equipment.find((e) => e.id === id))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const showSkill = (skillId: string, label: string) => {
     const sk = cat.skills.find((x) => x.id === skillId);
     onInfo({ title: label, price: "compétence", lines: [sk?.sourceText ?? "Description indisponible."] });
@@ -38,21 +51,37 @@ export function ProfileStatCard({
           <Tag>{limLabel}</Tag>
           {p.magic?.canCast && <Tag tone="amber">Mage</Tag>}
         </div>
+        {/* Stats groupées comme sur la carte : V P A C · T I, puis PA / PV / Stature à part. */}
         <div className="fe-stats">
-          {STATS.map(([k, label]) => (
-            <span key={label} className="fe-stat">
-              <span className="k">{label} </span>
-              <span className="v">{p.stats[k] ?? "—"}</span>
+          <div className="fe-statrow">
+            {STATS_COMBAT.map(([k, label]) => (
+              <span key={label} className="fe-stat">
+                <span className="k">{label}</span>
+                <span className="v">{p.stats[k] ?? "—"}</span>
+              </span>
+            ))}
+            <span className="fe-statsep" aria-hidden />
+            {STATS_SECONDARY.map(([k, label]) => (
+              <span key={label} className="fe-stat">
+                <span className="k">{label}</span>
+                <span className="v">{p.stats[k] ?? "—"}</span>
+              </span>
+            ))}
+          </div>
+          <div className="fe-statrow fe-statrow--res">
+            <span className="fe-stat">
+              <span className="k">PA</span>
+              <span className="v">{p.pa}</span>
             </span>
-          ))}
-          <span className="fe-stat">
-            <span className="k">PA </span>
-            <span className="v">{p.pa}</span>
-          </span>
-          <span className="fe-stat">
-            <span className="k">PV </span>
-            <span className="v">{p.pv}</span>
-          </span>
+            <span className="fe-stat">
+              <span className="k">PV</span>
+              <span className="v">{p.pv}</span>
+            </span>
+            <span className="fe-stat">
+              <span className="k">Stature</span>
+              <span className="v">{p.stature}</span>
+            </span>
+          </div>
         </div>
         <div className="fe-skills">
           {p.skills.map((s, i) => {
@@ -86,11 +115,25 @@ export function ProfileStatCard({
             })}
           </div>
         )}
+        {/* Dés de maîtrise : tout en bas de la carte (comme sur la carte officielle). */}
+        {p.masteryDice.length > 0 && (
+          <div className="fe-mastery">
+            <span className="fe-block-label">Dés de maîtrise</span>
+            <div className="fe-dice">
+              {p.masteryDice.map((die, i) => (
+                <span key={i} className="fe-die">
+                  {die.map((d) => MASTERY_SHORT[d] ?? d).join(" · ")}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {cards.length > 0 && (
-        <div>
-          <SectionTitle>Cartes liées</SectionTitle>
+      {/* Libellé toujours présent (même vide) pour un gabarit de carte constant. */}
+      <div>
+        <SectionTitle>Cartes liées</SectionTitle>
+        {cards.length > 0 ? (
           <div className="fe-linked">
             {cards.map((c) => (
               <button
@@ -105,6 +148,27 @@ export function ProfileStatCard({
               </button>
             ))}
           </div>
+        ) : (
+          <p className="fe-mag-bonus">Aucune.</p>
+        )}
+      </div>
+
+      {/* Équipement : colonne de gauche, uniquement à l'aperçu roster (l'éditeur a son onglet). Libellé toujours présent. */}
+      {showEquipment && (
+        <div className="fe-eq-section">
+          <SectionTitle>Équipement</SectionTitle>
+          {baseEq.length > 0 ? (
+            <div className="fe-eqrow">
+              {baseEq.map((e) => (
+                <button key={e.id} className="fe-eq" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
+                  <span className="nm">{e.name}</span>
+                  {equipBits(e) && <span className="bits">{equipBits(e)}</span>}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="fe-mag-bonus">Aucun.</p>
+          )}
         </div>
       )}
     </div>

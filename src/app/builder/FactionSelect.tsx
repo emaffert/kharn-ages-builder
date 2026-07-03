@@ -63,7 +63,6 @@ export function FactionSelect({
       <div className="fs-wrap">
         <div className="fs-hero">
           <img className="fs-logo" src={logoUrl} alt="Khârn-Âges" />
-          <span className="fs-hero-sep" />
           <p className="fs-tagline">Constructeur de listes</p>
         </div>
 
@@ -139,7 +138,7 @@ export function FactionSelect({
               className="fs-start-btn"
               onClick={() => onStart(selected.id, format, points)}
             >
-              Démarrer une liste →
+              Démarrer une liste
             </Button>
           </div>
         </div>

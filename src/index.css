@@ -74,26 +74,6 @@ body {
 .kh-toggle button:hover { color: var(--bone); }
 .kh-toggle button[data-on="true"] { color: var(--bone); background: var(--tint-3); }
 
-/* Direction artistique « parchemin » du constructeur (esprit livres/cartes Khârn-Âges). */
-.kh-builder {
-  font-family: "EB Garamond", Georgia, "Times New Roman", serif;
-  color: #2e2418;
-}
-.kh-display {
-  font-family: "Cinzel", Georgia, serif;
-  letter-spacing: 0.02em;
-}
-.kh-parchment {
-  background-color: #e7dbc0;
-  background-image:
-    radial-gradient(at 25% 15%, rgba(0, 0, 0, 0.05), transparent 55%),
-    radial-gradient(at 82% 88%, rgba(74, 47, 28, 0.1), transparent 50%),
-    linear-gradient(155deg, #efe4ca 0%, #e2d0ab 55%, #d7c39d 100%);
-}
-.kh-panel {
-  background-color: rgba(247, 238, 214, 0.72);
-}
-
 /* ============================================================================
    Kit UI (primitives) — Phase 1. Sur tokens, backées Radix côté comportement.
    ============================================================================ */

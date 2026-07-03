@@ -27,21 +27,23 @@ export class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.error) {
       return (
-        <div className="kh-builder kh-parchment flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-          <h1 className="kh-display text-2xl font-bold" style={{ color: "#7a2b2b" }}>
+        <div
+          className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center"
+          style={{ background: "var(--forge)", color: "var(--bone)" }}
+        >
+          <h1 className="text-2xl font-bold" style={{ fontFamily: "Cinzel, serif", color: "var(--faction-2)" }}>
             Une erreur est survenue
           </h1>
-          <p className="max-w-md text-sm opacity-70">
+          <p className="max-w-md text-sm" style={{ color: "var(--bone-dim)" }}>
             L'application a rencontré un problème inattendu. Tes listes sauvegardées ne sont pas affectées.
           </p>
-          <pre className="max-w-md overflow-auto rounded bg-black/5 p-2 text-left text-xs opacity-60">
+          <pre
+            className="max-w-md overflow-auto rounded p-2 text-left text-xs"
+            style={{ background: "var(--tint-2)", color: "var(--bone-faint)" }}
+          >
             {this.state.error.message}
           </pre>
-          <button
-            onClick={() => window.location.reload()}
-            className="rounded-md px-4 py-2 text-sm font-semibold text-white shadow"
-            style={{ background: "#7a4a2b" }}
-          >
+          <button onClick={() => window.location.reload()} className="ui-btn ui-btn--primary">
             Recharger la page
           </button>
         </div>

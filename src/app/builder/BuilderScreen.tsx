@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ListDocument, Profile } from "@core";
+import type { Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
 import {
@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Button, Tag, Dialog, SegmentedControl, Toast, ToastProvider } from "@ui";
+import { Button, Tag, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from "@ui";
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
@@ -27,7 +27,6 @@ import { RosterGroup } from "./RosterGroup";
 import { PurchaseSummary } from "./PurchaseSummary";
 import { encodeList } from "../io/listCode";
 import { exportText } from "../io/listText";
-import { resolveImport } from "./importList";
 
 /** Écran 2 : construction de la liste (roster à gauche, liste au centre, barre d'actions, modales). */
 
@@ -58,9 +57,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     await store.saveCurrent();
     setSaved(true); // le toast se referme seul (durée Radix) → onOpenChange(false)
   };
-  const [io, setIo] = useState<null | "export" | "import">(null);
-  const [importText, setImportText] = useState("");
-  const [importError, setImportError] = useState<string | null>(null);
+  const [io, setIo] = useState<null | "export">(null);
   const [exportCode, setExportCode] = useState("");
   const [exportMode, setExportMode] = useState<"code" | "texte">("code");
   useEffect(() => {
@@ -71,26 +68,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     () => (io !== "export" ? "" : exportMode === "code" ? exportCode : exportText(cat, store.list)),
     [io, exportMode, exportCode, cat, store.list],
   );
-  // Import unifié : code portable d'abord, sinon texte best-effort.
-  const [importUnresolved, setImportUnresolved] = useState<string[]>([]);
-  const [pendingImport, setPendingImport] = useState<ListDocument | null>(null);
-  const runImport = async () => {
-    setImportError(null);
-    setImportUnresolved([]);
-    setPendingImport(null);
-    try {
-      const { doc, warnings } = await resolveImport(cat, importText);
-      if (warnings.length > 0) {
-        setImportUnresolved(warnings);
-        setPendingImport(doc);
-      } else {
-        store.loadSaved(doc);
-        setIo(null);
-      }
-    } catch (e) {
-      setImportError(e instanceof Error ? e.message : "Import impossible.");
-    }
-  };
 
   const models: ModelEntry[] = cat.models
     .map((m) => ({
@@ -166,6 +143,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const total = evaluation.totalCost;
   const limit = store.list.pointsLimit ?? 300;
   const ratio = Math.min(100, (total / Math.max(1, limit)) * 100);
+  const remaining = limit - total;
   const issuesOf = (id: string) =>
     evaluation.issues.filter((is) => is.severity === "error" && is.instanceId === id).map((is) => is.message);
   const invalidCount = new Set(
@@ -178,6 +156,14 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     ...(overLimit ? [`Budget dépassé : ${total} / ${limit} Ko.`] : []),
   ];
   const isValid = invalidCount === 0 && listErrors.length === 0;
+  // Détail des erreurs pour le popover (au lieu d'une infobulle au survol) : figurines fautives + erreurs de liste.
+  const instanceErrors = [
+    ...new Set(
+      evaluation.issues.filter((is) => is.severity === "error" && is.instanceId).map((is) => String(is.instanceId)),
+    ),
+  ].map((id) => ({ id, name: memberOf(id)?.p.name ?? "Figurine", messages: issuesOf(id) }));
+  const scrollToUnit = (id: string) =>
+    document.getElementById(`unit-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
 
   // Leader : personnage OU l'une des deux figurines les plus chères.
   const topTwo = new Set([...items].sort((a, b) => b.p.cost - a.p.cost).slice(0, 2).map((x) => x.inst.instanceId));
@@ -276,6 +262,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     return (
       <div
         key={id}
+        id={`unit-${id}`}
         className={`bld-unit${isLeader ? " is-leader" : ""}${rowIssues.length > 0 ? " is-error" : ""}${attached ? " is-attached" : ""}${handle?.isDragging ? " is-dragging" : ""}`}
       >
         <div className="bld-unit-main">
@@ -295,6 +282,15 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               </button>
               {x.p.level ? <span className="lvltag">{LEVEL[x.p.level]}</span> : null}
               {isLeader && <span className="bld-crest-badge">❖ Meneur</span>}
+              {!attached && !isLeader && leadable && (
+                <button
+                  className="bld-setleader-chip"
+                  onClick={() => store.setLeader(id)}
+                  title="Promouvoir en meneur"
+                >
+                  ❖ Définir meneur
+                </button>
+              )}
               {attached && <Tag>rattaché</Tag>}
             </div>
             {guarded && (
@@ -319,11 +315,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
               >
                 {open ? "▾" : "▸"}
-              </button>
-            )}
-            {!attached && !isLeader && leadable && (
-              <button className="bld-setleader" onClick={() => store.setLeader(id)} title="Promouvoir en meneur">
-                Définir meneur
               </button>
             )}
             {!attached && (
@@ -375,12 +366,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
   const formatLabel = store.list.format === "bataille" ? "Bataille" : "Escarmouche";
   const errorTotal = invalidCount + listErrors.length;
-  const validityTitle = [
-    invalidCount > 0 ? `${invalidCount} figurine${invalidCount > 1 ? "s" : ""} en erreur` : null,
-    ...listErrors,
-  ]
-    .filter(Boolean)
-    .join("\n");
 
   return (
     <ToastProvider>
@@ -420,18 +405,38 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             <div className="bld-gauge-track">
               <div className={`bld-gauge-fill${overLimit ? " over" : ""}`} style={{ width: `${ratio}%` }} />
             </div>
+            <div className={`bld-gauge-rem${overLimit ? " over" : ""}`}>
+              {remaining >= 0 ? `${remaining} Ko restants` : `${-remaining} Ko au-dessus`}
+            </div>
           </div>
           {isValid ? (
             <div className="bld-validity ok">
               <span className="big">✓</span> Liste valide
             </div>
           ) : (
-            <div className="bld-validity err" title={validityTitle}>
-              <span className="big">⚠</span> {errorTotal} erreur{errorTotal > 1 ? "s" : ""}
-            </div>
+            <Popover
+              trigger={
+                <button className="bld-validity err" type="button">
+                  <span className="big">⚠</span> {errorTotal} erreur{errorTotal > 1 ? "s" : ""}
+                </button>
+              }
+            >
+              <div className="bld-errpop">
+                {instanceErrors.map((e) => (
+                  <button key={e.id} type="button" className="bld-errpop-item" onClick={() => scrollToUnit(e.id)}>
+                    <span className="nm">{e.name}</span>
+                    <span className="msg">{e.messages.join(" · ")}</span>
+                  </button>
+                ))}
+                {listErrors.map((m, k) => (
+                  <div key={k} className="bld-errpop-line">
+                    {m}
+                  </div>
+                ))}
+              </div>
+            </Popover>
           )}
           <div className="bld-actions">
-            <Button onClick={() => { setImportText(""); setImportError(null); setIo("import"); }}>Importer</Button>
             <Button onClick={() => setIo("export")}>Exporter</Button>
             <Button variant="primary" onClick={onSave}>
               Sauvegarder
@@ -471,18 +476,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         </section>
       </div>
 
-      {/* Pied : légende */}
-      <footer className="bld-foot">
-        <span>Fer de Lance · {fac.name}</span>
-        <span className="bld-dot" />
-        <span className="bld-leg"><span className="bld-swatch" style={{ background: "var(--ember)" }} /> Meneur</span>
-        <span className="bld-leg"><span className="bld-swatch" style={{ background: "var(--moss)" }} /> Gratuit</span>
-        <span className="bld-leg"><span className="bld-swatch" style={{ background: "var(--scorch)" }} /> Erreur</span>
-        <span style={{ flex: 1 }} />
-        <span>
-          {items.length} figurine{items.length > 1 ? "s" : ""}
-        </span>
-      </footer>
+      {/* Pied réservé (vide pour l'instant) — masqué tant qu'il n'a pas de contenu (.bld-foot:empty). */}
+      <footer className="bld-foot" />
 
       {/* Modale roster (mobile) : l'aside étant masqué sous `md`. */}
       {showRoster && (
@@ -686,59 +681,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             value={exportValue}
             onFocus={(e) => e.currentTarget.select()}
           />
-        </Dialog>
-      )}
-      {io === "import" && (
-        <Dialog
-          open
-          onOpenChange={(o) => !o && setIo(null)}
-          title="Importer une liste"
-          size="md"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setIo(null)}>Annuler</Button>
-              {pendingImport ? (
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    store.loadSaved(pendingImport);
-                    setIo(null);
-                  }}
-                >
-                  Charger quand même
-                </Button>
-              ) : (
-                <Button variant="primary" disabled={importText.trim() === ""} onClick={runImport}>
-                  Charger
-                </Button>
-              )}
-            </>
-          }
-        >
-          <p className="mdl-note">Colle un code portable (KA1:…) ou un roster texte. Remplace la liste en cours.</p>
-          <textarea
-            className="mdl-textarea"
-            style={{ height: "26vh" }}
-            value={importText}
-            onChange={(e) => {
-              setImportText(e.target.value);
-              setImportError(null);
-              setImportUnresolved([]);
-              setPendingImport(null);
-            }}
-            placeholder="KA1:…  ou  roster texte"
-          />
-          {importError && <p className="mdl-warn">⚠ {importError}</p>}
-          {importUnresolved.length > 0 && (
-            <div className="mdl-warn-box">
-              <p className="font-semibold">Avertissements :</p>
-              <ul className="mt-1 space-y-0.5">
-                {importUnresolved.map((l, k) => (
-                  <li key={k}>· {l.trim()}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </Dialog>
       )}
       <Toast open={saved} onOpenChange={setSaved} title="✓ Liste enregistrée" />

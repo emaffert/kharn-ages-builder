@@ -217,7 +217,7 @@ body {
   box-shadow: var(--shadow), inset 0 0 0 1px var(--hair); }
 .fs-grp { display: flex; flex-direction: column; gap: 8px; }
 .fs-glabel { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-faint); font-weight: 600; }
-.fs-points { width: 92px; padding: 6px 10px; border-radius: 9px; font: inherit; font-size: 14px; color: var(--bone);
+.fs-points { width: 68px; padding: 6px 10px; border-radius: 9px; font: inherit; font-size: 14px; color: var(--bone);
   background: var(--forge); border: 1px solid var(--hair-strong); appearance: textfield; -moz-appearance: textfield; }
 /* Pas de flèches d'incrément (pas de sens avec un pas de 1 en Ko). */
 .fs-points::-webkit-outer-spin-button,

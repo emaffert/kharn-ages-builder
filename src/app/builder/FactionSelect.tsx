@@ -43,8 +43,8 @@ export function FactionSelect({
 
   const [format, setFormat] = useState<ListDocument["format"]>("escarmouche");
   const [budget, setBudget] = useState<"300" | "400" | "custom">("300");
-  const [customPoints, setCustomPoints] = useState(300);
-  const points = budget === "custom" ? customPoints : Number(budget);
+  const [customPoints, setCustomPoints] = useState("300"); // chaîne : autorise le champ vide en cours de saisie
+  const points = budget === "custom" ? Number(customPoints) || 0 : Number(budget);
 
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState("");
@@ -125,9 +125,14 @@ export function FactionSelect({
                   className="fs-points"
                   type="number"
                   min={0}
+                  max={9999}
                   value={customPoints}
                   aria-label="Budget personnalisé (Ko)"
-                  onChange={(e) => setCustomPoints(Math.max(0, Number(e.target.value) || 0))}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") return setCustomPoints(""); // champ vidé : on laisse vide
+                    setCustomPoints(String(Math.min(9999, Math.max(0, Math.floor(Number(v)) || 0))));
+                  }}
                 />
               )}
             </div>

@@ -116,9 +116,9 @@ export const ProfileSchema = z.object({
   notes: z.array(z.string()).optional(),
   cardImage: z.string(),
   /**
-   * Icône/portrait recadré (data-URI) *propre à ce profil*. Rarement utilisé : préférer
-   * `Catalog.icons` (indexé par `cardImage`) pour partager l'icône entre les niveaux d'un modèle.
-   * Sert de repli si aucune icône n'est indexée pour `cardImage` (cf. `iconFor`).
+   * Icône/portrait recadré (data-URI) *propre à ce profil*, qui **déroge** au partage : si présent,
+   * il l'emporte sur l'icône partagée par `cardImage` (cf. `iconFor`). Utile quand un niveau doit
+   * avoir sa propre illustration. Par défaut on préfère `Catalog.icons` (partagé entre niveaux).
    */
   icon: z.string().optional(),
   mountEligible: z.boolean().optional(),
@@ -292,9 +292,10 @@ export const CatalogSchema = z.object({
 export type Catalog = z.infer<typeof CatalogSchema>;
 
 /**
- * Icône à afficher pour un profil : celle indexée par son `cardImage` (partagée entre niveaux),
- * sinon l'icône propre au profil (repli hérité), sinon aucune.
+ * Icône à afficher pour un profil : l'icône *propre au profil* (`p.icon`) si définie — elle déroge
+ * au partage pour ce niveau précis —, sinon celle partagée par `cardImage` (commune aux niveaux),
+ * sinon aucune.
  */
 export function iconFor(cat: Catalog, p: Profile): string | undefined {
-  return cat.icons?.[p.cardImage] ?? p.icon;
+  return p.icon ?? cat.icons?.[p.cardImage];
 }

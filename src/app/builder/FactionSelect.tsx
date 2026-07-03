@@ -63,10 +63,10 @@ export function FactionSelect({
       <div className="fs-wrap">
         <div className="fs-hero">
           <img className="fs-logo" src={logoUrl} alt="Khârn-Âges" />
+          <span className="fs-hero-sep" />
           <p className="fs-tagline">Constructeur de listes</p>
         </div>
 
-        <h1 className="fs-title">Choisis ta faction</h1>
         <div className="fs-grid">
           {FACTIONS.map((f) => {
             const n = counts.get(f.id) ?? 0;
@@ -134,15 +134,12 @@ export function FactionSelect({
             </div>
           </div>
           <div className="fs-go">
-            <span>
-              Faction : <span className="fs-chosen">{selected.name}</span>
-            </span>
             <Button
               variant="primary"
               className="fs-start-btn"
               onClick={() => onStart(selected.id, format, points)}
             >
-              Commencer →
+              Démarrer une liste →
             </Button>
           </div>
         </div>

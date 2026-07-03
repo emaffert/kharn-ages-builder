@@ -170,21 +170,19 @@ body {
    ============================================================================ */
 .fs-scene { height: 100%; overflow-y: auto; transition: background .5s var(--ease);
   background:
-    radial-gradient(90% 70% at 50% -10%, color-mix(in srgb, var(--faction) 20%, transparent), transparent 60%),
+    radial-gradient(95% 70% at 50% 6%, color-mix(in srgb, var(--faction) 12%, transparent), transparent 58%),
     radial-gradient(70% 60% at 50% 120%, color-mix(in srgb, #000 55%, transparent), transparent 55%); }
 .fs-wrap { width: 100%; max-width: 1000px; margin: 0 auto; padding: 44px 24px 64px; }
 /* En clair, on retire le halo haut (il estompait les titres) : simple chaleur discrète en bas. */
 [data-theme="light"] .fs-scene {
   background: radial-gradient(70% 45% at 50% 132%, color-mix(in srgb, #4a2f1c 8%, transparent), transparent 60%); }
 
-.fs-hero { text-align: center; margin-bottom: 24px; }
-.fs-logo { display: block; width: min(340px, 76%); height: auto; margin: 0 auto;
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .5)) drop-shadow(0 0 24px var(--ember-glow)); }
-.fs-tagline { margin: 12px 0 0; font-family: "Cinzel", serif; font-size: 16px; letter-spacing: .24em;
-  text-transform: uppercase; color: var(--ember); font-weight: 600; }
-.fs-title { font-family: "Cinzel", serif; font-weight: 700; font-size: 27px; text-align: center; margin: 0 0 18px;
-  letter-spacing: .01em; background: linear-gradient(180deg, var(--bone), var(--bone-dim)); -webkit-background-clip: text;
-  background-clip: text; color: transparent; }
+/* En-tête compact : logo + tagline sur une ligne (évite l'effet colonne). */
+.fs-hero { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 30px; }
+.fs-logo { height: 54px; width: auto; filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .5)); }
+.fs-hero-sep { width: 1px; height: 34px; background: var(--hair-strong); }
+.fs-tagline { margin: 0; font-family: "Cinzel", serif; font-size: 15px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ember); font-weight: 600; }
 .fs-sub { margin: 0; color: var(--bone-dim); font-size: 15px; }
 
 .fs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
@@ -222,7 +220,6 @@ body {
 .fs-points { width: 92px; padding: 6px 10px; border-radius: 9px; font: inherit; font-size: 14px; color: var(--bone);
   background: var(--forge); border: 1px solid var(--hair-strong); }
 .fs-go { margin-left: auto; display: flex; align-items: center; gap: 14px; }
-.fs-chosen { font-family: "Cinzel", serif; color: var(--faction-2); font-weight: 600; }
 /* CTA principal : plus lourd que les sélecteurs (taille + halo braise). */
 .fs-start-btn { padding: 11px 24px; font-size: 15px;
   box-shadow: 0 0 26px -5px var(--ember-glow), 0 2px 0 var(--ember-deep); }

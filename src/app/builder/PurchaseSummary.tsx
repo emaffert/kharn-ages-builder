@@ -73,6 +73,8 @@ export function PurchaseSummary({
     ["Magie", magie],
   ];
   const shown = rows.filter(([, v]) => v.length > 0);
+  // Rien à montrer (ni achat, ni alerte) → pas de panneau du tout (plus de « Aucun achat »).
+  if (shown.length === 0 && issues.length === 0) return null;
   return (
     <div className="bld-loadout">
       {issues.length > 0 && (
@@ -82,11 +84,7 @@ export function PurchaseSummary({
           ))}
         </div>
       )}
-      {shown.length === 0 ? (
-        <p className="bld-loadout-empty">
-          Aucun achat — l'équipement, les améliorations et les sorts s'ajoutent en éditant la figurine.
-        </p>
-      ) : (
+      {shown.length > 0 && (
         <div className="bld-loadout-groups">
           {shown.map(([label, vals]) => (
             <div key={label} className="bld-loadout-group">

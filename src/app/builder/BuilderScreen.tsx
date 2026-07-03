@@ -319,10 +319,10 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 className="bld-toggle"
                 onClick={() => toggleCollapsed(id)}
                 aria-expanded={open}
+                aria-label={open ? "Replier le détail" : "Déplier le détail des achats"}
                 title={open ? "Replier le détail" : "Déplier le détail des achats"}
               >
-                <span className="chev">{open ? "▾" : "▸"}</span>
-                Détails
+                {open ? "▾" : "▸"}
               </button>
             )}
             {!attached && (

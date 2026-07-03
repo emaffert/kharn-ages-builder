@@ -1,6 +1,6 @@
 import { specialCardsForProfile } from "@ui/explain";
 import { Tag } from "@ui";
-import type { Catalog, Profile } from "@core";
+import { iconFor, type Catalog, type Profile } from "@core";
 import { SectionTitle } from "./components";
 import {
   LEVEL,
@@ -49,10 +49,13 @@ export function ProfileStatCard({
     <div className="fe-statcard">
       <div className="fe-card">
         <div className="fe-card-head">
-          <h3 className="fe-card-name">
-            {p.name}
-            {p.level ? <span className="lvl">{LEVEL[p.level]}</span> : null}
-          </h3>
+          <div className="fe-headmain">
+            {iconFor(cat, p) && <img className="fe-portrait" src={iconFor(cat, p)} alt="" />}
+            <h3 className="fe-card-name">
+              {p.name}
+              {p.level ? <span className="lvl">{LEVEL[p.level]}</span> : null}
+            </h3>
+          </div>
           <span className="fe-cost-chip">{p.cost} Ko</span>
         </div>
         <div className="fe-taglist">

@@ -356,10 +356,11 @@ body {
 .bld-ritem + .bld-ritem { margin-top: 2px; }
 .bld-ritem.is-cond { opacity: .72; }
 .bld-ritem.is-max { opacity: .4; }
-.bld-rmed { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center;
+.bld-rmed { width: 40px; height: 40px; flex: none; border-radius: 10px; overflow: hidden; display: grid; place-items: center;
   font-family: "Cinzel", serif; font-weight: 700; font-size: 13px; color: var(--panel-ink);
   background: radial-gradient(120% 120% at 30% 20%, #2c2016, var(--panel-dark));
   box-shadow: inset 0 0 0 1px var(--ash), inset 0 6px 12px -8px rgba(0, 0, 0, .9); }
+.bld-rmed-img { width: 100%; height: 100%; object-fit: cover; }
 .bld-ritem.is-cond .bld-rmed { color: var(--bone-faint); }
 .bld-rmain { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: none; border: 0;
   color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 7px 9px; border-radius: 10px; }
@@ -388,7 +389,11 @@ body {
 
 .bld-unit { position: relative; display: flex; flex-direction: column; padding: 12px 14px 12px 12px;
   border-radius: var(--radius); background: linear-gradient(180deg, var(--soot-2), var(--soot)); box-shadow: var(--shadow);
-  border-left: 3px solid transparent; transition: transform .16s var(--ease), box-shadow .16s var(--ease); }
+  border-left: 3px solid transparent; transition: transform .16s var(--ease), box-shadow .16s var(--ease);
+  /* Promeut la ligne sur sa propre couche GPU : sans ça, l'animation de `translateY` au survol
+     re-rasterise le texte/les vecteurs à chaque frame (le nom, le blason et la poignée « sautent »
+     d'un sous-pixel, paraissant désynchronisés des aplats). */
+  will-change: transform; }
 .bld-unit-main { display: flex; align-items: center; gap: 14px; cursor: pointer; }
 .bld-unit:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .bld-unit.is-leader { border-left-color: var(--ember);
@@ -411,16 +416,20 @@ body {
   transition: .16s var(--ease); }
 .bld-toggle:hover { color: var(--bone); background: var(--tint-2); }
 
-.bld-thumb { width: 48px; height: 48px; flex: none; border-radius: 11px; position: relative; display: grid; place-items: center;
+.bld-thumb { width: 64px; height: 64px; flex: none; border-radius: 15px; position: relative; display: grid; place-items: center;
   background: radial-gradient(120% 120% at 30% 15%, var(--faction-deep), var(--panel-dark));
   box-shadow: inset 0 0 0 1px var(--ash-2), inset 0 8px 16px -10px rgba(0, 0, 0, .95); }
-.bld-thumb.sm { width: 40px; height: 40px; }
-.bld-thumb .lvl { font-family: "Cinzel", serif; font-weight: 700; font-size: 18px; color: var(--panel-ink);
+/* Lignes rattachées (Likan/Muskh) : un cran plus petites que les lignes de premier niveau. */
+.bld-thumb.sm { width: 56px; height: 56px; border-radius: 13px; }
+.bld-thumb .lvl { font-family: "Cinzel", serif; font-weight: 700; font-size: 22px; color: var(--panel-ink);
   text-shadow: 0 1px 3px rgba(0, 0, 0, .8); }
-.bld-thumb.sm .lvl { font-size: 15px; }
+.bld-thumb.sm .lvl { font-size: 20px; }
 .bld-thumb .sig { position: absolute; top: -5px; left: -5px; width: 20px; height: 22px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .7)); }
 .bld-unit.is-leader .bld-thumb { box-shadow: inset 0 0 0 1px var(--ember), 0 0 20px -6px var(--ember-glow); }
+.bld-thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 15px; }
+.bld-thumb.sm .bld-thumb-img { border-radius: 13px; }
+.bld-unit.is-leader .bld-thumb-img { box-shadow: inset 0 0 0 1px var(--ember); }
 
 .bld-uinfo { flex: 1; min-width: 0; }
 .bld-uname { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -555,6 +564,9 @@ body {
 .fe-card { border-radius: var(--radius); background: var(--soot-2); box-shadow: inset 0 0 0 1px var(--hair-strong);
   padding: 16px; }
 .fe-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.fe-headmain { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.fe-portrait { width: 84px; height: 84px; flex: none; border-radius: 13px; object-fit: cover;
+  box-shadow: inset 0 0 0 1px var(--hair-strong), 0 6px 16px -8px rgba(0, 0, 0, .7); }
 .fe-card-name { font-family: "Cinzel", serif; font-size: 22px; font-weight: 700; color: var(--bone); line-height: 1.1; }
 .fe-card-name .lvl { color: var(--bone-faint); font-size: 17px; margin-left: 8px; }
 .fe-cost-chip { flex: none; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: 13px; color: var(--gold);

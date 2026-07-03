@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Profile } from "@core";
+import { iconFor, type Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
 import {
@@ -79,6 +79,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         .filter((p): p is Profile => Boolean(p))
         .sort((a, b) => (a.level ?? 0) - (b.level ?? 0)),
     }))
+    .map((m) => ({ ...m, icon: m.profiles[0] ? iconFor(cat, m.profiles[0]) : undefined }))
     // Roster restreint à la faction choisie (les autres factions n'ont pas encore de profils).
     .filter((m) => m.profiles.length > 0 && m.profiles[0].factionId === factionId)
     .filter((m) => rosterQuery.trim() === "" || m.name.toLowerCase().includes(rosterQuery.trim().toLowerCase()));
@@ -254,6 +255,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     handle?: { isDragging: boolean; handleProps: Record<string, unknown> },
   ) => {
     const id = x.inst.instanceId;
+    const icon = iconFor(cat, x.p);
     const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
     const isLeader = id === fdl.leaderInstanceId;
     const guarded = x.inst.bodyguardOfInstanceId != null;
@@ -284,8 +286,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             </button>
           )}
           <div className={`bld-thumb${attached ? " sm" : ""}`}>
+            {icon && <img className="bld-thumb-img" src={icon} alt="" />}
             <FactionEmblem kind={fac.emblem} className="sig" />
-            <span className="lvl">{LEVEL[x.p.level ?? 0] || "·"}</span>
+            {!icon && <span className="lvl">{LEVEL[x.p.level ?? 0] || "·"}</span>}
           </div>
           <div className="bld-uinfo">
             <div className="bld-uname">

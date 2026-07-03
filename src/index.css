@@ -179,11 +179,11 @@ body {
 
 /* En-tête : gros logo + tagline en sous-titre (pas d'effet colonne, « Choisis ta faction » ayant sauté). */
 .fs-hero { text-align: center; margin-bottom: 30px; }
-/* Le logo (lettres sombres) est prévu pour un fond clair : en sombre, un halo lumineux
-   diffus (sans bord net) éclaire le fond derrière lui pour lever le contraste des lettres. */
+/* Le logo (lettres sombres) est prévu pour un fond clair : en sombre, un halo chaud diffus
+   (famille braise/or, pas de blanc) éclaire le fond derrière lui — façon lueur de forge. */
 .fs-logo { display: block; box-sizing: border-box; width: min(430px, 88%); height: auto; margin: 0 auto;
   padding: 34px 54px;
-  background: radial-gradient(65% 72% at 50% 47%, rgba(246, 237, 216, .8), rgba(246, 237, 216, 0) 72%);
+  background: radial-gradient(62% 70% at 50% 47%, rgba(232, 200, 138, .55), rgba(232, 200, 138, 0) 72%);
   filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .4)); }
 [data-theme="light"] .fs-logo { padding: 0; background: none; width: min(340px, 76%);
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, .2)); }

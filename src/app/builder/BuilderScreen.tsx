@@ -1,16 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ListDocument, Profile } from "@core";
+import type { Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
-import { Overlay } from "../Overlay";
-import { ActionBtn, RecruitPill } from "./components";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from "@ui";
+import { RecruitPill } from "./components";
+import { FactionEmblem } from "./FactionEmblem";
+import { SortableUnit } from "./SortableUnit";
+import { EditIcon, TrashIcon, SearchIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { RosterGroup } from "./RosterGroup";
 import { PurchaseSummary } from "./PurchaseSummary";
 import { encodeList } from "../io/listCode";
 import { exportText } from "../io/listText";
-import { resolveImport } from "./importList";
 
 /** Écran 2 : construction de la liste (roster à gauche, liste au centre, barre d'actions, modales). */
 
@@ -19,20 +35,30 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const { evaluation, fdl } = store;
   const factionId = fdl.factionId;
   const fac = FACTIONS.find((f) => f.id === factionId) ?? FACTIONS[0];
-  const { accent, deep } = fac;
+  const factionVars = {
+    "--faction": fac.color,
+    "--faction-2": fac.colorBright,
+    "--faction-deep": fac.colorDeep,
+  } as React.CSSProperties;
   const [modal, setModal] = useState<Modal>(null);
   const [rosterQuery, setRosterQuery] = useState("");
   const [showRoster, setShowRoster] = useState(false); // tiroir roster (mobile : aside masqué)
-  const [dragId, setDragId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [confirmBack, setConfirmBack] = useState(false);
+  // Réordonnancement : glisser depuis la poignée (petite distance d'activation pour préserver les clics).
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (over && active.id !== over.id) store.moveMember(String(active.id), String(over.id));
+  };
   const onSave = async () => {
     await store.saveCurrent();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaved(true); // le toast se referme seul (durée Radix) → onOpenChange(false)
   };
-  const [io, setIo] = useState<null | "export" | "import">(null);
-  const [importText, setImportText] = useState("");
-  const [importError, setImportError] = useState<string | null>(null);
+  const [io, setIo] = useState<null | "export">(null);
   const [exportCode, setExportCode] = useState("");
   const [exportMode, setExportMode] = useState<"code" | "texte">("code");
   useEffect(() => {
@@ -43,26 +69,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     () => (io !== "export" ? "" : exportMode === "code" ? exportCode : exportText(cat, store.list)),
     [io, exportMode, exportCode, cat, store.list],
   );
-  // Import unifié : code portable d'abord, sinon texte best-effort.
-  const [importUnresolved, setImportUnresolved] = useState<string[]>([]);
-  const [pendingImport, setPendingImport] = useState<ListDocument | null>(null);
-  const runImport = async () => {
-    setImportError(null);
-    setImportUnresolved([]);
-    setPendingImport(null);
-    try {
-      const { doc, warnings } = await resolveImport(cat, importText);
-      if (warnings.length > 0) {
-        setImportUnresolved(warnings);
-        setPendingImport(doc);
-      } else {
-        store.loadSaved(doc);
-        setIo(null);
-      }
-    } catch (e) {
-      setImportError(e instanceof Error ? e.message : "Import impossible.");
-    }
-  };
 
   const models: ModelEntry[] = cat.models
     .map((m) => ({
@@ -108,17 +114,19 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const isChar = (p: Profile) => Boolean(p.isNamed) || p.limitation.kind === "U" || p.limitation.kind === "P";
   const memberOf = (id: string) => items.find((x) => x.inst.instanceId === id);
 
-  // Ordre d'affichage : les unités rattachées (Likan/Muskh) apparaissent juste sous leur porteur.
+  // Ordre d'affichage : chaque figurine de premier niveau porte ses unités rattachées (Likan/Muskh),
+  // rendues juste sous elle. Seuls les groupes de premier niveau sont réordonnables (drag & drop).
+  type Item = NonNullable<ReturnType<typeof memberOf>>;
   const attachedIds = new Set(items.flatMap((x) => x.inst.attachedInstanceIds ?? []));
-  const ordered = items
+  const groups: { x: Item; children: Item[] }[] = items
     .filter((x) => !attachedIds.has(x.inst.instanceId))
-    .flatMap((x) => [
-      { x, attached: false },
-      ...(x.inst.attachedInstanceIds ?? [])
+    .map((x) => ({
+      x,
+      children: (x.inst.attachedInstanceIds ?? [])
         .map((cid) => memberOf(cid))
-        .filter((c): c is NonNullable<typeof c> => Boolean(c))
-        .map((c) => ({ x: c, attached: true })),
-    ]);
+        .filter((c): c is Item => Boolean(c)),
+    }));
+  const topLevelIds = groups.map((g) => g.x.inst.instanceId);
 
   // UI locale (non persistée). Repli : déplié par défaut → on suit les figurines *repliées*.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
@@ -136,6 +144,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const total = evaluation.totalCost;
   const limit = store.list.pointsLimit ?? 300;
   const ratio = Math.min(100, (total / Math.max(1, limit)) * 100);
+  const remaining = limit - total;
   const issuesOf = (id: string) =>
     evaluation.issues.filter((is) => is.severity === "error" && is.instanceId === id).map((is) => is.message);
   const invalidCount = new Set(
@@ -148,6 +157,18 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     ...(overLimit ? [`Budget dépassé : ${total} / ${limit} Ko.`] : []),
   ];
   const isValid = invalidCount === 0 && listErrors.length === 0;
+  // Détail des erreurs pour le popover (au lieu d'une infobulle au survol) : figurines fautives + erreurs de liste.
+  const instanceErrors = [
+    ...new Set(
+      evaluation.issues.filter((is) => is.severity === "error" && is.instanceId).map((is) => String(is.instanceId)),
+    ),
+  ].map((id) => ({ id, name: memberOf(id)?.p.name ?? "Figurine", messages: issuesOf(id) }));
+  const scrollToUnit = (id: string) =>
+    document.getElementById(`unit-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // « Non sauvegardé » : la copie en base a-t-elle le même horodatage que la liste courante ?
+  const savedCopy = store.savedLists.find((l) => l.id === store.list.id);
+  const dirty = savedCopy ? savedCopy.updatedAt !== store.list.updatedAt : items.length > 0;
+  const onBack = () => (dirty ? setConfirmBack(true) : onNew());
 
   // Leader : personnage OU l'une des deux figurines les plus chères.
   const topTwo = new Set([...items].sort((a, b) => b.p.cost - a.p.cost).slice(0, 2).map((x) => x.inst.instanceId));
@@ -192,31 +213,29 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   // Contenu du roster, partagé entre l'aside desktop et la modale mobile.
   const rosterInner = (
     <>
-      <div className="border-b px-3 py-2.5" style={{ borderColor: `${accent}33` }}>
-        <input
-          value={rosterQuery}
-          onChange={(e) => setRosterQuery(e.target.value)}
-          placeholder="Rechercher un profil…"
-          className="w-full rounded bg-white/60 px-2 py-1.5 text-sm outline-none shadow-inner"
-        />
-        <p className="kh-display mt-2 text-sm font-semibold" style={{ color: deep }}>
-          Roster · {fac.name}
-        </p>
+      <div className="bld-roster-head">
+        <label className="bld-search">
+          <SearchIcon />
+          <input
+            value={rosterQuery}
+            onChange={(e) => setRosterQuery(e.target.value)}
+            placeholder="Rechercher un profil…"
+          />
+        </label>
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="bld-roster-scroll">
         {models.length === 0 ? (
-          <p className="px-2 py-4 text-sm opacity-60">
+          <p className="bld-empty">
             {rosterQuery.trim() !== ""
               ? "Aucun profil ne correspond à la recherche."
-              : `Aucune figurine à recruter pour la faction ${fac.name} pour l'instant.`}
+              : `Aucune figurine à recruter pour ${fac.name} pour l'instant.`}
           </p>
         ) : (
           <>
-            <RosterGroup label="Personnages" items={personnages} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-            <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} accent={accent} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup label="Personnages" items={personnages} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
             <RosterGroup
               label="Recrutement conditionnel"
-              hint="se recrutent via un porteur dans la liste"
               items={conditionnels}
               onOpen={(id) => setModal({ kind: "preview", modelId: id })}
               conditional
@@ -227,274 +246,289 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     </>
   );
 
-  return (
-    <div className="kh-builder kh-parchment flex h-full flex-col">
-      {/* Barre d'actions */}
-      <header className="flex flex-wrap items-center gap-3 border-b px-4 py-2.5" style={{ borderColor: accent, background: `${accent}12` }}>
-        <button onClick={onNew} className="rounded px-2 py-1 text-sm hover:bg-white/50" title="Créer une nouvelle liste">
-          ← Nouvelle liste
-        </button>
-        <span className="h-5 w-px" style={{ background: `${accent}44` }} />
-        <input
-          value={store.list.name}
-          onChange={(e) => store.setName(e.target.value)}
-          className="kh-display rounded bg-transparent px-1 text-lg font-semibold outline-none"
-          style={{ color: deep }}
-        />
-        <span className="rounded-full px-2.5 py-0.5 text-xs font-medium text-white" style={{ background: accent }}>
-          {fac.name}
-        </span>
-        <div className="ml-auto flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-sm">
-              <span className="kh-display font-bold" style={{ color: deep }}>
-                {total}
-              </span>
-              <span className="opacity-60"> / {limit} Ko</span>
+  // Rendu d'une ligne d'unité. `handle` (poignée dnd-kit) n'est fourni que pour les figurines
+  // de premier niveau ; les rattachées suivent leur porteur et ne se glissent pas seules.
+  const renderUnit = (
+    x: Item,
+    attached: boolean,
+    handle?: { isDragging: boolean; handleProps: Record<string, unknown> },
+  ) => {
+    const id = x.inst.instanceId;
+    const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
+    const isLeader = id === fdl.leaderInstanceId;
+    const guarded = x.inst.bodyguardOfInstanceId != null;
+    const guardOf = guarded ? memberOf(x.inst.bodyguardOfInstanceId!)?.p.name : null;
+    const eligible = guardEligible(x.p) || guarded; // reste dispo pour se dé-désigner
+    const free = costOf(id) === 0 && (guarded || x.p.modelId === "larbin");
+    const open = !collapsed.has(id);
+    const leadable = canLead(x.p, id);
+    const rowIssues = issuesOf(id);
+    const hasActions = x.p.traits.includes("femelle-fang") || x.p.id === "fangs-xayin-2" || eligible;
+    return (
+      <div
+        key={id}
+        id={`unit-${id}`}
+        className={`bld-unit${isLeader ? " is-leader" : ""}${rowIssues.length > 0 ? " is-error" : ""}${attached ? " is-attached" : ""}${handle?.isDragging ? " is-dragging" : ""}`}
+      >
+        <div
+          className="bld-unit-main"
+          onClick={(e) => {
+            // Tout le cadre (icône → prix), hors boutons/champs, ouvre l'édition de la figurine.
+            if ((e.target as HTMLElement).closest("button, input, a")) return;
+            setModal({ kind: "edit", instanceId: id });
+          }}
+        >
+          {!attached && (
+            <button type="button" className="bld-grip" title="Glisser pour réordonner" {...(handle?.handleProps ?? {})}>
+              <span className="bld-grip-dots">⠿</span>
+            </button>
+          )}
+          <div className={`bld-thumb${attached ? " sm" : ""}`}>
+            <FactionEmblem kind={fac.emblem} className="sig" />
+            <span className="lvl">{LEVEL[x.p.level ?? 0] || "·"}</span>
+          </div>
+          <div className="bld-uinfo">
+            <div className="bld-uname">
+              <button className="nm" onClick={() => setModal({ kind: "edit", instanceId: id })}>
+                {x.p.name}
+              </button>
+              {x.p.level ? <span className="lvltag">{LEVEL[x.p.level]}</span> : null}
+              {isLeader && <span className="bld-crest-badge">❖ Meneur</span>}
+              {!attached && !isLeader && leadable && (
+                <button
+                  className="bld-setleader-chip"
+                  onClick={() => store.setLeader(id)}
+                  title="Promouvoir en meneur"
+                >
+                  ❖ Définir meneur
+                </button>
+              )}
             </div>
-            <div className="mt-0.5 h-1.5 w-32 overflow-hidden rounded-full" style={{ background: `${accent}22` }}>
-              <div className="h-full rounded-full" style={{ width: `${ratio}%`, background: accent }} />
+            {rowIssues.length > 0 && <div className="bld-urow-msg">⚠ {rowIssues.join(" · ")}</div>}
+          </div>
+          {free ? (
+            <div className="bld-ucost free">gratuit</div>
+          ) : (
+            <div className="bld-ucost">
+              {costOf(id)} <span className="ko">Ko</span>
+            </div>
+          )}
+          <div className="bld-uactions">
+            {buyable && (
+              <button
+                className="bld-toggle"
+                onClick={() => toggleCollapsed(id)}
+                aria-expanded={open}
+                aria-label={open ? "Replier le détail" : "Déplier le détail des achats"}
+                title={open ? "Replier le détail" : "Déplier le détail des achats"}
+              >
+                {open ? "▾" : "▸"}
+              </button>
+            )}
+            {!attached && (
+              <button className="bld-icon" title="Éditer" onClick={() => setModal({ kind: "edit", instanceId: id })}>
+                <EditIcon />
+              </button>
+            )}
+            <button className="bld-icon danger" title="Retirer" onClick={() => store.removeMember(id)}>
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
+
+        {hasActions && (
+          <div className="bld-pills">
+            {x.p.traits.includes("femelle-fang") && (
+              <RecruitPill label="+ Likan" onClick={() => setModal({ kind: "recruit-likan", carrierInstanceId: id })} />
+            )}
+            {x.p.id === "fangs-xayin-2" && (
+              <RecruitPill label="+ Muskh" onClick={() => store.addAttached(id, "fangs-muskh-1")} />
+            )}
+            {eligible && (
+              <button
+                className={`bld-pill${guarded ? " on" : ""}`}
+                onClick={() => onGuardClick(id)}
+                title={x.p.modelId === "djouked" ? "Garde rapproché de Broutcha" : "Garde du corps d'une Fille de Nyx"}
+              >
+                {guarded ? `✓ Garde du corps de ${guardOf}` : "Garde du corps"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {buyable && open && (
+          <PurchaseSummary
+            p={x.p}
+            cat={cat}
+            added={x.inst.addedEquipmentIds}
+            removed={x.inst.removedBaseEquipmentIds}
+            grimoireId={x.inst.grimoireId}
+            spellIds={x.inst.spellIds}
+            upgrades={x.inst.specialCardIds ?? []}
+            issues={rowIssues}
+            onPick={setItemInfo}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const formatLabel = store.list.format === "bataille" ? "Bataille" : "Escarmouche";
+  const errorTotal = invalidCount + listErrors.length;
+
+  return (
+    <ToastProvider>
+      <div className="bld-root" style={factionVars}>
+      {/* Bandeau de liste : identité + jauge-forge + validation + actions */}
+      <div className="bld-listbar">
+        <button className="bld-back" onClick={onBack} title="Revenir à l'accueil">
+          ← Retour
+        </button>
+        <FactionEmblem kind={fac.emblem} className="bld-crest" />
+        <div className="bld-id">
+          <input
+            className="bld-name"
+            value={store.list.name}
+            onChange={(e) => store.setName(e.target.value)}
+            aria-label="Nom de la liste"
+          />
+          <div className="bld-meta">
+            <span className="bld-faction-chip">{fac.name}</span>
+            <span className="bld-dot" />
+            <span>{formatLabel}</span>
+            <span className="bld-dot" />
+            <span>
+              {items.length} figurine{items.length > 1 ? "s" : ""}
+            </span>
+          </div>
+        </div>
+
+        <div className="bld-forge">
+          <div className="bld-gauge">
+            <div className="bld-gauge-top">
+              <span className="bld-gauge-label">Budget</span>
+              <span className="bld-gauge-val">
+                {total} <span className="lim">/ {limit} Ko</span>
+              </span>
+            </div>
+            <div className="bld-gauge-track">
+              <div className={`bld-gauge-fill${overLimit ? " over" : ""}`} style={{ width: `${ratio}%` }} />
+            </div>
+            <div className={`bld-gauge-rem${overLimit ? " over" : ""}`}>
+              {remaining >= 0 ? `${remaining} Ko restants` : `${-remaining} Ko au-dessus`}
             </div>
           </div>
-          <ActionBtn accent={accent} onClick={() => { setImportText(""); setImportError(null); setIo("import"); }}>
-            Importer
-          </ActionBtn>
-          <ActionBtn accent={accent} onClick={() => setIo("export")}>
-            Exporter
-          </ActionBtn>
-          <ActionBtn accent={accent} primary onClick={onSave}>
-            {saved ? "✓ Enregistré" : "Sauvegarder"}
-          </ActionBtn>
+          {isValid ? (
+            <div className="bld-validity ok">
+              <span className="big">✓</span> Liste valide
+            </div>
+          ) : (
+            <Popover
+              trigger={
+                <button className="bld-validity err" type="button">
+                  <span className="big">⚠</span> {errorTotal} erreur{errorTotal > 1 ? "s" : ""}
+                </button>
+              }
+            >
+              <div className="bld-errpop">
+                {instanceErrors.map((e) => (
+                  <button key={e.id} type="button" className="bld-errpop-item" onClick={() => scrollToUnit(e.id)}>
+                    <span className="nm">{e.name}</span>
+                    <span className="msg">{e.messages.join(" · ")}</span>
+                  </button>
+                ))}
+                {listErrors.map((m, k) => (
+                  <div key={k} className="bld-errpop-line">
+                    {m}
+                  </div>
+                ))}
+              </div>
+            </Popover>
+          )}
+          <div className="bld-actions">
+            <Button onClick={() => setIo("export")}>Exporter</Button>
+            <Button variant="primary" onClick={onSave}>
+              Sauvegarder
+            </Button>
+          </div>
         </div>
-      </header>
+      </div>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="bld-body">
         {/* Roster */}
-        <aside className="kh-panel hidden w-72 shrink-0 flex-col border-r md:flex" style={{ borderColor: `${accent}44` }}>
-          {rosterInner}
-        </aside>
+        <aside className="bld-roster">{rosterInner}</aside>
 
         {/* Liste */}
-        <section className="flex-1 overflow-y-auto p-6">
-          <div className="mx-auto max-w-2xl space-y-2">
-            <button
-              onClick={() => setShowRoster(true)}
-              className="mb-2 rounded-md px-3 py-1.5 text-sm font-medium text-white shadow md:hidden"
-              style={{ background: accent }}
-            >
-              + ajouter depuis le roster
+        <section className="bld-list">
+          <div className="bld-list-inner">
+            <button className="bld-add-mobile" onClick={() => setShowRoster(true)}>
+              + Ajouter depuis le roster
             </button>
-            {ordered.map(({ x, attached }) => {
-              const id = x.inst.instanceId;
-              const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
-              const isLeader = id === fdl.leaderInstanceId;
-              const guarded = x.inst.bodyguardOfInstanceId != null;
-              const eligible = guardEligible(x.p) || guarded; // reste dispo pour se dé-désigner
-              const free = costOf(id) === 0 && (guarded || x.p.modelId === "larbin");
-              const open = !collapsed.has(id);
-              const leadable = canLead(x.p, id);
-              const rowIssues = issuesOf(id);
-              const hasActions = x.p.traits.includes("femelle-fang") || x.p.id === "fangs-xayin-2" || eligible;
-              return (
-                <div
-                  key={id}
-                  draggable={!attached}
-                  onDragStart={attached ? undefined : () => setDragId(id)}
-                  onDragOver={attached ? undefined : (e) => e.preventDefault()}
-                  onDrop={
-                    attached
-                      ? undefined
-                      : () => {
-                          if (dragId && dragId !== id) store.moveMember(dragId, id);
-                          setDragId(null);
-                        }
-                  }
-                  onDragEnd={() => setDragId(null)}
-                  className={`rounded-md border-l-4 bg-white/45 shadow-sm transition hover:bg-white/60 ${attached ? "ml-6" : ""} ${dragId === id ? "opacity-40" : ""}`}
-                  style={{ borderLeftColor: isLeader ? accent : attached ? `${accent}55` : "transparent" }}
-                >
-                  <div className="flex items-center gap-2 px-3 py-2.5">
-                    {attached ? (
-                      <span className="w-3 text-center opacity-50" style={{ color: accent }} title="Unité rattachée à son porteur">
-                        ↳
-                      </span>
-                    ) : (
-                      <span className="w-3 cursor-grab text-center opacity-30" title="Glisser pour réordonner">
-                        ⠿
-                      </span>
+            {groups.length === 0 && (
+              <p className="bld-empty">Liste vide — ajoute des figurines depuis le roster.</p>
+            )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext items={topLevelIds} strategy={verticalListSortingStrategy}>
+                {groups.map(({ x, children }) => (
+                  <SortableUnit key={x.inst.instanceId} id={x.inst.instanceId}>
+                    {(handle) => (
+                      <>
+                        {renderUnit(x, false, handle)}
+                        {children.map((c) => renderUnit(c, true))}
+                      </>
                     )}
-                    {buyable ? (
-                      <button
-                        onClick={() => toggleCollapsed(id)}
-                        title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
-                        className="w-4 text-center opacity-60 transition hover:opacity-100"
-                        style={{ color: accent }}
-                      >
-                        {open ? "▾" : "▸"}
-                      </button>
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <button
-                      onClick={() => setModal({ kind: "edit", instanceId: id })}
-                      className="flex flex-1 items-center text-left"
-                    >
-                      <span className="flex-1">
-                        <span className="font-semibold" style={{ color: deep }}>
-                          {x.p.name}
-                        </span>
-                        {x.p.level && <span className="ml-1 opacity-50">{LEVEL[x.p.level]}</span>}
-                        {rowIssues.length > 0 && (
-                          <span className="ml-2" style={{ color: "#9a3b2b" }} title={rowIssues.join("\n")}>
-                            ⚠
-                          </span>
-                        )}
-                        {guarded && (
-                          <span className="kh-display ml-2 text-[10px] uppercase tracking-wide" style={{ color: "#4a6b32" }}>
-                            Garde du corps de {memberOf(x.inst.bodyguardOfInstanceId!)?.p.name}
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                    {isLeader ? (
-                      <span
-                        className="kh-display rounded-full px-2.5 py-1 text-xs font-semibold text-white"
-                        style={{ background: accent }}
-                      >
-                        ❖ Leader
-                      </span>
-                    ) : (
-                      leadable && (
-                        <button
-                          onClick={() => store.setLeader(id)}
-                          title="Promouvoir en Leader"
-                          className="rounded-full border px-2.5 py-1 text-xs transition hover:bg-white/60"
-                          style={{ borderColor: `${accent}66`, color: accent }}
-                        >
-                          Définir leader
-                        </button>
-                      )
-                    )}
-                    <span className={`w-16 text-right text-sm ${free ? "font-semibold" : ""}`} style={{ color: free ? "#4a6b32" : deep }}>
-                      {free ? "gratuit" : `${costOf(id)} Ko`}
-                    </span>
-                    <button
-                      onClick={() => store.removeMember(id)}
-                      className="opacity-40 transition hover:text-red-700 hover:opacity-100"
-                      title="Retirer"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  {hasActions && (
-                    <div className="flex flex-wrap gap-2 px-3 pb-2.5 pl-9">
-                      {x.p.traits.includes("femelle-fang") && (
-                        <RecruitPill label="+ Likan" accent={accent} onClick={() => setModal({ kind: "recruit-likan", carrierInstanceId: id })} />
-                      )}
-                      {x.p.id === "fangs-xayin-2" && (
-                        <RecruitPill label="+ Muskh" accent={accent} onClick={() => store.addAttached(id, "fangs-muskh-1")} />
-                      )}
-                      {eligible && (
-                        <button
-                          onClick={() => onGuardClick(id)}
-                          title={
-                            x.p.modelId === "djouked"
-                              ? "Garde rapproché de Broutcha"
-                              : "Garde du corps d'une Fille de Nyx"
-                          }
-                          className="rounded-full border px-2 py-0.5 text-xs transition"
-                          style={
-                            guarded
-                              ? { background: "#4a6b3218", borderColor: "#4a6b3255", color: "#3c5a28" }
-                              : { borderColor: `${accent}55`, color: accent }
-                          }
-                        >
-                          {guarded ? "✓ Garde du corps — retirer" : "Garde du corps"}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {buyable && open && (
-                    <PurchaseSummary
-                      p={x.p}
-                      cat={cat}
-                      accent={accent}
-                      added={x.inst.addedEquipmentIds}
-                      removed={x.inst.removedBaseEquipmentIds}
-                      grimoireId={x.inst.grimoireId}
-                      spellIds={x.inst.spellIds}
-                      issues={rowIssues}
-                      onPick={setItemInfo}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                  </SortableUnit>
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
         </section>
       </div>
 
-      {/* Barre de validation */}
-      <footer className="flex items-center gap-4 border-t px-4 py-2 text-sm" style={{ borderColor: accent, background: `${accent}12` }}>
-        {isValid ? (
-          <span className="rounded px-2 py-0.5 font-medium" style={{ background: "#4a6b3222", color: "#3c5a28" }}>
-            ✓ Liste valide
-          </span>
-        ) : (
-          <span
-            className="rounded px-2 py-0.5 font-medium"
-            style={{ background: "#9a3b2b22", color: "#9a3b2b" }}
-            title={listErrors.join("\n")}
-          >
-            ⚠{" "}
-            {[
-              invalidCount > 0 ? `${invalidCount} figurine${invalidCount > 1 ? "s" : ""} en erreur` : null,
-              ...listErrors,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        )}
-        <span className="opacity-60">{items.length} figurines</span>
-      </footer>
+      {/* Pied réservé (vide pour l'instant) — masqué tant qu'il n'a pas de contenu (.bld-foot:empty). */}
+      <footer className="bld-foot" />
 
       {/* Modale roster (mobile) : l'aside étant masqué sous `md`. */}
       {showRoster && (
-        <Overlay onClose={() => setShowRoster(false)}>
-          <div className="kh-panel flex max-h-[80vh] flex-col">
-            <div className="mb-1 flex items-center justify-between">
-              <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                Recruter · {fac.name}
-              </h3>
-              <button onClick={() => setShowRoster(false)} className="rounded px-2 py-1 text-sm hover:bg-black/5">
-                Fermer
-              </button>
-            </div>
+        <Dialog open onOpenChange={(o) => !o && setShowRoster(false)} title={`Recruter · ${fac.name}`} size="md">
+          <div className="bld-root" style={{ ...factionVars, background: "transparent" }}>
             {rosterInner}
           </div>
-        </Overlay>
+        </Dialog>
       )}
 
       {/* Modale : aperçu ou édition */}
       {modal?.kind === "preview" && modalModel && (
-        <Overlay onClose={() => setModal(null)}>
-          <CardPreview
-            profiles={modalModel.profiles}
-            cat={cat}
-            accent={accent}
-            deep={deep}
-            onClose={() => setModal(null)}
-            onAdd={(profileId) => store.addMember(profileId)}
-            onInfo={setItemInfo}
-            isAtLimit={(profileId) => {
-              const p = cat.profiles.find((x) => x.id === profileId);
-              return p ? atLimit(p) : false;
-            }}
-          />
-        </Overlay>
+        <CardPreview
+          profiles={modalModel.profiles}
+          cat={cat}
+          title={modalModel.name}
+          open
+          onOpenChange={(o) => !o && setModal(null)}
+          onAdd={(profileId) => store.addMember(profileId)}
+          onInfo={setItemInfo}
+          isAtLimit={(profileId) => {
+            const p = cat.profiles.find((x) => x.id === profileId);
+            return p ? atLimit(p) : false;
+          }}
+        />
       )}
       {modal?.kind === "edit" && editItem && (
-        <Overlay onClose={() => setModal(null)}>
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setModal(null)}
+          title={`${editItem.p.name} ${LEVEL[editItem.p.level ?? 0]}`.trim()}
+          size="lg"
+          footer={
+            <>
+              <span className="bld-ucost" style={{ fontSize: 15 }}>
+                {costOf(editItem.inst.instanceId)} <span className="ko">Ko</span>
+              </span>
+              <span style={{ flex: 1 }} />
+              <Button variant="ghost" onClick={() => setModal(null)}>Fermer</Button>
+            </>
+          }
+        >
           <FigureEditor
             profile={editItem.p}
             cat={cat}
@@ -503,9 +537,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             upgrades={editItem.inst.specialCardIds ?? []}
             grimoire={editItem.inst.grimoireId ?? "none"}
             spells={editItem.inst.spellIds}
-            accent={accent}
-            deep={deep}
-            onClose={() => setModal(null)}
             onAdd={(eid) => store.addEquip(editItem.inst.instanceId, eid)}
             onRemove={(eid) => store.removeEquip(editItem.inst.instanceId, eid)}
             onToggleBase={(eid) => store.toggleBase(editItem.inst.instanceId, eid)}
@@ -516,71 +547,57 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onToggleSpell={(sid) => store.toggleSpell(editItem.inst.instanceId, sid)}
             onInfo={setItemInfo}
           />
-        </Overlay>
+        </Dialog>
       )}
       {modal?.kind === "guard" && (
-        <Overlay onClose={() => setModal(null)}>
-          <div className="space-y-3">
-            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-              Garde du corps de quelle Fille de Nyx ?
-            </h3>
-            <p className="text-sm opacity-70">
-              {memberOf(modal.instanceId)?.p.name} sera lié à la Fille de Nyx choisie.
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {availableFilles.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => {
-                    store.setGuard(modal.instanceId, f.id);
-                    setModal(null);
-                  }}
-                  className="rounded-md border px-3 py-2 text-left text-sm transition hover:bg-white/60"
-                  style={{ borderColor: `${accent}44`, color: deep }}
-                >
-                  {f.name}
-                </button>
-              ))}
-            </div>
+        <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Garde du corps" size="sm">
+          <p className="mdl-note">{memberOf(modal.instanceId)?.p.name} sera lié à la Fille de Nyx choisie.</p>
+          <div className="mdl-list">
+            {availableFilles.map((f) => (
+              <button
+                key={f.id}
+                className="mdl-choice"
+                onClick={() => {
+                  store.setGuard(modal.instanceId, f.id);
+                  setModal(null);
+                }}
+              >
+                {f.name}
+              </button>
+            ))}
           </div>
-        </Overlay>
+        </Dialog>
       )}
       {modal?.kind === "recruit-level" &&
         (() => {
           const m = models.find((mm) => mm.id === modal.modelId);
           if (!m) return null;
           return (
-            <Overlay onClose={() => setModal(null)}>
-              <div className="space-y-3">
-                <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                  Recruter — {m.name}
-                </h3>
-                <p className="text-sm opacity-70">Choisir le niveau :</p>
-                <div className="flex flex-col gap-1.5">
-                  {m.profiles.map((p) => {
-                    const max = atLimit(p);
-                    return (
-                      <button
-                        key={p.id}
-                        disabled={max}
-                        onClick={() => {
-                          store.addMember(p.id);
-                          setModal(null);
-                        }}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition hover:bg-white/60 disabled:cursor-not-allowed disabled:opacity-40"
-                        style={{ borderColor: `${accent}44`, color: deep }}
-                      >
-                        <span>
-                          {p.name} <span className="opacity-50">{LEVEL[p.level ?? 0]}</span>
-                          {max && <span className="ml-1.5 text-[10px] uppercase tracking-wide">· max</span>}
-                        </span>
-                        <span className="text-xs opacity-60">{p.cost} Ko</span>
-                      </button>
-                    );
-                  })}
-                </div>
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter — ${m.name}`} size="sm">
+              <p className="mdl-note">Choisir le niveau :</p>
+              <div className="mdl-list">
+                {m.profiles.map((p) => {
+                  const max = atLimit(p);
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={max}
+                      className="mdl-choice"
+                      onClick={() => {
+                        store.addMember(p.id);
+                        setModal(null);
+                      }}
+                    >
+                      <span>
+                        {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
+                        {max && <span className="max">max</span>}
+                      </span>
+                      <span className="cost">{p.cost} Ko</span>
+                    </button>
+                  );
+                })}
               </div>
-            </Overlay>
+            </Dialog>
           );
         })()}
       {modal?.kind === "recruit-likan" &&
@@ -596,164 +613,124 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             .filter((p) => p.modelId === "likan")
             .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
           return (
-            <Overlay onClose={() => setModal(null)}>
-              <div className="space-y-3">
-                <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                  Recruter un Likan
-                </h3>
-                <p className="text-sm opacity-70">
-                  Capacité restante de {carrier?.p.name} : {remaining} (somme des niveaux des Likans ≤ niveau du porteur).
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {likans.map((p) => {
-                    const ok = (p.level ?? 0) <= remaining;
-                    return (
-                      <button
-                        key={p.id}
-                        disabled={!ok}
-                        onClick={() => {
-                          store.addAttached(modal.carrierInstanceId, p.id);
-                          setModal(null);
-                        }}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition hover:bg-white/60 disabled:cursor-not-allowed disabled:opacity-40"
-                        style={{ borderColor: `${accent}44`, color: deep }}
-                      >
-                        <span>
-                          {p.name} <span className="opacity-50">{LEVEL[p.level ?? 0]}</span>
-                        </span>
-                        <span className="text-xs opacity-60">{p.cost} Ko</span>
-                      </button>
-                    );
-                  })}
-                  {remaining <= 0 && <p className="text-sm opacity-60">Capacité de rattachement atteinte.</p>}
-                </div>
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Recruter un Likan" size="sm">
+              <p className="mdl-note">
+                Capacité restante de {carrier?.p.name} : {remaining} (somme des niveaux des Likans ≤ niveau du porteur).
+              </p>
+              <div className="mdl-list">
+                {likans.map((p) => {
+                  const ok = (p.level ?? 0) <= remaining;
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={!ok}
+                      className="mdl-choice"
+                      onClick={() => {
+                        store.addAttached(modal.carrierInstanceId, p.id);
+                        setModal(null);
+                      }}
+                    >
+                      <span>
+                        {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
+                      </span>
+                      <span className="cost">{p.cost} Ko</span>
+                    </button>
+                  );
+                })}
+                {remaining <= 0 && <p className="mdl-note">Capacité de rattachement atteinte.</p>}
               </div>
-            </Overlay>
+            </Dialog>
           );
         })()}
       {itemInfo && (
-        <Overlay onClose={() => setItemInfo(null)}>
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="kh-display text-lg font-bold leading-tight" style={{ color: deep }}>
-                {itemInfo.title}
-              </h3>
-              <span className="rounded px-2 py-0.5 text-sm font-semibold text-white" style={{ background: accent }}>
-                {itemInfo.price}
-              </span>
-            </div>
+        <Dialog open onOpenChange={(o) => !o && setItemInfo(null)} title={itemInfo.title} size="sm">
+          <span className="mdl-price">{itemInfo.price}</span>
+          <div>
             {itemInfo.lines.map((l, k) => (
-              <p key={k} className="text-sm leading-snug">
+              <p key={k} className="mdl-line">
                 {l}
               </p>
             ))}
           </div>
-        </Overlay>
+        </Dialog>
       )}
       {io === "export" && (
-        <Overlay onClose={() => setIo(null)}>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-                Exporter
-              </h3>
-              <div className="inline-flex overflow-hidden rounded-md text-xs" style={{ boxShadow: `inset 0 0 0 1px ${accent}55` }}>
-                {(["code", "texte"] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setExportMode(m)}
-                    className="px-3 py-1 transition"
-                    style={exportMode === m ? { background: accent, color: "#f5ecd6" } : { color: accent }}
-                  >
-                    {m === "code" ? "Code portable" : "Texte"}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="text-sm opacity-70">
-              {exportMode === "code"
-                ? "Code compact à partager ou réimporter sur un autre appareil."
-                : "Roster lisible (partage/impression). Réimportable en best-effort."}
-            </p>
-            <textarea
-              readOnly
-              value={exportValue}
-              onFocus={(e) => e.currentTarget.select()}
-              className="h-48 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setIo(null)}
+          title="Exporter"
+          size="md"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setIo(null)}>Fermer</Button>
+              <Button variant="primary" onClick={() => navigator.clipboard?.writeText(exportValue)}>Copier</Button>
+            </>
+          }
+        >
+          <div className="mb-3">
+            <SegmentedControl
+              ariaLabel="Format d'export"
+              value={exportMode}
+              onChange={setExportMode}
+              options={[
+                { value: "code", label: "Code portable" },
+                { value: "texte", label: "Texte" },
+              ]}
             />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => navigator.clipboard?.writeText(exportValue)}
-                className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow" style={{ background: accent }}
-              >
-                Copier
-              </button>
-              <button onClick={() => setIo(null)} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
-                Fermer
-              </button>
-            </div>
           </div>
-        </Overlay>
+          <p className="mdl-note">
+            {exportMode === "code"
+              ? "Code compact à partager ou réimporter sur un autre appareil."
+              : "Roster lisible (partage/impression). Réimportable en best-effort."}
+          </p>
+          <textarea
+            className="mdl-textarea"
+            style={{ height: "38vh" }}
+            readOnly
+            value={exportValue}
+            onFocus={(e) => e.currentTarget.select()}
+          />
+        </Dialog>
       )}
-      {io === "import" && (
-        <Overlay onClose={() => setIo(null)}>
-          <div className="space-y-3">
-            <h3 className="kh-display text-lg font-bold" style={{ color: deep }}>
-              Importer une liste
-            </h3>
-            <p className="text-sm opacity-70">Colle un code portable (KA1:…) ou un roster texte. Remplace la liste en cours.</p>
-            <textarea
-              value={importText}
-              onChange={(e) => {
-                setImportText(e.target.value);
-                setImportError(null);
-                setImportUnresolved([]);
-                setPendingImport(null);
-              }}
-              placeholder="KA1:…  ou  roster texte"
-              className="h-32 w-full resize-none rounded bg-white/60 p-2 font-mono text-xs shadow-inner outline-none"
-            />
-            {importError && <p className="text-sm" style={{ color: "#9a3b2b" }}>⚠ {importError}</p>}
-            {importUnresolved.length > 0 && (
-              <div className="rounded-md bg-black/5 p-2 text-xs" style={{ color: "#9a3b2b" }}>
-                <p className="font-semibold">Avertissements :</p>
-                <ul className="mt-1 space-y-0.5">
-                  {importUnresolved.map((l, k) => (
-                    <li key={k}>· {l.trim()}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
-              {pendingImport ? (
-                <button
-                  onClick={() => {
-                    store.loadSaved(pendingImport);
-                    setIo(null);
-                  }}
-                  className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow"
-                  style={{ background: accent }}
-                >
-                  Charger quand même
-                </button>
-              ) : (
-                <button
-                  onClick={runImport}
-                  disabled={importText.trim() === ""}
-                  className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow disabled:opacity-40"
-                  style={{ background: accent }}
-                >
-                  Charger
-                </button>
-              )}
-              <button onClick={() => setIo(null)} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
+      {confirmBack && (
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setConfirmBack(false)}
+          title="Modifications non sauvegardées"
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setConfirmBack(false)}>
                 Annuler
-              </button>
-            </div>
-          </div>
-        </Overlay>
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setConfirmBack(false);
+                  onNew();
+                }}
+              >
+                Quitter
+              </Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  await onSave();
+                  setConfirmBack(false);
+                  onNew();
+                }}
+              >
+                Enregistrer et quitter
+              </Button>
+            </>
+          }
+        >
+          <p className="mdl-note">Cette liste comporte des modifications non enregistrées. Elles seront perdues si tu quittes sans enregistrer.</p>
+        </Dialog>
       )}
-    </div>
+      <Toast open={saved} onOpenChange={setSaved} title="✓ Liste enregistrée" />
+      </div>
+    </ToastProvider>
   );
 }
 

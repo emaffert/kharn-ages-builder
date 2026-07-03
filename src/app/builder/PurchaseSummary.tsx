@@ -8,21 +8,21 @@ type SummaryChip = { name: string; info: ItemInfo };
 export function PurchaseSummary({
   p,
   cat,
-  accent,
   added,
   removed,
   grimoireId,
   spellIds,
+  upgrades,
   issues,
   onPick,
 }: {
   p: Profile;
   cat: Catalog;
-  accent: string;
   added: string[];
   removed: string[];
   grimoireId?: string;
   spellIds: string[];
+  upgrades: string[];
   issues: string[];
   onPick: (info: ItemInfo) => void;
 }) {
@@ -33,13 +33,16 @@ export function PurchaseSummary({
   const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
   const armes = equip.filter((e) => WEAPON_CATS.includes(e.category)).map((e) => chip(e.name, equipInfo(e)));
   const objets = equip.filter((e) => !WEAPON_CATS.includes(e.category)).map((e) => chip(e.name, equipInfo(e)));
-  const cartes = specialCardsForProfile(p, cat).map((c) =>
-    chip(c.name, {
-      title: c.name,
-      price: c.cost > 0 ? `${c.cost} Ko` : "auto",
-      lines: c.rulesText.map((r) => r.text),
-    }),
-  );
+  // N'affiche que les cartes automatiques (appliquées d'office) et les améliorations réellement sélectionnées.
+  const cartes = specialCardsForProfile(p, cat)
+    .filter((c) => !c.amelioration || upgrades.includes(c.id))
+    .map((c) =>
+      chip(c.name, {
+        title: c.name,
+        price: c.cost > 0 ? `${c.cost} Ko` : "auto",
+        lines: c.rulesText.map((r) => r.text),
+      }),
+    );
   // Magie : le grimoire acheté (avec son coût) puis une entrée « N sorts » (coût total).
   const magie: SummaryChip[] = [];
   const grim = grimoireId ? cat.grimoires.find((g) => g.id === grimoireId) : undefined;
@@ -65,42 +68,40 @@ export function PurchaseSummary({
   }
   const rows: [string, SummaryChip[]][] = [
     ["Armes", armes],
-    ["Équip.", objets],
+    ["Équipement", objets],
     ["Cartes", cartes],
     ["Magie", magie],
   ];
   const shown = rows.filter(([, v]) => v.length > 0);
+  // Rien à montrer (ni achat, ni alerte) → pas de panneau du tout (plus de « Aucun achat »).
+  if (shown.length === 0 && issues.length === 0) return null;
   return (
-    <div className="border-t px-3 py-2 pl-9 text-xs" style={{ borderColor: `${accent}22` }}>
+    <div className="bld-loadout">
       {issues.length > 0 && (
-        <ul className="mb-1.5 space-y-0.5" style={{ color: "#9a3b2b" }}>
+        <div className="bld-loadout-issues">
           {issues.map((m, k) => (
-            <li key={k}>⚠ {m}</li>
+            <span key={k}>⚠ {m}</span>
           ))}
-        </ul>
+        </div>
       )}
-      {shown.length === 0 ? (
-        <span className="opacity-50">Aucun achat pour l'instant.</span>
-      ) : (
-        <div className="flex flex-col gap-1">
+      {shown.length > 0 && (
+        <div className="bld-loadout-groups">
           {shown.map(([label, vals]) => (
-            <div key={label} className="flex gap-2">
-              <span className="kh-display w-14 shrink-0 pt-0.5 uppercase tracking-wide opacity-50" style={{ color: accent }}>
-                {label}
-              </span>
-              <span className="flex flex-wrap gap-1">
+            <div key={label} className="bld-loadout-group">
+              <div className="bld-loadout-label">{label}</div>
+              <div className="bld-loadout-items">
                 {vals.map((v, k) => (
                   <button
                     key={k}
+                    className="bld-loadout-item"
                     onClick={() => onPick(v.info)}
-                    className="rounded bg-black/5 px-1.5 py-0.5 transition hover:bg-black/15"
                     title="Voir la fiche et le prix"
                   >
-                    {v.name}
-                    <span className="ml-1 opacity-50">{v.info.price}</span>
+                    <span className="nm">{v.name}</span>
+                    <span className="px">{v.info.price}</span>
                   </button>
                 ))}
-              </span>
+              </div>
             </div>
           ))}
         </div>

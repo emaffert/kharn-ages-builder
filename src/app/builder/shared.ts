@@ -21,12 +21,43 @@ export const STATS: [keyof Profile["stats"], string][] = [
   ["t", "T"],
   ["i", "I"],
 ];
+// Groupes de stats comme sur les cartes officielles : combat (V P A C) puis (T I).
+export const STATS_COMBAT: [keyof Profile["stats"], string][] = STATS.slice(0, 4);
+export const STATS_SECONDARY: [keyof Profile["stats"], string][] = STATS.slice(4);
 
-export const FACTIONS = [
-  { id: "fangs", name: "Fangs", accent: "#7a4a2b", deep: "#4a2f1c", blurb: "Enfants de Nyx, sorcellerie d'os." },
-  { id: "kharns", name: "Khârns", accent: "#2b3a5a", deep: "#16223d", blurb: "La Couronne et ses vassaux." },
-  { id: "kherops", name: "Khérops", accent: "#7a2b2b", deep: "#4a1c1c", blurb: "Les soldats de l'Empereur." },
-  { id: "guilde-noire", name: "Guilde Noire", accent: "#2f2a26", deep: "#141210", blurb: "Renégats et mercenaires." },
+/** Libellés courts des 5 domaines de maîtrise (dés de maîtrise). */
+export const MASTERY_SHORT: Record<string, string> = {
+  offensive: "Off",
+  defensive: "Déf",
+  objectif: "Obj",
+  tir: "Tir",
+  esoterique: "Éso",
+};
+
+export type EmblemKind = "fangs" | "kharns" | "gouns" | "kherops" | "tembos" | "guilde";
+
+/**
+ * Les 6 factions (livre de règles, p. 6). `accent`/`deep` : ancienne palette (écrans non migrés).
+ * `color`/`colorBright`/`colorDeep`/`emblem` : identité « Forge/Braise » (blasons placeholders —
+ * à remplacer par les vrais logos de faction quand ils seront disponibles).
+ */
+export const FACTIONS: {
+  id: string;
+  name: string;
+  accent: string;
+  deep: string;
+  blurb: string;
+  color: string;
+  colorBright: string;
+  colorDeep: string;
+  emblem: EmblemKind;
+}[] = [
+  { id: "fangs", name: "Fangs", accent: "#7a4a2b", deep: "#4a2f1c", blurb: "Les enfants de Nyx, dans la Tanière.", color: "#b0472b", colorBright: "#e0553f", colorDeep: "#5e1a13", emblem: "fangs" },
+  { id: "kharns", name: "Khârns", accent: "#2b3a5a", deep: "#16223d", blurb: "Les représentants de la Couronne et de ses vassaux.", color: "#3d5f95", colorBright: "#7aa0d6", colorDeep: "#16223d", emblem: "kharns" },
+  { id: "gouns", name: "Goüns", accent: "#4f6a34", deep: "#2c3a1a", blurb: "Un peuple shamanique des plaines Dogons.", color: "#5f7a3e", colorBright: "#93b366", colorDeep: "#2c3a1a", emblem: "gouns" },
+  { id: "kherops", name: "Khérops", accent: "#7a5a2b", deep: "#40300f", blurb: "Les soldats de l'Empereur des steppes et de ses fils.", color: "#9a6b2a", colorBright: "#d0a24a", colorDeep: "#40300f", emblem: "kherops" },
+  { id: "tembos", name: "Tembos", accent: "#2f6a60", deep: "#123a34", blurb: "Anciens maîtres de Safar, retirés dans la forêt d'Euthéria.", color: "#2f7168", colorBright: "#5fa89c", colorDeep: "#123a34", emblem: "tembos" },
+  { id: "guilde-noire", name: "Guilde Noire", accent: "#2f2a26", deep: "#141210", blurb: "Les renégats ayant choisi d'adhérer aux préceptes de la guilde.", color: "#736784", colorBright: "#a99bbd", colorDeep: "#241f2d", emblem: "guilde" },
 ];
 
 /** Une figurine recrutée uniquement via un porteur (Likan, Muskh) — pas d'achat propre. */

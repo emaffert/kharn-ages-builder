@@ -92,6 +92,8 @@ export default defineConfig(({ command }) => ({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+      // Précache aussi les polices self-hostées (woff2) pour un fonctionnement hors-ligne complet.
+      workbox: { globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"] },
       manifest: {
         name: "Khârn-Âges — Constructeur de listes",
         short_name: "Khârn-Âges",

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Khârn-Âges — Édition de figurine (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="forge.css" />
+<style>
+body{--faction:#b0472b;--faction-2:#e0553f;--faction-deep:#5e1a13}
+/* Fond : le constructeur assombri derrière la modale */
+.backdrop{position:fixed;inset:0;z-index:3;display:grid;place-items:center;padding:26px;
+  background:radial-gradient(80% 60% at 50% 40%, color-mix(in srgb,var(--faction) 12%,transparent), transparent 60%), rgba(8,5,3,.74);
+  backdrop-filter:blur(3px)}
+
+/* Modale à TAILLE FIXE — le contenu scrolle à l'intérieur, jamais de reflow de la fenêtre */
+.modal{width:min(920px,96vw);height:min(640px,92vh);display:flex;flex-direction:column;overflow:hidden;
+  border-radius:16px;background:linear-gradient(180deg,var(--forge-2),var(--forge));
+  box-shadow:0 50px 120px -30px #000, inset 0 0 0 1px var(--hair-strong)}
+
+.mhead{display:flex;align-items:center;gap:14px;padding:16px 20px;
+  background:radial-gradient(120% 200% at 0% 0%, var(--header-glow), transparent 55%), linear-gradient(180deg,var(--forge-2),transparent);
+  border-bottom:1px solid var(--hair)}
+.mthumb{width:44px;height:44px;flex:none;border-radius:11px;display:grid;place-items:center;position:relative;
+  background:radial-gradient(120% 120% at 30% 15%, var(--faction-deep), var(--panel-dark));
+  box-shadow:inset 0 0 0 1px var(--ember), 0 0 20px -6px var(--ember-glow)}
+.mthumb .lvl{font-family:Cinzel;font-weight:700;font-size:17px;color:var(--panel-ink)}
+.mtitle{display:flex;flex-direction:column;gap:2px}
+.mtitle h2{margin:0;font-family:Cinzel;font-weight:600;font-size:20px}
+.mtitle .sub{font-size:12px;color:var(--bone-dim)}
+.mcost{margin-left:auto;font-family:Cinzel;font-weight:600;font-size:18px;color:var(--gold);display:flex;align-items:center;gap:7px}
+.mclose{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--bone-dim);font-size:18px;transition:.16s var(--ease)}
+.mclose:hover{color:var(--bone);background:var(--tint-2)}
+
+.tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--hair);background:var(--forge-2)}
+.tab{font-family:Cinzel;padding:11px 16px;font-size:13.5px;color:color-mix(in srgb,var(--bone) 55%,transparent);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:.16s var(--ease);letter-spacing:.02em}
+.tab:hover{color:var(--bone)}
+.tab.on{color:var(--bone);border-bottom-color:var(--ember)}
+
+.mbody{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 20px 0}
+.slots{display:flex;gap:10px;margin-bottom:12px}
+.slot{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-size:12px;color:var(--bone-dim);
+  background:var(--soot);box-shadow:inset 0 0 0 1px var(--hair)}
+.pips{display:inline-flex;gap:3px}
+.pip{width:8px;height:8px;border-radius:50%;background:var(--ash-2)}
+.pip.on{background:var(--ember);box-shadow:0 0 8px -1px var(--ember-glow)}
+.slot.full{color:var(--on-amber);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 40%,transparent)}
+
+.cols{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:18px;padding-bottom:2px}
+.col{display:flex;flex-direction:column;min-height:0}
+.col-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.col-title{font-family:Cinzel;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ember)}
+.col-total{font-size:13px;color:var(--bone-dim)}
+.col-total b{font-family:Cinzel;color:var(--gold);font-weight:600}
+.eq-search{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;background:var(--soot);box-shadow:inset 0 0 0 1px var(--hair);margin-bottom:8px}
+.eq-search svg{width:14px;height:14px;color:var(--bone-faint)}
+.eq-search input{flex:1;background:none;border:none;outline:none;color:var(--bone);font-size:13px}
+.eq-search input::placeholder{color:var(--bone-faint)}
+.scroll{flex:1;overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:10px}
+.grp{display:flex;flex-direction:column;gap:4px}
+.grp > .glabel{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-faint);font-weight:600;margin:2px 2px 2px}
+
+.row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;background:var(--soot-2);
+  box-shadow:inset 0 0 0 1px var(--hair);transition:.14s var(--ease)}
+.row:hover{background:var(--soot)}
+.row.base{background:var(--tint-1)}
+.row.blocked{opacity:.42}
+.row .nm{flex:1;min-width:0}
+.row .nm b{font-weight:500;font-size:13.5px}
+.row .nm .bits{display:block;font-size:11px;color:var(--bone-faint);margin-top:1px}
+.row .pr{font-size:12px;color:var(--gold-dim);font-weight:600;white-space:nowrap}
+.badge{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--bone-faint);
+  padding:2px 6px;border-radius:5px;box-shadow:inset 0 0 0 1px var(--hair-strong)}
+.mv{width:26px;height:26px;flex:none;border-radius:7px;display:grid;place-items:center;font-size:15px;line-height:1;transition:.14s var(--ease)}
+.mv.add{color:var(--ink-accent);background:linear-gradient(180deg,var(--ember-bright),var(--ember));box-shadow:0 0 16px -6px var(--ember-glow)}
+.mv.add:hover{filter:brightness(1.08)}
+.mv.rm{color:var(--bone-faint);box-shadow:inset 0 0 0 1px var(--hair-strong)}
+.mv.rm:hover{color:#ff8a6a;background:color-mix(in srgb,var(--scorch) 14%,transparent)}
+.mv.dis{background:var(--ash);color:var(--bone-faint);cursor:not-allowed;box-shadow:none}
+.blockmsg{font-size:11px;color:var(--on-scorch);padding:0 2px}
+
+.mfoot{display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid var(--hair);background:var(--forge-2)}
+.mfoot .hint{font-size:12px;color:var(--bone-faint)}
+
+@media (max-width:720px){.cols{grid-template-columns:1fr;overflow-y:auto}.col{min-height:220px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="sig-fang" viewBox="0 0 40 44">
+    <path d="M20 2 L37 8 V22 C37 33 29 40 20 43 C11 40 3 33 3 22 V8 Z" fill="var(--faction)" stroke="var(--gold)" stroke-width="2"/>
+    <path d="M20 11 C15 15 12 15 11 23 C15 20 17 21 20 27 C23 21 25 20 29 23 C28 15 25 15 20 11 Z" fill="#f4e6c8" opacity=".9"/>
+  </symbol>
+</defs></svg>
+
+<div class="backdrop">
+  <div class="modal" role="dialog" aria-label="Éditer Apathée III">
+    <!-- En-tête -->
+    <div class="mhead">
+      <div class="mthumb"><span class="lvl">III</span></div>
+      <div class="mtitle">
+        <h2>Apathée <span style="color:var(--bone-faint);font-size:15px">III</span></h2>
+        <span class="sub">Fille de Nyx · Mage · ostéomancie</span>
+      </div>
+      <div class="mcost"><span class="coin"></span>150 <span style="font-size:12px;color:var(--gold-dim);font-family:Inter">Ko</span></div>
+      <button class="mclose" title="Fermer">✕</button>
+    </div>
+
+    <!-- Onglets -->
+    <div class="tabs">
+      <button class="tab">Carte</button>
+      <button class="tab on">Équipement</button>
+      <button class="tab">Améliorations</button>
+      <button class="tab">Magie</button>
+    </div>
+
+    <!-- Corps : onglet Équipement -->
+    <div class="mbody">
+      <div class="slots">
+        <span class="slot full">Mains <span class="pips"><span class="pip on"></span><span class="pip on"></span></span> 2 / 2</span>
+        <span class="slot">Armure <span class="pips"><span class="pip"></span></span> 0 / 1</span>
+      </div>
+
+      <div class="cols">
+        <!-- Disponible -->
+        <div class="col">
+          <div class="col-head"><span class="col-title">Disponible</span></div>
+          <label class="eq-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input placeholder="Rechercher un équipement…" />
+          </label>
+          <div class="scroll">
+            <div class="grp">
+              <span class="glabel">Corps à corps</span>
+              <div class="row">
+                <div class="nm"><b>Faucille d'Os</b><span class="bits">CaC · 1m · All.2 · confère « Riposte »</span></div>
+                <span class="pr">15 Ko</span><button class="mv add" title="Ajouter">→</button>
+              </div>
+              <div class="row blocked" title="Plus assez de mains libres">
+                <div class="nm"><b>Masse d'ossements</b><span class="bits">CaC · 2m — plus assez de mains libres</span></div>
+                <span class="pr">20 Ko</span><button class="mv dis" title="Plus assez de mains libres">→</button>
+              </div>
+            </div>
+            <div class="grp">
+              <span class="glabel">Armure</span>
+              <div class="row">
+                <div class="nm"><b>Cuirasse d'Os</b><span class="bits">Armure · Sol.4</span></div>
+                <span class="pr">25 Ko</span><button class="mv add" title="Ajouter">→</button>
+              </div>
+            </div>
+            <div class="grp">
+              <span class="glabel">Objet</span>
+              <div class="row">
+                <div class="nm"><b>Crosse d'Ostéomancie</b><span class="bits">Objet · +3 pages de sorts</span></div>
+                <span class="pr">20 Ko</span><button class="mv add" title="Ajouter">→</button>
+              </div>
+              <div class="row">
+                <div class="nm"><b>Fiole de Fiel</b><span class="bits">Objet · usage unique</span></div>
+                <span class="pr">5 Ko</span><button class="mv add" title="Ajouter">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Équipé -->
+        <div class="col">
+          <div class="col-head">
+            <span class="col-title">Équipé</span>
+            <span class="col-total">total <b>150 Ko</b></span>
+          </div>
+          <div class="scroll" style="padding-top:2px">
+            <div class="row base">
+              <button class="mv rm" title="Retirer (baisse le coût, libère l'emplacement)">←</button>
+              <div class="nm"><b>Croc de Fiel</b><span class="bits">CaC · 1m · morsure</span></div>
+              <span class="badge">base</span><span class="pr">inclus</span>
+            </div>
+            <div class="row">
+              <button class="mv rm" title="Retirer">←</button>
+              <div class="nm"><b>Bouclier d'Os</b><span class="bits">Bouclier · 1m · Sol.3</span></div>
+              <span class="pr">10 Ko</span>
+            </div>
+            <p class="blockmsg" style="margin:6px 2px 0">Les deux mains sont occupées : retire une arme ou le bouclier pour en équiper une autre.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pied -->
+    <div class="mfoot">
+      <span class="hint">Les modifications sont appliquées en direct au coût et à la validation de la liste.</span>
+      <span class="spacer"></span>
+      <button class="btn">Fermer</button>
+    </div>
+  </div>
+</div>
+<script src="mockups.js"></script>
+</body>
+</html>

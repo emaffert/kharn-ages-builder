@@ -1,78 +1,82 @@
 import { useState } from "react";
+import { Button, SegmentedControl, Dialog } from "@ui";
 import type { Catalog, Profile } from "@core";
 import { ProfileStatCard } from "./ProfileStatCard";
 import { LEVEL, carrierLabel, isDependent, type ItemInfo } from "./shared";
 
 /**
- * Aperçu d'un modèle avant recrutement : sélecteur de niveau (profils multiples), carte de stats,
- * et bouton « Ajouter à la liste » (désactivé si limite atteinte ; masqué pour un recrutement dépendant).
+ * Aperçu d'un modèle avant recrutement, rendu dans un Dialog du kit (comme l'éditeur) :
+ * sélecteur de niveau, carte de stats, et pied avec coût + « Ajouter à la liste ».
  */
 export function CardPreview({
   profiles,
   cat,
-  accent,
-  deep,
-  onClose,
+  title,
+  open,
+  onOpenChange,
   onAdd,
   isAtLimit,
   onInfo,
 }: {
   profiles: Profile[];
   cat: Catalog;
-  accent: string;
-  deep: string;
-  onClose: () => void;
+  title: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onAdd: (profileId: string) => void;
   isAtLimit: (profileId: string) => boolean;
   onInfo: (info: ItemInfo) => void;
 }) {
-  const [idx, setIdx] = useState(0);
-  const p = profiles[idx];
+  const [id, setId] = useState(profiles[0].id);
+  const p = profiles.find((pf) => pf.id === id) ?? profiles[0];
   const dependent = isDependent(p);
   const carrier = carrierLabel(p, cat);
+  const atLimit = isAtLimit(p.id);
   return (
-    <div className="space-y-4">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      size="lg"
+      footer={
+        dependent ? (
+          <>
+            <span className="fe-preview-note">Se recrute via {carrier ?? "un porteur"}, pas directement.</span>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Fermer
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Fermer
+            </Button>
+            <Button
+              variant="primary"
+              disabled={atLimit}
+              title={atLimit ? "Limite de recrutement atteinte pour ce niveau" : undefined}
+              onClick={() => {
+                onAdd(p.id);
+                onOpenChange(false);
+              }}
+            >
+              {atLimit ? "Limite atteinte" : "Ajouter à la liste"}
+            </Button>
+          </>
+        )
+      }
+    >
       {profiles.length > 1 && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs opacity-60">Niveau</span>
-          <div className="inline-flex overflow-hidden rounded-md" style={{ boxShadow: `inset 0 0 0 1px ${accent}66` }}>
-            {profiles.map((pf, i) => (
-              <button
-                key={pf.id}
-                onClick={() => setIdx(i)}
-                className="px-3 py-1 text-sm transition"
-                style={i === idx ? { background: accent, color: "#f5ecd6" } : { color: accent }}
-              >
-                {LEVEL[pf.level ?? 0]} · {pf.cost}
-              </button>
-            ))}
-          </div>
+        <div className="mb-3">
+          <SegmentedControl
+            ariaLabel="Niveau"
+            value={id}
+            onChange={setId}
+            options={profiles.map((pf) => ({ value: pf.id, label: `${LEVEL[pf.level ?? 0]} · ${pf.cost}` }))}
+          />
         </div>
       )}
-      <ProfileStatCard p={p} cat={cat} accent={accent} deep={deep} onInfo={onInfo} />
-      <div className="flex justify-end gap-2">
-        {dependent ? (
-          <p className="mr-auto rounded-md bg-black/5 px-3 py-2 text-xs italic opacity-70">
-            Se recrute via {carrier ?? "un porteur"}, pas directement.
-          </p>
-        ) : (
-          <button
-            onClick={() => {
-              onAdd(p.id);
-              onClose();
-            }}
-            disabled={isAtLimit(p.id)}
-            title={isAtLimit(p.id) ? "Limite de recrutement atteinte pour ce niveau" : undefined}
-            className="rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ background: accent }}
-          >
-            {isAtLimit(p.id) ? "Limite atteinte" : "Ajouter à la liste"}
-          </button>
-        )}
-        <button onClick={onClose} className="rounded-md px-4 py-1.5 text-sm hover:bg-white/50">
-          Fermer
-        </button>
-      </div>
-    </div>
+      <ProfileStatCard p={p} cat={cat} onInfo={onInfo} showEquipment />
+    </Dialog>
   );
 }

@@ -41,11 +41,11 @@
   --forge:#dccb9f; --forge-2:#e7d9bb;           /* page / en-têtes */
   --soot:#f1e8d2; --soot-2:#faf3e1;             /* surfaces surélevées / cartes */
   --ash:#cdb890; --ash-2:#bda676;
-  --bone:#2c2015; --bone-dim:#6a5942; --bone-faint:#93805f; /* textes (encre bark) */
-  --ember:#c15c1a; --ember-bright:#e5852f; --ember-deep:#8f4110;
+  --bone:#2c2015; --bone-dim:#6a5942; --bone-faint:#726039; /* textes (encre bark) — faint assombri (AA) */
+  --ember:#9c4410; --ember-bright:#e5852f; --ember-deep:#8f4110; /* braise-texte assombrie pour le contraste (AA) */
   --ember-glow:rgba(193,92,26,.35);
   --faction-2:#a8352a;                          /* crimson plus profond pour le texte */
-  --gold:#8f6f22; --gold-dim:#795c19;
+  --gold:#7a5c16; --gold-dim:#795c19;           /* or-texte assombri (AA sur clair) */
   --moss:#5f7a2e; --amber:#a9761a; --scorch:#bf3f1c;
   --on-scorch:#8a2d15; --on-amber:#77530f; --on-moss:#40561f;
   --header-glow:color-mix(in srgb, var(--ember) 11%, transparent); /* clair : braise discret */
@@ -461,11 +461,29 @@ body {
 
 @media (max-width: 900px) {
   .bld-roster { display: none; }
+  .bld-listbar { flex-wrap: wrap; }
   .bld-forge { flex-wrap: wrap; gap: 10px; }
   .bld-gauge { width: 190px; }
   .bld-name { width: 12ch; }
 }
+@media (max-width: 560px) {
+  .bld-forge { margin-left: 0; width: 100%; }
+  .bld-gauge { flex: 1 1 140px; width: auto; }
+  .bld-actions { margin-left: auto; }
+  .bld-back { padding: 6px 8px; }
+  .bld-list { padding: 16px 12px; }
+}
 @media (min-width: 901px) { .bld-add-mobile { display: none; } }
+
+/* Toast (confirmations brèves) */
+.ui-toast-vp { position: fixed; bottom: 18px; right: 18px; z-index: 80; display: flex; flex-direction: column;
+  gap: 8px; max-width: 90vw; margin: 0; padding: 0; list-style: none; }
+.ui-toast { display: flex; align-items: center; gap: 8px; padding: 11px 16px; border-radius: 10px; color: var(--bone);
+  background: linear-gradient(180deg, var(--soot-2), var(--forge-2));
+  box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--hair-strong); }
+.ui-toast-title { font-weight: 600; font-size: 14px; color: var(--bone); }
+@keyframes ui-toast-in { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.ui-toast[data-state="open"] { animation: ui-toast-in .18s var(--ease); }
 
 /* Contenu des modales token (Dialog du kit) — choix, fiches, import/export. */
 .mdl-note { font-size: 13px; color: var(--bone-dim); margin-bottom: 12px; }

@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Button, Tag, Dialog, SegmentedControl } from "@ui";
+import { Button, Tag, Dialog, SegmentedControl, Toast, ToastProvider } from "@ui";
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
@@ -56,8 +56,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   };
   const onSave = async () => {
     await store.saveCurrent();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaved(true); // le toast se referme seul (durée Radix) → onOpenChange(false)
   };
   const [io, setIo] = useState<null | "export" | "import">(null);
   const [importText, setImportText] = useState("");
@@ -384,7 +383,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     .join("\n");
 
   return (
-    <div className="bld-root" style={factionVars}>
+    <ToastProvider>
+      <div className="bld-root" style={factionVars}>
       {/* Bandeau de liste : identité + jauge-forge + validation + actions */}
       <div className="bld-listbar">
         <button className="bld-back" onClick={onNew} title="Créer une nouvelle liste">
@@ -434,7 +434,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             <Button onClick={() => { setImportText(""); setImportError(null); setIo("import"); }}>Importer</Button>
             <Button onClick={() => setIo("export")}>Exporter</Button>
             <Button variant="primary" onClick={onSave}>
-              {saved ? "✓ Enregistré" : "Sauvegarder"}
+              Sauvegarder
             </Button>
           </div>
         </div>
@@ -741,7 +741,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           )}
         </Dialog>
       )}
-    </div>
+      <Toast open={saved} onOpenChange={setSaved} title="✓ Liste enregistrée" />
+      </div>
+    </ToastProvider>
   );
 }
 

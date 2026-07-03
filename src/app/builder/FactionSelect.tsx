@@ -5,6 +5,7 @@ import type { ListStore } from "../useListStore";
 import { FACTIONS } from "./shared";
 import { FactionEmblem } from "./FactionEmblem";
 import { resolveImport } from "./importList";
+import logoUrl from "../../assets/ka-logo.png";
 
 /** Écran 1 : choix de la faction / format / budget, ou reprise / import d'une liste existante. */
 
@@ -61,11 +62,11 @@ export function FactionSelect({
     <div className="fs-scene" style={sceneVars}>
       <div className="fs-wrap">
         <div className="fs-hero">
-          <div className="fs-eyebrow">Constructeur de listes</div>
-          <h1 className="fs-title">Choisis ta faction</h1>
-          <p className="fs-sub">Une seule faction par Fer de Lance. Elle déterminera les figurines recrutables.</p>
+          <img className="fs-logo" src={logoUrl} alt="Khârn-Âges" />
+          <p className="fs-tagline">Constructeur de listes</p>
         </div>
 
+        <h1 className="fs-title">Choisis ta faction</h1>
         <div className="fs-grid">
           {FACTIONS.map((f) => {
             const n = counts.get(f.id) ?? 0;
@@ -136,7 +137,11 @@ export function FactionSelect({
             <span>
               Faction : <span className="fs-chosen">{selected.name}</span>
             </span>
-            <Button variant="primary" onClick={() => onStart(selected.id, format, points)}>
+            <Button
+              variant="primary"
+              className="fs-start-btn"
+              onClick={() => onStart(selected.id, format, points)}
+            >
               Commencer →
             </Button>
           </div>
@@ -147,14 +152,15 @@ export function FactionSelect({
             <h2>Reprendre une liste</h2>
             <span className="fs-line" />
             <Button
-              variant="ghost"
+              variant="default"
               size="sm"
+              className="fs-import-btn"
               onClick={() => {
                 setShowImport((v) => !v);
                 setImportError(null);
               }}
             >
-              Importer un code
+              ⭳ Importer une liste
             </Button>
           </div>
 

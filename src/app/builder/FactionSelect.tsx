@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ListDocument } from "@core";
-import { Button, SegmentedControl } from "@ui";
+import { Button, SegmentedControl, Dialog } from "@ui";
 import type { ListStore } from "../useListStore";
 import { FACTIONS } from "./shared";
 import { FactionEmblem } from "./FactionEmblem";
@@ -157,41 +157,29 @@ export function FactionSelect({
               size="sm"
               className="fs-import-btn"
               onClick={() => {
-                setShowImport((v) => !v);
+                setImportText("");
                 setImportError(null);
+                setImportUnresolved([]);
+                setPendingImport(null);
+                setShowImport(true);
               }}
             >
               ⭳ Importer une liste
             </Button>
           </div>
 
-          {showImport && (
-            <div className="fs-import">
-              <textarea
-                value={importText}
-                onChange={(e) => {
-                  setImportText(e.target.value);
-                  setImportError(null);
-                  setImportUnresolved([]);
-                  setPendingImport(null);
-                }}
-                placeholder="Code (KA1:…) ou roster texte"
-              />
-              {importError && <p className="fs-import-msg">⚠ {importError}</p>}
-              {importUnresolved.length > 0 && (
-                <div className="fs-import-msg">
-                  <p className="font-semibold">Avertissements :</p>
-                  <ul className="mt-1 space-y-0.5">
-                    {importUnresolved.map((l, k) => (
-                      <li key={k}>· {l.trim()}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="mt-2 flex justify-end">
+          <Dialog
+            open={showImport}
+            onOpenChange={(o) => !o && setShowImport(false)}
+            title="Importer une liste"
+            size="md"
+            footer={
+              <>
+                <Button variant="ghost" onClick={() => setShowImport(false)}>
+                  Annuler
+                </Button>
                 <Button
                   variant="primary"
-                  size="sm"
                   disabled={importText.trim() === ""}
                   onClick={async () => {
                     if (pendingImport) return onLoad(pendingImport);
@@ -212,9 +200,33 @@ export function FactionSelect({
                 >
                   {pendingImport ? "Charger quand même" : "Importer"}
                 </Button>
+              </>
+            }
+          >
+            <textarea
+              className="mdl-textarea"
+              rows={4}
+              value={importText}
+              onChange={(e) => {
+                setImportText(e.target.value);
+                setImportError(null);
+                setImportUnresolved([]);
+                setPendingImport(null);
+              }}
+              placeholder="Code (KA1:…) ou roster texte"
+            />
+            {importError && <p className="mdl-warn">⚠ {importError}</p>}
+            {importUnresolved.length > 0 && (
+              <div className="mdl-warn-box">
+                <p className="font-semibold">Avertissements :</p>
+                <ul className="mt-1 space-y-0.5">
+                  {importUnresolved.map((l, k) => (
+                    <li key={k}>· {l.trim()}</li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          )}
+            )}
+          </Dialog>
 
           {store.savedLists.length === 0 ? (
             <p className="fs-sub" style={{ textAlign: "left" }}>

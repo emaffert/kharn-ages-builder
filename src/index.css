@@ -21,6 +21,7 @@
   /* Invariants (identiques clair/sombre) */
   --ink-accent:#1c1207;                         /* texte sur boutons braise/or */
   --panel-dark:#1b120c; --panel-ink:#f2e8d2;    /* médaillons de faction, toujours sombres */
+  --km-tune:invert(1) brightness(.86) sepia(.3); /* dé de maîtrise : négatif réchauffé (teinte os) en sombre */
   --on-scorch:#ffd6c4; --on-amber:#ffe0b0; --on-moss:#e7f0cf; /* texte sur pastilles sémantiques */
   --header-glow:color-mix(in srgb, var(--faction) 24%, transparent); /* halo d'en-tête : faction en sombre */
 
@@ -42,6 +43,7 @@
   --soot:#f1e8d2; --soot-2:#faf3e1;             /* surfaces surélevées / cartes */
   --ash:#cdb890; --ash-2:#bda676;
   --bone:#2c2015; --bone-dim:#6a5942; --bone-faint:#726039; /* textes (encre bark) — faint assombri (AA) */
+  --km-tune:none;                               /* dé de maîtrise : encre noire brute sur parchemin (rendu d'origine) */
   --ember:#9c4410; --ember-bright:#e5852f; --ember-deep:#8f4110; /* braise-texte assombrie pour le contraste (AA) */
   --ember-glow:rgba(193,92,26,.35);
   --faction-2:#a8352a;                          /* crimson plus profond pour le texte */
@@ -585,9 +587,19 @@ body {
 /* Étiquette de bloc dans la carte (maîtrise, équipement). */
 .fe-block-label { display: block; margin: 20px 0 6px; font-family: "Cinzel", serif; font-size: 11px;
   letter-spacing: .1em; text-transform: uppercase; color: var(--bone-faint); }
-.fe-dice { display: flex; flex-wrap: wrap; gap: 6px; }
-.fe-die { padding: 4px 9px; border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--bone-dim);
-  background: var(--tint-2); box-shadow: inset 0 0 0 1px var(--hair); }
+/* Bloc dés en bas de carte : le titre a été retiré, on garde la séparation d'avec le contenu au-dessus. */
+.fe-mastery { margin-top: 26px; }
+.fe-dice { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+/* Dé de maîtrise : `vide.png` en fond, chaque icône positionnée dans sa section (registration alpha,
+   cf. MasteryDie.tsx). Assets N&B utilisés tels quels en thème clair ; en sombre, `--km-tune`
+   (défini par thème) inverse et réchauffe l'ensemble en teinte os pour ressortir sur le fond. */
+.km-die { position: relative; display: block; width: 68px; aspect-ratio: 1147 / 1063; flex: none;
+  filter: var(--km-tune); }
+.km-die-bg { display: block; width: 100%; height: 100%; }
+/* left/top (coin haut-gauche) + width (échelle native) portés par le composant ; hauteur = aspect natif. */
+.km-die-icon { position: absolute; height: auto; }
+/* Domaine indisponible : estompé. */
+.km-die-icon[data-on="false"] { opacity: .14; }
 .fe-eqrow { display: flex; flex-direction: column; gap: 4px; }
 .fe-eq { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; text-align: left;
   padding: 6px 10px; border-radius: 8px; background: var(--tint-2); border: 0; cursor: pointer;

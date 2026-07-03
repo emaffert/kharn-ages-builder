@@ -2,11 +2,11 @@ import { specialCardsForProfile } from "@ui/explain";
 import { Tag } from "@ui";
 import { iconFor, type Catalog, type Profile } from "@core";
 import { SectionTitle } from "./components";
+import { MasteryDie } from "./MasteryDie";
 import {
   LEVEL,
   STATS_COMBAT,
   STATS_SECONDARY,
-  MASTERY_SHORT,
   equipInfo,
   equipBits,
   type ItemInfo,
@@ -129,12 +129,9 @@ export function ProfileStatCard({
         {/* Dés de maîtrise : tout en bas de la carte (comme sur la carte officielle). */}
         {p.masteryDice.length > 0 && (
           <div className="fe-mastery">
-            <span className="fe-block-label">Dés de maîtrise</span>
             <div className="fe-dice">
               {p.masteryDice.map((die, i) => (
-                <span key={i} className="fe-die">
-                  {die.map((d) => MASTERY_SHORT[d] ?? d).join(" · ")}
-                </span>
+                <MasteryDie key={i} domains={die} />
               ))}
             </div>
           </div>

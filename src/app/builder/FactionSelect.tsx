@@ -138,7 +138,7 @@ export function FactionSelect({
               className="fs-start-btn"
               onClick={() => onStart(selected.id, format, points)}
             >
-              Démarrer une liste
+              Nouvelle liste
             </Button>
           </div>
         </div>

@@ -164,7 +164,7 @@ export function FactionSelect({
                 setShowImport(true);
               }}
             >
-              ⭳ Importer une liste
+              Importer une liste
             </Button>
           </div>
 

@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Button, Tag, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from "@ui";
+import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from "@ui";
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
@@ -257,6 +257,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
     const isLeader = id === fdl.leaderInstanceId;
     const guarded = x.inst.bodyguardOfInstanceId != null;
+    const guardOf = guarded ? memberOf(x.inst.bodyguardOfInstanceId!)?.p.name : null;
     const eligible = guardEligible(x.p) || guarded; // reste dispo pour se dé-désigner
     const free = costOf(id) === 0 && (guarded || x.p.modelId === "larbin");
     const open = !collapsed.has(id);
@@ -269,10 +270,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         id={`unit-${id}`}
         className={`bld-unit${isLeader ? " is-leader" : ""}${rowIssues.length > 0 ? " is-error" : ""}${attached ? " is-attached" : ""}${handle?.isDragging ? " is-dragging" : ""}`}
       >
-        <div className="bld-unit-main">
+        <div
+          className="bld-unit-main"
+          onClick={(e) => {
+            // Tout le cadre (icône → prix), hors boutons/champs, ouvre l'édition de la figurine.
+            if ((e.target as HTMLElement).closest("button, input, a")) return;
+            setModal({ kind: "edit", instanceId: id });
+          }}
+        >
           {!attached && (
             <button type="button" className="bld-grip" title="Glisser pour réordonner" {...(handle?.handleProps ?? {})}>
-              ⠿
+              <span className="bld-grip-dots">⠿</span>
             </button>
           )}
           <div className={`bld-thumb${attached ? " sm" : ""}`}>
@@ -295,13 +303,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                   ❖ Définir meneur
                 </button>
               )}
-              {attached && <Tag>rattaché</Tag>}
             </div>
-            {guarded && (
-              <div className="bld-tags">
-                <Tag tone="moss">Garde du corps de {memberOf(x.inst.bodyguardOfInstanceId!)?.p.name}</Tag>
-              </div>
-            )}
             {rowIssues.length > 0 && <div className="bld-urow-msg">⚠ {rowIssues.join(" · ")}</div>}
           </div>
           {free ? (
@@ -316,9 +318,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               <button
                 className="bld-toggle"
                 onClick={() => toggleCollapsed(id)}
-                title={open ? "Replier le résumé" : "Déplier le résumé des achats"}
+                aria-expanded={open}
+                title={open ? "Replier le détail" : "Déplier le détail des achats"}
               >
-                {open ? "▾" : "▸"}
+                <span className="chev">{open ? "▾" : "▸"}</span>
+                Détails
               </button>
             )}
             {!attached && (
@@ -346,7 +350,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 onClick={() => onGuardClick(id)}
                 title={x.p.modelId === "djouked" ? "Garde rapproché de Broutcha" : "Garde du corps d'une Fille de Nyx"}
               >
-                {guarded ? "✓ Garde du corps — retirer" : "Garde du corps"}
+                {guarded ? `✓ Garde du corps de ${guardOf}` : "Garde du corps"}
               </button>
             )}
           </div>
@@ -360,6 +364,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             removed={x.inst.removedBaseEquipmentIds}
             grimoireId={x.inst.grimoireId}
             spellIds={x.inst.spellIds}
+            upgrades={x.inst.specialCardIds ?? []}
             issues={rowIssues}
             onPick={setItemInfo}
           />

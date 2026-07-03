@@ -18,13 +18,21 @@ export function ProfileStatCard({
   cat,
   onInfo,
   showEquipment = false,
+  upgrades,
+  onToggleUpgrade,
 }: {
   p: Profile;
   cat: Catalog;
   onInfo: (info: ItemInfo) => void;
   showEquipment?: boolean;
+  /** En édition : liste des améliorations achetées + bascule (cases à cocher dans la carte). */
+  upgrades?: string[];
+  onToggleUpgrade?: (id: string) => void;
 }) {
   const cards = specialCardsForProfile(p, cat);
+  const autoCards = cards.filter((c) => !c.amelioration); // appliquées d'office
+  const ameliorations = cards.filter((c) => c.amelioration); // achetables
+  const canEditUpgrades = Boolean(onToggleUpgrade);
   const precisions = p.skills.filter((s) => s.precision);
   const baseEq = p.baseEquipmentIds
     .map((id) => cat.equipment.find((e) => e.id === id))
@@ -130,27 +138,73 @@ export function ProfileStatCard({
         )}
       </div>
 
-      {/* Libellé toujours présent (même vide) pour un gabarit de carte constant. */}
-      <div>
-        <SectionTitle>Cartes liées</SectionTitle>
-        {cards.length > 0 ? (
-          <div className="fe-linked">
-            {cards.map((c) => (
-              <button
-                key={c.id}
-                className="fe-linked-item"
-                onClick={() =>
-                  onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: c.rulesText.map((r) => r.text) })
-                }
-              >
-                <span>{c.name}</span>
-                <span className="px">{c.cost > 0 ? `${c.cost} Ko` : "auto"}</span>
-              </button>
-            ))}
+      {/* Colonne latérale : améliorations (cochables en édition) + cartes liées automatiques. */}
+      <div className="fe-aside">
+        {ameliorations.length > 0 && (
+          <div>
+            <SectionTitle>Améliorations</SectionTitle>
+            {canEditUpgrades ? (
+              <div className="fe-col">
+                {ameliorations.map((c) => (
+                  <label key={c.id} className="fe-check">
+                    <input
+                      type="checkbox"
+                      checked={upgrades?.includes(c.id) ?? false}
+                      onChange={() => onToggleUpgrade?.(c.id)}
+                    />
+                    <button
+                      className="nm"
+                      onClick={() =>
+                        onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "gratuit", lines: c.rulesText.map((r) => r.text) })
+                      }
+                      title="Voir le détail"
+                    >
+                      {c.name}
+                    </button>
+                    <span className="px">{c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="fe-linked">
+                {ameliorations.map((c) => (
+                  <button
+                    key={c.id}
+                    className="fe-linked-item"
+                    onClick={() =>
+                      onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: c.rulesText.map((r) => r.text) })
+                    }
+                  >
+                    <span>{c.name}</span>
+                    <span className="px">{c.cost > 0 ? `${c.cost} Ko` : "auto"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <p className="fe-mag-bonus">Aucune.</p>
         )}
+        {/* Libellé toujours présent (même vide) pour un gabarit de carte constant. */}
+        <div>
+          <SectionTitle>Cartes liées</SectionTitle>
+          {autoCards.length > 0 ? (
+            <div className="fe-linked">
+              {autoCards.map((c) => (
+                <button
+                  key={c.id}
+                  className="fe-linked-item"
+                  onClick={() =>
+                    onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: c.rulesText.map((r) => r.text) })
+                  }
+                >
+                  <span>{c.name}</span>
+                  <span className="px">{c.cost > 0 ? `${c.cost} Ko` : "auto"}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="fe-mag-bonus">Aucune.</p>
+          )}
+        </div>
       </div>
 
       {/* Équipement : colonne de gauche, uniquement à l'aperçu roster (l'éditeur a son onglet). Libellé toujours présent. */}

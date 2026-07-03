@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { specialCardsForProfile } from "@ui/explain";
 import { SegmentedControl } from "@ui";
 import type { Catalog, Profile, Spell } from "@core";
 import { ProfileStatCard } from "./ProfileStatCard";
@@ -26,42 +25,6 @@ import {
  * Piloté par des callbacks du store (aucun état de liste local ici). Rendu dans un Dialog du kit
  * (le Dialog fournit le titre, la fermeture et le pied).
  */
-
-function AmeliorationsPanel({
-  profile: p,
-  cat,
-  upgrades,
-  onToggleUpgrade,
-  onInfo,
-}: {
-  profile: Profile;
-  cat: Catalog;
-  upgrades: string[];
-  onToggleUpgrade: (id: string) => void;
-  onInfo: (info: ItemInfo) => void;
-}) {
-  const ameliorations = specialCardsForProfile(p, cat).filter((c) => c.amelioration);
-  return (
-    <div className="fe-col">
-      {ameliorations.map((c) => (
-        <label key={c.id} className="fe-check">
-          <input type="checkbox" checked={upgrades.includes(c.id)} onChange={() => onToggleUpgrade(c.id)} />
-          <button
-            className="nm"
-            onClick={() =>
-              onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "gratuit", lines: c.rulesText.map((r) => r.text) })
-            }
-            title="Voir le détail"
-          >
-            {c.name}
-          </button>
-          <span className="px">{c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}</span>
-        </label>
-      ))}
-      {ameliorations.length === 0 && <p className="fe-mag-bonus">Aucune amélioration disponible.</p>}
-    </div>
-  );
-}
 
 /** Onglet magie : choix du grimoire, compteur de pages, puis sélection des sorts (SpellPanel). */
 function MagiePanel({
@@ -158,15 +121,14 @@ export function FigureEditor({
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
   const ways = castWays(p, cat, upgrades, [...activeBase, ...added]);
   const castable = ways.length > 0;
-  const ameliorations = specialCardsForProfile(p, cat).filter((c) => c.amelioration);
 
+  // Les améliorations se cochent désormais directement dans l'onglet « Carte » (plus d'onglet dédié).
   const tabs = [
     { id: "carte" as const, label: "Carte" },
     canBuy(p, cat) && { id: "equip" as const, label: "Équipement" },
-    ameliorations.length > 0 && { id: "amelio" as const, label: "Améliorations" },
     (castable || spells.length > 0) && { id: "magie" as const, label: "Magie" },
-  ].filter(Boolean) as { id: "carte" | "equip" | "amelio" | "magie"; label: string }[];
-  const [tab, setTab] = useState<"carte" | "equip" | "amelio" | "magie">("carte");
+  ].filter(Boolean) as { id: "carte" | "equip" | "magie"; label: string }[];
+  const [tab, setTab] = useState<"carte" | "equip" | "magie">("carte");
   const active = tabs.some((t) => t.id === tab) ? tab : "carte";
 
   return (
@@ -181,7 +143,15 @@ export function FigureEditor({
         </div>
       )}
 
-      {active === "carte" && <ProfileStatCard p={p} cat={cat} onInfo={onInfo} />}
+      {active === "carte" && (
+        <ProfileStatCard
+          p={p}
+          cat={cat}
+          onInfo={onInfo}
+          upgrades={upgrades}
+          onToggleUpgrade={onToggleUpgrade}
+        />
+      )}
       {active === "equip" && (
         <EquipPanel
           profile={p}
@@ -195,9 +165,6 @@ export function FigureEditor({
           onMun={onMun}
           onInfo={onInfo}
         />
-      )}
-      {active === "amelio" && (
-        <AmeliorationsPanel profile={p} cat={cat} upgrades={upgrades} onToggleUpgrade={onToggleUpgrade} onInfo={onInfo} />
       )}
       {active === "magie" && (
         <MagiePanel

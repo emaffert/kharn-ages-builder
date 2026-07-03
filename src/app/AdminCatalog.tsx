@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
+import { iconFor } from "@core";
 import type {
   Catalog,
   Constraint,
@@ -16,6 +17,7 @@ import type {
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
 import { useCatalogStore, type FieldValue } from "./useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "./RuleEditors";
+import { IconEditor } from "./IconEditor";
 
 const STAT_LABELS: [keyof Profile["stats"], string][] = [
   ["v", "V"],
@@ -411,11 +413,15 @@ interface DetailProps {
   cat: Catalog;
   updateField: (id: string, path: string, value: FieldValue) => void;
   updateProfile: (id: string, patch: Partial<Profile>) => void;
+  setIcon: (cardImage: string, dataUrl: string | null) => void;
   toggleUnverified: (id: string, key: string) => void;
 }
 
-function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverified }: DetailProps) {
+function ProfileDetail({ profile, cat, updateField, updateProfile, setIcon, toggleUnverified }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
+  const [editingIcon, setEditingIcon] = useState(false);
+  // Icône partagée par illustration de carte (les niveaux d'un modèle la partagent).
+  const icon = iconFor(cat, profile);
   const uv = (key: string) => profile.unverifiedFields?.includes(key) ?? false;
   const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
   const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
@@ -454,6 +460,46 @@ function ProfileDetail({ profile, cat, updateField, updateProfile, toggleUnverif
             <span className="text-sm">Ko</span>
           </label>
         </div>
+        <div className="flex items-center gap-3">
+          {icon ? (
+            <img src={icon} alt="" className="h-16 w-16 rounded-lg object-cover ring-1 ring-slate-700" />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-800 text-[10px] text-slate-500 ring-1 ring-slate-700">
+              pas d'icône
+            </div>
+          )}
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={() => setEditingIcon(true)}
+              className="rounded bg-slate-800 px-2.5 py-1 text-xs hover:bg-slate-700"
+            >
+              {icon ? "Modifier l'icône…" : "Créer l'icône…"}
+            </button>
+            {icon && (
+              <button
+                onClick={() => {
+                  // Retire l'icône partagée + l'éventuel repli propre au profil.
+                  setIcon(profile.cardImage, null);
+                  if (profile.icon) patch({ icon: undefined });
+                }}
+                className="rounded px-2.5 py-1 text-left text-xs text-rose-300 hover:bg-slate-800"
+              >
+                Retirer
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] leading-tight text-slate-500">Partagée par les niveaux de ce modèle (même carte).</p>
+        </div>
+        {editingIcon && (
+          <IconEditor
+            initialSrc={profile.cardImage ? `/${profile.cardImage}` : undefined}
+            onSave={(dataUrl) => {
+              setIcon(profile.cardImage, dataUrl);
+              setEditingIcon(false);
+            }}
+            onClose={() => setEditingIcon(false)}
+          />
+        )}
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <label className="flex items-center gap-1">
             <span className="text-xs text-slate-400">Niveau</span>
@@ -1641,6 +1687,7 @@ export function AdminCatalog() {
                   cat={catalog}
                   updateField={store.updateField}
                   updateProfile={store.updateProfile}
+                  setIcon={store.setIcon}
                   toggleUnverified={store.toggleUnverified}
                 />
               </div>

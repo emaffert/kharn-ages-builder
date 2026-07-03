@@ -115,6 +115,12 @@ export const ProfileSchema = z.object({
   /** Notes éditoriales hors carte (non verbatim) : ex. compétences ajoutées par le livre de bataille. */
   notes: z.array(z.string()).optional(),
   cardImage: z.string(),
+  /**
+   * Icône/portrait recadré (data-URI) *propre à ce profil*. Rarement utilisé : préférer
+   * `Catalog.icons` (indexé par `cardImage`) pour partager l'icône entre les niveaux d'un modèle.
+   * Sert de repli si aucune icône n'est indexée pour `cardImage` (cf. `iconFor`).
+   */
+  icon: z.string().optional(),
   mountEligible: z.boolean().optional(),
   /** Champs dont la lecture sur la carte est incertaine (chemins, ex. "stature", "stats.t"). */
   unverifiedFields: z.array(z.string()).optional(),
@@ -276,5 +282,19 @@ export const CatalogSchema = z.object({
   pacts: z.array(PactSchema),
   orders: z.array(OrderSchema),
   specialCards: z.array(SpecialCardSchema),
+  /**
+   * Icônes/portraits recadrés, indexés par `cardImage` (data-URI). Comme plusieurs profils (les
+   * niveaux d'un même modèle) partagent une illustration de carte, les indexer par `cardImage`
+   * partage automatiquement l'icône : on ne recadre qu'une fois par carte.
+   */
+  icons: z.record(z.string(), z.string()).optional(),
 });
 export type Catalog = z.infer<typeof CatalogSchema>;
+
+/**
+ * Icône à afficher pour un profil : celle indexée par son `cardImage` (partagée entre niveaux),
+ * sinon l'icône propre au profil (repli hérité), sinon aucune.
+ */
+export function iconFor(cat: Catalog, p: Profile): string | undefined {
+  return cat.icons?.[p.cardImage] ?? p.icon;
+}

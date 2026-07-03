@@ -202,7 +202,7 @@ export function equipInfo(e: Catalog["equipment"][number]): ItemInfo {
   };
 }
 
-export type ModelEntry = { id: string; name: string; profiles: Profile[] };
+export type ModelEntry = { id: string; name: string; profiles: Profile[]; icon?: string };
 
 export type Modal =
   | null

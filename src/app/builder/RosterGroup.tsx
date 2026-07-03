@@ -38,7 +38,9 @@ export function RosterGroup({
               onClick={() => onOpen(m.id)}
               title={isMax ? "Limite de recrutement atteinte" : "Voir la carte"}
             >
-              <span className="bld-rmed">{LEVEL[first.level ?? 0] || "·"}</span>
+              <span className="bld-rmed">
+              {m.icon ? <img className="bld-rmed-img" src={m.icon} alt="" /> : LEVEL[first.level ?? 0] || "·"}
+            </span>
               <span className="bld-rname">
                 {m.name}
                 {multi ? (

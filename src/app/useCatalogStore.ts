@@ -169,6 +169,18 @@ export function useCatalogStore() {
     [apply],
   );
 
+  /** Définit (ou retire, si `dataUrl` est nul) l'icône partagée indexée par `cardImage`. */
+  const setIcon = useCallback(
+    (cardImage: string, dataUrl: string | null) =>
+      apply((c) => {
+        const icons = { ...(c.icons ?? {}) };
+        if (dataUrl) icons[cardImage] = dataUrl;
+        else delete icons[cardImage];
+        return { ...c, icons };
+      }),
+    [apply],
+  );
+
   const toggleUnverified = useCallback(
     (id: string, key: string) =>
       apply((c) =>
@@ -262,6 +274,7 @@ export function useCatalogStore() {
     updateSpell,
     addSpell,
     removeSpell,
+    setIcon,
     toggleUnverified,
     reset,
     exportJson,

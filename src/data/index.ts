@@ -10,7 +10,20 @@ import catalogJson from "./catalog.fangs.json";
 /** Catalogue Fang, chargé depuis le JSON canonique et validé. */
 export const fangsCatalog: Catalog = parseCatalog(catalogJson);
 
-/** Retourne le catalogue actif de l'application. */
+/** Clé de persistance des éditions admin locales (cf. useCatalogStore). */
+const ADMIN_CATALOG_KEY = "kharn-admin-catalog-v1";
+
+/**
+ * Retourne le catalogue actif : les éditions admin locales (localStorage) si présentes et valides,
+ * sinon le catalogue bundlé. Permet à toute l'app (constructeur inclus) de refléter les éditions —
+ * notamment les icônes de profil.
+ */
 export function loadCatalog(): Catalog {
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(ADMIN_CATALOG_KEY) : null;
+    if (raw) return parseCatalog(JSON.parse(raw));
+  } catch {
+    /* JSON/quota/validation invalides → repli sur le catalogue bundlé */
+  }
   return fangsCatalog;
 }

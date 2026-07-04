@@ -1,4 +1,5 @@
-import type { Catalog, Limitation, RuleText, SkillRef } from "@core";
+import { useState } from "react";
+import type { Catalog, Equipment, Limitation, RuleText, SkillRef } from "@core";
 import { AddButton, RemoveButton } from "./primitives";
 import { INPUT, LEVEL_LABEL, removeAt, replaceAt } from "./shared";
 
@@ -119,6 +120,116 @@ export function TraitsEditor({ traits, onChange }: { traits: string[]; onChange:
   );
 }
 
+/** Combobox cherchable pour choisir un équipement par son nom (le catalogue s'étoffant). */
+export function EquipmentCombobox({
+  value,
+  cat,
+  onSelect,
+}: {
+  value: string;
+  cat: Catalog;
+  onSelect: (id: string) => void;
+}) {
+  const current = cat.equipment.find((x) => x.id === value);
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const q = query.trim().toLowerCase();
+  const matches = (q
+    ? cat.equipment.filter((x) => x.name.toLowerCase().includes(q) || x.category.includes(q))
+    : cat.equipment
+  ).slice(0, 10);
+  return (
+    <div className="adm-combo-wrap flex-1">
+      <input
+        className={`${INPUT} w-full`}
+        value={open ? query : current?.name ?? value}
+        placeholder="Rechercher un équipement…"
+        onFocus={() => { setQuery(""); setOpen(true); }}
+        onChange={(e) => setQuery(e.target.value)}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+      />
+      {open && matches.length > 0 && (
+        <ul className="adm-combo">
+          {matches.map((x) => (
+            <li key={x.id}>
+              <button
+                type="button"
+                className="adm-combo-item"
+                onMouseDown={() => { onSelect(x.id); setOpen(false); }}
+              >
+                <span>{x.name}</span>
+                <span className="adm-faint text-xs">{x.category} · {x.cost} Ko</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Réservation structurée d'un équipement : qui peut l'équiper (traits, niveaux, factions, profils). */
+const RESERVED_LEVELS = [1, 2, 3] as const;
+export function ReservedToEditor({
+  value,
+  cat,
+  onChange,
+}: {
+  value: Equipment["reservedTo"];
+  cat: Catalog;
+  onChange: (v: Equipment["reservedTo"]) => void;
+}) {
+  const r = value ?? {};
+  const clean = (v: NonNullable<Equipment["reservedTo"]>): Equipment["reservedTo"] => {
+    const out: NonNullable<Equipment["reservedTo"]> = {};
+    if (v.profileIds?.length) out.profileIds = v.profileIds;
+    if (v.modelIds?.length) out.modelIds = v.modelIds;
+    if (v.traits?.length) out.traits = v.traits;
+    if (v.levels?.length) out.levels = v.levels;
+    if (v.factionIds?.length) out.factionIds = v.factionIds;
+    return Object.keys(out).length ? out : undefined;
+  };
+  const update = (patch: Partial<NonNullable<Equipment["reservedTo"]>>) => onChange(clean({ ...r, ...patch }));
+  const toggleLevel = (lvl: (typeof RESERVED_LEVELS)[number]) => {
+    const levels = r.levels ?? [];
+    update({ levels: levels.includes(lvl) ? levels.filter((l) => l !== lvl) : [...levels, lvl] });
+  };
+  const toggleFaction = (id: string) => {
+    const fs = r.factionIds ?? [];
+    update({ factionIds: fs.includes(id) ? fs.filter((f) => f !== id) : [...fs, id] });
+  };
+  return (
+    <div className="space-y-2 text-xs adm-muted">
+      <p className="adm-faint">Vide = équipement libre. Sinon, réservé aux figurines validant toutes les dimensions renseignées.</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <span>niveaux :</span>
+        {RESERVED_LEVELS.map((lvl) => (
+          <label key={lvl} className="flex items-center gap-1">
+            <input type="checkbox" checked={r.levels?.includes(lvl) ?? false} onChange={() => toggleLevel(lvl)} />
+            {LEVEL_LABEL[lvl]}
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <span>factions :</span>
+        {cat.factions.map((f) => (
+          <label key={f.id} className="flex items-center gap-1">
+            <input type="checkbox" checked={r.factionIds?.includes(f.id) ?? false} onChange={() => toggleFaction(f.id)} />
+            {f.name}
+          </label>
+        ))}
+      </div>
+      <div className="flex items-start gap-2">
+        <span className="mt-1">traits :</span>
+        <div className="flex-1">
+          <TraitsEditor traits={r.traits ?? []} onChange={(t) => update({ traits: t })} />
+        </div>
+      </div>
+      <ProfileMultiSelect label="profils" ids={r.profileIds ?? []} cat={cat} onChange={(v) => update({ profileIds: v })} />
+    </div>
+  );
+}
+
 export function EquipmentEditor({
   ids,
   cat,
@@ -134,17 +245,7 @@ export function EquipmentEditor({
         const e = cat.equipment.find((x) => x.id === id);
         return (
           <div key={i} className="flex items-center gap-2">
-            <select
-              value={id}
-              onChange={(ev) => onChange(replaceAt(ids, i, ev.target.value))}
-              className={`${INPUT} flex-1`}
-            >
-              {cat.equipment.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
-                </option>
-              ))}
-            </select>
+            <EquipmentCombobox value={id} cat={cat} onSelect={(newId) => onChange(replaceAt(ids, i, newId))} />
             <span className="w-16 text-right text-xs adm-faint">{e ? `${e.cost} Ko` : "?"}</span>
             <RemoveButton onClick={() => onChange(removeAt(ids, i))} />
           </div>

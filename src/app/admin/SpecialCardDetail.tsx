@@ -48,6 +48,18 @@ export function SpecialCardDetail({
           (sinon carte automatique appliquée d'office, ex. Fille de Nyx)
         </span>
       </label>
+      {card.amelioration && (
+        <label className="flex items-center gap-2 text-xs adm-faint">
+          groupe de choix exclusif
+          <input
+            value={card.choiceGroup ?? ""}
+            onChange={(e) => onChange({ choiceGroup: e.target.value || undefined })}
+            className={`${INPUT} w-48`}
+            placeholder="ex. artisane-racines"
+          />
+          <span>une seule amélioration du même groupe sélectionnable</span>
+        </label>
+      )}
       <GrantsCastingEditor value={card.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
 
       <Section title="Portée (à qui s'applique la carte)">

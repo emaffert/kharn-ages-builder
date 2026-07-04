@@ -20,7 +20,7 @@ import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from 
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
-import { EditIcon, TrashIcon, SearchIcon } from "./icons";
+import { TrashIcon, SearchIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { RosterGroup } from "./RosterGroup";
@@ -326,11 +326,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 title={open ? "Replier le détail" : "Déplier le détail des achats"}
               >
                 {open ? "▾" : "▸"}
-              </button>
-            )}
-            {!attached && (
-              <button className="bld-icon" title="Éditer" onClick={() => setModal({ kind: "edit", instanceId: id })}>
-                <EditIcon />
               </button>
             )}
             <button className="bld-icon danger" title="Retirer" onClick={() => store.removeMember(id)}>

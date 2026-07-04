@@ -7,6 +7,7 @@ import { EquipmentDetail } from "./admin/EquipmentDetail";
 import { SkillCatalogDetail } from "./admin/SkillCatalogDetail";
 import { SpecialCardDetail } from "./admin/SpecialCardDetail";
 import { SpellDetail } from "./admin/SpellDetail";
+import { AdminDocs } from "./admin/AdminDocs";
 import "./admin/admin.css";
 
 export function AdminCatalog() {
@@ -23,6 +24,7 @@ export function AdminCatalog() {
   const [query, setQuery] = useState("");
   const [factionFilter, setFactionFilter] = useState("all");
   const [zoom, setZoom] = useState<string | null>(null);
+  const [showDocs, setShowDocs] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +96,12 @@ export function AdminCatalog() {
     <div className="adm-shell flex h-full">
       <aside className="adm-sidebar flex w-72 shrink-0 flex-col">
         <div className="adm-sidebar-head space-y-2 p-3">
-          <h1 className="adm-accent text-sm font-bold">Khârn-Âges — Admin catalogue</h1>
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="adm-accent text-sm font-bold">Khârn-Âges — Admin catalogue</h1>
+            <button onClick={() => setShowDocs(true)} className="adm-tab" title="Aide sur l'édition du catalogue">
+              Aide
+            </button>
+          </div>
           <div className="flex flex-wrap gap-1.5">
             <button onClick={() => setView("profiles")} className={tabClass(view === "profiles")}>
               Profils
@@ -377,6 +384,8 @@ export function AdminCatalog() {
           <img src={zoom} alt="Carte agrandie" className="max-h-[95vh] max-w-[95vw] rounded shadow-2xl" />
         </div>
       )}
+
+      {showDocs && <AdminDocs onClose={() => setShowDocs(false)} />}
     </div>
   );
 }

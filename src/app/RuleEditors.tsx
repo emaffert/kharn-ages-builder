@@ -7,20 +7,9 @@ import type {
   Selector,
 } from "@core";
 import { describeConstraint, describeEffect } from "@ui/explain";
+import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared";
 
 /** Éditeurs structurés des contraintes et effets (propres à un profil). */
-
-const INPUT = "adm-input";
-
-const EQUIPMENT_CATEGORIES = [
-  "arme-cac",
-  "arme-tir",
-  "bouclier",
-  "armure",
-  "munition",
-  "objet",
-  "monture-option",
-];
 
 const CONSTRAINT_TYPES: ConstraintType[] = [
   "forbids-equipment",
@@ -36,9 +25,6 @@ const CONSTRAINT_TYPES: ConstraintType[] = [
   "limitation",
   "custom",
 ];
-
-const replaceAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
-const removeAt = <T,>(arr: T[], i: number): T[] => arr.filter((_, j) => j !== i);
 
 function AddButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (

@@ -5,22 +5,16 @@ import {
   castableSpells as coreCastableSpells,
 } from "@core";
 import type { Catalog, Profile, ProfileInstance, Spell } from "@core";
+// Libellés de présentation partagés avec l'admin (source unique dans @ui) — alias pour garder les noms locaux.
+import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
 
 /**
  * Constantes, helpers purs et types partagés par les composants du constructeur.
  * Aucun rendu ici : uniquement des données et de la logique dérivée du catalogue/liste.
  */
 
-export const LEVEL = ["", "I", "II", "III"];
+export { STATS, LEVEL };
 
-export const STATS: [keyof Profile["stats"], string][] = [
-  ["v", "V"],
-  ["p", "P"],
-  ["a", "A"],
-  ["c", "C"],
-  ["t", "T"],
-  ["i", "I"],
-];
 // Groupes de stats comme sur les cartes officielles : combat (V P A C) puis (T I).
 export const STATS_COMBAT: [keyof Profile["stats"], string][] = STATS.slice(0, 4);
 export const STATS_SECONDARY: [keyof Profile["stats"], string][] = STATS.slice(4);

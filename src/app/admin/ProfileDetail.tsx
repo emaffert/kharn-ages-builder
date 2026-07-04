@@ -234,14 +234,6 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
 
       <Section title="Dés de maîtrise (chaque dé porte 1 à 5 domaines)">
         <div className="group space-y-2">
-          <div className="flex flex-wrap gap-3 text-xs adm-faint">
-            {MASTERY_DOMAINS.map((d) => (
-              <span key={d} className="flex items-center gap-1">
-                <DomainIcon domain={d} className="h-3.5 w-3.5" />
-                {d}
-              </span>
-            ))}
-          </div>
           {profile.masteryDice.map((die, i) => (
             <div key={i} className="flex flex-wrap items-center gap-1.5">
               <span className="w-10 text-xs font-semibold adm-muted">Dé {i + 1}</span>
@@ -264,7 +256,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
                     }
                     className={on ? "adm-dice adm-dice--on" : "adm-dice"}
                   >
-                    <DomainIcon domain={dom} />
+                    <DomainIcon domain={dom} className="h-5 w-5" />
                   </button>
                 );
               })}

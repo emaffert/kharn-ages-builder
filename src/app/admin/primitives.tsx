@@ -1,58 +1,26 @@
 import type { ReactNode } from "react";
 import { Tag } from "@ui";
 import type { FieldValue } from "../useCatalogStore";
+import offensive from "../../assets/maitrise/offensive.png";
+import defensive from "../../assets/maitrise/defensive.png";
+import objectif from "../../assets/maitrise/objectif.png";
+import tir from "../../assets/maitrise/tir.png";
+import esoterique from "../../assets/maitrise/esoterique.png";
 
 /** Composants de présentation réutilisables de l'admin (stylés sur admin.css). */
 
-/** Icônes originales évoquant les 5 domaines de maîtrise (cf. livret p.7). */
+/** Vrais symboles des 5 domaines de maîtrise (mêmes assets que le dé des fiches). */
+const DOMAIN_ICONS: Record<string, string> = { offensive, defensive, objectif, tir, esoterique };
+
+/**
+ * Icône d'un domaine de maîtrise (asset N&B). Recoloré par le `filter` de thème `--km-tune`
+ * (comme le dé des fiches) : encre en clair, os en sombre. L'état actif/inactif dans un dé est
+ * rendu par l'opacité (cf. `.adm-dice .adm-domain-icon` dans admin.css).
+ */
 export function DomainIcon({ domain, className = "h-4 w-4" }: { domain: string; className?: string }) {
-  const common = {
-    viewBox: "0 0 16 16",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.5,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    className,
-  };
-  switch (domain) {
-    case "offensive": // épées croisées
-      return (
-        <svg {...common}>
-          <path d="M3 13 13 3" />
-          <path d="M13 13 3 3" />
-        </svg>
-      );
-    case "defensive": // bouclier
-      return (
-        <svg {...common}>
-          <path d="M8 2l5 2v4c0 3-2 5-5 6-3-1-5-3-5-6V4z" />
-        </svg>
-      );
-    case "objectif": // fanion
-      return (
-        <svg {...common}>
-          <path d="M5 2v12" />
-          <path d="M5 3h7l-2 2 2 2H5" />
-        </svg>
-      );
-    case "tir": // arc et flèche
-      return (
-        <svg {...common}>
-          <path d="M4 3a8 8 0 0 1 0 10" />
-          <path d="M2 8h11" />
-          <path d="M11 6l2 2-2 2" />
-        </svg>
-      );
-    case "esoterique": // étincelle
-      return (
-        <svg {...common}>
-          <path d="M8 2l1.2 4.8L14 8l-4.8 1.2L8 14l-1.2-4.8L2 8l4.8-1.2z" />
-        </svg>
-      );
-    default:
-      return null;
-  }
+  const src = DOMAIN_ICONS[domain];
+  if (!src) return null;
+  return <img src={src} alt={domain} className={`adm-domain-icon ${className}`} />;
 }
 
 /** Pastille de règle — réutilise `@ui` Tag (mêmes tons que le builder). */

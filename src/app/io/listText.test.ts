@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fangsCatalog } from "@data";
+import { catalog } from "@data";
 import type { ListDocument } from "@core";
 import { exportText, importText } from "./listText";
 
@@ -9,7 +9,7 @@ function makeDoc(): ListDocument {
   const executeur = { instanceId: "e", profileId: "fangs-executeur-2", addedEquipmentIds: ["arbalete-de-poing"], removedBaseEquipmentIds: [], spellIds: [], munitions: { "arbalete-de-poing": 4 } };
   return {
     schemaVersion: "1",
-    catalogVersion: fangsCatalog.version,
+    catalogVersion: catalog.version,
     id: "l1",
     name: "Tanière de Nyx",
     format: "escarmouche",
@@ -23,7 +23,7 @@ function makeDoc(): ListDocument {
 
 describe("export/import texte", () => {
   it("l'export contient le nom, la faction et les figurines", () => {
-    const txt = exportText(fangsCatalog, makeDoc());
+    const txt = exportText(catalog, makeDoc());
     expect(txt).toContain("Tanière de Nyx");
     expect(txt).toContain("Fangs");
     expect(txt).toContain("Apathée III");
@@ -32,7 +32,7 @@ describe("export/import texte", () => {
   });
 
   it("réimporte les figurines, l'arme, les munitions et le sort (best-effort)", () => {
-    const { doc, unresolved } = importText(fangsCatalog, exportText(fangsCatalog, makeDoc()));
+    const { doc, unresolved } = importText(catalog, exportText(catalog, makeDoc()));
     const members = doc.fersDeLance[0].members;
     expect(members.map((m) => m.profileId)).toEqual(["fangs-apathee-3", "fangs-executeur-2"]);
     expect(doc.fersDeLance[0].factionId).toBe("fangs");
@@ -51,15 +51,15 @@ describe("export/import texte", () => {
     doc.fersDeLance[0].members = doc.fersDeLance[0].members.map((m) =>
       m.profileId === "fangs-executeur-2" ? { ...m, removedBaseEquipmentIds: ["couteau"] } : m,
     );
-    const txt = exportText(fangsCatalog, doc);
+    const txt = exportText(catalog, doc);
     expect(txt).toContain("Couteau [retiré]");
-    const { doc: back } = importText(fangsCatalog, txt);
+    const { doc: back } = importText(catalog, txt);
     const exec = back.fersDeLance[0].members.find((m) => m.profileId === "fangs-executeur-2")!;
     expect(exec.removedBaseEquipmentIds).toContain("couteau");
   });
 
   it("signale les lignes non reconnues", () => {
-    const { unresolved } = importText(fangsCatalog, "Ma liste\nFangs · Escarmouche · 300 Ko\n\n• Profil Inexistant — 10 Ko");
+    const { unresolved } = importText(catalog, "Ma liste\nFangs · Escarmouche · 300 Ko\n\n• Profil Inexistant — 10 Ko");
     expect(unresolved.length).toBeGreaterThan(0);
   });
 });

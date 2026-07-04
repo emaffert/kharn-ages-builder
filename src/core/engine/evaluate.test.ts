@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fangsCatalog } from "@data";
+import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
 import { evaluateList } from "./evaluate";
 
@@ -23,7 +23,7 @@ function makeList(
 ): ListDocument {
   return {
     schemaVersion: "1",
-    catalogVersion: fangsCatalog.version,
+    catalogVersion: catalog.version,
     id: "test",
     name: "Test",
     format,
@@ -37,7 +37,7 @@ function makeList(
 }
 
 const evalFang = (members: ProfileInstance[], faction?: string) =>
-  evaluateList(fangsCatalog, makeList(members, faction));
+  evaluateList(catalog, makeList(members, faction));
 
 describe("calcul de coût", () => {
   it("coût de base d'un profil", () => {

@@ -66,4 +66,14 @@ describe("useListStore", () => {
     act(() => result.current.toggleUpgrade(goulue, "apprentie-de-nyx")); // +15
     expect(result.current.evaluation.totalCost).toBe(60);
   });
+
+  it("toggleUpgrade impose un choix exclusif au sein d'un même choiceGroup", () => {
+    const { result } = renderHook(() => useListStore("gouns"));
+    act(() => result.current.addMember("gouns-artisane-dogon-1"));
+    const artisane = result.current.fdl.members[0].instanceId;
+    act(() => result.current.toggleUpgrade(artisane, "racines-tribales-nourrice"));
+    act(() => result.current.toggleUpgrade(artisane, "racines-tribales-herboriste"));
+    // La 2e sélection du même groupe (Racines Tribales) remplace la 1re.
+    expect(result.current.fdl.members[0].specialCardIds).toEqual(["racines-tribales-herboriste"]);
+  });
 });

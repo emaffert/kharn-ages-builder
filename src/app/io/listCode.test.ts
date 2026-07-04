@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fangsCatalog } from "@data";
+import { catalog } from "@data";
 import type { ListDocument } from "@core";
 import { encodeList, decodeList, checkImportedList } from "./listCode";
 
@@ -44,13 +44,13 @@ describe("code portable de liste", () => {
 
 describe("checkImportedList", () => {
   it("aucun avertissement pour une liste compatible", () => {
-    const ok = { ...doc, catalogVersion: fangsCatalog.version, fersDeLance: [{ id: "f", factionId: "fangs", leaderInstanceId: "a", members: [{ instanceId: "a", profileId: "fangs-apathee-3", addedEquipmentIds: [], removedBaseEquipmentIds: [], spellIds: [] }] }] };
-    expect(checkImportedList(fangsCatalog, ok)).toEqual([]);
+    const ok = { ...doc, catalogVersion: catalog.version, fersDeLance: [{ id: "f", factionId: "fangs", leaderInstanceId: "a", members: [{ instanceId: "a", profileId: "fangs-apathee-3", addedEquipmentIds: [], removedBaseEquipmentIds: [], spellIds: [] }] }] };
+    expect(checkImportedList(catalog, ok)).toEqual([]);
   });
 
   it("signale une version différente et un profil inconnu", () => {
     const bad = { ...doc, catalogVersion: "0.0.0-autre", fersDeLance: [{ id: "f", factionId: "fangs", leaderInstanceId: "a", members: [{ instanceId: "a", profileId: "profil-inexistant", addedEquipmentIds: [], removedBaseEquipmentIds: [], spellIds: [] }] }] };
-    const w = checkImportedList(fangsCatalog, bad);
+    const w = checkImportedList(catalog, bad);
     expect(w.some((m) => m.includes("Version"))).toBe(true);
     expect(w.some((m) => m.includes("profil-inexistant"))).toBe(true);
   });

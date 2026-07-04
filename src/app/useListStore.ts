@@ -177,7 +177,16 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     toggleSpell: (instanceId, spellId) =>
       patchMember(instanceId, (m) => ({ ...m, spellIds: toggle(m.spellIds, spellId) })),
     toggleUpgrade: (instanceId, cardId) =>
-      patchMember(instanceId, (m) => ({ ...m, specialCardIds: toggle(m.specialCardIds ?? [], cardId) })),
+      patchMember(instanceId, (m) => {
+        const current = m.specialCardIds ?? [];
+        if (current.includes(cardId)) return { ...m, specialCardIds: current.filter((id) => id !== cardId) };
+        // Ajout : si la carte relève d'un groupe de choix exclusif, retirer les autres du même groupe.
+        const group = catalog.specialCards.find((c) => c.id === cardId)?.choiceGroup;
+        const kept = group
+          ? current.filter((id) => catalog.specialCards.find((c) => c.id === id)?.choiceGroup !== group)
+          : current;
+        return { ...m, specialCardIds: [...kept, cardId] };
+      }),
     setMunition: (instanceId, equipId, qty) =>
       patchMember(instanceId, (m) => ({ ...m, munitions: { ...(m.munitions ?? {}), [equipId]: Math.max(0, qty) } })),
     setGuard: (instanceId, ofInstanceId) =>

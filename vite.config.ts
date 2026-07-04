@@ -51,10 +51,10 @@ function devCardsPlugin(): Plugin {
 
 /**
  * Endpoint de DÉVELOPPEMENT pour enregistrer le catalogue édité directement dans
- * `src/data/catalog.fangs.json`. `apply: "serve"` => absent du build de production.
+ * `src/data/catalog.json`. `apply: "serve"` => absent du build de production.
  */
 function devSaveCatalogPlugin(): Plugin {
-  const target = resolve(__dirname, "src/data/catalog.fangs.json");
+  const target = resolve(__dirname, "src/data/catalog.json");
   return {
     name: "dev-save-catalog",
     apply: "serve",

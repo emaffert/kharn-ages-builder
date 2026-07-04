@@ -257,6 +257,11 @@ export const SpecialCardSchema = z.object({
    * Absent/`false` : carte automatique appliquée d'office (ex. Fille de Nyx, Xayìn & Muskh).
    */
   amelioration: z.boolean().optional(),
+  /**
+   * Groupe de choix exclusif : parmi les améliorations partageant le même `choiceGroup`,
+   * une figurine ne peut en sélectionner qu'une seule (ex. les 3 spécialités « Racines Tribales »).
+   */
+  choiceGroup: z.string().optional(),
   /** La carte confère la capacité de lancer des sorts dans ces voies (ex. Apprentie de Nyx → ostéomancie). */
   grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   rulesText: z.array(RuleTextSchema),

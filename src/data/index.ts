@@ -1,14 +1,14 @@
 /**
- * Catalogue de données. Source de vérité : `catalog.fangs.json` (round-trip avec l'éditeur admin).
- * Le JSON est validé par Zod au chargement (`parseCatalog`).
+ * Catalogue de données (toutes factions). Source de vérité : `catalog.json`
+ * (round-trip avec l'éditeur admin). Le JSON est validé par Zod au chargement (`parseCatalog`).
  * Référence : docs/schema-donnees.md.
  */
 
 import { parseCatalog, type Catalog } from "@core";
-import catalogJson from "./catalog.fangs.json";
+import catalogJson from "./catalog.json";
 
-/** Catalogue Fang, chargé depuis le JSON canonique et validé. */
-export const fangsCatalog: Catalog = parseCatalog(catalogJson);
+/** Catalogue bundlé, chargé depuis le JSON canonique et validé. */
+export const catalog: Catalog = parseCatalog(catalogJson);
 
 /** Clé de persistance des éditions admin locales (cf. useCatalogStore). */
 const ADMIN_CATALOG_KEY = "kharn-admin-catalog-v1";
@@ -25,5 +25,5 @@ export function loadCatalog(): Catalog {
   } catch {
     /* JSON/quota/validation invalides → repli sur le catalogue bundlé */
   }
-  return fangsCatalog;
+  return catalog;
 }

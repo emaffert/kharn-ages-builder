@@ -214,7 +214,7 @@ export function useCatalogStore() {
   );
 
   /**
-   * DEV uniquement : enregistre le catalogue directement dans `src/data/catalog.fangs.json`
+   * DEV uniquement : enregistre le catalogue directement dans `src/data/catalog.json`
    * via l'endpoint du serveur Vite. Retourne un message d'erreur, ou null si OK.
    */
   const saveToProject = useCallback(async (): Promise<string | null> => {

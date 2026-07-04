@@ -155,11 +155,6 @@ export function explainTraitUsage(trait: string, cat: Catalog): string[] {
   for (const s of cat.spells) {
     if (s.reservedTo?.trait === trait) out.push(`sort « ${s.name} » — réservé à ce trait`);
   }
-  for (const eq of cat.equipment) {
-    for (const c of eq.restrictions) {
-      if (constraintUses(c)) out.push(`équipement « ${eq.name} » — ${describeConstraint(c, cat)}`);
-    }
-  }
   return [...new Set(out)];
 }
 

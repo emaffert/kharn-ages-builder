@@ -1,5 +1,4 @@
 import type { Catalog, Equipment } from "@core";
-import { ConstraintListEditor } from "../RuleEditors";
 import { Section } from "./primitives";
 import { EQUIPMENT_CATEGORIES, INPUT } from "./shared";
 import { GrantsCastingEditor, ReservedToEditor, SkillsEditor } from "./editors";
@@ -120,14 +119,6 @@ export function EquipmentDetail({
 
       <Section title="Réservé à (qui peut l'équiper)">
         <ReservedToEditor value={e.reservedTo} cat={cat} onChange={(v) => onChange({ reservedTo: v })} />
-      </Section>
-
-      <Section title="Restrictions (notes verbatim)">
-        <ConstraintListEditor
-          constraints={e.restrictions}
-          cat={cat}
-          onChange={(c) => onChange({ restrictions: c })}
-        />
       </Section>
 
       <details>

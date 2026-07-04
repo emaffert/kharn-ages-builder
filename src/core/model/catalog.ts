@@ -146,7 +146,6 @@ export const EquipmentSchema = z.object({
   effectsText: z.string(),
   /** Compétences conférées (ex. la Faucille d'Os confère « Riposte »). */
   grantsSkills: z.array(SkillRefSchema).optional(),
-  restrictions: z.array(ConstraintSchema),
   /**
    * Réservation : l'équipement n'est portable que par les profils correspondant à *toutes* les
    * dimensions fournies (au sein d'une dimension, l'appartenance suffit). Ex. Bâton relique →
@@ -214,7 +213,6 @@ export const MountSchema = z.object({
     .optional(),
   grantedSkills: z.array(SkillRefSchema).optional(),
   specialActionsText: z.string().optional(),
-  restrictions: z.array(ConstraintSchema),
   cardImage: z.string().optional(),
 });
 export type Mount = z.infer<typeof MountSchema>;
@@ -224,7 +222,6 @@ export const MountOptionSchema = z.object({
   name: z.string(),
   cost: z.number(),
   effectsText: z.string(),
-  restrictions: z.array(ConstraintSchema),
 });
 export type MountOption = z.infer<typeof MountOptionSchema>;
 

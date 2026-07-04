@@ -7,7 +7,6 @@ describe("explain", () => {
     const all = [
       ...catalog.profiles.flatMap((p) => p.recruitment),
       ...catalog.specialCards.flatMap((c) => c.constraints),
-      ...catalog.equipment.flatMap((e) => e.restrictions),
     ];
     for (const c of all) {
       expect(describeConstraint(c, catalog).length).toBeGreaterThan(0);

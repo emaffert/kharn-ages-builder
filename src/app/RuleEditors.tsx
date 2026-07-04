@@ -11,6 +11,9 @@ import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared
 
 /** Éditeurs structurés des contraintes et effets (propres à un profil). */
 
+// Types réellement appliqués par le moteur (+ « custom » = note libre non vérifiée).
+// Les types prévus mais non implémentés sont retirés jusqu'à leur implémentation, pour ne pas
+// exposer des champs sans effet.
 const CONSTRAINT_TYPES: ConstraintType[] = [
   "forbids-equipment",
   "requires-present",
@@ -18,11 +21,6 @@ const CONSTRAINT_TYPES: ConstraintType[] = [
   "equipment-reserved",
   "consumes-slot",
   "attachment",
-  "count-relative",
-  "mount-eligibility",
-  "pact-composition",
-  "mutual-exclusion",
-  "limitation",
   "custom",
 ];
 
@@ -316,11 +314,14 @@ function ParamsEditor({
   params,
   cat,
   onChange,
+  onProfile,
 }: {
   type: ConstraintType;
   params: Record<string, unknown>;
   cat: Catalog;
   onChange: (p: Record<string, unknown>) => void;
+  /** true = édité sur une fiche de profil (le sujet est la figurine elle-même). */
+  onProfile: boolean;
 }) {
   const set = (patch: Record<string, unknown>) => onChange({ ...params, ...patch });
   const arr = (k: string): string[] => (Array.isArray(params[k]) ? (params[k] as string[]) : []);
@@ -336,7 +337,10 @@ function ParamsEditor({
             onChange={(v) => set({ categories: v })}
             options={EQUIPMENT_CATEGORIES.map((c) => ({ value: c, label: c }))}
           />
-          <Txt label="profil (sujet, optionnel)" value={str("profileId")} onChange={(v) => set({ profileId: v || undefined })} />
+          {/* Sur une carte spéciale : le profil visé. Sur une fiche de profil, le sujet est la figurine. */}
+          {!onProfile && (
+            <Txt label="profil (sujet)" value={str("profileId")} onChange={(v) => set({ profileId: v || undefined })} />
+          )}
         </div>
       );
     case "requires-present":
@@ -367,18 +371,15 @@ function ParamsEditor({
       );
     case "equipment-reserved":
       return (
-        <div className="space-y-1.5">
-          <Txt label="réservé au trait" value={str("trait")} onChange={(v) => set({ trait: v || undefined })} />
-          <StringList
-            label="grimoires interdits"
-            values={arr("forbidGrimoires")}
-            onChange={(v) => set({ forbidGrimoires: v })}
-            options={[
-              { value: "petit", label: "petit" },
-              { value: "grand", label: "grand" },
-            ]}
-          />
-        </div>
+        <StringList
+          label="grimoires interdits"
+          values={arr("forbidGrimoires")}
+          onChange={(v) => set({ forbidGrimoires: v })}
+          options={[
+            { value: "petit", label: "petit" },
+            { value: "grand", label: "grand" },
+          ]}
+        />
       );
     case "consumes-slot":
       return (
@@ -475,10 +476,13 @@ export function ConstraintListEditor({
   constraints,
   cat,
   onChange,
+  onProfile = false,
 }: {
   constraints: Constraint[];
   cat: Catalog;
   onChange: (c: Constraint[]) => void;
+  /** true quand édité sur une fiche de profil (masque le champ « profil sujet » redondant). */
+  onProfile?: boolean;
 }) {
   const update = (i: number, c: Constraint) => onChange(replaceAt(constraints, i, c));
   return (
@@ -516,7 +520,7 @@ export function ConstraintListEditor({
               auto-vérifiée
             </label>
           </div>
-          <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} />
+          <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} onProfile={onProfile} />
           <label className="block text-xs adm-faint">
             wording verbatim (fait foi)
             <textarea value={c.sourceText} onChange={(e) => update(i, { ...c, sourceText: e.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />

@@ -338,6 +338,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
           constraints={profile.recruitment}
           cat={cat}
           onChange={(c) => patch({ recruitment: c })}
+          onProfile
         />
       </Section>
 

@@ -3423,8 +3423,7 @@
       "cost": 0,
       "isFree": true,
       "hands": 1,
-      "effectsText": "Saignement 1 en cas de RC. Pas d'effet avec C.",
-      "restrictions": []
+      "effectsText": "Saignement 1 en cas de RC. Pas d'effet avec C."
     },
     {
       "id": "faucille-os",
@@ -3438,7 +3437,6 @@
           "skillId": "rusee"
         }
       ],
-      "restrictions": [],
       "cardImage": "cards/Fangs/fangs-xayin-muskh.jpg"
     },
     {
@@ -3447,8 +3445,7 @@
       "category": "arme-cac",
       "cost": 10,
       "hands": 1,
-      "effectsText": "Empoisonne la victime.",
-      "restrictions": []
+      "effectsText": "Empoisonne la victime."
     },
     {
       "id": "paire-poignards",
@@ -3456,8 +3453,7 @@
       "category": "arme-cac",
       "cost": 18,
       "hands": 2,
-      "effectsText": "3 dégâts / Saignement 2. 3 PA = 2 attaques à 2 PA successives.",
-      "restrictions": []
+      "effectsText": "3 dégâts / Saignement 2. 3 PA = 2 attaques à 2 PA successives."
     },
     {
       "id": "arbalete-de-poing",
@@ -3469,8 +3465,7 @@
         "unitCost": 2,
         "max": 10
       },
-      "effectsText": "Arme de tir entraînant plusieurs jets de défense (voir FAQ).",
-      "restrictions": []
+      "effectsText": "Arme de tir entraînant plusieurs jets de défense (voir FAQ)."
     },
     {
       "id": "baton-relique-decatie-2",
@@ -3479,7 +3474,6 @@
       "cost": 15,
       "hands": 1,
       "effectsText": "Les Goulues dans son aura infligent +2 dégâts.",
-      "restrictions": [],
       "reservedTo": {
         "profileIds": [
           "fangs-decatie-2"
@@ -3493,7 +3487,6 @@
       "cost": 15,
       "hands": 1,
       "effectsText": "Les Goulues dans son aura gagnent « Réceptif (ostéomancie) ».",
-      "restrictions": [],
       "reservedTo": {
         "profileIds": [
           "fangs-decatie-3"
@@ -3506,8 +3499,7 @@
       "category": "arme-cac",
       "cost": 10,
       "hands": 2,
-      "effectsText": "Permet de regagner 1 PA en cas de RC. Pas d'attaque ou de défense à 3 PA.",
-      "restrictions": []
+      "effectsText": "Permet de regagner 1 PA en cas de RC. Pas d'attaque ou de défense à 3 PA."
     },
     {
       "id": "fronde",
@@ -3519,8 +3511,7 @@
         "short": 0,
         "long": 6
       },
-      "effectsText": "3 dégâts. Sonne en cas de RC.",
-      "restrictions": []
+      "effectsText": "3 dégâts. Sonne en cas de RC."
     },
     {
       "id": "mkuki",
@@ -3533,8 +3524,7 @@
         "short": 2,
         "long": 5
       },
-      "effectsText": "10-distance dégâts. Nécessite une cible à 2\" ou plus.",
-      "restrictions": []
+      "effectsText": "10-distance dégâts. Nécessite une cible à 2\" ou plus."
     },
     {
       "id": "arc-court",
@@ -3547,7 +3537,6 @@
         "long": 6
       },
       "effectsText": "",
-      "restrictions": [],
       "reservedTo": {
         "levels": [
           1
@@ -3564,8 +3553,7 @@
         "short": 3,
         "long": 6
       },
-      "effectsText": "4 dégâts.",
-      "restrictions": []
+      "effectsText": "4 dégâts."
     },
     {
       "id": "arc-composite",
@@ -3577,8 +3565,7 @@
         "short": 5,
         "long": 15
       },
-      "effectsText": "4 dégâts. Permet de relancer 1D10 lors d'un tir par activation.",
-      "restrictions": []
+      "effectsText": "4 dégâts. Permet de relancer 1D10 lors d'un tir par activation."
     },
     {
       "id": "canne-des-esprits",
@@ -3587,8 +3574,7 @@
       "cost": 8,
       "hands": 2,
       "allonge": 1,
-      "effectsText": "Ses adversaires ont -1 en attaque et en défense. +1 par incantation.",
-      "restrictions": []
+      "effectsText": "Ses adversaires ont -1 en attaque et en défense. +1 par incantation."
     },
     {
       "id": "canne-alaric",
@@ -3597,8 +3583,7 @@
       "cost": 0,
       "hands": 2,
       "allonge": 1,
-      "effectsText": "",
-      "restrictions": []
+      "effectsText": ""
     },
     {
       "id": "madrier",
@@ -3608,7 +3593,6 @@
       "hands": 2,
       "allonge": 1,
       "effectsText": "+1 dégât. Allonge. Permet de répartir les dégâts sur tous ses adversaires au corps à corps.",
-      "restrictions": [],
       "reservedTo": {
         "traits": [
           "synkherces"
@@ -3625,8 +3609,7 @@
         "short": 2,
         "long": 7
       },
-      "effectsText": "10-distance dégâts. CàC = C dégâts.",
-      "restrictions": []
+      "effectsText": "10-distance dégâts. CàC = C dégâts."
     },
     {
       "id": "javelot",
@@ -3638,8 +3621,7 @@
         "short": 2,
         "long": 7
       },
-      "effectsText": "10-distance dégâts. CàC = C dégâts.",
-      "restrictions": []
+      "effectsText": "10-distance dégâts. CàC = C dégâts."
     },
     {
       "id": "n-gao",
@@ -3648,8 +3630,7 @@
       "cost": 7,
       "hands": 1,
       "durability": 4,
-      "effectsText": "+A en défense.",
-      "restrictions": []
+      "effectsText": "+A en défense."
     },
     {
       "id": "equip-1783195319723",
@@ -3657,7 +3638,6 @@
       "category": "objet",
       "cost": 5,
       "effectsText": "+1 en attaque et aux dégâts.",
-      "restrictions": [],
       "cardImage": "cards/Gouns/champion-tribal-1.jpg"
     },
     {
@@ -3666,7 +3646,6 @@
       "category": "objet",
       "cost": 10,
       "effectsText": "Immunisent à la terreur.",
-      "restrictions": [],
       "cardImage": "cards/Gouns/champion-tribal-1.jpg"
     }
   ],
@@ -3816,7 +3795,6 @@
         "allonge": 0.5,
         "stature": 3
       },
-      "restrictions": [],
       "cardImage": "cards/Gouns/mochere.jpg"
     },
     {
@@ -3842,7 +3820,6 @@
           "value": 1
         }
       ],
-      "restrictions": [],
       "cardImage": "cards/Gouns/mochere.jpg"
     },
     {
@@ -3871,7 +3848,6 @@
           "value": 2
         }
       ],
-      "restrictions": [],
       "cardImage": "cards/Gouns/mochere.jpg"
     }
   ],

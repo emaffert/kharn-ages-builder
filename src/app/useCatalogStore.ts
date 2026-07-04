@@ -92,7 +92,7 @@ export function useCatalogStore() {
       ...c,
       equipment: [
         ...c.equipment,
-        { id, name: "Nouvel équipement", category: "arme-cac", cost: 0, effectsText: "", restrictions: [] },
+        { id, name: "Nouvel équipement", category: "arme-cac", cost: 0, effectsText: "" },
       ],
     }));
     return id;

@@ -345,11 +345,13 @@ function validate(
   for (const fdl of list.fersDeLance) {
     const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdl.id);
     validateLimitations(fdl, inFdl, issues);
+    validateConsumesSlot(cat, fdl, inFdl, issues);
     validateFactionMembership(fdl, inFdl, issues);
     validateLeader(fdl, inFdl, issues);
   }
 
   validateForbiddenEquipment(cat, resolved, idx, issues);
+  validateReservedEquipment(cat, resolved, issues);
   validateRequiresPresent(cat, resolved, issues);
   validateAttachments(cat, list, resolved, issues);
   validateSpecialCardScope(idx, resolved, issues);
@@ -464,6 +466,44 @@ function validateLimitations(fdl: FerDeLance, inFdl: ResolvedInstance[], issues:
   }
 }
 
+/**
+ * LIM P : un personnage « occupe la place » d'un profil générique (modèle, niveau) via une contrainte
+ * `consumes-slot` { modelId, level }. Combattants du profil cible + personnages consommant son créneau
+ * ne peuvent dépasser la limitation du profil cible (ex. Engueran prend une place de Paladin III).
+ */
+function validateConsumesSlot(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
+  const bySlot = new Map<string, { modelId: string; level: number; consumers: ResolvedInstance[] }>();
+  for (const ri of inFdl) {
+    for (const c of ri.profile.recruitment) {
+      if (c.type !== "consumes-slot") continue;
+      const { modelId, level } = c.params as { modelId?: string; level?: number };
+      if (!modelId || typeof level !== "number") continue;
+      const key = `${modelId}#${level}`;
+      const slot = bySlot.get(key) ?? { modelId, level, consumers: [] };
+      slot.consumers.push(ri);
+      bySlot.set(key, slot);
+    }
+  }
+  for (const { modelId, level, consumers } of bySlot.values()) {
+    const target =
+      cat.profiles.find((p) => p.modelId === modelId && p.level === level && !p.isNamed) ??
+      cat.profiles.find((p) => p.modelId === modelId && p.level === level);
+    if (!target) continue;
+    const allowed = target.limitation.kind === "X" ? (target.limitation.value ?? Infinity) : 1;
+    const total = inFdl.filter((ri) => ri.profile.id === target.id).length + consumers.length;
+    if (total > allowed) {
+      const src = consumers[0].profile.recruitment.find((c) => c.type === "consumes-slot");
+      issues.push({
+        severity: "error",
+        ferDeLanceId: fdl.id,
+        ruleId: `consumes-slot:${modelId}#${level}`,
+        message: `${total} occupant(s) de la place de « ${target.name} » (niveau ${level}) pour une limite de ${allowed}.`,
+        sourceText: src?.sourceText ?? "",
+      });
+    }
+  }
+}
+
 function validateFactionMembership(
   fdl: FerDeLance,
   inFdl: ResolvedInstance[],
@@ -533,6 +573,42 @@ function validateForbiddenEquipment(
           ruleId: constraint.id,
           message: `« ${ri.profile.name} » ne peut pas être équipé de ce type d'équipement.`,
           sourceText: constraint.sourceText,
+        });
+      }
+    }
+  }
+}
+
+/** Une figurine valide-t-elle la réservation d'un équipement ? (toutes les dimensions fournies). */
+function reservedOk(eq: Catalog["equipment"][number], p: Profile): boolean {
+  const r = eq.reservedTo;
+  if (!r) return true;
+  if (r.profileIds && !r.profileIds.includes(p.id)) return false;
+  if (r.modelIds && !(p.modelId != null && r.modelIds.includes(p.modelId))) return false;
+  if (r.traits && !r.traits.some((t) => p.traits.includes(t))) return false;
+  if (r.levels && !(p.level != null && r.levels.includes(p.level))) return false;
+  if (r.factionIds && !(p.factionId != null && r.factionIds.includes(p.factionId))) return false;
+  return true;
+}
+
+/**
+ * Défense en profondeur : le constructeur empêche déjà d'ajouter un équipement réservé à une
+ * figurine non éligible, mais une liste importée pourrait en contenir un — on le signale ici.
+ * On ne contrôle que l'équipement AJOUTÉ (l'équipement de base est défini par la carte).
+ */
+function validateReservedEquipment(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
+  const eqById = new Map(cat.equipment.map((e) => [e.id, e]));
+  for (const ri of resolved) {
+    for (const id of ri.instance.addedEquipmentIds) {
+      const eq = eqById.get(id);
+      if (eq && !reservedOk(eq, ri.profile)) {
+        issues.push({
+          severity: "error",
+          ferDeLanceId: ri.ferDeLanceId,
+          instanceId: ri.instance.instanceId,
+          ruleId: `reserved-${eq.id}`,
+          message: `« ${ri.profile.name} » ne peut pas être équipé de « ${eq.name} » (réservé à d'autres figurines).`,
+          sourceText: "Équipement réservé.",
         });
       }
     }

@@ -206,4 +206,15 @@ describe("cartes spéciales payantes", () => {
     const res = evalFang([inst("fangs-larbin-1", { specialCardIds: ["apprentie-de-nyx"] })]);
     expect(res.issues.some((i) => i.ruleId === "special-card-scope:apprentie-de-nyx")).toBe(true);
   });
+
+  it("signale un équipement réservé porté par une figurine non éligible", () => {
+    // Le Madrier est réservé au trait « synkherces » ; un Dogon n'y a pas droit.
+    const res = evaluateList(catalog, makeList([inst("gouns-dogon-1", { addedEquipmentIds: ["madrier"] })], "gouns"));
+    expect(res.issues.some((i) => i.ruleId === "reserved-madrier")).toBe(true);
+  });
+
+  it("n'alerte pas quand la figurine éligible porte l'équipement réservé", () => {
+    const res = evaluateList(catalog, makeList([inst("gouns-guerrier-albinos-3", { addedEquipmentIds: ["madrier"] })], "gouns"));
+    expect(res.issues.some((i) => i.ruleId === "reserved-madrier")).toBe(false);
+  });
 });

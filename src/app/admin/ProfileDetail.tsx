@@ -1,0 +1,408 @@
+import { useState } from "react";
+import { iconFor } from "@core";
+import type { Catalog, Constraint, Effect, Level, Profile } from "@core";
+import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
+import type { FieldValue } from "../useCatalogStore";
+import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
+import { IconEditor } from "../IconEditor";
+import { AddButton, Badge, DomainIcon, EditableNumber, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
+import { INPUT, MASTERY_DOMAINS, STAT_LABELS, removeAt, replaceAt } from "./shared";
+import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
+
+// ── Détail d'un profil ───────────────────────────────────────────────────────
+
+interface DetailProps {
+  profile: Profile;
+  cat: Catalog;
+  updateField: (id: string, path: string, value: FieldValue) => void;
+  updateProfile: (id: string, patch: Partial<Profile>) => void;
+  setIcon: (cardImage: string, dataUrl: string | null) => void;
+  toggleUnverified: (id: string, key: string) => void;
+}
+
+/** Emplacement d'icône (partagée ou propre au niveau) : aperçu + boutons éditer/retirer. */
+export function IconSlot({
+  title,
+  hint,
+  src,
+  active,
+  createLabel = "Créer l'icône…",
+  onEdit,
+  onRemove,
+}: {
+  title: string;
+  hint: string;
+  src?: string;
+  active: boolean;
+  createLabel?: string;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="flex gap-2.5">
+      {src ? (
+        <img src={src} alt="" className="adm-slot-thumb h-16 w-16" />
+      ) : (
+        <div className="adm-slot-empty h-16 w-16 text-center text-[10px]">aucune</div>
+      )}
+      <div className="flex w-40 flex-col gap-1">
+        <div className="flex items-center gap-1.5">
+          <span className="adm-muted text-[11px] font-semibold">{title}</span>
+          {active && <span className="adm-slot-on px-1 text-[9px]">affichée</span>}
+        </div>
+        <p className="adm-faint text-[10px] leading-tight">{hint}</p>
+        <div className="mt-auto flex gap-1.5">
+          <button onClick={onEdit} className="adm-btn-soft px-2 py-0.5 text-xs">
+            {src ? "Modifier…" : createLabel}
+          </button>
+          {src && (
+            <button onClick={onRemove} className="adm-x px-2 py-0.5 text-xs">
+              Retirer
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProfileDetail({ profile, cat, updateField, updateProfile, setIcon, toggleUnverified }: DetailProps) {
+  const cards = specialCardsForProfile(profile, cat);
+  // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
+  const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
+  const shared = profile.cardImage ? cat.icons?.[profile.cardImage] : undefined;
+  const own = profile.icon; // déroge au partage : l'emporte sur la partagée
+  const displayed = iconFor(cat, profile); // ce que voit réellement l'app
+  const uv = (key: string) => profile.unverifiedFields?.includes(key) ?? false;
+  const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
+  const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
+  const flag = (key: string) => toggleUnverified(profile.id, key);
+
+  // Une contrainte de carte ne concerne ce profil que si son sujet est ce profil
+  // (ou si elle n'a pas de sujet précis). Évite que Xayìn hérite des contraintes de Muskh.
+  const constraintConcernsProfile = (c: Constraint): boolean => {
+    const params = c.params as { subjectProfileId?: string; profileId?: string };
+    const subject = params.subjectProfileId ?? params.profileId;
+    return subject == null || subject === profile.id;
+  };
+  const inheritedConstraints: { c: Constraint; via: string }[] = cards.flatMap((card) =>
+    card.constraints.filter(constraintConcernsProfile).map((c) => ({ c, via: card.name })),
+  );
+  const inheritedEffects: { e: Effect; via: string }[] = cards.flatMap((card) =>
+    card.effects.map((e) => ({ e, via: card.name })),
+  );
+
+  return (
+    <div className="space-y-6">
+      <header className="space-y-2">
+        <div className="flex items-center gap-3">
+          <input
+            value={profile.name}
+            onChange={(e) => upd("name", e.target.value)}
+            className="adm-title flex-1"
+          />
+          <label className="flex items-center gap-1 adm-accent">
+            <input
+              type="number"
+              value={profile.cost}
+              onChange={(e) => upd("cost", Number(e.target.value))}
+              className="adm-cost"
+            />
+            <span className="text-sm">Ko</span>
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-4">
+          {/* Icône partagée : commune à tous les niveaux qui partagent cette illustration de carte. */}
+          <IconSlot
+            title="Partagée (par carte)"
+            hint="Commune à tous les niveaux de ce modèle."
+            src={shared}
+            active={shared != null && own == null}
+            onEdit={() => setEditingIcon("shared")}
+            onRemove={() => setIcon(profile.cardImage, null)}
+          />
+          {/* Icône propre à ce niveau : déroge au partage (l'emporte sur la partagée). */}
+          <IconSlot
+            title="Propre à ce niveau"
+            hint="Déroge au partage : remplace la partagée pour ce profil seul."
+            src={own}
+            active={own != null}
+            createLabel="Déroger au partage…"
+            onEdit={() => setEditingIcon("own")}
+            onRemove={() => patch({ icon: undefined })}
+          />
+        </div>
+        {displayed == null && (
+          <p className="text-[10px] adm-faint">Aucune icône — l'app affichera le blason + niveau.</p>
+        )}
+        {editingIcon && (
+          <IconEditor
+            initialSrc={profile.cardImage ? `/${profile.cardImage}` : undefined}
+            onSave={(dataUrl) => {
+              if (editingIcon === "own") patch({ icon: dataUrl });
+              else setIcon(profile.cardImage, dataUrl);
+              setEditingIcon(null);
+            }}
+            onClose={() => setEditingIcon(null)}
+          />
+        )}
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-1">
+            <span className="text-xs adm-faint">Niveau</span>
+            <select
+              value={profile.level ?? ""}
+              onChange={(e) =>
+                patch({ level: e.target.value === "" ? undefined : (Number(e.target.value) as Level) })
+              }
+              className={INPUT}
+            >
+              <option value="">—</option>
+              <option value="1">I</option>
+              <option value="2">II</option>
+              <option value="3">III</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1">
+            <span className="text-xs adm-faint">Faction</span>
+            <input
+              value={profile.factionId ?? ""}
+              onChange={(e) => patch({ factionId: e.target.value || undefined })}
+              className={`${INPUT} w-28`}
+            />
+          </label>
+          <LimitationEditor limitation={profile.limitation} onChange={(l) => patch({ limitation: l })} />
+          <label className="flex items-center gap-1 text-xs adm-muted">
+            <input
+              type="checkbox"
+              checked={profile.isNamed ?? false}
+              onChange={(e) => patch({ isNamed: e.target.checked || undefined })}
+            />
+            Personnage
+          </label>
+          <label className="flex items-center gap-1 text-xs adm-muted">
+            <input
+              type="checkbox"
+              checked={profile.magic?.canCast ?? false}
+              onChange={(e) =>
+                patch({
+                  magic: e.target.checked
+                    ? { canCast: true, magicWayIds: profile.magic?.magicWayIds ?? [] }
+                    : undefined,
+                })
+              }
+            />
+            Mage
+          </label>
+        </div>
+      </header>
+
+      <Section title="Caractéristiques (modifiables — ⚠ = lecture à vérifier)">
+        <div className="flex flex-wrap gap-2">
+          {STAT_LABELS.map(([k, label]) => (
+            <EditableNumber
+              key={label}
+              label={label}
+              value={profile.stats[k]}
+              unverified={uv(`stats.${k}`)}
+              onChange={(v) => upd(`stats.${k}`, v)}
+              onToggle={() => flag(`stats.${k}`)}
+            />
+          ))}
+          <EditableNumber
+            label="Stature"
+            value={profile.stature}
+            unverified={uv("stature")}
+            onChange={(v) => upd("stature", v ?? 0)}
+            onToggle={() => flag("stature")}
+          />
+          <EditableNumber
+            label="PA"
+            value={profile.pa}
+            unverified={uv("pa")}
+            onChange={(v) => upd("pa", v ?? 0)}
+            onToggle={() => flag("pa")}
+          />
+          <EditableNumber
+            label="PV"
+            value={profile.pv}
+            unverified={uv("pv")}
+            onChange={(v) => upd("pv", v ?? 0)}
+            onToggle={() => flag("pv")}
+          />
+        </div>
+      </Section>
+
+      <Section title="Dés de maîtrise (chaque dé porte 1 à 5 domaines)">
+        <div className="group space-y-2">
+          <div className="flex flex-wrap gap-3 text-xs adm-faint">
+            {MASTERY_DOMAINS.map((d) => (
+              <span key={d} className="flex items-center gap-1">
+                <DomainIcon domain={d} className="h-3.5 w-3.5" />
+                {d}
+              </span>
+            ))}
+          </div>
+          {profile.masteryDice.map((die, i) => (
+            <div key={i} className="flex flex-wrap items-center gap-1.5">
+              <span className="w-10 text-xs font-semibold adm-muted">Dé {i + 1}</span>
+              {MASTERY_DOMAINS.map((dom) => {
+                const on = die.includes(dom);
+                return (
+                  <button
+                    key={dom}
+                    type="button"
+                    title={dom}
+                    aria-label={dom}
+                    onClick={() =>
+                      patch({
+                        masteryDice: replaceAt(
+                          profile.masteryDice,
+                          i,
+                          on ? die.filter((x) => x !== dom) : [...die, dom],
+                        ),
+                      })
+                    }
+                    className={on ? "adm-dice adm-dice--on" : "adm-dice"}
+                  >
+                    <DomainIcon domain={dom} />
+                  </button>
+                );
+              })}
+              <RemoveButton onClick={() => patch({ masteryDice: removeAt(profile.masteryDice, i) })} />
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
+            <AddButton onClick={() => patch({ masteryDice: [...profile.masteryDice, []] })}>
+              + dé
+            </AddButton>
+            <FlagButton active={uv("masteryDice")} onClick={() => flag("masteryDice")} />
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Compétences">
+        <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
+      </Section>
+
+      <Section title="Traits (tags internes — non imprimés sur les cartes)">
+        <TraitsEditor traits={profile.traits} onChange={(t) => patch({ traits: t })} />
+        <div className="space-y-1 text-xs">
+          {profile.traits.map((t) => {
+            const usages = explainTraitUsage(t, cat);
+            return (
+              <div key={t}>
+                <span className="font-semibold adm-muted">{t}</span>
+                {usages.length === 0 ? (
+                  <span className="adm-faint"> — tag interne, non référencé par une règle</span>
+                ) : (
+                  <ul className="ml-4 list-disc adm-faint">
+                    {usages.map((u, i) => (
+                      <li key={i}>{u}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title="Équipement de base">
+        <EquipmentEditor
+          ids={profile.baseEquipmentIds}
+          cat={cat}
+          onChange={(ids) => patch({ baseEquipmentIds: ids })}
+        />
+      </Section>
+
+      <Section title="Règles de la carte (verbatim — fait foi)">
+        <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
+      </Section>
+
+      <Section title="Notes (hors carte — non verbatim)">
+        <div className="space-y-2">
+          {(profile.notes ?? []).map((n, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <textarea
+                value={n}
+                rows={2}
+                onChange={(e) => patch({ notes: replaceAt(profile.notes ?? [], i, e.target.value) })}
+                className={`${INPUT} flex-1`}
+              />
+              <RemoveButton
+                onClick={() => {
+                  const next = removeAt(profile.notes ?? [], i);
+                  patch({ notes: next.length ? next : undefined });
+                }}
+              />
+            </div>
+          ))}
+          <AddButton onClick={() => patch({ notes: [...(profile.notes ?? []), ""] })}>+ note</AddButton>
+        </div>
+      </Section>
+
+      <Section title="Contraintes du profil (modifiables)">
+        <ConstraintListEditor
+          constraints={profile.recruitment}
+          cat={cat}
+          onChange={(c) => patch({ recruitment: c })}
+        />
+      </Section>
+
+      {inheritedConstraints.length > 0 && (
+        <Section title="Contraintes héritées des cartes spéciales (lecture seule)">
+          <div className="space-y-2">
+            {inheritedConstraints.map(({ c, via }, idx) => (
+              <RuleCard
+                key={`${c.id}-${idx}`}
+                human={describeConstraint(c, cat)}
+                sourceText={c.sourceText}
+                badges={
+                  <>
+                    <Badge tone={c.severity === "error" ? "red" : "amber"}>{c.severity}</Badge>
+                    <Badge>{c.type}</Badge>
+                    <Badge tone="violet">via « {via} »</Badge>
+                  </>
+                }
+              />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      <Section title="Effets / octrois du profil (modifiables)">
+        <EffectListEditor
+          effects={profile.effects ?? []}
+          newSource={{ kind: "profile", id: profile.id }}
+          cat={cat}
+          onChange={(e) => patch({ effects: e.length ? e : undefined })}
+        />
+      </Section>
+
+      {inheritedEffects.length > 0 && (
+        <Section title="Effets hérités des cartes spéciales (lecture seule)">
+          <div className="space-y-2">
+            {inheritedEffects.map(({ e, via }, idx) => (
+              <RuleCard
+                key={`${e.id}-${idx}`}
+                human={describeEffect(e, cat)}
+                sourceText={e.sourceText}
+                badges={
+                  <>
+                    <Badge tone={e.appliesToListBuilding ? "green" : "slate"}>
+                      {e.appliesToListBuilding ? "calculé par l'éditeur" : "en jeu seulement"}
+                    </Badge>
+                    <Badge>{e.operation.kind}</Badge>
+                    <Badge tone="violet">via « {via} »</Badge>
+                  </>
+                }
+              />
+            ))}
+          </div>
+        </Section>
+      )}
+
+    </div>
+  );
+}
+

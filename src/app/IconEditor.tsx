@@ -7,6 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react";
+import { Button } from "@ui";
 
 const FRAME = 300; // taille d'édition (px)
 const OUT = 256; // résolution de l'icône exportée (px)
@@ -130,7 +131,7 @@ export function IconEditor({
     const f = size / FRAME;
     return (
       <div
-        className="relative shrink-0 overflow-hidden bg-slate-950 ring-1 ring-slate-700"
+        className="adm-frame relative shrink-0 overflow-hidden"
         style={{ width: size, height: size, borderRadius: size * 0.09, cursor: interactive && nat ? "grab" : "default" }}
         onPointerDown={interactive ? onPointerDown : undefined}
         onPointerMove={interactive ? onPointerMove : undefined}
@@ -157,16 +158,16 @@ export function IconEditor({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+    <div className="adm-scrim fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="flex max-w-[720px] gap-5 rounded-lg border border-slate-700 bg-slate-900 p-5 text-slate-100 shadow-2xl"
+        className="adm-modal flex max-w-[720px] gap-5 p-5"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cadre d'édition */}
         <div className="flex flex-col items-center gap-3">
           {framed(FRAME, true)}
           <div className="flex w-full items-center gap-2">
-            <span className="text-xs text-slate-400">Zoom</span>
+            <span className="adm-faint text-xs">Zoom</span>
             <input
               type="range"
               min={1}
@@ -174,47 +175,41 @@ export function IconEditor({
               step={0.02}
               value={zoom}
               onChange={(e) => setZoomClamped(Number(e.target.value))}
-              className="flex-1 accent-amber-500"
+              className="adm-range flex-1"
               disabled={!nat}
             />
           </div>
-          <p className="text-center text-xs text-slate-500">Glisse pour déplacer · molette ou curseur pour zoomer</p>
+          <p className="adm-faint text-center text-xs">Glisse pour déplacer · molette ou curseur pour zoomer</p>
         </div>
 
         {/* Colonne latérale : aperçus + actions */}
         <div className="flex w-56 flex-col gap-4">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-300/80">Aperçu réel</p>
+            <p className="adm-section-title mb-2">Aperçu réel</p>
             <div className="flex items-end gap-4">
               <div className="flex flex-col items-center gap-1">
                 {framed(64)}
-                <span className="text-[10px] text-slate-500">vignette 64</span>
+                <span className="adm-faint text-[10px]">vignette 64</span>
               </div>
               <div className="flex flex-col items-center gap-1">
                 {framed(84)}
-                <span className="text-[10px] text-slate-500">modale 84</span>
+                <span className="adm-faint text-[10px]">modale 84</span>
               </div>
             </div>
           </div>
 
-          {error && <p className="text-xs text-amber-400">{error}</p>}
+          {error && <p className="adm-accent text-xs">{error}</p>}
 
-          <label className="cursor-pointer rounded bg-slate-800 px-3 py-2 text-center text-sm hover:bg-slate-700">
+          <label className="adm-btn-soft cursor-pointer px-3 py-2 text-center text-sm">
             Charger une image…
             <input type="file" accept="image/*" onChange={pickFile} className="hidden" />
           </label>
 
           <div className="mt-auto flex flex-col gap-2">
-            <button
-              onClick={save}
-              disabled={!nat}
-              className="rounded bg-emerald-600/80 px-3 py-2 text-sm font-medium text-emerald-50 hover:bg-emerald-600 disabled:opacity-40"
-            >
+            <Button variant="primary" onClick={save} disabled={!nat}>
               Enregistrer l'icône
-            </button>
-            <button onClick={onClose} className="rounded bg-slate-800 px-3 py-2 text-sm hover:bg-slate-700">
-              Annuler
-            </button>
+            </Button>
+            <Button onClick={onClose}>Annuler</Button>
           </div>
         </div>
       </div>

@@ -10,8 +10,7 @@ import { describeConstraint, describeEffect } from "@ui/explain";
 
 /** Éditeurs structurés des contraintes et effets (propres à un profil). */
 
-const INPUT =
-  "rounded bg-slate-800 px-2 py-1 text-sm outline-none ring-1 ring-slate-700 focus:ring-amber-600";
+const INPUT = "adm-input";
 
 const EQUIPMENT_CATEGORIES = [
   "arme-cac",
@@ -46,7 +45,7 @@ function AddButton({ onClick, children }: { onClick: () => void; children: React
     <button
       type="button"
       onClick={onClick}
-      className="rounded border border-dashed border-slate-600 px-2 py-0.5 text-xs text-slate-400 hover:border-amber-600 hover:text-amber-300"
+      className="adm-add"
     >
       {children}
     </button>
@@ -55,7 +54,7 @@ function AddButton({ onClick, children }: { onClick: () => void; children: React
 
 function RemoveButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} title="Supprimer" className="text-slate-500 hover:text-red-400">
+    <button type="button" onClick={onClick} title="Supprimer" className="adm-x">
       ✕
     </button>
   );
@@ -78,7 +77,7 @@ function StringList({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <span className="text-xs text-slate-400">{label}</span>
+      <span className="text-xs adm-faint">{label}</span>
       {values.map((v, i) => (
         <span key={i} className="flex items-center gap-0.5">
           {options ? (
@@ -137,9 +136,9 @@ function SelectorEditor({
 }) {
   const set = (patch: Partial<Selector>) => onChange(cleanSelector({ ...selector, ...patch }));
   return (
-    <div className="space-y-1.5 rounded border border-slate-700/60 p-2">
+    <div className="adm-card space-y-1.5 p-2">
       {allowSelf && (
-        <label className="flex items-center gap-1 text-xs text-slate-300">
+        <label className="flex items-center gap-1 text-xs adm-muted">
           <input type="checkbox" checked={selector.self ?? false} onChange={(e) => set({ self: e.target.checked })} />
           lui-même (self)
         </label>
@@ -163,7 +162,7 @@ function SelectorEditor({
         onChange={(v) => set({ equipmentIds: v })}
         options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
       />
-      <label className="flex items-center gap-1 text-xs text-slate-400">
+      <label className="flex items-center gap-1 text-xs adm-faint">
         au moins
         <input
           type="number"
@@ -303,7 +302,7 @@ function OperationEditor({
 
 function Num({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number) => void }) {
   return (
-    <label className="flex items-center gap-1 text-xs text-slate-400">
+    <label className="flex items-center gap-1 text-xs adm-faint">
       {label}
       <input
         type="number"
@@ -317,7 +316,7 @@ function Num({ label, value, onChange }: { label: string; value: number | null; 
 
 function Txt({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
-    <label className="flex items-center gap-1 text-xs text-slate-400">
+    <label className="flex items-center gap-1 text-xs adm-faint">
       {label}
       <input value={value} onChange={(e) => onChange(e.target.value)} className={`${INPUT} w-32`} />
     </label>
@@ -413,7 +412,7 @@ function ParamsEditor({
       );
     default:
       return (
-        <label className="block text-xs text-slate-400">
+        <label className="block text-xs adm-faint">
           params (JSON)
           <textarea
             defaultValue={JSON.stringify(params, null, 2)}
@@ -444,7 +443,7 @@ function Select({
   options: Option[];
 }) {
   return (
-    <label className="flex items-center gap-1 text-xs text-slate-400">
+    <label className="flex items-center gap-1 text-xs adm-faint">
       {label}
       <select value={value} onChange={(e) => onChange(e.target.value)} className={INPUT}>
         <option value="">—</option>
@@ -462,10 +461,10 @@ function Select({
 
 function EditorCard({ children, preview, onRemove }: { children: React.ReactNode; preview: string; onRemove: () => void }) {
   return (
-    <details className="rounded-md border border-slate-700/60 bg-slate-800/40">
-      <summary className="flex cursor-pointer list-none items-center gap-2 p-3 hover:bg-slate-800/60 [&::-webkit-details-marker]:hidden">
-        <span className="flex-1 text-sm text-emerald-200/90">↳ {preview}</span>
-        <span className="text-xs text-slate-500">modifier ▾</span>
+    <details className="adm-card">
+      <summary className="adm-summary flex cursor-pointer list-none items-center gap-2 p-3 [&::-webkit-details-marker]:hidden">
+        <span className="adm-ok flex-1 text-sm">↳ {preview}</span>
+        <span className="adm-faint text-xs">modifier ▾</span>
         <button
           type="button"
           title="Supprimer"
@@ -474,12 +473,12 @@ function EditorCard({ children, preview, onRemove }: { children: React.ReactNode
             e.stopPropagation();
             onRemove();
           }}
-          className="text-slate-500 hover:text-red-400"
+          className="adm-x"
         >
           ✕
         </button>
       </summary>
-      <div className="space-y-2 border-t border-slate-700/60 p-3">{children}</div>
+      <div className="adm-bd space-y-2 border-t p-3">{children}</div>
     </details>
   );
 }
@@ -501,7 +500,7 @@ export function ConstraintListEditor({
       {constraints.map((c, i) => (
         <EditorCard key={i} preview={describeConstraint(c, cat)} onRemove={() => onChange(removeAt(constraints, i))}>
           <div className="grid grid-cols-2 gap-2">
-            <label className="flex items-center gap-1 text-xs text-slate-400">
+            <label className="flex items-center gap-1 text-xs adm-faint">
               type
               <select value={c.type} onChange={(e) => update(i, { ...c, type: e.target.value as ConstraintType, params: {} })} className={INPUT}>
                 {CONSTRAINT_TYPES.map((t) => (
@@ -511,7 +510,7 @@ export function ConstraintListEditor({
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-1 text-xs text-slate-400">
+            <label className="flex items-center gap-1 text-xs adm-faint">
               portée
               <select value={c.scope} onChange={(e) => update(i, { ...c, scope: e.target.value as Constraint["scope"] })} className={INPUT}>
                 <option value="profil">profil</option>
@@ -519,20 +518,20 @@ export function ConstraintListEditor({
                 <option value="ost">ost</option>
               </select>
             </label>
-            <label className="flex items-center gap-1 text-xs text-slate-400">
+            <label className="flex items-center gap-1 text-xs adm-faint">
               sévérité
               <select value={c.severity} onChange={(e) => update(i, { ...c, severity: e.target.value as Constraint["severity"] })} className={INPUT}>
                 <option value="error">error</option>
                 <option value="warning">warning</option>
               </select>
             </label>
-            <label className="flex items-center gap-1 text-xs text-slate-300">
+            <label className="flex items-center gap-1 text-xs adm-muted">
               <input type="checkbox" checked={c.autoEnforced} onChange={(e) => update(i, { ...c, autoEnforced: e.target.checked })} />
               auto-vérifiée
             </label>
           </div>
           <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} />
-          <label className="block text-xs text-slate-400">
+          <label className="block text-xs adm-faint">
             wording verbatim (fait foi)
             <textarea value={c.sourceText} onChange={(e) => update(i, { ...c, sourceText: e.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />
           </label>
@@ -577,24 +576,24 @@ export function EffectListEditor({
       {effects.map((e, i) => (
         <EditorCard key={i} preview={describeEffect(e, cat)} onRemove={() => onChange(removeAt(effects, i))}>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-1 text-xs text-slate-400">
+            <label className="flex items-center gap-1 text-xs adm-faint">
               portée
               <select value={e.scope} onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })} className={INPUT}>
                 <option value="fer-de-lance">fer-de-lance</option>
                 <option value="ost">ost</option>
               </select>
             </label>
-            <label className="flex items-center gap-1 text-xs text-slate-300">
+            <label className="flex items-center gap-1 text-xs adm-muted">
               <input type="checkbox" checked={e.appliesToListBuilding} onChange={(ev) => update(i, { ...e, appliesToListBuilding: ev.target.checked })} />
               calculé par l'éditeur
             </label>
           </div>
-          <div className="text-xs text-slate-400">opération</div>
+          <div className="text-xs adm-faint">opération</div>
           <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, { ...e, operation: op })} />
-          <div className="text-xs text-slate-400">cible</div>
+          <div className="text-xs adm-faint">cible</div>
           <SelectorEditor selector={e.target} cat={cat} onChange={(s) => update(i, { ...e, target: s })} />
           <details>
-            <summary className="cursor-pointer text-xs text-slate-400">condition (optionnelle)</summary>
+            <summary className="cursor-pointer text-xs adm-faint">condition (optionnelle)</summary>
             <div className="mt-1">
               <SelectorEditor
                 selector={e.condition ?? {}}
@@ -604,7 +603,7 @@ export function EffectListEditor({
               />
             </div>
           </details>
-          <label className="block text-xs text-slate-400">
+          <label className="block text-xs adm-faint">
             wording verbatim (fait foi)
             <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />
           </label>

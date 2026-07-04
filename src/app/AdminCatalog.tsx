@@ -21,6 +21,7 @@ export function AdminCatalog() {
   const [selectedCardId, setSelectedCardId] = useState(catalog.specialCards[0]?.id ?? "");
   const [selectedSpellId, setSelectedSpellId] = useState(catalog.spells[0]?.id ?? "");
   const [query, setQuery] = useState("");
+  const [factionFilter, setFactionFilter] = useState("all");
   const [zoom, setZoom] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -39,8 +40,13 @@ export function AdminCatalog() {
 
   const q = query.trim().toLowerCase();
   const filteredProfiles = useMemo(
-    () => catalog.profiles.filter((p) => !q || p.name.toLowerCase().includes(q)),
-    [catalog, q],
+    () =>
+      catalog.profiles.filter(
+        (p) =>
+          (!q || p.name.toLowerCase().includes(q)) &&
+          (factionFilter === "all" || p.factionId === factionFilter),
+      ),
+    [catalog, q, factionFilter],
   );
   const filteredEquipment = useMemo(
     () => catalog.equipment.filter((e) => !q || e.name.toLowerCase().includes(q)),
@@ -112,6 +118,20 @@ export function AdminCatalog() {
             placeholder="Rechercher…"
             className="adm-input w-full"
           />
+          {view === "profiles" && (
+            <select
+              value={factionFilter}
+              onChange={(e) => setFactionFilter(e.target.value)}
+              className="adm-input w-full"
+            >
+              <option value="all">Toutes les factions</option>
+              {catalog.factions.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          )}
           <div className="flex flex-wrap gap-1.5">
             {import.meta.env.DEV && (
               <Button variant="primary" size="sm" className="flex-1" onClick={onSave}>

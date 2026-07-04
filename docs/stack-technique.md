@@ -17,8 +17,13 @@ pour le modèle de données et l'architecture en couches.
 ## Outils
 
 - **Zod** : validation de schéma du catalogue et des listes (et garde-fou de l'éditeur admin).
-- **Tailwind CSS v4** : mise en forme, via le plugin Vite `@tailwindcss/vite` (pas de
-  `tailwind.config` ; configuration dans `src/index.css`).
+- **Système visuel « Forge / Braise »** : couleurs, thèmes clair/sombre et composants sont pilotés
+  par des **tokens CSS** (variables `--bone`, `--forge`, `--ember`… dans `src/index.css`) et un kit
+  de primitives partagées `@ui` (`Button`, `Tag`, `Dialog`…). **Aucune couleur codée en dur** : le
+  builder comme l'admin s'appuient sur ces tokens (l'admin via ses classes `.adm-*`, cf.
+  `src/app/admin/admin.css`), donc l'ensemble suit le thème clair/sombre.
+- **Tailwind CSS v4** : utilitaires de **mise en page uniquement** (flex, gap, espacements), via le
+  plugin Vite `@tailwindcss/vite` (pas de `tailwind.config` ; configuré dans `src/index.css`).
 - **Dexie** (IndexedDB) : sauvegarde locale des listes.
 - **Vitest** (jsdom) : tests ; **ESLint** : analyse statique.
 - **PWA** : `vite-plugin-pwa` génère le service worker et le manifeste (pas de dossier `public/`).
@@ -38,9 +43,11 @@ kharn-ages-builder/
       model/             #   types + schémas Zod (catalogue, liste portable)
       engine/            #   validation, résolution des effets, calcul de coût + magie
     data/                # catalogue JSON (factions, profils, équipements, sorts…) + chargement validé
-    ui/                  # helpers de présentation (traduction lisible des règles)
+    ui/                  # kit de composants partagés (Button, Tag, Dialog…), libellés partagés
+                         #   (labels.ts) + helpers de présentation (traduction lisible des règles)
     app/                 # écrans + état applicatif
       builder/           #   constructeur de listes (faction, roster, éditeur de figurine)
+      admin/             #   éditeur de catalogue (CRUD) — modules par entité, stylé sur .adm-*
       io/                #   persistance Dexie + sérialisation (code/texte) + ids
     main.tsx
   index.html

@@ -42,9 +42,11 @@ src/
     model/    # types + schémas Zod (catalogue, liste portable)
     engine/   # validation des contraintes, résolution des effets, calcul de coût + magie
   data/   # catalogue (JSON) + chargement validé
-  ui/     # helpers de présentation (traduction lisible des règles)
+  ui/     # kit de composants partagés (Button, Tag, Dialog…), libellés partagés (labels.ts)
+          #   et helpers de présentation (traduction lisible des règles)
   app/    # écrans + état applicatif
     builder/  # constructeur de listes (sélection de faction, roster, éditeur de figurine)
+    admin/    # éditeur de catalogue (CRUD profils/équipements/sorts…), stylé sur les classes .adm-*
     io/       # persistance Dexie + sérialisation (code portable, texte) + ids
 docs/     # documentation de conception
 cards/    # images des cartes (gitignoré — copyright ; servi en dev uniquement)
@@ -96,6 +98,9 @@ Cycle de mise à jour des données :
 Accessible par l'onglet **Admin**. À gauche, la liste des entrées du catalogue — profils,
 équipements, compétences, cartes spéciales, sorts — avec recherche et indicateur ⚠ pour les
 profils ayant des champs à vérifier. À droite, le détail de l'entrée sélectionnée.
+
+L'admin partage le **système visuel** de l'application (tokens « Forge / Braise », thème
+clair/sombre, composants `@ui`) ; son UI est découpée en modules sous `src/app/admin/`.
 
 Champs modifiables :
 

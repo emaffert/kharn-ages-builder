@@ -254,6 +254,19 @@ function EquipPanel({
   const removedCost = removed.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
   const munTotal = worn.reduce((n, e) => n + (e.munition ? munQty(e.id) * e.munition.unitCost : 0), 0);
 
+  // Équipé regroupé par catégorie — mêmes en-têtes que « disponible » (base en tête de chaque groupe).
+  const ownedResolved = [
+    ...activeBase.map((id) => ({ id, isBase: true, e: eq(id) })),
+    ...added.map((id) => ({ id, isBase: false, e: eq(id) })),
+  ].filter((o): o is { id: string; isBase: boolean; e: NonNullable<ReturnType<typeof eq>> } => Boolean(o.e));
+  const ownedCats = [
+    ...PURCHASE_CATS,
+    ...[...new Set(ownedResolved.map((o) => o.e.category))].filter((c) => !PURCHASE_CATS.includes(c)),
+  ];
+  const ownedByCat = ownedCats
+    .map((c) => [c, ownedResolved.filter((o) => o.e.category === c)] as const)
+    .filter(([, v]) => v.length > 0);
+
   const munitionRow = (e: Catalog["equipment"][number]) => {
     if (!e.munition) return null;
     const n = munQty(e.id);
@@ -291,7 +304,50 @@ function EquipPanel({
       </div>
 
       <div className="fe-panes">
-        {/* Volet disponible */}
+        {/* Volet équipé — à gauche (près de la fiche) ; l'équipement de base reste toujours en tête. */}
+        <div>
+          <div className="fe-section-head">
+            <SectionTitle>Équipé</SectionTitle>
+            <span className="tot">
+              total <b>{p.cost + addedCost - removedCost + munTotal} Ko</b>
+            </span>
+          </div>
+          <div className="fe-scroll">
+            {ownedByCat.map(([c, list]) => (
+              <div key={c}>
+                <p className="fe-group-label">{CAT_LABEL[c] ?? c}</p>
+                <div className="fe-col">
+                  {list.map(({ id, isBase, e }) => (
+                    <div key={id}>
+                      <div className="fe-item is-clickable" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
+                        <span className="fe-item-main">
+                          <span className="fe-item-name">{e.name}</span>
+                          {isBase && <span className="fe-badge-base">base</span>}
+                        </span>
+                        <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
+                        <button
+                          className="fe-move rem"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            if (isBase) onToggleBase(id);
+                            else onRemove(id);
+                          }}
+                          title={isBase ? "Retirer (libère l'emplacement)" : "Retirer"}
+                        >
+                          →
+                        </button>
+                      </div>
+                      {e.munition && munitionRow(e)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {ownedResolved.length === 0 && <p className="fe-mag-bonus">Rien d'équipé.</p>}
+          </div>
+        </div>
+
+        {/* Volet disponible — à droite. */}
         <div>
           <SectionTitle>Disponible</SectionTitle>
           <input
@@ -309,23 +365,30 @@ function EquipPanel({
                     const blocked = blockReason(e);
                     const isBase = removed.includes(e.id);
                     return (
-                      <div key={e.id} className={`fe-item${blocked ? " is-blocked" : ""}`} title={blocked ?? undefined}>
+                      <div
+                        key={e.id}
+                        className={`fe-item is-clickable${blocked ? " is-blocked" : ""}`}
+                        title={blocked ?? "Voir le détail"}
+                        onClick={() => onInfo(equipInfo(e))}
+                      >
+                        <button
+                          className="fe-move add"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            if (isBase) onToggleBase(e.id);
+                            else onAdd(e.id);
+                          }}
+                          disabled={Boolean(blocked)}
+                          title={blocked ?? (isBase ? "Remettre l'équipement de base" : "Ajouter")}
+                        >
+                          ←
+                        </button>
                         <span className="fe-item-main">
-                          <button className="fe-item-name" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
-                            {e.name}
-                          </button>
+                          <span className="fe-item-name">{e.name}</span>
                           {isBase && <span className="fe-badge-base">base</span>}
                           {equipBits(e) && <span className="fe-item-bits">{equipBits(e)}</span>}
                         </span>
                         <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
-                        <button
-                          className="fe-move add"
-                          onClick={() => (isBase ? onToggleBase(e.id) : onAdd(e.id))}
-                          disabled={Boolean(blocked)}
-                          title={blocked ?? (isBase ? "Remettre l'équipement de base" : "Ajouter")}
-                        >
-                          →
-                        </button>
                       </div>
                     );
                   })}
@@ -333,61 +396,6 @@ function EquipPanel({
               </div>
             ))}
             {byCat.length === 0 && <p className="fe-mag-bonus">{q ? "Aucun résultat." : "Aucun équipement disponible."}</p>}
-          </div>
-        </div>
-
-        {/* Volet équipé — l'équipement de base reste toujours en tête. */}
-        <div>
-          <div className="fe-section-head">
-            <SectionTitle>Équipé</SectionTitle>
-            <span className="tot">
-              total <b>{p.cost + addedCost - removedCost + munTotal} Ko</b>
-            </span>
-          </div>
-          <div className="fe-col">
-            {p.baseEquipmentIds.map((id) => {
-              const e = eq(id);
-              if (!e || removed.includes(id)) return null;
-              return (
-                <div key={id}>
-                  <div className="fe-item">
-                    <button className="fe-move rem" onClick={() => onToggleBase(id)} title="Retirer (libère l'emplacement)">
-                      ←
-                    </button>
-                    <span className="fe-item-main">
-                      <button className="fe-item-name" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
-                        {e.name}
-                      </button>
-                      <span className="fe-badge-base">base</span>
-                    </span>
-                    <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
-                  </div>
-                  {e.munition && munitionRow(e)}
-                </div>
-              );
-            })}
-            {added.map((id) => {
-              const e = eq(id);
-              return (
-                e && (
-                  <div key={id}>
-                    <div className="fe-item">
-                      <button className="fe-move rem" onClick={() => onRemove(id)} title="Retirer">
-                        ←
-                      </button>
-                      <span className="fe-item-main">
-                        <button className="fe-item-name" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
-                          {e.name}
-                        </button>
-                      </span>
-                      <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
-                    </div>
-                    {e.munition && munitionRow(e)}
-                  </div>
-                )
-              );
-            })}
-            {activeBase.length === 0 && added.length === 0 && <p className="fe-mag-bonus">Rien d'équipé.</p>}
           </div>
         </div>
       </div>
@@ -429,6 +437,10 @@ function SpellPanel({
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
   );
   const blocked = (s: Spell) => pagesUsed + (s.pages ?? 0) > pageCap;
+  // Sélectionnés regroupés par voie — mêmes en-têtes que « disponible ».
+  const chosenGroups = [...new Set(chosen.map(groupOf))].sort((a, b) =>
+    a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
+  );
 
   return (
     <div className="fe-root">
@@ -437,7 +449,49 @@ function SpellPanel({
       </div>
 
       <div className="fe-panes">
-        {/* Volet disponible */}
+        {/* Volet sélectionnés — à gauche (près de la fiche). */}
+        <div>
+          <div className="fe-section-head">
+            <SectionTitle>Sélectionnés</SectionTitle>
+            <span className="tot">
+              pages <b>{pagesUsed}/{pageCap === Infinity ? "∞" : pageCap}</b>
+            </span>
+          </div>
+          <div className="fe-scroll">
+            {chosenGroups.map((g) => (
+              <div key={g}>
+                <p className="fe-group-label">{g}</p>
+                <div className="fe-col">
+                  {chosen
+                    .filter((s) => groupOf(s) === g)
+                    .map((s) => (
+                      <div key={s.id} className="fe-item is-clickable" onClick={() => onInfo(spellInfo(s, cat))} title="Voir le détail">
+                        <span className="fe-item-main">
+                          <span className="fe-item-name">{s.name}</span>
+                          <span className="fe-item-bits">
+                            {s.pages ?? 0} p{s.cost ? ` · ${s.cost} Ko` : ""}
+                          </span>
+                        </span>
+                        <button
+                          className="fe-move rem"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            onToggle(s.id);
+                          }}
+                          title="Retirer"
+                        >
+                          →
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+            {chosen.length === 0 && <p className="fe-mag-bonus">Aucun sort.</p>}
+          </div>
+        </div>
+
+        {/* Volet disponible — à droite. */}
         <div>
           <SectionTitle>Disponible</SectionTitle>
           <input
@@ -456,23 +510,29 @@ function SpellPanel({
                     .map((s) => {
                       const no = blocked(s);
                       return (
-                        <div key={s.id} className={`fe-item${no ? " is-blocked" : ""}`} title={no ? "Pas assez de pages" : undefined}>
+                        <div
+                          key={s.id}
+                          className={`fe-item is-clickable${no ? " is-blocked" : ""}`}
+                          title={no ? "Pas assez de pages" : "Voir le détail"}
+                          onClick={() => onInfo(spellInfo(s, cat))}
+                        >
+                          <button
+                            className="fe-move add"
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              onToggle(s.id);
+                            }}
+                            disabled={no}
+                            title={no ? "Pas assez de pages" : "Ajouter"}
+                          >
+                            ←
+                          </button>
                           <span className="fe-item-main">
-                            <button className="fe-item-name" onClick={() => onInfo(spellInfo(s, cat))} title="Voir le détail">
-                              {s.name}
-                            </button>
+                            <span className="fe-item-name">{s.name}</span>
                             <span className="fe-item-bits">
                               {s.pages ?? 0} p{s.cost ? ` · ${s.cost} Ko` : ""}
                             </span>
                           </span>
-                          <button
-                            className="fe-move add"
-                            onClick={() => onToggle(s.id)}
-                            disabled={no}
-                            title={no ? "Pas assez de pages" : "Ajouter"}
-                          >
-                            →
-                          </button>
                         </div>
                       );
                     })}
@@ -480,34 +540,6 @@ function SpellPanel({
               </div>
             ))}
             {avail.length === 0 && <p className="fe-mag-bonus">{q ? "Aucun résultat." : "Aucun sort disponible."}</p>}
-          </div>
-        </div>
-
-        {/* Volet sélectionnés */}
-        <div>
-          <div className="fe-section-head">
-            <SectionTitle>Sélectionnés</SectionTitle>
-            <span className="tot">
-              pages <b>{pagesUsed}/{pageCap === Infinity ? "∞" : pageCap}</b>
-            </span>
-          </div>
-          <div className="fe-col">
-            {chosen.map((s) => (
-              <div key={s.id} className="fe-item">
-                <button className="fe-move rem" onClick={() => onToggle(s.id)} title="Retirer">
-                  ←
-                </button>
-                <span className="fe-item-main">
-                  <button className="fe-item-name" onClick={() => onInfo(spellInfo(s, cat))} title="Voir le détail">
-                    {s.name}
-                  </button>
-                  <span className="fe-item-bits">
-                    {s.pages ?? 0} p{s.cost ? ` · ${s.cost} Ko` : ""}
-                  </span>
-                </span>
-              </div>
-            ))}
-            {chosen.length === 0 && <p className="fe-mag-bonus">Aucun sort.</p>}
           </div>
         </div>
       </div>

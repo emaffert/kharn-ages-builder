@@ -638,11 +638,13 @@ body {
 .fe-col { display: flex; flex-direction: column; gap: 5px; }
 .fe-item { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 8px; background: var(--tint-1);
   font-size: 13.5px; }
+/* Ligne entière cliquable (ouvre la description) — le bouton ajouter/retirer stoppe la propagation. */
+.fe-item.is-clickable { cursor: pointer; transition: background .16s var(--ease); }
+.fe-item.is-clickable:hover { background: var(--tint-3); }
 .fe-item.is-blocked { opacity: .42; }
 .fe-item-main { flex: 1; min-width: 0; }
-.fe-item-name { color: var(--bone); font-weight: 500; background: none; border: 0; cursor: pointer; padding: 0;
-  text-decoration: underline dotted; text-underline-offset: 2px; }
-.fe-item-name:hover { color: var(--ember-bright); }
+.fe-item-name { color: var(--bone); font-weight: 500; padding: 0; transition: color .16s var(--ease); }
+.fe-item.is-clickable:hover .fe-item-name { color: var(--ember-bright); }
 .fe-item-bits { color: var(--bone-faint); font-size: 11.5px; margin-left: 6px; }
 .fe-badge-base { margin-left: 6px; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--bone-faint);
   background: var(--tint-3); padding: 0 5px; border-radius: 5px; }

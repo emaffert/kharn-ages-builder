@@ -88,7 +88,7 @@ export function FactionSelect({
                 <FactionEmblem kind={f.emblem} className="fs-emblem" />
                 <h3>{f.name}</h3>
                 <p>{f.blurb}</p>
-                <div className="fs-count">{soon ? "à venir" : `${n} profils`}</div>
+                {soon && <div className="fs-count">à venir</div>}
               </button>
             );
           })}

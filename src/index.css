@@ -477,6 +477,8 @@ body {
 .bld-pill:hover { background: color-mix(in srgb, var(--ember) 12%, transparent); }
 .bld-pill.on { color: var(--on-moss); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--moss) 45%, transparent);
   background: color-mix(in srgb, var(--moss) 16%, transparent); }
+.bld-pill:disabled { opacity: .4; cursor: not-allowed; }
+.bld-pill:disabled:hover { background: transparent; }
 
 /* Résumé d'achats (replié sous la ligne) */
 /* Détail d'achats d'une figurine — présenté comme une « feuille d'équipement »

@@ -3,9 +3,19 @@ import type { ReactNode } from "react";
 /** Petits composants de présentation partagés par le constructeur (dépendent uniquement de leurs props). */
 
 /** Pastille de recrutement lié (ex. « + Likan », « + Muskh ») posée sous une figurine porteuse. */
-export function RecruitPill({ label, onClick }: { label: string; onClick: () => void }) {
+export function RecruitPill({
+  label,
+  onClick,
+  disabled,
+  title,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  title?: string;
+}) {
   return (
-    <button className="bld-pill" onClick={onClick}>
+    <button className="bld-pill" onClick={onClick} disabled={disabled} title={title}>
       {label}
     </button>
   );

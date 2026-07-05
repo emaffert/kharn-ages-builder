@@ -10,6 +10,7 @@ import {
   profileMatchesAnySelector,
   protecteeSelectorsFor,
   recruitableDependentGroups,
+  type DependentGroup,
   type ItemInfo,
   type Modal,
   type ModelEntry,
@@ -278,6 +279,18 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     const leadable = canLead(x.p, id);
     const rowIssues = issuesOf(id);
     const depGroups = recruitableDependentGroups(x.p, cat); // Likan, Muskh… dérivés des contraintes
+    // Capacité de rattachement restante du porteur (Σ niveaux des rattachés « à capacité » ≤ son niveau).
+    const usedCapacity = (x.inst.attachedInstanceIds ?? [])
+      .map((aid) => memberOf(aid)?.p)
+      .filter((p): p is Profile => Boolean(p) && isAttachmentDependent(p!))
+      .reduce((n, p) => n + (p.level ?? 0), 0);
+    const remainingCapacity = (x.p.level ?? 0) - usedCapacity;
+    // Un groupe est indisponible si tous ses profils sont à leur limitation, ou (capacité) si aucun ne rentre.
+    const groupDisabled = (g: DependentGroup) => {
+      const free = g.profiles.filter((p) => !atLimit(p));
+      if (free.length === 0) return true;
+      return g.capacityLimited && !free.some((p) => (p.level ?? 0) <= remainingCapacity);
+    };
     const hasActions = depGroups.length > 0 || eligible;
     return (
       <div
@@ -349,17 +362,25 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
         {hasActions && (
           <div className="bld-pills">
-            {depGroups.map((g) => (
-              <RecruitPill
-                key={g.modelId}
-                label={`+ ${g.modelName}`}
-                onClick={() =>
-                  g.capacityLimited || g.profiles.length > 1
-                    ? setModal({ kind: "recruit-attached", carrierInstanceId: id, modelId: g.modelId })
-                    : store.addAttached(id, g.profiles[0].id)
-                }
-              />
-            ))}
+            {depGroups.map((g) => {
+              const disabled = groupDisabled(g);
+              return (
+                <RecruitPill
+                  key={g.modelId}
+                  label={`+ ${g.modelName}`}
+                  disabled={disabled}
+                  title={disabled ? `${g.modelName} : limite atteinte` : undefined}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (g.capacityLimited || g.profiles.length > 1) {
+                      setModal({ kind: "recruit-attached", carrierInstanceId: id, modelId: g.modelId });
+                    } else {
+                      store.addAttached(id, g.profiles[0].id);
+                    }
+                  }}
+                />
+              );
+            })}
             {eligible && (
               <button
                 className={`bld-pill${guarded ? " on" : ""}`}
@@ -645,7 +666,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               )}
               <div className="mdl-list">
                 {choices.map((p) => {
-                  const ok = !capacityLimited || (p.level ?? 0) <= remaining;
+                  const ok = !atLimit(p) && (!capacityLimited || (p.level ?? 0) <= remaining);
                   return (
                     <button
                       key={p.id}

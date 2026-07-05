@@ -35,8 +35,12 @@ export const EffectSchema = z.object({
   id: z.string(),
   source: EffectSourceSchema,
   scope: EffectScopeSchema,
-  /** Condition d'activation. Absente => actif dès que la source est recrutée. */
-  condition: SelectorSchema.optional(),
+  /**
+   * Condition d'activation. Absente => actif dès que la source est recrutée.
+   * Une liste de sélecteurs = conditions cumulées (ET : toutes doivent être vraies),
+   * ex. « ≥3 Dogons ET ≥1 Père de famille ».
+   */
+  condition: z.union([SelectorSchema, z.array(SelectorSchema)]).optional(),
   /** Cible de l'effet (peut être `self`). */
   target: SelectorSchema,
   operation: EffectOperationSchema,

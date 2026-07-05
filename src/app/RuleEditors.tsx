@@ -92,6 +92,15 @@ function profileOptions(cat: Catalog): Option[] {
   return cat.profiles.map((p) => ({ value: p.id, label: p.name + (p.level ? ` ${p.level}` : "") }));
 }
 
+/** Un modèle regroupe tous ses niveaux ; libellé = nom (sans niveau) d'un profil du modèle. */
+function modelOptions(cat: Catalog): Option[] {
+  const byModel = new Map<string, string>();
+  for (const p of cat.profiles) {
+    if (p.modelId && !byModel.has(p.modelId)) byModel.set(p.modelId, p.name);
+  }
+  return [...byModel].map(([value, label]) => ({ value, label }));
+}
+
 // ── Sélecteur (cible / condition) ─────────────────────────────────────────────
 
 function cleanSelector(sel: Selector): Selector {
@@ -132,6 +141,12 @@ function SelectorEditor({
         values={selector.profileIds ?? []}
         onChange={(v) => set({ profileIds: v })}
         options={profileOptions(cat)}
+      />
+      <StringList
+        label="modèles"
+        values={selector.modelIds ?? []}
+        onChange={(v) => set({ modelIds: v })}
+        options={modelOptions(cat)}
       />
       <StringList label="traits" values={selector.traits ?? []} onChange={(v) => set({ traits: v })} placeholder="trait" />
       <StringList
@@ -583,14 +598,50 @@ export function EffectListEditor({
           <div className="text-xs adm-faint">cible</div>
           <SelectorEditor selector={e.target} cat={cat} onChange={(s) => update(i, { ...e, target: s })} />
           <details>
-            <summary className="cursor-pointer text-xs adm-faint">condition (optionnelle)</summary>
-            <div className="mt-1">
-              <SelectorEditor
-                selector={e.condition ?? {}}
-                cat={cat}
-                allowSelf={false}
-                onChange={(s) => update(i, { ...e, condition: Object.keys(s).length ? s : undefined })}
-              />
+            <summary className="cursor-pointer text-xs adm-faint">
+              conditions (optionnelles) — toutes doivent être vraies
+            </summary>
+            <div className="mt-1 space-y-1.5">
+              {(() => {
+                const conds: Selector[] = e.condition
+                  ? Array.isArray(e.condition)
+                    ? e.condition
+                    : [e.condition]
+                  : [];
+                const commit = (next: Selector[]) => {
+                  const cleaned = next.filter((s) => Object.keys(s).length > 0);
+                  update(i, {
+                    ...e,
+                    condition:
+                      cleaned.length === 0 ? undefined : cleaned.length === 1 ? cleaned[0] : cleaned,
+                  });
+                };
+                return (
+                  <>
+                    {conds.map((c, ci) => (
+                      <div key={ci} className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <SelectorEditor
+                            selector={c}
+                            cat={cat}
+                            allowSelf={false}
+                            onChange={(s) => commit(replaceAt(conds, ci, s))}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="adm-x"
+                          title="Retirer la clause"
+                          onClick={() => commit(removeAt(conds, ci))}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <AddButton onClick={() => commit([...conds, { countAtLeast: 1 }])}>+ clause</AddButton>
+                  </>
+                );
+              })()}
             </div>
           </details>
           <label className="block text-xs adm-faint">

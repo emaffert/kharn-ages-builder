@@ -143,7 +143,7 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
           <ul className="adm-doc-list">
             <li><strong>opération</strong> — ce que fait l'effet (référence ci-dessous) ;</li>
             <li><strong>cible</strong> — à qui il s'applique (un sélecteur) ;</li>
-            <li><strong>condition</strong> — état requis pour qu'il s'active (un sélecteur, optionnel) ;</li>
+            <li><strong>condition</strong> — état requis pour qu'il s'active (optionnel) ; on peut cumuler plusieurs clauses, <strong>toutes</strong> devant être vraies (ET), ex. « ≥3 Dogons ET ≥1 Père de famille » ;</li>
             <li><strong>appliqué à la construction</strong> — si décoché, l'effet est « en jeu » seulement (affiché, jamais calculé au coût) ;</li>
             <li><strong>au choix du joueur</strong> — l'effet n'est pas appliqué d'office (ex. réduction « garde rapprochée »).</li>
           </ul>
@@ -168,7 +168,8 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <li><code>{`"equipmentCategories": ["arme-cac"]`}</code> — restreint la cible à ces catégories d'équipement (utile avec <code>cost-delta</code>).</li>
             <li><code>{`"equipmentIds": ["arbalete-de-poing"]`}</code> — un équipement précis.</li>
             <li><code>{`"countAtLeast": 2`}</code> — sur une <strong>condition</strong> : l'effet ne s'active que si au moins N figurines correspondent (ex. « ≥ 2 frères d'armes → tous apatrides »).</li>
-            <li><code>{`"modelIds": [...]`}</code>, <code>{`"factionIds": [...]`}</code> — existent dans le format mais n'ont pas encore de champ dédié dans le formulaire.</li>
+            <li><code>{`"modelIds": ["pere-de-famille"]`}</code> — toutes les figurines d'un modèle (tous niveaux).</li>
+            <li><code>{`"factionIds": [...]`}</code> — existe dans le format mais n'a pas encore de champ dédié dans le formulaire.</li>
           </ul>
 
           <H>Améliorations & choix exclusif</H>

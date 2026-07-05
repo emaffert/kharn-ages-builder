@@ -121,18 +121,24 @@ function instancesInScope(
   return all.filter((ri) => ri.ferDeLanceId === ferDeLanceId);
 }
 
-/** Une condition (sélecteur) est-elle satisfaite dans la portée ? */
+/**
+ * Une condition est-elle satisfaite dans la portée ? Une condition peut être un sélecteur unique
+ * ou une liste de sélecteurs, auquel cas toutes les clauses doivent tenir (ET),
+ * ex. « ≥3 Dogons ET ≥1 Père de famille ».
+ */
 function conditionHolds(
-  condition: Selector | undefined,
+  condition: Selector | Selector[] | undefined,
   scope: EffectScope,
   ferDeLanceId: string,
   all: ResolvedInstance[],
 ): boolean {
   if (!condition) return true;
+  const clauses = Array.isArray(condition) ? condition : [condition];
   const pool = instancesInScope(all, scope, ferDeLanceId);
-  const matches = pool.filter((ri) => instanceMatchesIdentity(condition, ri));
-  const threshold = condition.countAtLeast ?? 1;
-  return matches.length >= threshold;
+  return clauses.every((clause) => {
+    const matches = pool.filter((ri) => instanceMatchesIdentity(clause, ri));
+    return matches.length >= (clause.countAtLeast ?? 1);
+  });
 }
 
 function collectEffectOccurrences(

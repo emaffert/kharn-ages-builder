@@ -113,7 +113,10 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `${op.amount >= 0 ? "+" : ""}${op.amount} page(s) de sorts pour ${tgt}`;
       break;
   }
-  if (e.condition) base += ` — si ${describeSelector(e.condition, cat)}`;
+  if (e.condition) {
+    const clauses = Array.isArray(e.condition) ? e.condition : [e.condition];
+    base += ` — si ${clauses.map((c) => describeSelector(c, cat)).join(" et ")}`;
+  }
   if (e.optIn) base += " (au choix du joueur)";
   if (!e.appliesToListBuilding) base += " (effet en jeu uniquement)";
   return base;
@@ -125,7 +128,11 @@ export function describeEffect(e: Effect, cat: Catalog): string {
  */
 export function explainTraitUsage(trait: string, cat: Catalog): string[] {
   const out: string[] = [];
-  const selUses = (sel?: Selector) => Boolean(sel?.traits?.includes(trait));
+  const selUses = (sel?: Selector | Selector[]): boolean => {
+    if (!sel) return false;
+    const clauses = Array.isArray(sel) ? sel : [sel];
+    return clauses.some((s) => Boolean(s.traits?.includes(trait)));
+  };
   const constraintUses = (c: Constraint) => {
     const p = c.params as { carrier?: { trait?: string }; trait?: string };
     if (c.type === "attachment" && p.carrier?.trait === trait) return true;

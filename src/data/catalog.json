@@ -4122,12 +4122,20 @@
             "id": "lien-de-la-terre"
           },
           "scope": "fer-de-lance",
-          "condition": {
-            "traits": [
-              "dogon"
-            ],
-            "countAtLeast": 3
-          },
+          "condition": [
+            {
+              "traits": [
+                "dogon"
+              ],
+              "countAtLeast": 3
+            },
+            {
+              "modelIds": [
+                "pere-de-famille"
+              ],
+              "countAtLeast": 1
+            }
+          ],
           "target": {
             "traits": [
               "dogon"
@@ -4148,12 +4156,20 @@
             "id": "lien-de-la-terre"
           },
           "scope": "fer-de-lance",
-          "condition": {
-            "traits": [
-              "dogon"
-            ],
-            "countAtLeast": 3
-          },
+          "condition": [
+            {
+              "traits": [
+                "dogon"
+              ],
+              "countAtLeast": 3
+            },
+            {
+              "modelIds": [
+                "pere-de-famille"
+              ],
+              "countAtLeast": 1
+            }
+          ],
           "target": {
             "traits": [
               "dogon"

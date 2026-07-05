@@ -4353,6 +4353,7 @@
         "trait": "dogon"
       },
       "amelioration": true,
+      "shared": true,
       "rulesText": [
         {
           "text": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie »."
@@ -4453,7 +4454,7 @@
     },
     {
       "id": "racines-tribales-nourrice",
-      "name": "Racines Tribales — Nourrice",
+      "name": "Racines Tribales : Nourrice",
       "cost": 5,
       "scope": {
         "profileIds": [
@@ -4473,7 +4474,7 @@
     },
     {
       "id": "racines-tribales-tisserande",
-      "name": "Racines Tribales — Tisserande",
+      "name": "Racines Tribales : Tisserande",
       "cost": 10,
       "scope": {
         "profileIds": [
@@ -4493,7 +4494,7 @@
     },
     {
       "id": "racines-tribales-herboriste",
-      "name": "Racines Tribales — Herboriste",
+      "name": "Racines Tribales : Herboriste",
       "cost": 15,
       "scope": {
         "profileIds": [

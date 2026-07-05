@@ -259,6 +259,12 @@ export const SpecialCardSchema = z.object({
    * une figurine ne peut en sélectionner qu'une seule (ex. les 3 spécialités « Racines Tribales »).
    */
   choiceGroup: z.string().optional(),
+  /**
+   * `true` : amélioration *partagée* au niveau du Fer de Lance — payée **une seule fois** quel que soit
+   * le nombre de figurines qui en bénéficient (ex. Lien de la Terre). On l'active depuis n'importe quel
+   * modèle éligible ; l'effet (portée `fer-de-lance`) profite à toute sa cible.
+   */
+  shared: z.boolean().optional(),
   /** La carte confère la capacité de lancer des sorts dans ces voies (ex. Apprentie de Nyx → ostéomancie). */
   grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   rulesText: z.array(RuleTextSchema),

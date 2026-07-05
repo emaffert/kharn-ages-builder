@@ -194,6 +194,14 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
           <Code>{`// Sur chacune des 3 cartes :
 "amelioration": true,
 "choiceGroup": "artisane-racines"`}</Code>
+          <p>
+            Une amélioration <strong>partagée</strong> (<code>shared: true</code>) est <strong>payée une seule
+            fois par Fer de Lance</strong>, quel que soit le nombre de figurines qui en bénéficient : on l'active
+            depuis n'importe quel modèle éligible et l'effet (portée <code>fer-de-lance</code>) profite à toute sa
+            cible (ex. Lien de la Terre).
+          </p>
+          <Code>{`"amelioration": true,
+"shared": true`}</Code>
 
           <H>Fiabilité & champs « à vérifier »</H>
           <p>

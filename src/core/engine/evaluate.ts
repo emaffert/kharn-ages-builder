@@ -302,7 +302,12 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex): number {
     for (const id of inst.mount.optionIds) cost += idx.mountOptionCost.get(id) ?? 0;
   }
   for (const id of inst.orderIds ?? []) cost += idx.orderCost.get(id) ?? 0;
-  for (const id of inst.specialCardIds ?? []) cost += idx.specialCard.get(id)?.cost ?? 0;
+  for (const id of inst.specialCardIds ?? []) {
+    const card = idx.specialCard.get(id);
+    // Les améliorations partagées sont facturées une fois par Fer de Lance (cf. computeCosts), pas par instance.
+    if (card?.shared) continue;
+    cost += card?.cost ?? 0;
+  }
   return cost;
 }
 
@@ -313,6 +318,21 @@ function computeCosts(
 ): Map<string, number> {
   const cost = new Map<string, number>();
   for (const ri of resolved) cost.set(ri.instance.instanceId, baseInstanceCost(ri, idx));
+
+  // Améliorations partagées : facturées une seule fois par Fer de Lance (au premier porteur),
+  // quel que soit le nombre de figurines qui la sélectionnent ou en bénéficient.
+  const chargedShared = new Map<string, Set<string>>(); // ferDeLanceId -> cardIds déjà facturées
+  for (const ri of resolved) {
+    for (const id of ri.instance.specialCardIds ?? []) {
+      const card = idx.specialCard.get(id);
+      if (!card?.shared) continue;
+      const done = chargedShared.get(ri.ferDeLanceId) ?? new Set<string>();
+      if (done.has(id)) continue;
+      done.add(id);
+      chargedShared.set(ri.ferDeLanceId, done);
+      cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + card.cost);
+    }
+  }
 
   // cost-delta : modificateurs additifs.
   for (const occ of occurrences) {

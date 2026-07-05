@@ -65,6 +65,8 @@ export interface ListStore {
   setGrimoire: (instanceId: string, g: "none" | "petit" | "grand") => void;
   toggleSpell: (instanceId: string, spellId: string) => void;
   toggleUpgrade: (instanceId: string, cardId: string) => void;
+  /** Amélioration partagée (payée une fois par Fer de Lance) : active/retire sur tout le FdL. */
+  toggleSharedAmelioration: (instanceId: string, cardId: string) => void;
   setMunition: (instanceId: string, equipId: string, qty: number) => void;
   setGuard: (instanceId: string, ofInstanceId: string | null) => void;
   // Persistance locale (Dexie).
@@ -186,6 +188,20 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
           ? current.filter((id) => catalog.specialCards.find((c) => c.id === id)?.choiceGroup !== group)
           : current;
         return { ...m, specialCardIds: [...kept, cardId] };
+      }),
+    toggleSharedAmelioration: (instanceId, cardId) =>
+      patchFdl((f) => {
+        // Active dès qu'un membre la porte : si active → retirer partout ; sinon → poser sur ce membre.
+        const active = f.members.some((m) => (m.specialCardIds ?? []).includes(cardId));
+        return {
+          ...f,
+          members: f.members.map((m) => {
+            if (active) return { ...m, specialCardIds: (m.specialCardIds ?? []).filter((id) => id !== cardId) };
+            return m.instanceId === instanceId
+              ? { ...m, specialCardIds: [...(m.specialCardIds ?? []), cardId] }
+              : m;
+          }),
+        };
       }),
     setMunition: (instanceId, equipId, qty) =>
       patchMember(instanceId, (m) => ({ ...m, munitions: { ...(m.munitions ?? {}), [equipId]: Math.max(0, qty) } })),

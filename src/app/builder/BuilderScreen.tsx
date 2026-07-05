@@ -223,6 +223,10 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
   const modalModel = modal?.kind === "preview" ? models.find((m) => m.id === modal.modelId) : undefined;
   const editItem = modal?.kind === "edit" ? memberOf(modal.instanceId) : undefined;
+  // Améliorations partagées actives dans le Fer de Lance (payées une fois, cochées sur tous les éligibles).
+  const sharedActiveCardIds = [...new Set((store.fdl?.members ?? []).flatMap((m) => m.specialCardIds ?? []))].filter(
+    (id) => cat.specialCards.find((c) => c.id === id)?.shared,
+  );
 
   // Contenu du roster, partagé entre l'aside desktop et la modale mobile.
   const rosterInner = (
@@ -406,7 +410,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             removed={x.inst.removedBaseEquipmentIds}
             grimoireId={x.inst.grimoireId}
             spellIds={x.inst.spellIds}
-            upgrades={x.inst.specialCardIds ?? []}
+            upgrades={[...new Set([...(x.inst.specialCardIds ?? []), ...sharedActiveCardIds])]}
             issues={rowIssues}
             onPick={setItemInfo}
           />
@@ -576,7 +580,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             cat={cat}
             added={editItem.inst.addedEquipmentIds}
             removed={editItem.inst.removedBaseEquipmentIds}
-            upgrades={editItem.inst.specialCardIds ?? []}
+            upgrades={[...new Set([...(editItem.inst.specialCardIds ?? []), ...sharedActiveCardIds])]}
             grimoire={editItem.inst.grimoireId ?? "none"}
             spells={editItem.inst.spellIds}
             onAdd={(eid) => store.addEquip(editItem.inst.instanceId, eid)}
@@ -584,7 +588,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onToggleBase={(eid) => store.toggleBase(editItem.inst.instanceId, eid)}
             munQty={(eid) => editItem.inst.munitions?.[eid] ?? 0}
             onMun={(eid, qty) => store.setMunition(editItem.inst.instanceId, eid, qty)}
-            onToggleUpgrade={(cid) => store.toggleUpgrade(editItem.inst.instanceId, cid)}
+            onToggleUpgrade={(cid) =>
+              cat.specialCards.find((c) => c.id === cid)?.shared
+                ? store.toggleSharedAmelioration(editItem.inst.instanceId, cid)
+                : store.toggleUpgrade(editItem.inst.instanceId, cid)
+            }
             onGrimoire={(g) => store.setGrimoire(editItem.inst.instanceId, g)}
             onToggleSpell={(sid) => store.toggleSpell(editItem.inst.instanceId, sid)}
             onInfo={setItemInfo}

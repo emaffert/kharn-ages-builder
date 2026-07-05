@@ -203,7 +203,10 @@ export function ProfileStatCard({
                     >
                       {c.name}
                     </button>
-                    <span className="px">{c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}</span>
+                    <span className="px">
+                      {c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}
+                      {c.shared ? " · partagée" : ""}
+                    </span>
                   </label>
                 ))}
               </div>

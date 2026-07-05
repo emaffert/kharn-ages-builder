@@ -38,8 +38,13 @@ export function PurchaseSummary({
     .filter((c) => !c.amelioration || upgrades.includes(c.id))
     .map((c) =>
       chip(c.name, {
+        // Partagée : payée une fois pour le Fer de Lance → « … Ko · partagée » (pas un coût par ligne).
         title: c.name,
-        price: c.cost > 0 ? `${c.cost} Ko` : "auto",
+        price: c.shared
+          ? `${c.cost > 0 ? `${c.cost} Ko · ` : ""}partagée`
+          : c.cost > 0
+            ? `${c.cost} Ko`
+            : "auto",
         lines: c.rulesText.map((r) => r.text),
       }),
     );

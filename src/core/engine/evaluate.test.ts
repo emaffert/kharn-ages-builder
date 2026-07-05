@@ -206,6 +206,23 @@ describe("valeur de compétence dérivée d'un décompte (skill-count)", () => {
   });
 });
 
+describe("amélioration partagée (payée une fois par Fer de Lance)", () => {
+  it("Lien de la Terre n'est facturée qu'une fois même portée par plusieurs Dogons", () => {
+    const plain = evaluateList(catalog, makeList([inst("gouns-dogon-1"), inst("gouns-dogon-1")], "gouns")).totalCost;
+    const shared = evaluateList(
+      catalog,
+      makeList(
+        [
+          inst("gouns-dogon-1", { specialCardIds: ["lien-de-la-terre"] }),
+          inst("gouns-dogon-1", { specialCardIds: ["lien-de-la-terre"] }),
+        ],
+        "gouns",
+      ),
+    ).totalCost;
+    expect(shared - plain).toBe(8); // +8 une seule fois, pas +16
+  });
+});
+
 describe("munitions", () => {
   it("les munitions ajoutent quantité × coût unitaire au coût", () => {
     const base = evalFang([inst("fangs-executeur-1", { addedEquipmentIds: ["arbalete-de-poing"] })]).totalCost;

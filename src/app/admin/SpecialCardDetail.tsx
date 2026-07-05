@@ -49,16 +49,29 @@ export function SpecialCardDetail({
         </span>
       </label>
       {card.amelioration && (
-        <label className="flex items-center gap-2 text-xs adm-faint">
-          groupe de choix exclusif
-          <input
-            value={card.choiceGroup ?? ""}
-            onChange={(e) => onChange({ choiceGroup: e.target.value || undefined })}
-            className={`${INPUT} w-48`}
-            placeholder="ex. artisane-racines"
-          />
-          <span>une seule amélioration du même groupe sélectionnable</span>
-        </label>
+        <>
+          <label className="flex items-center gap-2 text-xs adm-faint">
+            groupe de choix exclusif
+            <input
+              value={card.choiceGroup ?? ""}
+              onChange={(e) => onChange({ choiceGroup: e.target.value || undefined })}
+              className={`${INPUT} w-48`}
+              placeholder="ex. artisane-racines"
+            />
+            <span>une seule amélioration du même groupe sélectionnable</span>
+          </label>
+          <label className="flex items-center gap-2 text-sm adm-muted">
+            <input
+              type="checkbox"
+              checked={card.shared ?? false}
+              onChange={(e) => onChange({ shared: e.target.checked || undefined })}
+            />
+            Partagée (payée une fois par Fer de Lance)
+            <span className="text-xs adm-faint">
+              (activée depuis n'importe quel modèle éligible, ex. Lien de la Terre)
+            </span>
+          </label>
+        </>
       )}
       <GrantsCastingEditor value={card.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
 

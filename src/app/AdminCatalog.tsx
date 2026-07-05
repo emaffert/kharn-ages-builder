@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Button } from "@ui";
+import { Button, Dialog } from "@ui";
 import { useCatalogStore } from "./useCatalogStore";
 import { LEVEL_LABEL } from "./admin/shared";
 import { ProfileDetail } from "./admin/ProfileDetail";
@@ -22,6 +22,8 @@ export function AdminCatalog() {
   const [selectedCardId, setSelectedCardId] = useState(catalog.specialCards[0]?.id ?? "");
   const [selectedSpellId, setSelectedSpellId] = useState(catalog.spells[0]?.id ?? "");
   const [query, setQuery] = useState("");
+  // Suppression d'entité en attente de confirmation (modale au skin de l'app, action irréversible).
+  const [pendingDelete, setPendingDelete] = useState<{ what: string; run: () => void } | null>(null);
   const [factionFilter, setFactionFilter] = useState("all");
   const [zoom, setZoom] = useState<string | null>(null);
   const [showDocs, setShowDocs] = useState(false);
@@ -306,10 +308,15 @@ export function AdminCatalog() {
                   equipment={selectedEquip}
                   cat={catalog}
                   onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
-                  onRemove={() => {
-                    store.removeEquipment(selectedEquip.id);
-                    setSelectedEquipId(catalog.equipment.find((x) => x.id !== selectedEquip.id)?.id ?? "");
-                  }}
+                  onRemove={() =>
+                    setPendingDelete({
+                      what: `l'équipement « ${selectedEquip.name} »`,
+                      run: () => {
+                        store.removeEquipment(selectedEquip.id);
+                        setSelectedEquipId(catalog.equipment.find((x) => x.id !== selectedEquip.id)?.id ?? "");
+                      },
+                    })
+                  }
                 />
               </div>
             ) : (
@@ -321,10 +328,15 @@ export function AdminCatalog() {
                 <SkillCatalogDetail
                   skill={selectedSkill}
                   onChange={(patch) => store.updateSkill(selectedSkill.id, patch)}
-                  onRemove={() => {
-                    store.removeSkill(selectedSkill.id);
-                    setSelectedSkillId(catalog.skills.find((x) => x.id !== selectedSkill.id)?.id ?? "");
-                  }}
+                  onRemove={() =>
+                    setPendingDelete({
+                      what: `la compétence « ${selectedSkill.keyword} »`,
+                      run: () => {
+                        store.removeSkill(selectedSkill.id);
+                        setSelectedSkillId(catalog.skills.find((x) => x.id !== selectedSkill.id)?.id ?? "");
+                      },
+                    })
+                  }
                 />
               </div>
             ) : (
@@ -337,10 +349,15 @@ export function AdminCatalog() {
                   card={selectedCard}
                   cat={catalog}
                   onChange={(patch) => store.updateSpecialCard(selectedCard.id, patch)}
-                  onRemove={() => {
-                    store.removeSpecialCard(selectedCard.id);
-                    setSelectedCardId(catalog.specialCards.find((x) => x.id !== selectedCard.id)?.id ?? "");
-                  }}
+                  onRemove={() =>
+                    setPendingDelete({
+                      what: `la carte « ${selectedCard.name} »`,
+                      run: () => {
+                        store.removeSpecialCard(selectedCard.id);
+                        setSelectedCardId(catalog.specialCards.find((x) => x.id !== selectedCard.id)?.id ?? "");
+                      },
+                    })
+                  }
                 />
               </div>
             ) : (
@@ -353,10 +370,15 @@ export function AdminCatalog() {
                   spell={selectedSpell}
                   cat={catalog}
                   onChange={(patch) => store.updateSpell(selectedSpell.id, patch)}
-                  onRemove={() => {
-                    store.removeSpell(selectedSpell.id);
-                    setSelectedSpellId(catalog.spells.find((x) => x.id !== selectedSpell.id)?.id ?? "");
-                  }}
+                  onRemove={() =>
+                    setPendingDelete({
+                      what: `le sort « ${selectedSpell.name} »`,
+                      run: () => {
+                        store.removeSpell(selectedSpell.id);
+                        setSelectedSpellId(catalog.spells.find((x) => x.id !== selectedSpell.id)?.id ?? "");
+                      },
+                    })
+                  }
                 />
               </div>
             ) : (
@@ -393,6 +415,35 @@ export function AdminCatalog() {
       )}
 
       {showDocs && <AdminDocs onClose={() => setShowDocs(false)} />}
+
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(o) => {
+          if (!o) setPendingDelete(null);
+        }}
+        size="sm"
+        title="Confirmer la suppression"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
+              Annuler
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                pendingDelete?.run();
+                setPendingDelete(null);
+              }}
+            >
+              Supprimer
+            </Button>
+          </>
+        }
+      >
+        <p>
+          Supprimer {pendingDelete?.what} ? Cette action est <b>irréversible</b>.
+        </p>
+      </Dialog>
     </div>
   );
 }

@@ -141,6 +141,19 @@ function conditionHolds(
   });
 }
 
+/**
+ * Désignation « garde du corps » : la cible (le garde) est-elle assignée à un protégé valide ?
+ * Sans champ `designation`, toute désignation (assignée à quelqu'un) suffit ; avec, le protégé
+ * doit correspondre à `designation.of` (ex. Larbin → Fille de Nyx, Djouked → Broutcha).
+ */
+function designationOk(effect: Effect, ri: ResolvedInstance, all: ResolvedInstance[]): boolean {
+  const targetId = ri.instance.bodyguardOfInstanceId;
+  if (targetId == null) return false;
+  if (!effect.designation) return true;
+  const protectee = all.find((r) => r.instance.instanceId === targetId);
+  return protectee != null && instanceMatchesIdentity(effect.designation.of, protectee);
+}
+
 function collectEffectOccurrences(
   resolved: ResolvedInstance[],
   cat: Catalog,
@@ -154,7 +167,7 @@ function collectEffectOccurrences(
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
       if (!effect.appliesToListBuilding) continue;
-      if (effect.optIn && ri.instance.bodyguardOfInstanceId == null) continue;
+      if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
       occurrences.push({
         effect,
         ferDeLanceId: ri.ferDeLanceId,
@@ -308,7 +321,7 @@ function computeCosts(
     if (op.kind !== "cost-set") continue;
     if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
 
-    const designated = resolveTargets(occ, resolved).filter((ri) => ri.instance.bodyguardOfInstanceId != null);
+    const designated = resolveTargets(occ, resolved).filter((ri) => designationOk(occ.effect, ri, resolved));
     const cap = op.maxCount ?? designated.length;
     const freed = Math.min(cap, occ.sourceCount ?? designated.length, designated.length);
     for (const ri of designated.slice(0, freed)) {

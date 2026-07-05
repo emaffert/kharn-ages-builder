@@ -702,7 +702,8 @@
           "type": "attachment",
           "params": {
             "carrier": {
-              "trait": "femelle-fang"
+              "trait": "femelle-fang",
+              "label": "une femelle Fang"
             },
             "capacityRule": "sum(attached.level) <= carrier.level"
           },
@@ -794,7 +795,8 @@
           "type": "attachment",
           "params": {
             "carrier": {
-              "trait": "femelle-fang"
+              "trait": "femelle-fang",
+              "label": "une femelle Fang"
             },
             "capacityRule": "sum(attached.level) <= carrier.level"
           },
@@ -893,7 +895,8 @@
           "type": "attachment",
           "params": {
             "carrier": {
-              "trait": "femelle-fang"
+              "trait": "femelle-fang",
+              "label": "une femelle Fang"
             },
             "capacityRule": "sum(attached.level) <= carrier.level"
           },
@@ -2208,7 +2211,14 @@
           "appliesToListBuilding": true,
           "optIn": true,
           "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha.",
-          "autoEnforced": true
+          "autoEnforced": true,
+          "designation": {
+            "of": {
+              "profileIds": [
+                "fangs-broutcha-2"
+              ]
+            }
+          }
         }
       ],
       "rules": [
@@ -3894,7 +3904,14 @@
           },
           "appliesToListBuilding": true,
           "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
-          "autoEnforced": true
+          "autoEnforced": true,
+          "designation": {
+            "of": {
+              "traits": [
+                "fille-de-nyx"
+              ]
+            }
+          }
         },
         {
           "id": "fille-de-nyx-pages",

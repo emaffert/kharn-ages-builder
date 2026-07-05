@@ -43,6 +43,12 @@ export const EffectSchema = z.object({
   condition: z.union([SelectorSchema, z.array(SelectorSchema)]).optional(),
   /** Cible de l'effet (peut être `self`). */
   target: SelectorSchema,
+  /**
+   * Désignation « garde du corps » : la cible (le garde) ne bénéficie de l'opération que si elle est
+   * assignée à protéger l'une des figurines décrites par `of`. Pilote l'UI de désignation du
+   * constructeur ET conditionne la remise dans le moteur (ex. Larbin → Fille de Nyx ; Djouked → Broutcha).
+   */
+  designation: z.object({ of: SelectorSchema }).optional(),
   operation: EffectOperationSchema,
   /** false => effet en jeu uniquement (affiché verbatim, non calculé par l'éditeur). */
   appliesToListBuilding: z.boolean(),

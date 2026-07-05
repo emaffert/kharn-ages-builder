@@ -647,6 +647,23 @@ export function EffectListEditor({
               })()}
             </div>
           </details>
+          <details>
+            <summary className="cursor-pointer text-xs adm-faint">
+              désignation « garde du corps » (optionnel)
+            </summary>
+            <div className="mt-1 space-y-1">
+              <p className="text-xs adm-faint">
+                Si renseigné, la cible (le garde) ne bénéficie de l'effet que si elle est désignée pour
+                protéger l'une de ces figurines.
+              </p>
+              <SelectorEditor
+                selector={e.designation?.of ?? {}}
+                cat={cat}
+                allowSelf={false}
+                onChange={(s) => update(i, { ...e, designation: Object.keys(s).length ? { of: s } : undefined })}
+              />
+            </div>
+          </details>
           <label className="block text-xs adm-faint">
             wording verbatim (fait foi)
             <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />

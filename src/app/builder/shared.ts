@@ -4,7 +4,7 @@ import {
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
 } from "@core";
-import type { Catalog, Profile, ProfileInstance, Spell } from "@core";
+import type { Catalog, Profile, ProfileInstance, Selector, Spell } from "@core";
 // Libellés de présentation partagés avec l'admin (source unique dans @ui) — alias pour garder les noms locaux.
 import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
 
@@ -114,17 +114,64 @@ export function recruitableDependentGroups(carrier: Profile, cat: Catalog): Depe
   });
 }
 
-const TRAIT_LABEL: Record<string, string> = { "femelle-fang": "une femelle Fang" };
+// ── Garde du corps (désignation) ── Dérivé des effets portant un champ `designation`.
+
+/** Correspondance identité d'un sélecteur sur un profil (OR entre dimensions). */
+function selectorMatchesProfile(sel: Selector, p: Profile): boolean {
+  if (sel.profileIds?.includes(p.id)) return true;
+  if (sel.modelIds && p.modelId != null && sel.modelIds.includes(p.modelId)) return true;
+  if (sel.traits?.some((t) => p.traits.includes(t))) return true;
+  if (sel.factionIds && p.factionId != null && sel.factionIds.includes(p.factionId)) return true;
+  return false;
+}
+
+/** Un effet de désignation : `guardMatch` = qui est le garde, `of` = les figurines protégeables. */
+type GuardDesignation = { guardMatch: (p: Profile) => boolean; of: Selector };
+
+function guardDesignations(cat: Catalog): GuardDesignation[] {
+  const out: GuardDesignation[] = [];
+  for (const p of cat.profiles) {
+    for (const e of p.effects ?? []) {
+      if (!e.designation) continue;
+      // `self` => le garde est la figurine source (ce profil) ; sinon la cible désigne le garde.
+      const guardMatch = e.target.self
+        ? (q: Profile) => q.id === p.id
+        : (q: Profile) => selectorMatchesProfile(e.target, q);
+      out.push({ guardMatch, of: e.designation.of });
+    }
+  }
+  for (const s of cat.specialCards) {
+    for (const e of s.effects ?? []) {
+      if (!e.designation || e.target.self) continue; // `self` sur une carte n'a pas de source unique
+      out.push({ guardMatch: (q: Profile) => selectorMatchesProfile(e.target, q), of: e.designation.of });
+    }
+  }
+  return out;
+}
+
+/** Sélecteurs des protégés qu'un garde donné peut protéger (⋃ des désignations correspondantes). */
+export function protecteeSelectorsFor(guard: Profile, cat: Catalog): Selector[] {
+  return guardDesignations(cat)
+    .filter((d) => d.guardMatch(guard))
+    .map((d) => d.of);
+}
+
+/** Un profil (protégé candidat) correspond-il à l'un de ces sélecteurs ? */
+export function profileMatchesAnySelector(p: Profile, sels: Selector[]): boolean {
+  return sels.some((s) => selectorMatchesProfile(s, p));
+}
 
 /** Modèle/figurine exact via lequel se recrute un profil dépendant (Likan → femelle Fang, Muskh → Xayìn). */
 export function carrierLabel(p: Profile, cat: Catalog): string | null {
   const name = (id?: string) =>
     cat.profiles.find((x) => x.id === id)?.name ?? cat.models.find((m) => m.id === id)?.name;
-  // Attachment : porteur désigné par trait ou par identifiants.
+  // Attachment : porteur désigné par trait ou par identifiants. `label` = libellé lisible optionnel.
   for (const c of p.recruitment as { type: string; params?: Record<string, unknown> }[]) {
     if (c.type !== "attachment") continue;
-    const car = c.params?.carrier as { trait?: string; profileIds?: string[]; modelIds?: string[] } | undefined;
-    if (car?.trait) return TRAIT_LABEL[car.trait] ?? car.trait;
+    const car = c.params?.carrier as
+      | { trait?: string; label?: string; profileIds?: string[]; modelIds?: string[] }
+      | undefined;
+    if (car?.trait) return car.label ?? car.trait;
     const names = [...(car?.profileIds ?? []), ...(car?.modelIds ?? [])].map(name).filter(Boolean);
     if (names.length) return names.join(" / ");
   }

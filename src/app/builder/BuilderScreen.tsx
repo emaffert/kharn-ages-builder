@@ -7,6 +7,8 @@ import {
   canBuy,
   isAttachmentDependent,
   isDependent,
+  profileMatchesAnySelector,
+  protecteeSelectorsFor,
   recruitableDependentGroups,
   type ItemInfo,
   type Modal,
@@ -185,29 +187,29 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const topTwo = new Set([...items].sort((a, b) => b.p.cost - a.p.cost).slice(0, 2).map((x) => x.inst.instanceId));
   const canLead = (p: Profile, id: string) => isChar(p) || topTwo.has(id);
 
-  // Garde du corps : chaque Fille de Nyx n'offre qu'un emplacement → on retire dynamiquement
-  // celles qui ont déjà un garde. La gratuité elle-même vient du moteur.
+  // Garde du corps (désignation) : dérivé des effets `designation` du catalogue. Chaque protégé n'offre
+  // qu'une place → on retire dynamiquement ceux déjà gardés. La gratuité/remise vient du moteur.
   const takenFdN = new Set(fdl.members.map((m) => m.bodyguardOfInstanceId).filter(Boolean) as string[]);
-  const availableFilles = items
-    .filter((x) => x.p.traits.includes("fille-de-nyx") && !takenFdN.has(x.inst.instanceId))
-    .map((x) => ({ id: x.inst.instanceId, name: x.p.name }));
-  // Djouked ne peut être que le garde rapproché de Broutcha (spécifiquement).
-  const availableBroutcha = () =>
-    items.find((x) => x.p.modelId === "broutcha" && !takenFdN.has(x.inst.instanceId))?.inst.instanceId;
-  const guardEligible = (p: Profile) =>
-    p.modelId === "larbin"
-      ? availableFilles.length > 0
-      : p.modelId === "djouked"
-        ? availableBroutcha() != null
-        : false;
+  // Protégés disponibles pour un garde donné : figurines correspondant à `designation.of`,
+  // pas déjà gardées, et distinctes du garde lui-même.
+  const availableProtectees = (guardId: string, guardProfile: Profile): Item[] => {
+    const sels = protecteeSelectorsFor(guardProfile, cat);
+    if (sels.length === 0) return [];
+    return items.filter(
+      (x) =>
+        x.inst.instanceId !== guardId &&
+        !takenFdN.has(x.inst.instanceId) &&
+        profileMatchesAnySelector(x.p, sels),
+    );
+  };
+  const guardEligible = (guardId: string, p: Profile) => availableProtectees(guardId, p).length > 0;
   const onGuardClick = (id: string) => {
-    if (memberOf(id)?.inst.bodyguardOfInstanceId != null) return store.setGuard(id, null);
-    const p = memberOf(id)?.p;
-    if (p?.modelId === "djouked") {
-      const b = availableBroutcha();
-      if (b) store.setGuard(id, b);
-    } else if (availableFilles.length === 1) store.setGuard(id, availableFilles[0].id);
-    else if (availableFilles.length > 1) setModal({ kind: "guard", instanceId: id });
+    const m = memberOf(id);
+    if (!m) return;
+    if (m.inst.bodyguardOfInstanceId != null) return store.setGuard(id, null); // dé-désigner
+    const options = availableProtectees(id, m.p);
+    if (options.length === 1) store.setGuard(id, options[0].inst.instanceId);
+    else if (options.length > 1) setModal({ kind: "guard", instanceId: id });
   };
   // Ajout rapide depuis le roster (sans passer par la carte) ; choix du niveau si profils multiples.
   const onQuickAdd = (m: ModelEntry) => {
@@ -270,8 +272,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     const isLeader = id === fdl.leaderInstanceId;
     const guarded = x.inst.bodyguardOfInstanceId != null;
     const guardOf = guarded ? memberOf(x.inst.bodyguardOfInstanceId!)?.p.name : null;
-    const eligible = guardEligible(x.p) || guarded; // reste dispo pour se dé-désigner
-    const free = costOf(id) === 0 && (guarded || x.p.modelId === "larbin");
+    const eligible = guardEligible(id, x.p) || guarded; // reste dispo pour se dé-désigner
+    const free = costOf(id) === 0 && guarded;
     const open = !collapsed.has(id);
     const leadable = canLead(x.p, id);
     const rowIssues = issuesOf(id);
@@ -362,7 +364,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               <button
                 className={`bld-pill${guarded ? " on" : ""}`}
                 onClick={() => onGuardClick(id)}
-                title={x.p.modelId === "djouked" ? "Garde rapproché de Broutcha" : "Garde du corps d'une Fille de Nyx"}
+                title={guarded ? "Retirer la désignation" : "Désigner comme garde du corps"}
               >
                 {guarded ? `✓ Garde du corps de ${guardOf}` : "Garde du corps"}
               </button>
@@ -563,25 +565,30 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           />
         </Dialog>
       )}
-      {modal?.kind === "guard" && (
-        <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Garde du corps" size="sm">
-          <p className="mdl-note">{memberOf(modal.instanceId)?.p.name} sera lié à la Fille de Nyx choisie.</p>
-          <div className="mdl-list">
-            {availableFilles.map((f) => (
-              <button
-                key={f.id}
-                className="mdl-choice"
-                onClick={() => {
-                  store.setGuard(modal.instanceId, f.id);
-                  setModal(null);
-                }}
-              >
-                {f.name}
-              </button>
-            ))}
-          </div>
-        </Dialog>
-      )}
+      {modal?.kind === "guard" &&
+        (() => {
+          const guard = memberOf(modal.instanceId);
+          const options = guard ? availableProtectees(modal.instanceId, guard.p) : [];
+          return (
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Garde du corps" size="sm">
+              <p className="mdl-note">{guard?.p.name} sera désigné garde du corps de :</p>
+              <div className="mdl-list">
+                {options.map((x) => (
+                  <button
+                    key={x.inst.instanceId}
+                    className="mdl-choice"
+                    onClick={() => {
+                      store.setGuard(modal.instanceId, x.inst.instanceId);
+                      setModal(null);
+                    }}
+                  >
+                    {x.p.name}
+                  </button>
+                ))}
+              </div>
+            </Dialog>
+          );
+        })()}
       {modal?.kind === "recruit-level" &&
         (() => {
           const m = models.find((mm) => mm.id === modal.modelId);

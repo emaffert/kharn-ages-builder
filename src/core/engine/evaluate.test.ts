@@ -64,6 +64,15 @@ describe("calcul de coût", () => {
     expect(Object.values(res.costByInstance).some((c) => c === 0)).toBe(false);
   });
 
+  it("un Larbin désigné garde d'une non-Fille de Nyx n'est pas gratuit (designation.of)", () => {
+    // Une Fille (Apathée) est présente donc l'effet existe, mais le Larbin est assigné à une Goulue
+    // qui n'a pas le trait « fille-de-nyx » → la remise ne s'applique pas.
+    const goulue = inst("fangs-goulue-1");
+    const larbin = inst("fangs-larbin-1", { bodyguardOfInstanceId: goulue.instanceId });
+    const res = evalFang([inst("fangs-apathee-3"), goulue, larbin]);
+    expect(res.costByInstance[larbin.instanceId]).toBe(35);
+  });
+
   it("deux Filles de Nyx rendent gratuits 2 Larbins désignés (plafond)", () => {
     const apathee = inst("fangs-apathee-3");
     const broutcha = inst("fangs-broutcha-2");

@@ -117,6 +117,7 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     const clauses = Array.isArray(e.condition) ? e.condition : [e.condition];
     base += ` — si ${clauses.map((c) => describeSelector(c, cat)).join(" et ")}`;
   }
+  if (e.designation) base += ` — garde du corps de ${describeSelector(e.designation.of, cat)}`;
   if (e.optIn) base += " (au choix du joueur)";
   if (!e.appliesToListBuilding) base += " (effet en jeu uniquement)";
   return base;

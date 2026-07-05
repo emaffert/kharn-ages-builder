@@ -114,8 +114,9 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <strong><code>attachment</code></strong> — rattache la figurine à un porteur ; la somme des niveaux des
             rattachés ne peut excéder le niveau du porteur (ex. Likan → femelle Fang).          </p>
           <Code>{`{
-  "carrier": { "trait": "femelle-fang" },
+  "carrier": { "trait": "femelle-fang", "label": "une femelle Fang" },
   //  carrier = le porteur : par "trait", ou "profileIds": [...], ou "modelIds": [...]
+  //  label (optionnel) = libellé lisible affiché à la place du trait ("via une femelle Fang")
   "capacityRule": "sum(attached.level) <= carrier.level"
   //  capacityRule = descriptif ; la règle « ≤ niveau du porteur » est appliquée d'office
 }`}</Code>
@@ -169,6 +170,17 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <li><code>{`"modelIds": ["pere-de-famille"]`}</code> — toutes les figurines d'un modèle (tous niveaux).</li>
             <li><code>{`"factionIds": [...]`}</code> — existe dans le format mais n'a pas encore de champ dédié dans le formulaire.</li>
           </ul>
+
+          <p>
+            <strong>Garde du corps (désignation).</strong> Le champ <strong>« désignation »</strong> d'un effet de
+            coût restreint la remise aux gardes <em>désignés</em> : la cible (le garde) n'en bénéficie que si le
+            joueur l'assigne à protéger une figurine décrite par <code>of</code>. Le constructeur en déduit qui peut
+            être garde du corps de qui — plus besoin de coder ces liens.
+          </p>
+          <Code>{`// Effet « Larbin gratuit » d'une Fille de Nyx (cible = Larbin) :
+"operation": { "kind": "cost-set", "amount": 0, "maxCount": 2 },
+"designation": { "of": { "traits": ["fille-de-nyx"] } }
+//  of = les protégeables ; le Larbin doit être désigné garde d'une Fille de Nyx pour être gratuit.`}</Code>
 
           <H>Améliorations & choix exclusif</H>
           <p>

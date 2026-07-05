@@ -113,6 +113,11 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     case "stat-count":
       base = `${op.stat.toUpperCase()} de ${tgt} = nombre de ${describeSelector(op.of, cat)}${op.atLeastBase ? " (minimum : valeur de base)" : ""}`;
       break;
+    case "skill-count": {
+      const per = op.per && op.per > 1 ? ` par groupe de ${op.per}` : "";
+      base = `« ${skillName(cat, op.skillId)} » de ${tgt} = nombre de ${describeSelector(op.of, cat)}${per} (arrondi inférieur)`;
+      break;
+    }
     case "spell-pages":
       base = `${op.amount >= 0 ? "+" : ""}${op.amount} page(s) de sorts pour ${tgt}`;
       break;

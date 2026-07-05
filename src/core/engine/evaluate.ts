@@ -52,6 +52,8 @@ export interface EvaluationResult {
   grantedSkills: Record<string, string[]>;
   /** Modificateurs de caractéristiques cumulés par effet, par instance (stat -> delta). Pour l'affichage. */
   statDeltas: Record<string, Record<string, number>>;
+  /** Valeurs de compétences calculées par effet, par instance (skillId -> valeur). Pour l'affichage. */
+  skillValues: Record<string, Record<string, number>>;
   issues: Issue[];
 }
 
@@ -793,6 +795,28 @@ function computeStatDeltas(
   return out;
 }
 
+/** Valeurs de compétences dérivées d'un décompte (skill-count), par instance : skillId -> valeur. */
+function computeSkillValues(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+): Map<string, Map<string, number>> {
+  const out = new Map<string, Map<string, number>>();
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "skill-count") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+    const pool = instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId);
+    const count = pool.filter((ri) => instanceMatchesIdentity(op.of, ri)).length;
+    const value = Math.floor(count / (op.per && op.per > 0 ? op.per : 1));
+    for (const ri of resolveTargets(occ, resolved)) {
+      const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
+      m.set(op.skillId, value); // SET non cumulatif (idempotent si plusieurs porteurs)
+      out.set(ri.instance.instanceId, m);
+    }
+  }
+  return out;
+}
+
 // ── Point d'entrée ───────────────────────────────────────────────────────────
 
 export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult {
@@ -809,6 +833,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const displayOcc = collectEffectOccurrences(display, cat, idx, true);
   applyGrants(display, displayOcc);
   const statDeltasByInstance = computeStatDeltas(display, displayOcc);
+  const skillValuesByInstance = computeSkillValues(display, displayOcc);
   const displayById = new Map(display.map((ri) => [ri.instance.instanceId, ri]));
 
   const costByInstance: Record<string, number> = {};
@@ -816,6 +841,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const grantedTraits: Record<string, string[]> = {};
   const grantedSkills: Record<string, string[]> = {};
   const statDeltas: Record<string, Record<string, number>> = {};
+  const skillValues: Record<string, Record<string, number>> = {};
   for (const ri of resolved) {
     const id = ri.instance.instanceId;
     const c = cost.get(id) ?? 0;
@@ -831,8 +857,19 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     }
     const sd = statDeltasByInstance.get(id);
     if (sd && sd.size > 0) statDeltas[id] = Object.fromEntries(sd);
+    const sv = skillValuesByInstance.get(id);
+    if (sv && sv.size > 0) skillValues[id] = Object.fromEntries(sv);
   }
   const totalCost = Object.values(costByInstance).reduce((s, c) => s + c, 0);
 
-  return { totalCost, costByInstance, costByFerDeLance, grantedTraits, grantedSkills, statDeltas, issues };
+  return {
+    totalCost,
+    costByInstance,
+    costByFerDeLance,
+    grantedTraits,
+    grantedSkills,
+    statDeltas,
+    skillValues,
+    issues,
+  };
 }

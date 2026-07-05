@@ -158,6 +158,7 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <li><code>{`{ "kind": "spell-pages", "amount": 3 }`}</code> — ajoute des pages de sorts à la cible.</li>
             <li><code>{`{ "kind": "stat-modifier", "stat": "i", "amount": "level" }`}</code> — modifie une caractéristique (<code>amount</code> = nombre ou <code>"level"</code>). <em>Effet en jeu — affiché, non calculé au coût.</em></li>
             <li><code>{`{ "kind": "stat-count", "stat": "t", "of": { "traits": ["dogon"] }, "atLeastBase": true }`}</code> — fixe une caractéristique au <strong>nombre de figurines</strong> correspondant à <code>of</code> dans la portée (ex. Instinct grégaire : T = nombre de Dogons) ; <code>atLeastBase</code> = plancher à la valeur de base. <em>Affiché sur le profil.</em></li>
+            <li><code>{`{ "kind": "skill-count", "skillId": "seigneur-de-guerre", "of": { "levels": [1] }, "per": 3 }`}</code> — fixe la <strong>valeur d'une compétence</strong> (à valeur) à <code>⌊ nombre de figurines « of » / per ⌋</code> (arrondi inférieur ; <code>per</code> défaut 1). Ex. Seigneur de guerre = ⌊ Niv I de l'Ost / 3 ⌋. <em>Affiché sur le profil.</em></li>
           </ul>
 
           <p><strong>Sélecteurs</strong> (cible et condition) — dimensions cumulables :</p>

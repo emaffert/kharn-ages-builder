@@ -230,6 +230,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, stat: "i", amount: "level" };
     case "stat-count":
       return { kind, stat: "t", of: {}, atLeastBase: true };
+    case "skill-count":
+      return { kind, skillId: "", of: {}, per: 3 };
     case "spell-pages":
       return { kind, amount: 0 };
   }
@@ -264,6 +266,7 @@ function OperationEditor({
             "grant-trait",
             "stat-modifier",
             "stat-count",
+            "skill-count",
             "spell-pages",
           ] as const
         ).map((k) => (
@@ -354,6 +357,26 @@ function OperationEditor({
           </label>
           <div className="w-full">
             <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée)</div>
+            <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
+          </div>
+        </>
+      )}
+      {op.kind === "skill-count" && (
+        <>
+          <span className="text-xs adm-faint">valeur de</span>
+          <Combobox
+            value={op.skillId}
+            className="w-48"
+            placeholder="Rechercher une compétence…"
+            options={[...cat.skills]
+              .sort((a, b) => a.keyword.localeCompare(b.keyword))
+              .map((s) => ({ value: s.id, label: s.keyword }))}
+            onChange={(v) => onChange({ ...op, skillId: v })}
+          />
+          <span className="text-xs adm-faint">= nombre de figurines ÷</span>
+          <Num label="par groupe de" value={op.per ?? 1} onChange={(v) => onChange({ ...op, per: v || 1 })} />
+          <div className="w-full">
+            <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée) — arrondi à l'inférieur</div>
             <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
           </div>
         </>

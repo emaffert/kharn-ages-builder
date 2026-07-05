@@ -30,6 +30,14 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     of: SelectorSchema,
     atLeastBase: z.boolean().optional(),
   }),
+  // Valeur d'une compétence (à valeur, ex. Seigneur de guerre X) dérivée d'un décompte :
+  // X = ⌊ nombre de figurines « of » dans la portée / per ⌋ (per défaut 1, arrondi inférieur).
+  z.object({
+    kind: z.literal("skill-count"),
+    skillId: z.string(),
+    of: SelectorSchema,
+    per: z.number().optional(),
+  }),
   // Budget de pages de sorts (ex. Fille de Nyx : +3 ; Crosse d'Ostéomancie : +3).
   // Enforcement (capacité vs sorts choisis) prévu côté constructeur de liste.
   z.object({ kind: z.literal("spell-pages"), amount: z.number() }),

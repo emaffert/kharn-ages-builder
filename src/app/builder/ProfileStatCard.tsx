@@ -15,6 +15,8 @@ import {
 /** Modifications apportées par des effets (pour l'affichage : couleur « braise » + infobulle). */
 export type ProfileMods = {
   statDeltas?: Record<string, number>;
+  /** Valeurs de compétences calculées par effet (skillId -> valeur), ex. Seigneur de guerre. */
+  skillValues?: Record<string, number>;
   grantedSkillIds?: string[];
   grantedTraitIds?: string[];
 };
@@ -111,9 +113,16 @@ export function ProfileStatCard({
         <div className="fe-skills">
           {p.skills.map((s, i) => {
             const sk = cat.skills.find((x) => x.id === s.skillId);
-            const label = `${sk?.keyword ?? s.skillId}${s.value != null ? ` ${s.value}` : ""}`;
+            const fxVal = mods?.skillValues?.[s.skillId]; // valeur calculée par un effet (ex. Seigneur de guerre)
+            const value = fxVal ?? s.value;
+            const label = `${sk?.keyword ?? s.skillId}${value != null ? ` ${value}` : ""}`;
             return (
-              <button key={i} className="fe-skill" onClick={() => showSkill(s.skillId, label)}>
+              <button
+                key={i}
+                className={`fe-skill${fxVal != null ? " is-fx" : ""}`}
+                onClick={() => showSkill(s.skillId, label)}
+                title={fxVal != null ? "Valeur calculée par un effet" : undefined}
+              >
                 {label}
               </button>
             );

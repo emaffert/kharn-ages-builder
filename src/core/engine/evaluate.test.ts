@@ -190,6 +190,22 @@ describe("caractéristique dérivée d'un décompte (stat-count)", () => {
   });
 });
 
+describe("valeur de compétence dérivée d'un décompte (skill-count)", () => {
+  it("Seigneur de guerre = ⌊ nombre de Niv I de l'Ost / 3 ⌋", () => {
+    const vieillard = inst("gouns-vieillard-shaman-3"); // Niv III : ne se compte pas lui-même
+    // 7 figurines Niveau I → ⌊7/3⌋ = 2.
+    const nivI = Array.from({ length: 7 }, () => inst("gouns-dogon-1"));
+    const res = evaluateList(catalog, makeList([vieillard, ...nivI], "gouns"));
+    expect(res.skillValues[vieillard.instanceId]?.["seigneur-de-guerre"]).toBe(2);
+  });
+
+  it("arrondi inférieur : 2 Niv I → 0", () => {
+    const vieillard = inst("gouns-vieillard-shaman-3");
+    const res = evaluateList(catalog, makeList([vieillard, inst("gouns-dogon-1"), inst("gouns-dogon-1")], "gouns"));
+    expect(res.skillValues[vieillard.instanceId]?.["seigneur-de-guerre"]).toBe(0);
+  });
+});
+
 describe("munitions", () => {
   it("les munitions ajoutent quantité × coût unitaire au coût", () => {
     const base = evalFang([inst("fangs-executeur-1", { addedEquipmentIds: ["arbalete-de-poing"] })]).totalCost;

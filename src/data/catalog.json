@@ -2355,14 +2355,6 @@
         "mongo"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Instinct grégaire",
-          "text": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu."
-        }
-      ],
-      "cardImage": "cards/Gouns/guerrier-mongo.jpg",
-      "unverifiedFields": [],
       "effects": [
         {
           "id": "guerrier-mongo-1-instinct-gregaire",
@@ -2387,7 +2379,15 @@
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu.",
           "autoEnforced": false
         }
-      ]
+      ],
+      "rules": [
+        {
+          "label": "Instinct grégaire",
+          "text": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu."
+        }
+      ],
+      "cardImage": "cards/Gouns/guerrier-mongo.jpg",
+      "unverifiedFields": []
     },
     {
       "id": "gouns-guerrier-mongo-2",
@@ -2440,14 +2440,6 @@
         "mongo"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Instinct grégaire",
-          "text": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3)."
-        }
-      ],
-      "cardImage": "cards/Gouns/guerrier-mongo.jpg",
-      "unverifiedFields": [],
       "effects": [
         {
           "id": "guerrier-mongo-2-instinct-gregaire",
@@ -2473,7 +2465,15 @@
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3).",
           "autoEnforced": false
         }
-      ]
+      ],
+      "rules": [
+        {
+          "label": "Instinct grégaire",
+          "text": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3)."
+        }
+      ],
+      "cardImage": "cards/Gouns/guerrier-mongo.jpg",
+      "unverifiedFields": []
     },
     {
       "id": "gouns-guerrier-mongo-3",
@@ -2535,17 +2535,6 @@
         "mongo"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Instinct grégaire",
-          "text": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4)."
-        }
-      ],
-      "notes": [
-        "Rusé ajouté via les Règles de bataille (Guerriers Mongo niveau III)."
-      ],
-      "cardImage": "cards/Gouns/guerrier-mongo.jpg",
-      "unverifiedFields": [],
       "effects": [
         {
           "id": "guerrier-mongo-3-instinct-gregaire",
@@ -2571,7 +2560,18 @@
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4).",
           "autoEnforced": false
         }
-      ]
+      ],
+      "rules": [
+        {
+          "label": "Instinct grégaire",
+          "text": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4)."
+        }
+      ],
+      "notes": [
+        "Rusé ajouté via les Règles de bataille (Guerriers Mongo niveau III)."
+      ],
+      "cardImage": "cards/Gouns/guerrier-mongo.jpg",
+      "unverifiedFields": []
     },
     {
       "id": "gouns-guerrier-albinos-3",
@@ -2650,12 +2650,12 @@
       "recruitment": [],
       "rules": [
         {
-          "label": "Rassurant",
-          "text": "Les Dogons et les Mongos dans son aura ont +2 en témérité."
-        },
-        {
           "label": "Synkherces",
           "text": ""
+        },
+        {
+          "label": "Rassurant",
+          "text": "Les Dogons et les Mongos dans son aura ont +2 en témérité."
         }
       ],
       "cardImage": "cards/Gouns/guerrier-albinos.jpg",
@@ -2710,17 +2710,6 @@
         "mongo"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Instinct grégaire",
-          "text": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu."
-        }
-      ],
-      "notes": [
-        "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
-      ],
-      "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
-      "unverifiedFields": [],
       "effects": [
         {
           "id": "eclaireur-mongo-1-instinct-gregaire",
@@ -2745,7 +2734,18 @@
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu.",
           "autoEnforced": false
         }
-      ]
+      ],
+      "rules": [
+        {
+          "label": "Instinct grégaire",
+          "text": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu."
+        }
+      ],
+      "notes": [
+        "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
+      ],
+      "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
+      "unverifiedFields": []
     },
     {
       "id": "gouns-eclaireur-mongo-2",
@@ -2807,17 +2807,6 @@
         "mongo"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Instinct grégaire",
-          "text": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3)."
-        }
-      ],
-      "notes": [
-        "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
-      ],
-      "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
-      "unverifiedFields": [],
       "effects": [
         {
           "id": "eclaireur-mongo-2-instinct-gregaire",
@@ -2843,7 +2832,18 @@
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3).",
           "autoEnforced": false
         }
-      ]
+      ],
+      "rules": [
+        {
+          "label": "Instinct grégaire",
+          "text": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3)."
+        }
+      ],
+      "notes": [
+        "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
+      ],
+      "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
+      "unverifiedFields": []
     },
     {
       "id": "gouns-eclaireur-mongo-3",
@@ -2910,17 +2910,6 @@
         "mongo"
       ],
       "recruitment": [],
-      "rules": [
-        {
-          "label": "Instinct grégaire",
-          "text": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4)."
-        }
-      ],
-      "notes": [
-        "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
-      ],
-      "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
-      "unverifiedFields": [],
       "effects": [
         {
           "id": "eclaireur-mongo-3-instinct-gregaire",
@@ -2946,7 +2935,18 @@
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4).",
           "autoEnforced": false
         }
-      ]
+      ],
+      "rules": [
+        {
+          "label": "Instinct grégaire",
+          "text": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4)."
+        }
+      ],
+      "notes": [
+        "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
+      ],
+      "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
+      "unverifiedFields": []
     },
     {
       "id": "gouns-shaman-1",
@@ -3080,6 +3080,10 @@
       "pv": 22,
       "skills": [
         {
+          "skillId": "seigneur-de-guerre",
+          "precision": "+1 par groupe de 3 Niv I."
+        },
+        {
           "skillId": "shamanisme"
         },
         {
@@ -3124,11 +3128,33 @@
       },
       "traits": [],
       "recruitment": [],
-      "rules": [
+      "effects": [
         {
-          "label": "SDG",
-          "text": "+1 par groupe de 3 Niv I."
-        },
+          "id": "vieillard-shaman-3-seigneur-de-guerre",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-vieillard-shaman-3"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "skill-count",
+            "skillId": "seigneur-de-guerre",
+            "of": {
+              "levels": [
+                1
+              ]
+            },
+            "per": 3
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "Seigneur de Guerre — +1 par groupe de 3 Niv I.",
+          "autoEnforced": false
+        }
+      ],
+      "rules": [
         {
           "text": "Immunité « X », le Vieillard doit choisir une voie de magie au début de la partie."
         }
@@ -3196,6 +3222,10 @@
       "recruitment": [],
       "rules": [
         {
+          "label": "Dogon",
+          "text": ""
+        },
+        {
           "label": "Héros",
           "text": "Ne peut être joué avec d'autres versions d'Alaric."
         },
@@ -3204,10 +3234,6 @@
         },
         {
           "text": "Ne peut choisir que la Sarclette ou le Couteau pour arme alternative."
-        },
-        {
-          "label": "Dogon",
-          "text": ""
         }
       ],
       "cardImage": "cards/Gouns/alaric.jpg",

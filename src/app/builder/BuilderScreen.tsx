@@ -590,6 +590,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onInfo={setItemInfo}
             mods={{
               statDeltas: evaluation.statDeltas[editItem.inst.instanceId],
+              skillValues: evaluation.skillValues[editItem.inst.instanceId],
               grantedSkillIds: evaluation.grantedSkills[editItem.inst.instanceId],
               grantedTraitIds: evaluation.grantedTraits[editItem.inst.instanceId],
             }}

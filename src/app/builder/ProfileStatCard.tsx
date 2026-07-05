@@ -137,7 +137,7 @@ export function ProfileStatCard({
           <div className="fe-rules">
             {p.rules.map((r, i) => (
               <div key={i}>
-                {r.label && <b>{r.label} : </b>}
+                {r.label && <b>{r.label}{r.text ? " : " : ""}</b>}
                 {r.text}
               </div>
             ))}

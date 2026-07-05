@@ -9,6 +9,7 @@ import {
   STATS_SECONDARY,
   equipInfo,
   equipBits,
+  spellInfo,
   type ItemInfo,
 } from "./shared";
 
@@ -59,6 +60,10 @@ export function ProfileStatCard({
   };
   const grantedSkillIds = (mods?.grantedSkillIds ?? []).filter((id) => !p.skills.some((s) => s.skillId === id));
   const grantedTraits = mods?.grantedTraitIds ?? [];
+  // Sorts connus d'office (signature) — affichés même pour les non-mages, cliquables.
+  const innateSpells = (p.magic?.knownReservedSpellIds ?? [])
+    .map((id) => cat.spells.find((s) => s.id === id))
+    .filter((s): s is NonNullable<typeof s> => Boolean(s));
   const cards = specialCardsForProfile(p, cat);
   const autoCards = cards.filter((c) => !c.amelioration); // appliquées d'office
   const ameliorations = cards.filter((c) => c.amelioration); // achetables
@@ -218,6 +223,24 @@ export function ProfileStatCard({
                 ))}
               </div>
             )}
+          </div>
+        )}
+        {innateSpells.length > 0 && (
+          <div>
+            <SectionTitle>Magie</SectionTitle>
+            <div className="fe-linked">
+              {innateSpells.map((s) => (
+                <button
+                  key={s.id}
+                  className="fe-linked-item"
+                  onClick={() => onInfo(spellInfo(s, cat))}
+                  title="Sort connu d'office — voir le détail"
+                >
+                  <span>{s.name}</span>
+                  <span className="px">{s.cost ? `${s.cost} Ko` : "d'office"}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
         {/* Libellé toujours présent (même vide) pour un gabarit de carte constant. */}

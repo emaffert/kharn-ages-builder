@@ -1839,9 +1839,6 @@
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
-        ],
-        "knownReservedSpellIds": [
-          "inflection-mentale"
         ]
       },
       "traits": [
@@ -1939,9 +1936,6 @@
         "canCast": true,
         "magicWayIds": [
           "osteomancie"
-        ],
-        "knownReservedSpellIds": [
-          "seduction-du-fiel"
         ]
       },
       "traits": [
@@ -2636,7 +2630,7 @@
         ]
       ],
       "magic": {
-        "canCast": true,
+        "canCast": false,
         "magicWayIds": [
           "shamanisme"
         ],
@@ -3208,7 +3202,7 @@
         ]
       ],
       "magic": {
-        "canCast": true,
+        "canCast": false,
         "magicWayIds": [
           "shamanisme"
         ],

@@ -1,4 +1,5 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
+import { localCatalogDivergesFromFile } from "@data";
 import { ListBuilder } from "./ListBuilder";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "./useTheme";
@@ -10,6 +11,10 @@ const AdminCatalog = lazy(() => import("./AdminCatalog").then((m) => ({ default:
 export function App() {
   const [view, setView] = useState<"builder" | "admin">("builder");
   const [theme, setTheme] = useTheme();
+  // Garde-fou dev : signale qu'une copie locale du catalogue masque `catalog.json`.
+  // Recalculé au changement de vue (ex. après un Réinit. dans l'Admin) — `view` est volontaire.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const staleCatalog = useMemo(() => import.meta.env.DEV && localCatalogDivergesFromFile(), [view]);
   return (
     <div className="kh-shell flex h-screen flex-col">
       <nav className="kh-topbar flex items-center gap-2 px-4 py-1.5">
@@ -28,7 +33,17 @@ export function App() {
         >
           Admin
         </button>
-        <span className="ml-auto">
+        <span className="ml-auto flex items-center gap-2">
+          {staleCatalog && (
+            <button
+              type="button"
+              className="kh-stale"
+              onClick={() => location.reload()}
+              title="Une copie locale du catalogue (Admin) masque catalog.json — les modifications du fichier ne sont pas reflétées. Recharger la page, ou Admin › Réinit. pour repartir du fichier."
+            >
+              ⚠ catalogue local ≠ fichier — recharger
+            </button>
+          )}
           <ThemeToggle theme={theme} setTheme={setTheme} />
         </span>
       </nav>

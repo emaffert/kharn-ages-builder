@@ -71,6 +71,11 @@ body {
 .kh-tab:hover { color: var(--bone); background: var(--tint-2); }
 .kh-tab[data-on="true"] { color: var(--ink-accent);
   background: linear-gradient(180deg, var(--ember-bright), var(--ember)); }
+/* Garde-fou dev : copie locale du catalogue différente du fichier. */
+.kh-stale { font-size: 12px; font-weight: 600; color: var(--scorch); border-radius: 999px; padding: 3px 10px;
+  background: color-mix(in srgb, var(--scorch) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--scorch) 45%, transparent); cursor: pointer; }
+.kh-stale:hover { background: color-mix(in srgb, var(--scorch) 20%, transparent); }
 .kh-toggle { box-shadow: inset 0 0 0 1px var(--hair-strong); }
 .kh-toggle button { color: var(--bone-dim); transition: .16s var(--ease); }
 .kh-toggle button:hover { color: var(--bone); }

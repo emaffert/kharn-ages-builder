@@ -27,3 +27,18 @@ export function loadCatalog(): Catalog {
   }
   return catalog;
 }
+
+/**
+ * Une copie locale du catalogue (localStorage) est-elle active ET différente de `catalog.json` ?
+ * Sert de garde-fou en dev : la copie locale masque le fichier, donc les modifications directes
+ * de `catalog.json` ne sont pas reflétées tant qu'on ne l'a pas rechargée (Admin › Réinit.).
+ */
+export function localCatalogDivergesFromFile(): boolean {
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(ADMIN_CATALOG_KEY) : null;
+    if (!raw) return false;
+    return raw !== JSON.stringify(catalog);
+  } catch {
+    return false;
+  }
+}

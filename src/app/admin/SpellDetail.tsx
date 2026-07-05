@@ -1,5 +1,5 @@
 import type { Catalog, Spell } from "@core";
-import { AddButton, RemoveButton, Section } from "./primitives";
+import { AddButton, Combobox, RemoveButton, Section } from "./primitives";
 import { INPUT, removeAt, replaceAt } from "./shared";
 import { ProfileMultiSelect } from "./editors";
 
@@ -53,18 +53,16 @@ export function SpellDetail({
         </label>
         <label className="flex items-center gap-1">
           voie
-          <select
+          <Combobox
             value={s.magicWayId ?? ""}
-            onChange={(e) => onChange({ magicWayId: e.target.value || undefined })}
-            className={INPUT}
-          >
-            <option value="">—</option>
-            {cat.magicWays.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
+            className="w-44"
+            placeholder="Rechercher une voie…"
+            options={[
+              { value: "", label: "— (aucune)" },
+              ...cat.magicWays.map((m) => ({ value: m.id, label: m.name })),
+            ]}
+            onChange={(v) => onChange({ magicWayId: v || undefined })}
+          />
         </label>
         <label className="flex items-center gap-1">
           pages

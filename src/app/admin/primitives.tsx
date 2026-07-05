@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Tag } from "@ui";
 import type { FieldValue } from "../useCatalogStore";
+import { INPUT } from "./shared";
 import offensive from "../../assets/maitrise/offensive.png";
 import defensive from "../../assets/maitrise/defensive.png";
 import objectif from "../../assets/maitrise/objectif.png";
@@ -115,6 +116,70 @@ export function RuleCard({
       <div className="flex flex-wrap items-center gap-1.5">{badges}</div>
       <p className="adm-fg text-sm">{human}</p>
       <p className="adm-quote pl-2 text-xs italic">« {sourceText} »</p>
+    </div>
+  );
+}
+
+export type ComboOption = { value: string; label: string; hint?: string };
+
+/**
+ * Menu déroulant cherchable générique : choisir une entrée dans une liste (compétence, profil,
+ * modèle, voie de sort…) qui s'étoffe. Même comportement que le choix d'équipement.
+ */
+export function Combobox({
+  value,
+  options,
+  onChange,
+  placeholder = "Rechercher…",
+  className = "flex-1",
+}: {
+  value: string;
+  options: ComboOption[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const current = options.find((o) => o.value === value);
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const q = query.trim().toLowerCase();
+  const matches = (
+    q
+      ? options.filter((o) => o.label.toLowerCase().includes(q) || (o.hint?.toLowerCase().includes(q) ?? false))
+      : options
+  ).slice(0, 12);
+  return (
+    <div className={`adm-combo-wrap ${className}`}>
+      <input
+        className={`${INPUT} w-full`}
+        value={open ? query : current?.label ?? value}
+        placeholder={placeholder}
+        onFocus={() => {
+          setQuery("");
+          setOpen(true);
+        }}
+        onChange={(e) => setQuery(e.target.value)}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+      />
+      {open && matches.length > 0 && (
+        <ul className="adm-combo">
+          {matches.map((o) => (
+            <li key={o.value}>
+              <button
+                type="button"
+                className="adm-combo-item"
+                onMouseDown={() => {
+                  onChange(o.value);
+                  setOpen(false);
+                }}
+              >
+                <span>{o.label}</span>
+                {o.hint && <span className="adm-faint text-xs">{o.hint}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

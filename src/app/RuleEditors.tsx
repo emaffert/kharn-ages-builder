@@ -8,6 +8,7 @@ import type {
 } from "@core";
 import { describeConstraint, describeEffect } from "@ui/explain";
 import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared";
+import { Combobox } from "./admin/primitives";
 
 /** Éditeurs structurés des contraintes et effets (propres à un profil). */
 
@@ -253,19 +254,15 @@ function OperationEditor({
         </>
       )}
       {op.kind === "grant-skill" && (
-        <select
+        <Combobox
           value={op.skillId}
-          onChange={(e) => onChange({ ...op, skillId: e.target.value })}
-          className={INPUT}
-        >
-          {[...cat.skills]
+          className="w-48"
+          placeholder="Rechercher une compétence…"
+          options={[...cat.skills]
             .sort((a, b) => a.keyword.localeCompare(b.keyword))
-            .map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.keyword}
-              </option>
-            ))}
-        </select>
+            .map((s) => ({ value: s.id, label: s.keyword }))}
+          onChange={(v) => onChange({ ...op, skillId: v })}
+        />
       )}
       {op.kind === "grant-trait" && (
         <Txt label="trait" value={op.trait} onChange={(v) => onChange({ ...op, trait: v })} />
@@ -450,14 +447,7 @@ function Select({
   return (
     <label className="flex items-center gap-1 text-xs adm-faint">
       {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={INPUT}>
-        <option value="">—</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <Combobox value={value} options={options} onChange={onChange} className="w-44" />
     </label>
   );
 }

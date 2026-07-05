@@ -1,6 +1,5 @@
-import { useState } from "react";
 import type { Catalog, Equipment, Limitation, RuleText, SkillRef } from "@core";
-import { AddButton, RemoveButton } from "./primitives";
+import { AddButton, Combobox, RemoveButton } from "./primitives";
 import { INPUT, LEVEL_LABEL, removeAt, replaceAt } from "./shared";
 
 // ── Éditeurs de champs complexes ─────────────────────────────────────────────
@@ -44,19 +43,14 @@ export function SkillsEditor({
       {skills.map((s, i) => (
         <div key={i} className="adm-card space-y-1 p-1.5">
           <div className="flex items-center gap-2">
-            <select
+            <Combobox
               value={s.skillId}
-              onChange={(e) => onChange(replaceAt(skills, i, { ...s, skillId: e.target.value }))}
-              className={`${INPUT} flex-1`}
-            >
-              {[...cat.skills]
+              placeholder="Rechercher une compétence…"
+              options={[...cat.skills]
                 .sort((a, b) => a.keyword.localeCompare(b.keyword))
-                .map((sk) => (
-                  <option key={sk.id} value={sk.id}>
-                    {sk.keyword}
-                  </option>
-                ))}
-            </select>
+                .map((sk) => ({ value: sk.id, label: sk.keyword }))}
+              onChange={(v) => onChange(replaceAt(skills, i, { ...s, skillId: v }))}
+            />
             <input
               type="text"
               placeholder="valeur"
@@ -130,41 +124,17 @@ export function EquipmentCombobox({
   cat: Catalog;
   onSelect: (id: string) => void;
 }) {
-  const current = cat.equipment.find((x) => x.id === value);
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const q = query.trim().toLowerCase();
-  const matches = (q
-    ? cat.equipment.filter((x) => x.name.toLowerCase().includes(q) || x.category.includes(q))
-    : cat.equipment
-  ).slice(0, 10);
   return (
-    <div className="adm-combo-wrap flex-1">
-      <input
-        className={`${INPUT} w-full`}
-        value={open ? query : current?.name ?? value}
-        placeholder="Rechercher un équipement…"
-        onFocus={() => { setQuery(""); setOpen(true); }}
-        onChange={(e) => setQuery(e.target.value)}
-        onBlur={() => setTimeout(() => setOpen(false), 120)}
-      />
-      {open && matches.length > 0 && (
-        <ul className="adm-combo">
-          {matches.map((x) => (
-            <li key={x.id}>
-              <button
-                type="button"
-                className="adm-combo-item"
-                onMouseDown={() => { onSelect(x.id); setOpen(false); }}
-              >
-                <span>{x.name}</span>
-                <span className="adm-faint text-xs">{x.category} · {x.cost} Ko</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <Combobox
+      value={value}
+      placeholder="Rechercher un équipement…"
+      options={cat.equipment.map((x) => ({
+        value: x.id,
+        label: x.name,
+        hint: `${x.category} · ${x.cost} Ko`,
+      }))}
+      onChange={onSelect}
+    />
   );
 }
 
@@ -327,14 +297,16 @@ export function ProfileMultiSelect({
       <span className="text-xs adm-faint">{label}</span>
       {ids.map((id, i) => (
         <span key={i} className="flex items-center gap-0.5">
-          <select value={id} onChange={(e) => onChange(replaceAt(ids, i, e.target.value))} className={INPUT}>
-            {cat.profiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-                {p.level ? ` ${LEVEL_LABEL[p.level]}` : ""}
-              </option>
-            ))}
-          </select>
+          <Combobox
+            value={id}
+            className="w-48"
+            placeholder="Rechercher un profil…"
+            options={cat.profiles.map((p) => ({
+              value: p.id,
+              label: p.name + (p.level ? ` ${LEVEL_LABEL[p.level]}` : ""),
+            }))}
+            onChange={(v) => onChange(replaceAt(ids, i, v))}
+          />
           <RemoveButton onClick={() => onChange(removeAt(ids, i))} />
         </span>
       ))}

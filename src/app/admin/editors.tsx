@@ -1,29 +1,101 @@
+import type { ReactNode } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Catalog, Equipment, Limitation, RuleText, SkillRef } from "@core";
 import { AddButton, Combobox, RemoveButton } from "./primitives";
 import { INPUT, LEVEL_LABEL, removeAt, replaceAt } from "./shared";
+
+// ── Liste réordonnable (drag & drop) ──────────────────────────────────────────
+// L'ordre des éléments = leur ordre d'affichage dans les profils ; on le contrôle par glisser-déposer.
+
+function SortableRow({ id, children }: { id: string; children: ReactNode }) {
+  const { setNodeRef, transform, transition, attributes, listeners, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        position: "relative",
+        zIndex: isDragging ? 5 : undefined,
+      }}
+      className="flex items-start gap-2"
+    >
+      <button type="button" className="adm-grip" title="Glisser pour réordonner" {...attributes} {...listeners}>
+        ⠿
+      </button>
+      {children}
+    </div>
+  );
+}
+
+function SortableList<T>({
+  items,
+  onReorder,
+  children,
+}: {
+  items: T[];
+  onReorder: (v: T[]) => void;
+  children: (item: T, i: number) => ReactNode;
+}) {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const ids = items.map((_, i) => String(i));
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    onReorder(arrayMove(items, Number(active.id), Number(over.id)));
+  };
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">
+          {items.map((item, i) => (
+            <SortableRow key={i} id={String(i)}>
+              {children(item, i)}
+            </SortableRow>
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
 
 // ── Éditeurs de champs complexes ─────────────────────────────────────────────
 
 export function RulesEditor({ rules, onChange }: { rules: RuleText[]; onChange: (r: RuleText[]) => void }) {
   return (
     <div className="space-y-2">
-      {rules.map((r, i) => (
-        <div key={i} className="flex items-start gap-2">
-          <input
-            placeholder="Label (optionnel)"
-            value={r.label ?? ""}
-            onChange={(e) => onChange(replaceAt(rules, i, { ...r, label: e.target.value || undefined }))}
-            className={`${INPUT} w-32 shrink-0`}
-          />
-          <textarea
-            value={r.text}
-            rows={2}
-            onChange={(e) => onChange(replaceAt(rules, i, { ...r, text: e.target.value }))}
-            className={`${INPUT} flex-1`}
-          />
-          <RemoveButton onClick={() => onChange(removeAt(rules, i))} />
-        </div>
-      ))}
+      <SortableList items={rules} onReorder={onChange}>
+        {(r, i) => (
+          <>
+            <input
+              placeholder="Label (optionnel)"
+              value={r.label ?? ""}
+              onChange={(e) => onChange(replaceAt(rules, i, { ...r, label: e.target.value || undefined }))}
+              className={`${INPUT} w-32 shrink-0`}
+            />
+            <textarea
+              value={r.text}
+              rows={2}
+              onChange={(e) => onChange(replaceAt(rules, i, { ...r, text: e.target.value }))}
+              className={`${INPUT} flex-1`}
+            />
+            <RemoveButton onClick={() => onChange(removeAt(rules, i))} />
+          </>
+        )}
+      </SortableList>
       <AddButton onClick={() => onChange([...rules, { text: "" }])}>+ règle</AddButton>
     </div>
   );
@@ -40,9 +112,10 @@ export function SkillsEditor({
 }) {
   return (
     <div className="space-y-1.5">
-      {skills.map((s, i) => (
-        <div key={i} className="adm-card space-y-1 p-1.5">
-          <div className="flex items-center gap-2">
+      <SortableList items={skills} onReorder={onChange}>
+        {(s, i) => (
+          <div className="adm-card space-y-1 p-1.5 flex-1">
+            <div className="flex items-center gap-2">
             <Combobox
               value={s.skillId}
               placeholder="Rechercher une compétence…"
@@ -91,8 +164,9 @@ export function SkillsEditor({
               <RemoveButton onClick={() => onChange(replaceAt(skills, i, { ...s, precision: undefined }))} />
             </div>
           )}
-        </div>
-      ))}
+          </div>
+        )}
+      </SortableList>
       <AddButton onClick={() => onChange([...skills, { skillId: cat.skills[0]?.id ?? "" }])}>
         + compétence
       </AddButton>
@@ -265,17 +339,19 @@ export function LimitationEditor({
 export function TextLinesEditor({ items, onChange }: { items: RuleText[]; onChange: (r: RuleText[]) => void }) {
   return (
     <div className="space-y-2">
-      {items.map((r, i) => (
-        <div key={i} className="flex items-start gap-2">
-          <textarea
-            value={r.text}
-            rows={2}
-            onChange={(e) => onChange(replaceAt(items, i, { text: e.target.value }))}
-            className={`${INPUT} flex-1`}
-          />
-          <RemoveButton onClick={() => onChange(removeAt(items, i))} />
-        </div>
-      ))}
+      <SortableList items={items} onReorder={onChange}>
+        {(r, i) => (
+          <>
+            <textarea
+              value={r.text}
+              rows={2}
+              onChange={(e) => onChange(replaceAt(items, i, { text: e.target.value }))}
+              className={`${INPUT} flex-1`}
+            />
+            <RemoveButton onClick={() => onChange(removeAt(items, i))} />
+          </>
+        )}
+      </SortableList>
       <AddButton onClick={() => onChange([...items, { text: "" }])}>+ ligne</AddButton>
     </div>
   );

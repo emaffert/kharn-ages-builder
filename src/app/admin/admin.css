@@ -46,6 +46,11 @@
 .adm-add:hover { border-color: var(--ember); color: var(--ember-bright); }
 .adm-x { background: transparent; border: 0; color: var(--bone-faint); cursor: pointer; transition: color .16s var(--ease); }
 .adm-x:hover { color: var(--scorch); }
+/* Poignée de glisser-déposer (réordonnancement des règles/compétences). */
+.adm-grip { align-self: center; background: transparent; border: 0; padding: 2px 4px; line-height: 1;
+  color: var(--bone-faint); cursor: grab; touch-action: none; transition: color .16s var(--ease); }
+.adm-grip:hover { color: var(--bone); }
+.adm-grip:active { cursor: grabbing; }
 .adm-flag { background: transparent; border: 0; color: var(--bone-faint); cursor: pointer; line-height: 1; }
 .adm-flag--on { color: var(--ember-bright); }
 .adm-btn-soft { border-radius: var(--radius-sm); background: var(--tint-2); color: var(--bone); border: 0; cursor: pointer;

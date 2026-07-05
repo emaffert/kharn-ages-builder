@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { iconFor, type Profile } from "@core";
 import type { ListStore } from "../useListStore";
-import { FACTIONS, LEVEL, canBuy, isDependent, type ItemInfo, type Modal, type ModelEntry } from "./shared";
+import {
+  FACTIONS,
+  LEVEL,
+  canBuy,
+  isAttachmentDependent,
+  isDependent,
+  recruitableDependentGroups,
+  type ItemInfo,
+  type Modal,
+  type ModelEntry,
+} from "./shared";
 import {
   DndContext,
   closestCenter,
@@ -85,7 +95,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     .filter((m) => rosterQuery.trim() === "" || m.name.toLowerCase().includes(rosterQuery.trim().toLowerCase()));
   const kindOf = (m: ModelEntry) => {
     const p0 = m.profiles[0];
-    if (isDependent(p0)) return "cond";
+    if (isDependent(p0, cat)) return "cond";
     if (p0.isNamed || p0.limitation.kind === "U" || p0.limitation.kind === "P") return "perso";
     return "troupe";
   };
@@ -265,7 +275,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     const open = !collapsed.has(id);
     const leadable = canLead(x.p, id);
     const rowIssues = issuesOf(id);
-    const hasActions = x.p.traits.includes("femelle-fang") || x.p.id === "fangs-xayin-2" || eligible;
+    const depGroups = recruitableDependentGroups(x.p, cat); // Likan, Muskh… dérivés des contraintes
+    const hasActions = depGroups.length > 0 || eligible;
     return (
       <div
         key={id}
@@ -336,12 +347,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
         {hasActions && (
           <div className="bld-pills">
-            {x.p.traits.includes("femelle-fang") && (
-              <RecruitPill label="+ Likan" onClick={() => setModal({ kind: "recruit-likan", carrierInstanceId: id })} />
-            )}
-            {x.p.id === "fangs-xayin-2" && (
-              <RecruitPill label="+ Muskh" onClick={() => store.addAttached(id, "fangs-muskh-1")} />
-            )}
+            {depGroups.map((g) => (
+              <RecruitPill
+                key={g.modelId}
+                label={`+ ${g.modelName}`}
+                onClick={() =>
+                  g.capacityLimited || g.profiles.length > 1
+                    ? setModal({ kind: "recruit-attached", carrierInstanceId: id, modelId: g.modelId })
+                    : store.addAttached(id, g.profiles[0].id)
+                }
+              />
+            ))}
             {eligible && (
               <button
                 className={`bld-pill${guarded ? " on" : ""}`}
@@ -598,26 +614,31 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             </Dialog>
           );
         })()}
-      {modal?.kind === "recruit-likan" &&
+      {modal?.kind === "recruit-attached" &&
         (() => {
           const carrier = memberOf(modal.carrierInstanceId);
+          const modelName = cat.models.find((m) => m.id === modal.modelId)?.name ?? "figurine";
+          const choices = cat.profiles
+            .filter((p) => p.modelId === modal.modelId && isDependent(p, cat))
+            .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
+          const capacityLimited = choices.some(isAttachmentDependent);
           const carrierLevel = carrier?.p.level ?? 0;
+          // Seuls les rattachés « à capacité » (contrainte attachment) consomment le niveau du porteur.
           const usedLevels = (carrier?.inst.attachedInstanceIds ?? [])
             .map((aid) => memberOf(aid)?.p)
-            .filter((p): p is Profile => Boolean(p) && p!.modelId === "likan")
+            .filter((p): p is Profile => Boolean(p) && isAttachmentDependent(p!))
             .reduce((n, p) => n + (p.level ?? 0), 0);
           const remaining = carrierLevel - usedLevels;
-          const likans = cat.profiles
-            .filter((p) => p.modelId === "likan")
-            .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
           return (
-            <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Recruter un Likan" size="sm">
-              <p className="mdl-note">
-                Capacité restante de {carrier?.p.name} : {remaining} (somme des niveaux des Likans ≤ niveau du porteur).
-              </p>
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter — ${modelName}`} size="sm">
+              {capacityLimited && (
+                <p className="mdl-note">
+                  Capacité restante de {carrier?.p.name} : {remaining} (somme des niveaux des rattachés ≤ niveau du porteur).
+                </p>
+              )}
               <div className="mdl-list">
-                {likans.map((p) => {
-                  const ok = (p.level ?? 0) <= remaining;
+                {choices.map((p) => {
+                  const ok = !capacityLimited || (p.level ?? 0) <= remaining;
                   return (
                     <button
                       key={p.id}
@@ -635,7 +656,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                     </button>
                   );
                 })}
-                {remaining <= 0 && <p className="mdl-note">Capacité de rattachement atteinte.</p>}
+                {capacityLimited && remaining <= 0 && <p className="mdl-note">Capacité de rattachement atteinte.</p>}
               </div>
             </Dialog>
           );

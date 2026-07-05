@@ -29,7 +29,7 @@ export function CardPreview({
 }) {
   const [id, setId] = useState(profiles[0].id);
   const p = profiles.find((pf) => pf.id === id) ?? profiles[0];
-  const dependent = isDependent(p);
+  const dependent = isDependent(p, cat);
   const carrier = carrierLabel(p, cat);
   const atLimit = isAtLimit(p.id);
   return (

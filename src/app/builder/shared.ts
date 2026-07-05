@@ -45,8 +45,74 @@ export const FACTIONS: {
   { id: "guilde-noire", name: "Guilde Noire", accent: "#2f2a26", deep: "#141210", blurb: "Les renégats ayant choisi d'adhérer aux préceptes de la guilde.", color: "#736784", colorBright: "#a99bbd", colorDeep: "#241f2d", emblem: "guilde" },
 ];
 
-/** Une figurine recrutée uniquement via un porteur (Likan, Muskh) — pas d'achat propre. */
-export const isDependent = (p: Profile) => p.modelId === "likan" || p.id === "fangs-muskh-1";
+/** Porteur d'un profil dépendant, extrait de ses contraintes (attachment ou requires-present). */
+type CarrierSpec = { trait?: string; profileIds?: string[]; modelIds?: string[]; requiredProfileId?: string };
+
+function carrierSpec(p: Profile, cat: Catalog): CarrierSpec | null {
+  for (const c of p.recruitment) {
+    if (c.type !== "attachment") continue;
+    const car = (c.params as { carrier?: CarrierSpec }).carrier;
+    if (car && (car.trait || car.profileIds?.length || car.modelIds?.length)) {
+      return { trait: car.trait, profileIds: car.profileIds, modelIds: car.modelIds };
+    }
+  }
+  // requires-present : porté par le profil ou par une carte spéciale (ex. Muskh via Xayìn).
+  const all = [...p.recruitment, ...cat.specialCards.flatMap((s) => s.constraints)];
+  for (const c of all) {
+    if (c.type !== "requires-present") continue;
+    const params = c.params as { subjectProfileId?: string; requiredProfileId?: string };
+    if (params.subjectProfileId === p.id && params.requiredProfileId) {
+      return { requiredProfileId: params.requiredProfileId };
+    }
+  }
+  return null;
+}
+
+/** Une figurine recrutée uniquement via un porteur (ex. Likan, Muskh) — pas d'achat propre. */
+export const isDependent = (p: Profile, cat: Catalog): boolean => carrierSpec(p, cat) != null;
+
+/** Le dépendant occupe-t-il la capacité de rattachement du porteur (contrainte `attachment`) ? */
+export const isAttachmentDependent = (p: Profile): boolean =>
+  p.recruitment.some((c) => c.type === "attachment");
+
+function carrierMatches(spec: CarrierSpec, carrier: Profile): boolean {
+  if (spec.requiredProfileId) return carrier.id === spec.requiredProfileId;
+  if (spec.trait && carrier.traits.includes(spec.trait)) return true;
+  if (spec.profileIds?.includes(carrier.id)) return true;
+  if (spec.modelIds && carrier.modelId != null && spec.modelIds.includes(carrier.modelId)) return true;
+  return false;
+}
+
+/** Un groupe de figurines dépendantes (par modèle) recrutables via un porteur donné. */
+export type DependentGroup = {
+  modelId: string;
+  modelName: string;
+  profiles: Profile[];
+  /** true => rattachement à capacité (Σ niveaux ≤ niveau du porteur), ex. Likan. */
+  capacityLimited: boolean;
+};
+
+/** Figurines dépendantes qu'une figurine porteuse peut recruter, dérivées des contraintes du catalogue. */
+export function recruitableDependentGroups(carrier: Profile, cat: Catalog): DependentGroup[] {
+  const byModel = new Map<string, Profile[]>();
+  for (const p of cat.profiles) {
+    const spec = carrierSpec(p, cat);
+    if (!spec || !carrierMatches(spec, carrier)) continue;
+    const key = p.modelId ?? p.id;
+    const list = byModel.get(key) ?? [];
+    list.push(p);
+    byModel.set(key, list);
+  }
+  return [...byModel].map(([modelId, profiles]) => {
+    const sorted = [...profiles].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
+    return {
+      modelId,
+      modelName: cat.models.find((m) => m.id === modelId)?.name ?? sorted[0].name,
+      profiles: sorted,
+      capacityLimited: sorted.some(isAttachmentDependent),
+    };
+  });
+}
 
 const TRAIT_LABEL: Record<string, string> = { "femelle-fang": "une femelle Fang" };
 
@@ -194,7 +260,7 @@ export type Modal =
   | { kind: "preview"; modelId: string }
   | { kind: "edit"; instanceId: string }
   | { kind: "guard"; instanceId: string }
-  | { kind: "recruit-likan"; carrierInstanceId: string }
+  | { kind: "recruit-attached"; carrierInstanceId: string; modelId: string }
   | { kind: "recruit-level"; modelId: string };
 
 /** Fiche courte d'un achat (arme, équipement, carte) affichée au clic depuis le résumé. */

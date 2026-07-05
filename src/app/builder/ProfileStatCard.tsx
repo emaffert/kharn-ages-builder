@@ -18,7 +18,8 @@ export type ProfileMods = {
   statDeltas?: Record<string, number>;
   /** Valeurs de compétences calculées par effet (skillId -> valeur), ex. Seigneur de guerre. */
   skillValues?: Record<string, number>;
-  grantedSkillIds?: string[];
+  /** Compétences octroyées par effet, avec valeur éventuelle (ex. Héroïque « défense »). */
+  grantedSkills?: { skillId: string; value?: string | number }[];
   grantedTraitIds?: string[];
 };
 
@@ -58,7 +59,33 @@ export function ProfileStatCard({
       </span>
     );
   };
-  const grantedSkillIds = (mods?.grantedSkillIds ?? []).filter((id) => !p.skills.some((s) => s.skillId === id));
+  // Compétences affichées : natives + octroyées par effet, en fusionnant les valeurs d'une même
+  // compétence « à valeur » (ex. « Héroïque objectif » + octroi « défense » → « Héroïque objectif et défense »).
+  type SkillAgg = { skillId: string; nativeVals: (string | number)[]; grantedVals: (string | number)[]; native: boolean };
+  const skillOrder: string[] = [];
+  const skillAgg = new Map<string, SkillAgg>();
+  const ensureSkill = (id: string) => {
+    let a = skillAgg.get(id);
+    if (!a) {
+      a = { skillId: id, nativeVals: [], grantedVals: [], native: false };
+      skillAgg.set(id, a);
+      skillOrder.push(id);
+    }
+    return a;
+  };
+  for (const s of p.skills) {
+    const a = ensureSkill(s.skillId);
+    a.native = true;
+    if (s.value != null) a.nativeVals.push(s.value);
+  }
+  const grantedOnly = new Set<string>();
+  for (const g of mods?.grantedSkills ?? []) {
+    const a = ensureSkill(g.skillId);
+    if (!a.native) grantedOnly.add(g.skillId); // compétence entièrement octroyée par effet
+    if (g.value != null && !a.nativeVals.includes(g.value) && !a.grantedVals.includes(g.value)) {
+      a.grantedVals.push(g.value);
+    }
+  }
   const grantedTraits = mods?.grantedTraitIds ?? [];
   // Sorts connus d'office (signature) — affichés même pour les non-mages, cliquables.
   const innateSpells = (p.magic?.knownReservedSpellIds ?? [])
@@ -116,31 +143,19 @@ export function ProfileStatCard({
           </div>
         </div>
         <div className="fe-skills">
-          {p.skills.map((s, i) => {
-            const sk = cat.skills.find((x) => x.id === s.skillId);
-            const fxVal = mods?.skillValues?.[s.skillId]; // valeur calculée par un effet (ex. Seigneur de guerre)
-            const value = fxVal ?? s.value;
-            const label = `${sk?.keyword ?? s.skillId}${value != null ? ` ${value}` : ""}`;
-            return (
-              <button
-                key={i}
-                className={`fe-skill${fxVal != null ? " is-fx" : ""}`}
-                onClick={() => showSkill(s.skillId, label)}
-                title={fxVal != null ? "Valeur calculée par un effet" : undefined}
-              >
-                {label}
-              </button>
-            );
-          })}
-          {grantedSkillIds.map((id) => {
+          {skillOrder.map((id) => {
+            const a = skillAgg.get(id)!;
             const sk = cat.skills.find((x) => x.id === id);
-            const label = sk?.keyword ?? id;
+            const fxVal = mods?.skillValues?.[id]; // valeur calculée (skill-count, ex. Seigneur de guerre)
+            const vals = fxVal != null ? [fxVal] : [...a.nativeVals, ...a.grantedVals];
+            const isFx = fxVal != null || grantedOnly.has(id) || a.grantedVals.length > 0;
+            const label = `${sk?.keyword ?? id}${vals.length > 0 ? ` ${vals.join(" et ")}` : ""}`;
             return (
               <button
-                key={`g-${id}`}
-                className="fe-skill is-fx"
+                key={id}
+                className={`fe-skill${isFx ? " is-fx" : ""}`}
                 onClick={() => showSkill(id, label)}
-                title="Compétence octroyée par un effet"
+                title={isFx ? "Compétence ou valeur modifiée par un effet" : undefined}
               >
                 {label}
               </button>

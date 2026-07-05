@@ -153,7 +153,7 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
           <ul className="adm-doc-list">
             <li><code>{`{ "kind": "cost-delta", "amount": -10 }`}</code> — ajuste le coût de la cible (négatif = réduction). Ex. Exécuteur : −10 sur l'Arbalète de poing (cible <code>equipmentIds</code>).</li>
             <li><code>{`{ "kind": "cost-set", "amount": 0, "maxCount": 2 }`}</code> — fixe le coût de la cible (souvent 0 = gratuit) ; <code>maxCount</code> plafonne le nombre de cibles concernées (ex. Larbins des Filles de Nyx).</li>
-            <li><code>{`{ "kind": "grant-skill", "skillId": "riposte" }`}</code> — octroie une compétence à la cible.</li>
+            <li><code>{`{ "kind": "grant-skill", "skillId": "heroique", "value": "défense" }`}</code> — octroie une compétence à la cible ; <code>value</code> (optionnel) précise le domaine d'une compétence « à valeur » (ex. Héroïque « défense »). Sur le profil, les valeurs d'une même compétence fusionnent (« Héroïque objectif et défense »).</li>
             <li><code>{`{ "kind": "grant-trait", "trait": "apatride" }`}</code> — octroie un trait à la cible (peut débloquer d'autres règles, ex. faction).</li>
             <li><code>{`{ "kind": "spell-pages", "amount": 3 }`}</code> — ajoute des pages de sorts à la cible.</li>
             <li><code>{`{ "kind": "stat-modifier", "stat": "i", "amount": "level" }`}</code> — modifie une caractéristique (<code>amount</code> = nombre ou <code>"level"</code>). <em>Effet en jeu — affiché, non calculé au coût.</em></li>

@@ -32,6 +32,9 @@ import {
  *   Tant qu'elles ne sont pas implémentées, ces effets sont sans incidence sur coût/stats.
  */
 
+/** Compétence octroyée par un effet (avec sa valeur éventuelle pour les compétences « à valeur »). */
+export type GrantedSkill = { skillId: string; value?: string | number };
+
 export interface Issue {
   severity: "error" | "warning";
   ferDeLanceId?: string;
@@ -48,8 +51,8 @@ export interface EvaluationResult {
   costByFerDeLance: Record<string, number>;
   /** Traits octroyés par effet, par instance (en plus des traits de base du profil). Pour l'affichage. */
   grantedTraits: Record<string, string[]>;
-  /** Compétences octroyées par effet, par instance. Pour l'affichage. */
-  grantedSkills: Record<string, string[]>;
+  /** Compétences octroyées par effet, par instance (avec valeur éventuelle, ex. Héroïque « défense »). */
+  grantedSkills: Record<string, GrantedSkill[]>;
   /** Modificateurs de caractéristiques cumulés par effet, par instance (stat -> delta). Pour l'affichage. */
   statDeltas: Record<string, Record<string, number>>;
   /** Valeurs de compétences calculées par effet, par instance (skillId -> valeur). Pour l'affichage. */
@@ -76,7 +79,8 @@ interface ResolvedInstance {
   instance: ProfileInstance;
   profile: Profile;
   traits: Set<string>;
-  grantedSkills: Set<string>;
+  /** Compétences octroyées par effet : skillId → valeur éventuelle (compétence « à valeur »). */
+  grantedSkills: Map<string, string | number | undefined>;
 }
 
 interface EffectOccurrence {
@@ -268,7 +272,7 @@ function applyGrants(resolved: ResolvedInstance[], occurrences: EffectOccurrence
           }
         } else {
           if (!ri.grantedSkills.has(effect.operation.skillId)) {
-            ri.grantedSkills.add(effect.operation.skillId);
+            ri.grantedSkills.set(effect.operation.skillId, effect.operation.value);
             changed = true;
           }
         }
@@ -388,7 +392,7 @@ function buildResolved(list: ListDocument, idx: CatalogIndex): ResolvedInstance[
         instance: inst,
         profile,
         traits: new Set(profile.traits),
-        grantedSkills: new Set(),
+        grantedSkills: new Map(),
       });
     }
   }
@@ -768,7 +772,11 @@ function validateAttachments(
 // en incluant les effets « en jeu » (stat-modifier, octrois de compétence conditionnels…).
 
 function cloneForDisplay(resolved: ResolvedInstance[]): ResolvedInstance[] {
-  return resolved.map((ri) => ({ ...ri, traits: new Set(ri.profile.traits), grantedSkills: new Set<string>() }));
+  return resolved.map((ri) => ({
+    ...ri,
+    traits: new Set(ri.profile.traits),
+    grantedSkills: new Map<string, string | number | undefined>(),
+  }));
 }
 
 /** Valeur de base d'une caractéristique (V P A C T I dans `stats` ; PA/PV/Stature à part). */
@@ -859,7 +867,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const costByInstance: Record<string, number> = {};
   const costByFerDeLance: Record<string, number> = {};
   const grantedTraits: Record<string, string[]> = {};
-  const grantedSkills: Record<string, string[]> = {};
+  const grantedSkills: Record<string, GrantedSkill[]> = {};
   const statDeltas: Record<string, Record<string, number>> = {};
   const skillValues: Record<string, Record<string, number>> = {};
   for (const ri of resolved) {
@@ -873,7 +881,9 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
       const base = new Set(ri.profile.traits);
       const traits = [...dri.traits].filter((t) => !base.has(t));
       if (traits.length > 0) grantedTraits[id] = traits;
-      if (dri.grantedSkills.size > 0) grantedSkills[id] = [...dri.grantedSkills];
+      if (dri.grantedSkills.size > 0) {
+        grantedSkills[id] = [...dri.grantedSkills].map(([skillId, value]) => ({ skillId, value }));
+      }
     }
     const sd = statDeltasByInstance.get(id);
     if (sd && sd.size > 0) statDeltas[id] = Object.fromEntries(sd);

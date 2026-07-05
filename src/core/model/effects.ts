@@ -13,7 +13,8 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("cost-delta"), amount: z.number() }),
   z.object({ kind: z.literal("cost-set"), amount: z.number(), maxCount: z.number().optional() }),
   z.object({ kind: z.literal("unlock-upgrade"), upgradeId: z.string(), perItemCost: z.number() }),
-  z.object({ kind: z.literal("grant-skill"), skillId: z.string() }),
+  // `value` : pour une compétence « à valeur » (ex. octroie « Héroïque défense » → value "défense").
+  z.object({ kind: z.literal("grant-skill"), skillId: z.string(), value: z.union([z.string(), z.number()]).optional() }),
   z.object({ kind: z.literal("grant-trait"), trait: z.string() }),
   z.object({ kind: z.literal("cap"), value: z.number() }),
   z.object({

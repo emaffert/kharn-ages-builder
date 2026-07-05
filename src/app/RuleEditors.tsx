@@ -295,15 +295,22 @@ function OperationEditor({
         </>
       )}
       {op.kind === "grant-skill" && (
-        <Combobox
-          value={op.skillId}
-          className="w-48"
-          placeholder="Rechercher une compétence…"
-          options={[...cat.skills]
-            .sort((a, b) => a.keyword.localeCompare(b.keyword))
-            .map((s) => ({ value: s.id, label: s.keyword }))}
-          onChange={(v) => onChange({ ...op, skillId: v })}
-        />
+        <>
+          <Combobox
+            value={op.skillId}
+            className="w-48"
+            placeholder="Rechercher une compétence…"
+            options={[...cat.skills]
+              .sort((a, b) => a.keyword.localeCompare(b.keyword))
+              .map((s) => ({ value: s.id, label: s.keyword }))}
+            onChange={(v) => onChange({ ...op, skillId: v })}
+          />
+          <Txt
+            label="valeur (option.)"
+            value={op.value != null ? String(op.value) : ""}
+            onChange={(v) => onChange({ ...op, value: v || undefined })}
+          />
+        </>
       )}
       {op.kind === "grant-trait" && (
         <Txt label="trait" value={op.trait} onChange={(v) => onChange({ ...op, trait: v })} />

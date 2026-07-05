@@ -97,7 +97,7 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Débloque l'amélioration « ${op.upgradeId} » (+${op.perItemCost} Ko/objet) pour ${tgt}`;
       break;
     case "grant-skill":
-      base = `Octroie la compétence « ${skillName(cat, op.skillId)} » à ${tgt}`;
+      base = `Octroie la compétence « ${skillName(cat, op.skillId)}${op.value != null ? ` ${op.value}` : ""} » à ${tgt}`;
       break;
     case "grant-trait":
       base = `Octroie le trait « ${op.trait} » à ${tgt}`;

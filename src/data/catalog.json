@@ -4389,7 +4389,8 @@
           },
           "operation": {
             "kind": "grant-skill",
-            "skillId": "heroique"
+            "skillId": "heroique",
+            "value": "défense"
           },
           "appliesToListBuilding": false,
           "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",

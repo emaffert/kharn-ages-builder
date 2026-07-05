@@ -221,6 +221,17 @@ describe("amélioration partagée (payée une fois par Fer de Lance)", () => {
     ).totalCost;
     expect(shared - plain).toBe(8); // +8 une seule fois, pas +16
   });
+
+  it("Lien de la Terre octroie « Héroïque défense » à tous les Dogons (≥3 Dogons + Père de famille)", () => {
+    const d1 = inst("gouns-dogon-1", { specialCardIds: ["lien-de-la-terre"] });
+    const d2 = inst("gouns-dogon-1"); // ne porte pas la carte mais en bénéficie
+    const d3 = inst("gouns-dogon-1");
+    const pere = inst("gouns-pere-de-famille-2");
+    const res = evaluateList(catalog, makeList([d1, d2, d3, pere], "gouns"));
+    const heroique = res.grantedSkills[d2.instanceId]?.find((g) => g.skillId === "heroique");
+    expect(heroique?.value).toBe("défense");
+    expect(res.grantedSkills[d2.instanceId]?.map((g) => g.skillId)).toContain("instinct-de-survie");
+  });
 });
 
 describe("munitions", () => {
@@ -273,7 +284,7 @@ describe("cartes spéciales payantes", () => {
     const goulue = inst("fangs-goulue-1", { specialCardIds: ["apprentie-de-nyx"] });
     const res = evalFang([goulue]);
     expect(res.totalCost).toBe(60); // 45 + 15
-    expect(res.grantedSkills[goulue.instanceId]).toContain("osteomancie");
+    expect(res.grantedSkills[goulue.instanceId]?.map((g) => g.skillId)).toContain("osteomancie");
   });
 
   it("« Apprentie de Nyx » expose le bonus de caractéristique pour l'affichage (stat-modifier « en jeu »)", () => {

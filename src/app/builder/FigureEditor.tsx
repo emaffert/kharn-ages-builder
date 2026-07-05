@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SegmentedControl } from "@ui";
 import type { Catalog, Profile, Spell } from "@core";
-import { ProfileStatCard } from "./ProfileStatCard";
+import { ProfileStatCard, type ProfileMods } from "./ProfileStatCard";
 import { SectionTitle, SlotChip } from "./components";
 import {
   CAT_LABEL,
@@ -100,6 +100,7 @@ export function FigureEditor({
   onGrimoire,
   onToggleSpell,
   onInfo,
+  mods,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -117,6 +118,7 @@ export function FigureEditor({
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
+  mods?: ProfileMods;
 }) {
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
   const ways = castWays(p, cat, upgrades, [...activeBase, ...added]);
@@ -150,6 +152,7 @@ export function FigureEditor({
           onInfo={onInfo}
           upgrades={upgrades}
           onToggleUpgrade={onToggleUpgrade}
+          mods={mods}
         />
       )}
       {active === "equip" && (

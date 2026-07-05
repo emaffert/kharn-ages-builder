@@ -583,6 +583,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onGrimoire={(g) => store.setGrimoire(editItem.inst.instanceId, g)}
             onToggleSpell={(sid) => store.toggleSpell(editItem.inst.instanceId, sid)}
             onInfo={setItemInfo}
+            mods={{
+              statDeltas: evaluation.statDeltas[editItem.inst.instanceId],
+              grantedSkillIds: evaluation.grantedSkills[editItem.inst.instanceId],
+              grantedTraitIds: evaluation.grantedTraits[editItem.inst.instanceId],
+            }}
           />
         </Dialog>
       )}

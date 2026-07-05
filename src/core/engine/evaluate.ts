@@ -46,10 +46,12 @@ export interface EvaluationResult {
   totalCost: number;
   costByInstance: Record<string, number>;
   costByFerDeLance: Record<string, number>;
-  /** Traits octroyés par effet, par instance (en plus des traits de base du profil). */
+  /** Traits octroyés par effet, par instance (en plus des traits de base du profil). Pour l'affichage. */
   grantedTraits: Record<string, string[]>;
-  /** Compétences octroyées par effet, par instance. */
+  /** Compétences octroyées par effet, par instance. Pour l'affichage. */
   grantedSkills: Record<string, string[]>;
+  /** Modificateurs de caractéristiques cumulés par effet, par instance (stat -> delta). Pour l'affichage. */
+  statDeltas: Record<string, Record<string, number>>;
   issues: Issue[];
 }
 
@@ -158,6 +160,8 @@ function collectEffectOccurrences(
   resolved: ResolvedInstance[],
   cat: Catalog,
   idx: CatalogIndex,
+  /** true => inclut aussi les effets « en jeu » (appliesToListBuilding false) — pour l'affichage. */
+  includeInGame = false,
 ): EffectOccurrence[] {
   const occurrences: EffectOccurrence[] = [];
 
@@ -166,7 +170,7 @@ function collectEffectOccurrences(
   // Les effets `appliesToListBuilding: false` sont « en jeu seulement » : jamais calculés ici.
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
-      if (!effect.appliesToListBuilding) continue;
+      if (!includeInGame && !effect.appliesToListBuilding) continue;
       if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
       occurrences.push({
         effect,
@@ -190,7 +194,7 @@ function collectEffectOccurrences(
       const matchCount = inFdl.filter((ri) => specialCardScopeMatches(card, ri)).length;
       if (matchCount > 0) {
         for (const effect of card.effects) {
-          if (!effect.appliesToListBuilding || effect.optIn) continue;
+          if ((!includeInGame && !effect.appliesToListBuilding) || effect.optIn) continue;
           occurrences.push({ effect, ferDeLanceId: fdlId, sourceCount: matchCount });
         }
       }
@@ -203,7 +207,7 @@ function collectEffectOccurrences(
       const card = idx.specialCard.get(cardId);
       if (!card) continue;
       for (const effect of card.effects) {
-        if (!effect.appliesToListBuilding) continue;
+        if (!includeInGame && !effect.appliesToListBuilding) continue;
         occurrences.push({
           effect,
           ferDeLanceId: ri.ferDeLanceId,
@@ -719,6 +723,33 @@ function validateAttachments(
   }
 }
 
+// ── Affichage : profil réellement modifié par les effets ───────────────────────
+// Rejoué sur des clones (traits repartant de la base) pour ne pas fausser coût/validation,
+// en incluant les effets « en jeu » (stat-modifier, octrois de compétence conditionnels…).
+
+function cloneForDisplay(resolved: ResolvedInstance[]): ResolvedInstance[] {
+  return resolved.map((ri) => ({ ...ri, traits: new Set(ri.profile.traits), grantedSkills: new Set<string>() }));
+}
+
+function computeStatDeltas(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+): Map<string, Map<string, number>> {
+  const out = new Map<string, Map<string, number>>();
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "stat-modifier") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+    for (const ri of resolveTargets(occ, resolved)) {
+      const amount = op.amount === "level" ? (ri.profile.level ?? 0) : op.amount;
+      const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
+      m.set(op.stat, (m.get(op.stat) ?? 0) + amount);
+      out.set(ri.instance.instanceId, m);
+    }
+  }
+  return out;
+}
+
 // ── Point d'entrée ───────────────────────────────────────────────────────────
 
 export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult {
@@ -726,27 +757,39 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const resolved = buildResolved(list, idx);
   const occurrences = collectEffectOccurrences(resolved, cat, idx);
 
-  applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe
+  applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe (construction)
   const cost = computeCosts(resolved, occurrences, idx); // 4 : coûts
   const issues = validate(cat, list, resolved, idx); // 5 : contraintes
 
+  // Affichage : tous les effets d'octroi / de statistique, y compris « en jeu », sur des clones.
+  const display = cloneForDisplay(resolved);
+  const displayOcc = collectEffectOccurrences(display, cat, idx, true);
+  applyGrants(display, displayOcc);
+  const statDeltasByInstance = computeStatDeltas(display, displayOcc);
+  const displayById = new Map(display.map((ri) => [ri.instance.instanceId, ri]));
+
   const costByInstance: Record<string, number> = {};
   const costByFerDeLance: Record<string, number> = {};
+  const grantedTraits: Record<string, string[]> = {};
+  const grantedSkills: Record<string, string[]> = {};
+  const statDeltas: Record<string, Record<string, number>> = {};
   for (const ri of resolved) {
-    const c = cost.get(ri.instance.instanceId) ?? 0;
-    costByInstance[ri.instance.instanceId] = c;
+    const id = ri.instance.instanceId;
+    const c = cost.get(id) ?? 0;
+    costByInstance[id] = c;
     costByFerDeLance[ri.ferDeLanceId] = (costByFerDeLance[ri.ferDeLanceId] ?? 0) + c;
+
+    const dri = displayById.get(id);
+    if (dri) {
+      const base = new Set(ri.profile.traits);
+      const traits = [...dri.traits].filter((t) => !base.has(t));
+      if (traits.length > 0) grantedTraits[id] = traits;
+      if (dri.grantedSkills.size > 0) grantedSkills[id] = [...dri.grantedSkills];
+    }
+    const sd = statDeltasByInstance.get(id);
+    if (sd && sd.size > 0) statDeltas[id] = Object.fromEntries(sd);
   }
   const totalCost = Object.values(costByInstance).reduce((s, c) => s + c, 0);
 
-  const grantedTraits: Record<string, string[]> = {};
-  const grantedSkills: Record<string, string[]> = {};
-  for (const ri of resolved) {
-    const base = new Set(ri.profile.traits);
-    const granted = [...ri.traits].filter((t) => !base.has(t));
-    if (granted.length > 0) grantedTraits[ri.instance.instanceId] = granted;
-    if (ri.grantedSkills.size > 0) grantedSkills[ri.instance.instanceId] = [...ri.grantedSkills];
-  }
-
-  return { totalCost, costByInstance, costByFerDeLance, grantedTraits, grantedSkills, issues };
+  return { totalCost, costByInstance, costByFerDeLance, grantedTraits, grantedSkills, statDeltas, issues };
 }

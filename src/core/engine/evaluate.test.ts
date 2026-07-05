@@ -211,6 +211,13 @@ describe("cartes spéciales payantes", () => {
     expect(res.grantedSkills[goulue.instanceId]).toContain("osteomancie");
   });
 
+  it("« Apprentie de Nyx » expose le bonus de caractéristique pour l'affichage (stat-modifier « en jeu »)", () => {
+    const goulue = inst("fangs-goulue-1", { specialCardIds: ["apprentie-de-nyx"] });
+    const res = evalFang([goulue]);
+    // +niveau (I = 1) en Initiative, effet « en jeu » (non calculé au coût) mais affiché.
+    expect(res.statDeltas[goulue.instanceId]?.i).toBe(1);
+  });
+
   it("« Apprentie de Nyx » ne peut pas être attribuée à un non-Goulue", () => {
     const res = evalFang([inst("fangs-larbin-1", { specialCardIds: ["apprentie-de-nyx"] })]);
     expect(res.issues.some((i) => i.ruleId === "special-card-scope:apprentie-de-nyx")).toBe(true);

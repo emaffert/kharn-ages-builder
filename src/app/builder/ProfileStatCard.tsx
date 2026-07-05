@@ -12,6 +12,13 @@ import {
   type ItemInfo,
 } from "./shared";
 
+/** Modifications apportées par des effets (pour l'affichage : couleur « braise » + infobulle). */
+export type ProfileMods = {
+  statDeltas?: Record<string, number>;
+  grantedSkillIds?: string[];
+  grantedTraitIds?: string[];
+};
+
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
 export function ProfileStatCard({
   p,
@@ -20,6 +27,7 @@ export function ProfileStatCard({
   showEquipment = false,
   upgrades,
   onToggleUpgrade,
+  mods,
 }: {
   p: Profile;
   cat: Catalog;
@@ -28,7 +36,27 @@ export function ProfileStatCard({
   /** En édition : liste des améliorations achetées + bascule (cases à cocher dans la carte). */
   upgrades?: string[];
   onToggleUpgrade?: (id: string) => void;
+  /** Modifications d'effets à refléter sur le profil affiché (stats/compétences/traits). */
+  mods?: ProfileMods;
 }) {
+  // Rend une caractéristique en tenant compte d'un éventuel modificateur d'effet.
+  const statCell = (k: string, label: string, base: number | null | undefined) => {
+    const d = mods?.statDeltas?.[k];
+    const value = d != null ? (typeof base === "number" ? base : 0) + d : base;
+    return (
+      <span key={label} className="fe-stat">
+        <span className="k">{label}</span>
+        <span
+          className={`v${d != null ? " is-fx" : ""}`}
+          title={d != null ? `base ${base ?? "—"}, ${d > 0 ? "+" : ""}${d} (effet)` : undefined}
+        >
+          {value ?? "—"}
+        </span>
+      </span>
+    );
+  };
+  const grantedSkillIds = (mods?.grantedSkillIds ?? []).filter((id) => !p.skills.some((s) => s.skillId === id));
+  const grantedTraits = mods?.grantedTraitIds ?? [];
   const cards = specialCardsForProfile(p, cat);
   const autoCards = cards.filter((c) => !c.amelioration); // appliquées d'office
   const ameliorations = cards.filter((c) => c.amelioration); // achetables
@@ -61,37 +89,23 @@ export function ProfileStatCard({
         <div className="fe-taglist">
           <Tag>{limLabel}</Tag>
           {p.magic?.canCast && <Tag tone="amber">Mage</Tag>}
+          {grantedTraits.map((t) => (
+            <span key={t} className="fe-fx-tag" title="Trait octroyé par un effet">
+              {t}
+            </span>
+          ))}
         </div>
         {/* Stats groupées comme sur la carte : V P A C · T I, puis PA / PV / Stature à part. */}
         <div className="fe-stats">
           <div className="fe-statrow">
-            {STATS_COMBAT.map(([k, label]) => (
-              <span key={label} className="fe-stat">
-                <span className="k">{label}</span>
-                <span className="v">{p.stats[k] ?? "—"}</span>
-              </span>
-            ))}
+            {STATS_COMBAT.map(([k, label]) => statCell(k, label, p.stats[k]))}
             <span className="fe-statsep" aria-hidden />
-            {STATS_SECONDARY.map(([k, label]) => (
-              <span key={label} className="fe-stat">
-                <span className="k">{label}</span>
-                <span className="v">{p.stats[k] ?? "—"}</span>
-              </span>
-            ))}
+            {STATS_SECONDARY.map(([k, label]) => statCell(k, label, p.stats[k]))}
           </div>
           <div className="fe-statrow fe-statrow--res">
-            <span className="fe-stat">
-              <span className="k">PA</span>
-              <span className="v">{p.pa}</span>
-            </span>
-            <span className="fe-stat">
-              <span className="k">PV</span>
-              <span className="v">{p.pv}</span>
-            </span>
-            <span className="fe-stat">
-              <span className="k">Stature</span>
-              <span className="v">{p.stature}</span>
-            </span>
+            {statCell("pa", "PA", p.pa)}
+            {statCell("pv", "PV", p.pv)}
+            {statCell("stature", "Stature", p.stature)}
           </div>
         </div>
         <div className="fe-skills">
@@ -100,6 +114,20 @@ export function ProfileStatCard({
             const label = `${sk?.keyword ?? s.skillId}${s.value != null ? ` ${s.value}` : ""}`;
             return (
               <button key={i} className="fe-skill" onClick={() => showSkill(s.skillId, label)}>
+                {label}
+              </button>
+            );
+          })}
+          {grantedSkillIds.map((id) => {
+            const sk = cat.skills.find((x) => x.id === id);
+            const label = sk?.keyword ?? id;
+            return (
+              <button
+                key={`g-${id}`}
+                className="fe-skill is-fx"
+                onClick={() => showSkill(id, label)}
+                title="Compétence octroyée par un effet"
+              >
                 {label}
               </button>
             );

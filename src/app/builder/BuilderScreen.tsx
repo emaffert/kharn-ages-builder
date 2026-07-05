@@ -235,6 +235,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onChange={(e) => setRosterQuery(e.target.value)}
             placeholder="Rechercher un profil…"
           />
+          {rosterQuery && (
+            <button type="button" onClick={() => setRosterQuery("")} title="Effacer" className="bld-search-x">
+              ✕
+            </button>
+          )}
         </label>
       </div>
       <div className="bld-roster-scroll">

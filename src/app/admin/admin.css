@@ -46,6 +46,11 @@
 .adm-add:hover { border-color: var(--ember); color: var(--ember-bright); }
 .adm-x { background: transparent; border: 0; color: var(--bone-faint); cursor: pointer; transition: color .16s var(--ease); }
 .adm-x:hover { color: var(--scorch); }
+/* Croix d'effacement dans la barre de recherche. */
+.adm-search-x { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); background: transparent;
+  border: 0; padding: 2px 4px; line-height: 1; font-size: 12px; color: var(--bone-faint); cursor: pointer;
+  transition: color .16s var(--ease); }
+.adm-search-x:hover { color: var(--scorch); }
 /* Poignée de glisser-déposer (réordonnancement des règles/compétences). */
 .adm-grip { align-self: center; background: transparent; border: 0; padding: 2px 4px; line-height: 1;
   color: var(--bone-faint); cursor: grab; touch-action: none; transition: color .16s var(--ease); }

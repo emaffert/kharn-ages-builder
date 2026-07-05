@@ -119,12 +119,19 @@ export function AdminCatalog() {
               Sorts
             </button>
           </div>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher…"
-            className="adm-input w-full"
-          />
+          <div className="relative">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher…"
+              className="adm-input w-full pr-7"
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} title="Effacer" className="adm-search-x">
+                ✕
+              </button>
+            )}
+          </div>
           {view === "profiles" && (
             <select
               value={factionFilter}

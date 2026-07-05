@@ -158,6 +158,38 @@ describe("validation des contraintes", () => {
 
 });
 
+describe("caractéristique dérivée d'un décompte (stat-count)", () => {
+  it("Instinct grégaire : la Témérité d'un Dogon = nombre de Dogons", () => {
+    const dogons = [inst("gouns-dogon-1"), inst("gouns-dogon-1"), inst("gouns-dogon-1")];
+    const res = evaluateList(catalog, makeList(dogons, "gouns"));
+    for (const d of dogons) expect(res.statDeltas[d.instanceId]?.t).toBe(3); // T de base (—) → 3
+  });
+
+  it("Instinct grégaire avec minimum : T = max(nombre de Mongos, T de base)", () => {
+    const m2 = inst("gouns-guerrier-mongo-2"); // T de base 3
+    // Seul (1 Mongo) : sous le minimum → T reste 3 (delta 0).
+    const solo = evaluateList(catalog, makeList([m2], "gouns"));
+    expect(solo.statDeltas[m2.instanceId]?.t ?? 0).toBe(0);
+    // 5 Mongos : dépasse le minimum → T = 5 (delta +2 sur la base 3).
+    const m2b = inst("gouns-guerrier-mongo-2");
+    const crowd = evaluateList(
+      catalog,
+      makeList([m2b, ...Array.from({ length: 4 }, () => inst("gouns-guerrier-mongo-1"))], "gouns"),
+    );
+    expect(crowd.statDeltas[m2b.instanceId]?.t).toBe(2);
+  });
+
+  it("Artisane : Témérité = nombre de Goüns niveau I (faction ET niveau, dimensions cumulées)", () => {
+    const artisane = inst("gouns-artisane-dogon-1"); // niveau I
+    // 1 Artisane (I) + 1 Dogon (I) = 2 Goüns niveau I ; le Guerrier albinos III (niveau III) ne compte pas.
+    const res = evaluateList(
+      catalog,
+      makeList([artisane, inst("gouns-dogon-1"), inst("gouns-guerrier-albinos-3")], "gouns"),
+    );
+    expect(res.statDeltas[artisane.instanceId]?.t).toBe(2);
+  });
+});
+
 describe("munitions", () => {
   it("les munitions ajoutent quantité × coût unitaire au coût", () => {
     const base = evalFang([inst("fangs-executeur-1", { addedEquipmentIds: ["arbalete-de-poing"] })]).totalCost;

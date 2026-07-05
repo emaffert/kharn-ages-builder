@@ -6,6 +6,9 @@ import { EffectScopeSchema, SelectorSchema } from "./common";
  * souvent appliqué à d'autres figurines, conditionnellement à l'état de la liste.
  * Voir docs/schema-donnees.md — couche 2.
  */
+/** Caractéristiques modifiables par un effet (mêmes clés que la fiche : V P A C T I + PA PV Stature). */
+export const StatKeySchema = z.enum(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"]);
+
 export const EffectOperationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("cost-delta"), amount: z.number() }),
   z.object({ kind: z.literal("cost-set"), amount: z.number(), maxCount: z.number().optional() }),
@@ -15,9 +18,17 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("cap"), value: z.number() }),
   z.object({
     kind: z.literal("stat-modifier"),
-    stat: z.enum(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"]),
+    stat: StatKeySchema,
     // nombre fixe, ou "level" = le niveau de la figurine elle-même.
     amount: z.union([z.number(), z.literal("level")]),
+  }),
+  // Fixe une caractéristique au NOMBRE de figurines correspondant à `of` dans la portée
+  // (ex. Instinct grégaire : T des Dogons = nombre de Dogons). `atLeastBase` => plancher = valeur de base.
+  z.object({
+    kind: z.literal("stat-count"),
+    stat: StatKeySchema,
+    of: SelectorSchema,
+    atLeastBase: z.boolean().optional(),
   }),
   // Budget de pages de sorts (ex. Fille de Nyx : +3 ; Crosse d'Ostéomancie : +3).
   // Enforcement (capacité vs sorts choisis) prévu côté constructeur de liste.

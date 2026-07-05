@@ -53,19 +53,29 @@ function StringList({
   onChange,
   options,
   placeholder,
+  combo,
 }: {
   label: string;
   values: string[];
   onChange: (v: string[]) => void;
   options?: Option[];
   placeholder?: string;
+  /** true (avec `options`) : combobox cherchable au lieu d'un menu natif (listes qui s'étoffent). */
+  combo?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
       <span className="text-xs adm-faint">{label}</span>
       {values.map((v, i) => (
         <span key={i} className="flex items-center gap-0.5">
-          {options ? (
+          {options && combo ? (
+            <Combobox
+              value={v}
+              options={options}
+              className="w-44"
+              onChange={(nv) => onChange(replaceAt(values, i, nv))}
+            />
+          ) : options ? (
             <select value={v} onChange={(e) => onChange(replaceAt(values, i, e.target.value))} className={INPUT}>
               {options.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -84,7 +94,7 @@ function StringList({
           <RemoveButton onClick={() => onChange(removeAt(values, i))} />
         </span>
       ))}
-      <AddButton onClick={() => onChange([...values, options?.[0]?.value ?? ""])}>+</AddButton>
+      <AddButton onClick={() => onChange([...values, combo ? "" : options?.[0]?.value ?? ""])}>+</AddButton>
     </div>
   );
 }
@@ -111,6 +121,7 @@ function cleanSelector(sel: Selector): Selector {
   if (sel.modelIds?.length) out.modelIds = sel.modelIds;
   if (sel.traits?.length) out.traits = sel.traits;
   if (sel.factionIds?.length) out.factionIds = sel.factionIds;
+  if (sel.levels?.length) out.levels = sel.levels;
   if (sel.equipmentCategories?.length) out.equipmentCategories = sel.equipmentCategories;
   if (sel.equipmentIds?.length) out.equipmentIds = sel.equipmentIds;
   if (sel.countAtLeast != null) out.countAtLeast = sel.countAtLeast;
@@ -142,6 +153,7 @@ function SelectorEditor({
         values={selector.profileIds ?? []}
         onChange={(v) => set({ profileIds: v })}
         options={profileOptions(cat)}
+        combo
       />
       <StringList
         label="modèles"
@@ -149,7 +161,30 @@ function SelectorEditor({
         onChange={(v) => set({ modelIds: v })}
         options={modelOptions(cat)}
       />
+      <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
+        niveaux
+        {[1, 2, 3].map((lv) => (
+          <label key={lv} className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={selector.levels?.includes(lv) ?? false}
+              onChange={(e) => {
+                const cur = selector.levels ?? [];
+                const next = e.target.checked ? [...cur, lv] : cur.filter((x) => x !== lv);
+                set({ levels: next.length ? next : undefined });
+              }}
+            />
+            {["I", "II", "III"][lv - 1]}
+          </label>
+        ))}
+      </div>
       <StringList label="traits" values={selector.traits ?? []} onChange={(v) => set({ traits: v })} placeholder="trait" />
+      <StringList
+        label="factions"
+        values={selector.factionIds ?? []}
+        onChange={(v) => set({ factionIds: v })}
+        options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+      />
       <StringList
         label="équip. (cat.)"
         values={selector.equipmentCategories ?? []}
@@ -193,6 +228,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, value: 0 };
     case "stat-modifier":
       return { kind, stat: "i", amount: "level" };
+    case "stat-count":
+      return { kind, stat: "t", of: {}, atLeastBase: true };
     case "spell-pages":
       return { kind, amount: 0 };
   }
@@ -226,6 +263,7 @@ function OperationEditor({
             "grant-skill",
             "grant-trait",
             "stat-modifier",
+            "stat-count",
             "spell-pages",
           ] as const
         ).map((k) => (
@@ -290,6 +328,34 @@ function OperationEditor({
             }}
             className={`${INPUT} w-28`}
           />
+        </>
+      )}
+      {op.kind === "stat-count" && (
+        <>
+          <select
+            value={op.stat}
+            onChange={(ev) => onChange({ ...op, stat: ev.target.value as typeof op.stat })}
+            className={INPUT}
+          >
+            {(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"] as const).map((s) => (
+              <option key={s} value={s}>
+                {s.toUpperCase()}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs adm-faint">= nombre de</span>
+          <label className="flex items-center gap-1 text-xs adm-muted">
+            <input
+              type="checkbox"
+              checked={op.atLeastBase ?? false}
+              onChange={(ev) => onChange({ ...op, atLeastBase: ev.target.checked || undefined })}
+            />
+            minimum = valeur de base
+          </label>
+          <div className="w-full">
+            <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée)</div>
+            <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
+          </div>
         </>
       )}
       {op.kind === "spell-pages" && (

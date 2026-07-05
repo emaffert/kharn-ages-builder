@@ -2204,6 +2204,13 @@
           "target": {
             "self": true
           },
+          "designation": {
+            "of": {
+              "profileIds": [
+                "fangs-broutcha-2"
+              ]
+            }
+          },
           "operation": {
             "kind": "cost-delta",
             "amount": -35
@@ -2211,14 +2218,7 @@
           "appliesToListBuilding": true,
           "optIn": true,
           "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha.",
-          "autoEnforced": true,
-          "designation": {
-            "of": {
-              "profileIds": [
-                "fangs-broutcha-2"
-              ]
-            }
-          }
+          "autoEnforced": true
         }
       ],
       "rules": [
@@ -2278,6 +2278,31 @@
         "dogon"
       ],
       "recruitment": [],
+      "effects": [
+        {
+          "id": "dogon-1-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-dogon-1"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "dogon"
+              ]
+            }
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Dogons est égale au nombre de Dogons en jeu.",
+          "autoEnforced": false
+        }
+      ],
       "rules": [
         {
           "label": "Instinct grégaire",
@@ -2337,7 +2362,32 @@
         }
       ],
       "cardImage": "cards/Gouns/guerrier-mongo.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "guerrier-mongo-1-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-guerrier-mongo-1"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "mongo"
+              ]
+            }
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu.",
+          "autoEnforced": false
+        }
+      ]
     },
     {
       "id": "gouns-guerrier-mongo-2",
@@ -2397,7 +2447,33 @@
         }
       ],
       "cardImage": "cards/Gouns/guerrier-mongo.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "guerrier-mongo-2-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-guerrier-mongo-2"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "mongo"
+              ]
+            },
+            "atLeastBase": true
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3).",
+          "autoEnforced": false
+        }
+      ]
     },
     {
       "id": "gouns-guerrier-mongo-3",
@@ -2469,7 +2545,33 @@
         "Rusé ajouté via les Règles de bataille (Guerriers Mongo niveau III)."
       ],
       "cardImage": "cards/Gouns/guerrier-mongo.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "guerrier-mongo-3-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-guerrier-mongo-3"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "mongo"
+              ]
+            },
+            "atLeastBase": true
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4).",
+          "autoEnforced": false
+        }
+      ]
     },
     {
       "id": "gouns-guerrier-albinos-3",
@@ -2618,7 +2720,32 @@
         "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
       ],
       "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "eclaireur-mongo-1-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-eclaireur-mongo-1"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "mongo"
+              ]
+            }
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu.",
+          "autoEnforced": false
+        }
+      ]
     },
     {
       "id": "gouns-eclaireur-mongo-2",
@@ -2690,7 +2817,33 @@
         "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
       ],
       "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "eclaireur-mongo-2-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-eclaireur-mongo-2"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "mongo"
+              ]
+            },
+            "atLeastBase": true
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3).",
+          "autoEnforced": false
+        }
+      ]
     },
     {
       "id": "gouns-eclaireur-mongo-3",
@@ -2767,7 +2920,33 @@
         "Indépendant ajouté via les Règles de bataille (éclaireurs mongo)."
       ],
       "cardImage": "cards/Gouns/eclaireur-mongo.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "eclaireur-mongo-3-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-eclaireur-mongo-3"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "mongo"
+              ]
+            },
+            "atLeastBase": true
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4).",
+          "autoEnforced": false
+        }
+      ]
     },
     {
       "id": "gouns-shaman-1",
@@ -3027,7 +3206,8 @@
           "text": "Ne peut choisir que la Sarclette ou le Couteau pour arme alternative."
         },
         {
-          "text": "Dogon"
+          "label": "Dogon",
+          "text": ""
         }
       ],
       "cardImage": "cards/Gouns/alaric.jpg",
@@ -3209,6 +3389,34 @@
         "dogon"
       ],
       "recruitment": [],
+      "effects": [
+        {
+          "id": "artisane-dogon-1-instinct-gregaire",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-artisane-dogon-1"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-count",
+            "stat": "t",
+            "of": {
+              "factionIds": [
+                "gouns"
+              ],
+              "levels": [
+                1
+              ]
+            }
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "La témérité des Artisanes dogons est égale au nombre de Goûns Niveau I en jeu.",
+          "autoEnforced": false
+        }
+      ],
       "rules": [
         {
           "label": "Instinct grégaire",
@@ -3897,6 +4105,13 @@
               "fangs-larbin-1"
             ]
           },
+          "designation": {
+            "of": {
+              "traits": [
+                "fille-de-nyx"
+              ]
+            }
+          },
           "operation": {
             "kind": "cost-set",
             "amount": 0,
@@ -3904,14 +4119,7 @@
           },
           "appliesToListBuilding": true,
           "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
-          "autoEnforced": true,
-          "designation": {
-            "of": {
-              "traits": [
-                "fille-de-nyx"
-              ]
-            }
-          }
+          "autoEnforced": true
         },
         {
           "id": "fille-de-nyx-pages",
@@ -4233,6 +4441,7 @@
         ]
       },
       "amelioration": true,
+      "choiceGroup": "artisane-racines",
       "rulesText": [
         {
           "text": "Nourrice : les Goûns dans son aura ont +1 en stature."
@@ -4240,8 +4449,7 @@
       ],
       "constraints": [],
       "effects": [],
-      "cardImage": "cards/Gouns/artisane-dogon.jpg",
-      "choiceGroup": "artisane-racines"
+      "cardImage": "cards/Gouns/artisane-dogon.jpg"
     },
     {
       "id": "racines-tribales-tisserande",
@@ -4253,6 +4461,7 @@
         ]
       },
       "amelioration": true,
+      "choiceGroup": "artisane-racines",
       "rulesText": [
         {
           "text": "Tisserande : les Goûns dans son aura sont équipés de l'armure suivante « Dashiki » (0/+1)."
@@ -4260,8 +4469,7 @@
       ],
       "constraints": [],
       "effects": [],
-      "cardImage": "cards/Gouns/artisane-dogon.jpg",
-      "choiceGroup": "artisane-racines"
+      "cardImage": "cards/Gouns/artisane-dogon.jpg"
     },
     {
       "id": "racines-tribales-herboriste",
@@ -4273,6 +4481,7 @@
         ]
       },
       "amelioration": true,
+      "choiceGroup": "artisane-racines",
       "rulesText": [
         {
           "text": "Herboriste : la 1ère fois qu'un Goûn allié est terrassé, il regagne 1D5 PV et reste en jeu."
@@ -4280,8 +4489,7 @@
       ],
       "constraints": [],
       "effects": [],
-      "cardImage": "cards/Gouns/artisane-dogon.jpg",
-      "choiceGroup": "artisane-racines"
+      "cardImage": "cards/Gouns/artisane-dogon.jpg"
     },
     {
       "id": "peintures-de-guerre",

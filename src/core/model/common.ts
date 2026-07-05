@@ -57,6 +57,10 @@ export type SkillRef = z.infer<typeof SkillRefSchema>;
 /**
  * Sélecteur d'entités, utilisé par les contraintes et les effets pour cibler
  * des figurines/équipements, ou exprimer une condition d'activation.
+ *
+ * Correspondance d'identité : ET entre les dimensions renseignées, OU à l'intérieur d'une dimension.
+ * Ex. `{ profileIds: [A, B], levels: [2], traits: [X, Y] }` = (A ou B) ET niveau 2 ET (X ou Y).
+ * Pour cumuler des comptages indépendants, utiliser une liste de sélecteurs (ET entre clauses).
  */
 export const SelectorSchema = z.object({
   self: z.boolean().optional(),
@@ -64,6 +68,8 @@ export const SelectorSchema = z.object({
   modelIds: z.array(z.string()).optional(),
   traits: z.array(z.string()).optional(),
   factionIds: z.array(z.string()).optional(),
+  /** Niveaux ciblés (I/II/III). */
+  levels: z.array(z.number()).optional(),
   equipmentCategories: z.array(EquipmentCategorySchema).optional(),
   /** Cible des équipements précis (par id), ex. l'« Arbalète de poing » de l'Exécuteur. */
   equipmentIds: z.array(z.string()).optional(),

@@ -157,6 +157,7 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <li><code>{`{ "kind": "grant-trait", "trait": "apatride" }`}</code> — octroie un trait à la cible (peut débloquer d'autres règles, ex. faction).</li>
             <li><code>{`{ "kind": "spell-pages", "amount": 3 }`}</code> — ajoute des pages de sorts à la cible.</li>
             <li><code>{`{ "kind": "stat-modifier", "stat": "i", "amount": "level" }`}</code> — modifie une caractéristique (<code>amount</code> = nombre ou <code>"level"</code>). <em>Effet en jeu — affiché, non calculé au coût.</em></li>
+            <li><code>{`{ "kind": "stat-count", "stat": "t", "of": { "traits": ["dogon"] }, "atLeastBase": true }`}</code> — fixe une caractéristique au <strong>nombre de figurines</strong> correspondant à <code>of</code> dans la portée (ex. Instinct grégaire : T = nombre de Dogons) ; <code>atLeastBase</code> = plancher à la valeur de base. <em>Affiché sur le profil.</em></li>
           </ul>
 
           <p><strong>Sélecteurs</strong> (cible et condition) — dimensions cumulables :</p>

@@ -31,13 +31,14 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
   if (sel.modelIds?.length) parts.push(`modèles ${sel.modelIds.join(", ")}`);
   if (sel.traits?.length) parts.push(`les figurines « ${sel.traits.join(", ")} »`);
   if (sel.factionIds?.length) parts.push(`factions ${sel.factionIds.join(", ")}`);
+  if (sel.levels?.length) parts.push(`niveau ${sel.levels.join("/")}`);
   if (sel.equipmentCategories?.length) {
     parts.push(`équipement ${sel.equipmentCategories.join(", ")}`);
   }
   if (sel.equipmentIds?.length) {
     parts.push(`équipement ${sel.equipmentIds.map((id) => equipName(cat, id)).join(", ")}`);
   }
-  let s = parts.join(" / ") || "—";
+  let s = parts.join(" et ") || "—";
   if (sel.countAtLeast) s = `au moins ${sel.countAtLeast} × ${s}`;
   return s;
 }
@@ -109,6 +110,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Ajoute ${amount} à ${op.stat.toUpperCase()} de ${tgt}`;
       break;
     }
+    case "stat-count":
+      base = `${op.stat.toUpperCase()} de ${tgt} = nombre de ${describeSelector(op.of, cat)}${op.atLeastBase ? " (minimum : valeur de base)" : ""}`;
+      break;
     case "spell-pages":
       base = `${op.amount >= 0 ? "+" : ""}${op.amount} page(s) de sorts pour ${tgt}`;
       break;

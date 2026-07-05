@@ -116,13 +116,30 @@ export function recruitableDependentGroups(carrier: Profile, cat: Catalog): Depe
 
 // ── Garde du corps (désignation) ── Dérivé des effets portant un champ `designation`.
 
-/** Correspondance identité d'un sélecteur sur un profil (OR entre dimensions). */
+/** Correspondance identité d'un sélecteur sur un profil : ET entre dimensions, OU dedans. */
 function selectorMatchesProfile(sel: Selector, p: Profile): boolean {
-  if (sel.profileIds?.includes(p.id)) return true;
-  if (sel.modelIds && p.modelId != null && sel.modelIds.includes(p.modelId)) return true;
-  if (sel.traits?.some((t) => p.traits.includes(t))) return true;
-  if (sel.factionIds && p.factionId != null && sel.factionIds.includes(p.factionId)) return true;
-  return false;
+  let any = false;
+  if (sel.profileIds?.length) {
+    any = true;
+    if (!sel.profileIds.includes(p.id)) return false;
+  }
+  if (sel.modelIds?.length) {
+    any = true;
+    if (!(p.modelId != null && sel.modelIds.includes(p.modelId))) return false;
+  }
+  if (sel.traits?.length) {
+    any = true;
+    if (!sel.traits.some((t) => p.traits.includes(t))) return false;
+  }
+  if (sel.factionIds?.length) {
+    any = true;
+    if (!(p.factionId != null && sel.factionIds.includes(p.factionId))) return false;
+  }
+  if (sel.levels?.length) {
+    any = true;
+    if (!(p.level != null && sel.levels.includes(p.level))) return false;
+  }
+  return any;
 }
 
 /** Un effet de désignation : `guardMatch` = qui est le garde, `of` = les figurines protégeables. */

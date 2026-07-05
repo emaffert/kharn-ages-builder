@@ -103,15 +103,33 @@ function indexCatalog(cat: Catalog): CatalogIndex {
   };
 }
 
-/** Un instance correspond-il aux champs d'identité d'un sélecteur (OR entre champs) ? */
+/**
+ * Une instance correspond-elle à l'identité d'un sélecteur ? ET entre les dimensions renseignées,
+ * OU à l'intérieur d'une dimension. Un sélecteur sans aucune dimension d'identité ne correspond à rien.
+ */
 function instanceMatchesIdentity(sel: Selector, ri: ResolvedInstance): boolean {
-  if (sel.profileIds?.includes(ri.profile.id)) return true;
-  if (sel.modelIds && ri.profile.modelId && sel.modelIds.includes(ri.profile.modelId)) return true;
-  if (sel.traits?.some((t) => ri.traits.has(t))) return true;
-  if (sel.factionIds && ri.profile.factionId && sel.factionIds.includes(ri.profile.factionId)) {
-    return true;
+  let any = false;
+  if (sel.profileIds?.length) {
+    any = true;
+    if (!sel.profileIds.includes(ri.profile.id)) return false;
   }
-  return false;
+  if (sel.modelIds?.length) {
+    any = true;
+    if (!(ri.profile.modelId != null && sel.modelIds.includes(ri.profile.modelId))) return false;
+  }
+  if (sel.traits?.length) {
+    any = true;
+    if (!sel.traits.some((t) => ri.traits.has(t))) return false;
+  }
+  if (sel.factionIds?.length) {
+    any = true;
+    if (!(ri.profile.factionId != null && sel.factionIds.includes(ri.profile.factionId))) return false;
+  }
+  if (sel.levels?.length) {
+    any = true;
+    if (!(ri.profile.level != null && sel.levels.includes(ri.profile.level))) return false;
+  }
+  return any;
 }
 
 function instancesInScope(
@@ -731,20 +749,45 @@ function cloneForDisplay(resolved: ResolvedInstance[]): ResolvedInstance[] {
   return resolved.map((ri) => ({ ...ri, traits: new Set(ri.profile.traits), grantedSkills: new Set<string>() }));
 }
 
+/** Valeur de base d'une caractéristique (V P A C T I dans `stats` ; PA/PV/Stature à part). */
+function baseStat(p: Profile, key: string): number {
+  if (key === "pa") return p.pa;
+  if (key === "pv") return p.pv;
+  if (key === "stature") return p.stature;
+  return (p.stats as Record<string, number | null>)[key] ?? 0;
+}
+
 function computeStatDeltas(
   resolved: ResolvedInstance[],
   occurrences: EffectOccurrence[],
 ): Map<string, Map<string, number>> {
   const out = new Map<string, Map<string, number>>();
+  const add = (id: string, stat: string, delta: number) => {
+    const m = out.get(id) ?? new Map<string, number>();
+    m.set(stat, (m.get(stat) ?? 0) + delta);
+    out.set(id, m);
+  };
   for (const occ of occurrences) {
     const op = occ.effect.operation;
-    if (op.kind !== "stat-modifier") continue;
+    if (op.kind !== "stat-modifier" && op.kind !== "stat-count") continue;
     if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
-    for (const ri of resolveTargets(occ, resolved)) {
-      const amount = op.amount === "level" ? (ri.profile.level ?? 0) : op.amount;
-      const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
-      m.set(op.stat, (m.get(op.stat) ?? 0) + amount);
-      out.set(ri.instance.instanceId, m);
+    if (op.kind === "stat-count") {
+      // Caractéristique fixée au nombre de figurines correspondant à `of` dans la portée.
+      const pool = instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId);
+      const count = pool.filter((ri) => instanceMatchesIdentity(op.of, ri)).length;
+      for (const ri of resolveTargets(occ, resolved)) {
+        const base = baseStat(ri.profile, op.stat);
+        const value = op.atLeastBase ? Math.max(base, count) : count;
+        // SET (non cumulatif) : si plusieurs Dogons portent l'effet, chaque occurrence fixe la même
+        // valeur → idempotent, exprimé en delta sur la base.
+        const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
+        m.set(op.stat, value - base);
+        out.set(ri.instance.instanceId, m);
+      }
+    } else {
+      for (const ri of resolveTargets(occ, resolved)) {
+        add(ri.instance.instanceId, op.stat, op.amount === "level" ? (ri.profile.level ?? 0) : op.amount);
+      }
     }
   }
   return out;

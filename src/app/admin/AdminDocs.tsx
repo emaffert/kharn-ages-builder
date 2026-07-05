@@ -155,9 +155,7 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <li><code>{`{ "kind": "grant-skill", "skillId": "riposte" }`}</code> — octroie une compétence à la cible.</li>
             <li><code>{`{ "kind": "grant-trait", "trait": "apatride" }`}</code> — octroie un trait à la cible (peut débloquer d'autres règles, ex. faction).</li>
             <li><code>{`{ "kind": "spell-pages", "amount": 3 }`}</code> — ajoute des pages de sorts à la cible.</li>
-            <li><code>{`{ "kind": "stat-modifier", "stat": "i", "amount": "level" }`}</code> — modifie une caractéristique (<code>amount</code> = nombre ou <code>"level"</code>). <em>Effet en jeu — non calculé au coût.</em></li>
-            <li><code>{`{ "kind": "unlock-upgrade", "upgradeId": "borax", "perItemCost": 5 }`}</code> — débloque une amélioration payante. <em>Pas encore calculé.</em></li>
-            <li><code>{`{ "kind": "cap", "value": 2 }`}</code> — plafonne une quantité. <em>Pas encore calculé.</em></li>
+            <li><code>{`{ "kind": "stat-modifier", "stat": "i", "amount": "level" }`}</code> — modifie une caractéristique (<code>amount</code> = nombre ou <code>"level"</code>). <em>Effet en jeu — affiché, non calculé au coût.</em></li>
           </ul>
 
           <p><strong>Sélecteurs</strong> (cible et condition) — dimensions cumulables :</p>

@@ -213,14 +213,17 @@ function OperationEditor({
         onChange={(e) => onChange(defaultOperation(e.target.value as EffectOperation["kind"]))}
         className={INPUT}
       >
+        {/*
+          Seules les opérations réellement appliquées par le moteur sont proposées.
+          `stat-modifier` est gardé car utilisé « en jeu » (affiché, non calculé au coût).
+          `unlock-upgrade` et `cap` sont retirés tant qu'ils ne sont pas implémentés.
+        */}
         {(
           [
             "cost-delta",
             "cost-set",
-            "unlock-upgrade",
             "grant-skill",
             "grant-trait",
-            "cap",
             "stat-modifier",
             "spell-pages",
           ] as const

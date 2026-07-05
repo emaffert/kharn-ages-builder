@@ -510,22 +510,25 @@ function validateSpecialCardScope(
 }
 
 function validateLimitations(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
-  const countByProfile = new Map<string, number>();
+  // Compté par (modèle, niveau) : les variantes de loadout (même modèle ET même niveau, profils
+  // distincts) partagent la même limitation ; des niveaux différents comptent séparément
+  // (un modèle avec un N2 « U » et un N3 « U » peut aligner le N2 et le N3).
+  const groups = new Map<string, { ri: ResolvedInstance; count: number }>();
   for (const ri of inFdl) {
-    countByProfile.set(ri.profile.id, (countByProfile.get(ri.profile.id) ?? 0) + 1);
+    const key = ri.profile.modelId != null ? `${ri.profile.modelId}#${ri.profile.level ?? 0}` : ri.profile.id;
+    const g = groups.get(key);
+    if (g) g.count += 1;
+    else groups.set(key, { ri, count: 1 });
   }
-  const seenProfiles = new Set(inFdl.map((ri) => ri.profile.id));
-  for (const profileId of seenProfiles) {
-    const ri = inFdl.find((r) => r.profile.id === profileId)!;
+  for (const [key, { ri, count }] of groups) {
     const lim = ri.profile.limitation;
-    const count = countByProfile.get(profileId) ?? 0;
     const max =
       lim.kind === "X" ? (lim.value ?? Infinity) : lim.kind === "U" || lim.kind === "P" ? 1 : Infinity;
     if (count > max) {
       issues.push({
         severity: "error",
         ferDeLanceId: fdl.id,
-        ruleId: `limitation:${profileId}`,
+        ruleId: `limitation:${key}`,
         message: `« ${ri.profile.name} » : ${count} recruté(s) pour une limitation de ${max}.`,
         sourceText: `Limitation ${lim.kind}${lim.value ? " " + lim.value : ""}.`,
       });

@@ -107,18 +107,24 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const troupes = models.filter((m) => kindOf(m) === "troupe").sort(byName);
   const conditionnels = models.filter((m) => kindOf(m) === "cond").sort(byName);
 
-  // Limite de recrutement : Lim U/P → unique au niveau du **modèle** (ex. Décatie II vs III, une seule) ;
-  // Lim X → `value` par profil.
-  const modelOf = (p: Profile) => cat.models.find((m) => m.profileIds.includes(p.id));
+  // Limite de recrutement comptée par (modèle, niveau) : les variantes de loadout (même modèle ET
+  // même niveau) partagent la limite ; des niveaux différents comptent séparément (un Père de Famille
+  // N2 « U » et un N3 « U » coexistent). Lim U/P → 1 ; Lim X → `value`.
+  const groupKey = (p: Profile) => (p.modelId != null ? `${p.modelId}#${p.level ?? 0}` : p.id);
   const atLimit = (p: Profile) => {
-    if (p.limitation.kind === "U" || p.limitation.kind === "P") {
-      const ids = modelOf(p)?.profileIds ?? [p.id];
-      return fdl.members.filter((m) => ids.includes(m.profileId)).length >= 1;
-    }
-    if (p.limitation.kind === "X") {
-      return fdl.members.filter((m) => m.profileId === p.id).length >= (p.limitation.value ?? Infinity);
-    }
-    return false;
+    const max =
+      p.limitation.kind === "X"
+        ? (p.limitation.value ?? Infinity)
+        : p.limitation.kind === "U" || p.limitation.kind === "P"
+          ? 1
+          : Infinity;
+    if (max === Infinity) return false;
+    const key = groupKey(p);
+    const count = fdl.members.filter((m) => {
+      const mp = cat.profiles.find((x) => x.id === m.profileId);
+      return mp != null && groupKey(mp) === key;
+    }).length;
+    return count >= max;
   };
   const modelMaxed = (m: ModelEntry) => m.profiles.every(atLimit);
 

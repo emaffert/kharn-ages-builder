@@ -138,6 +138,36 @@ describe("validation des contraintes", () => {
     expect(five.issues.some((i) => i.ruleId?.startsWith("limitation:"))).toBe(true);
   });
 
+  it("limitation par (modèle, niveau) : niveaux distincts coexistent, variantes de loadout partagent le compteur", () => {
+    // Père de Famille « U » N2 + « U » N3 : niveaux distincts → coexistent (pas d'erreur).
+    const twoLevels = evaluateList(
+      catalog,
+      makeList([inst("gouns-pere-de-famille-2"), inst("gouns-pere-de-famille-3")], "gouns"),
+    );
+    expect(twoLevels.issues.some((i) => i.ruleId?.startsWith("limitation:"))).toBe(false);
+
+    // Champion Tribal N2 : deux variantes de loadout, limitation X=2 partagée → 2 + 1 = 3 > 2 → erreur.
+    const variantsOver = evaluateList(
+      catalog,
+      makeList(
+        [
+          inst("gouns-champion-tribal-javelots-2"),
+          inst("gouns-champion-tribal-javelots-2"),
+          inst("gouns-champion-tribal-ngao-2"),
+        ],
+        "gouns",
+      ),
+    );
+    expect(variantsOver.issues.some((i) => i.ruleId === "limitation:champion-tribal#2")).toBe(true);
+
+    // Champion Tribal N3 : deux variantes « U » → une de chaque = 2 > 1 → erreur (unicité partagée).
+    const uniqueVariants = evaluateList(
+      catalog,
+      makeList([inst("gouns-champion-tribal-javelots-3"), inst("gouns-champion-tribal-ngao-3")], "gouns"),
+    );
+    expect(uniqueVariants.issues.some((i) => i.ruleId === "limitation:champion-tribal#3")).toBe(true);
+  });
+
   it("Likan : somme des niveaux des rattachés ≤ niveau du porteur", () => {
     const likanA = inst("fangs-likan-1");
     const ok = evalFang([

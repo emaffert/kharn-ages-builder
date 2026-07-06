@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Constructeur de listes pour le jeu de figurines Khârn-Âges",
+  "license": "AGPL-3.0-or-later",
   "engines": {
     "node": ">=20"
   },

@@ -264,6 +264,11 @@ body {
   background: transparent; color: var(--bone-faint); cursor: pointer; opacity: 0; transition: .16s var(--ease); }
 .fs-scard:hover .fs-scard-del { opacity: 1; }
 .fs-scard-del:hover { color: var(--scorch); background: var(--tint-2); }
+/* Mention légale / propriété intellectuelle (discrète, bas de l'accueil). */
+.fs-legal { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--hair);
+  color: var(--bone-faint); font-size: 12px; line-height: 1.5; text-align: center; }
+.fs-legal a { color: var(--bone-dim); text-decoration: underline; }
+.fs-legal a:hover { color: var(--bone); }
 
 @media (max-width: 820px) {
   .fs-grid { grid-template-columns: repeat(2, 1fr); }

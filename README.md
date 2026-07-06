@@ -140,3 +140,14 @@ incluses dans le build de production.
 
 `make test` exécute la suite Vitest : validation du catalogue, moteur d'évaluation
 (coût, contraintes, effets), traduction des règles, et rendu de l'éditeur.
+
+## Licence
+
+Le **code source** de ce projet est distribué sous licence **GNU AGPL-3.0-or-later**
+(voir [`LICENSE`](LICENSE)).
+
+> **Avertissement de propriété intellectuelle.** « Khârn-Âges », « Kârn-Âges Tactik »,
+> ainsi que tous les noms, règles de jeu, profils, caractéristiques et images associés
+> sont la propriété de **TGCM Création** (<https://www.tgcmcreation.fr>) et **ne sont pas
+> couverts par cette licence**. Il s'agit d'un outil de fan, à but non commercial ; aucun
+> droit sur ces éléments n'est cédé ni impliqué.

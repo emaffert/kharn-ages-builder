@@ -270,6 +270,14 @@ export function FactionSelect({
             </div>
           )}
         </div>
+
+        <footer className="fs-legal">
+          Khârn-Âges, Kârn-Âges Tactik et les images sont la propriété de{" "}
+          <a href="https://www.tgcmcreation.fr" target="_blank" rel="noreferrer">
+            TGCM Création
+          </a>
+          . Outil de fan à but non commercial, sans affiliation ni lien avec l'éditeur.
+        </footer>
       </div>
 
       <Dialog

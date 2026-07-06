@@ -158,6 +158,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       return next;
     });
   const [itemInfo, setItemInfo] = useState<ItemInfo | null>(null);
+  const [editLimit, setEditLimit] = useState<string | null>(null); // budget en cours d'édition (null = affichage)
 
   // Coûts & validation : entièrement dérivés du moteur (evaluateList).
   const costOf = (id: string) => evaluation.costByInstance[id] ?? 0;
@@ -165,6 +166,12 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const limit = store.list.pointsLimit ?? 300;
   const ratio = Math.min(100, (total / Math.max(1, limit)) * 100);
   const remaining = limit - total;
+  const commitLimit = () => {
+    if (editLimit !== null && editLimit.trim() !== "") {
+      store.setPointsLimit(Math.min(9999, Math.max(0, Math.floor(Number(editLimit)) || 0)));
+    }
+    setEditLimit(null);
+  };
   const issuesOf = (id: string) =>
     evaluation.issues.filter((is) => is.severity === "error" && is.instanceId === id).map((is) => is.message);
   const invalidCount = new Set(
@@ -461,7 +468,37 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             <div className="bld-gauge-top">
               <span className="bld-gauge-label">Budget</span>
               <span className="bld-gauge-val">
-                {total} <span className="lim">/ {limit} Ko</span>
+                {total}{" "}
+                <span className="lim">
+                  /{" "}
+                  {editLimit === null ? (
+                    <button
+                      type="button"
+                      className="bld-lim-edit"
+                      title="Modifier le budget"
+                      onClick={() => setEditLimit(String(limit))}
+                    >
+                      {limit}
+                    </button>
+                  ) : (
+                    <input
+                      className="bld-lim-input"
+                      type="number"
+                      min={0}
+                      max={9999}
+                      autoFocus
+                      value={editLimit}
+                      aria-label="Budget maximum (Ko)"
+                      onChange={(e) => setEditLimit(e.target.value)}
+                      onBlur={commitLimit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitLimit();
+                        if (e.key === "Escape") setEditLimit(null);
+                      }}
+                    />
+                  )}{" "}
+                  Ko
+                </span>
               </span>
             </div>
             <div className="bld-gauge-track">

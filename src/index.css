@@ -317,6 +317,17 @@ body {
 .bld-gauge-label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-dim); font-weight: 600; }
 .bld-gauge-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 16px; color: var(--gold); }
 .bld-gauge-val .lim { color: var(--bone-faint); font-weight: 500; }
+/* Budget max éditable en un clic dans la jauge. */
+/* Bouton (affichage) et champ (édition) partagent la même boîte → pas de saut de taille. */
+.bld-lim-edit, .bld-lim-input { box-sizing: border-box; width: 5.5ch; font: inherit; font-weight: 700;
+  text-align: right; padding: 1px 6px; border: 0; border-radius: 5px; background: var(--tint-1); }
+.bld-lim-edit { color: var(--bone-dim); cursor: pointer; box-shadow: inset 0 0 0 1px var(--hair);
+  transition: color .15s var(--ease), box-shadow .15s var(--ease); }
+.bld-lim-edit:hover { color: var(--gold); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent); }
+.bld-lim-input { color: var(--gold);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent); }
+.bld-lim-input::-webkit-outer-spin-button, .bld-lim-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.bld-lim-input { -moz-appearance: textfield; appearance: textfield; }
 .bld-gauge-rem { margin-top: 5px; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--bone-faint);
   text-align: right; }
 .bld-gauge-rem.over { color: var(--scorch); font-weight: 600; }

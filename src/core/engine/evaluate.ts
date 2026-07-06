@@ -19,6 +19,7 @@ import {
   pageCapacity,
   pagesUsed,
 } from "./magic";
+import { totalMunitionCost } from "./munitions";
 
 /**
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
@@ -65,7 +66,6 @@ interface CatalogIndex {
   specialCard: Map<string, SpecialCard>;
   equipmentCost: Map<string, number>;
   equipmentCategory: Map<string, string>;
-  munitionUnitCost: Map<string, number>;
   grimoireCost: Map<string, number>;
   spellCost: Map<string, number>;
   mountCost: Map<string, number>;
@@ -98,9 +98,6 @@ function indexCatalog(cat: Catalog): CatalogIndex {
     specialCard: new Map(cat.specialCards.map((s) => [s.id, s])),
     equipmentCost: new Map(cat.equipment.map((e) => [e.id, e.cost])),
     equipmentCategory: new Map(cat.equipment.map((e) => [e.id, e.category])),
-    munitionUnitCost: new Map(
-      cat.equipment.filter((e) => e.munition).map((e) => [e.id, e.munition!.unitCost]),
-    ),
     grimoireCost: new Map(cat.grimoires.map((g) => [g.id, g.cost])),
     spellCost: new Map(cat.spells.map((s) => [s.id, s.cost ?? 0])),
     mountCost: new Map(cat.mounts.map((m) => [m.id, m.cost])),
@@ -291,16 +288,14 @@ function resolveTargets(occ: EffectOccurrence, resolved: ResolvedInstance[]): Re
   return pool.filter((ri) => instanceMatchesIdentity(effect.target, ri));
 }
 
-function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex): number {
+function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog): number {
   const inst = ri.instance;
   let cost = ri.profile.cost;
   for (const id of inst.removedBaseEquipmentIds) cost -= idx.equipmentCost.get(id) ?? 0;
   for (const id of inst.addedEquipmentIds) cost += idx.equipmentCost.get(id) ?? 0;
   if (inst.grimoireId) cost += idx.grimoireCost.get(inst.grimoireId) ?? 0;
   for (const id of inst.spellIds) cost += idx.spellCost.get(id) ?? 0;
-  for (const [equipId, qty] of Object.entries(inst.munitions ?? {})) {
-    cost += (idx.munitionUnitCost.get(equipId) ?? 0) * qty;
-  }
+  cost += totalMunitionCost(cat, inst);
   if (inst.mount) {
     cost += idx.mountCost.get(inst.mount.mountId) ?? 0;
     for (const id of inst.mount.optionIds) cost += idx.mountOptionCost.get(id) ?? 0;
@@ -319,9 +314,10 @@ function computeCosts(
   resolved: ResolvedInstance[],
   occurrences: EffectOccurrence[],
   idx: CatalogIndex,
+  cat: Catalog,
 ): Map<string, number> {
   const cost = new Map<string, number>();
-  for (const ri of resolved) cost.set(ri.instance.instanceId, baseInstanceCost(ri, idx));
+  for (const ri of resolved) cost.set(ri.instance.instanceId, baseInstanceCost(ri, idx, cat));
 
   // Améliorations partagées : facturées une seule fois par Fer de Lance (au premier porteur),
   // quel que soit le nombre de figurines qui la sélectionnent ou en bénéficient.
@@ -856,7 +852,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const occurrences = collectEffectOccurrences(resolved, cat, idx);
 
   applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe (construction)
-  const cost = computeCosts(resolved, occurrences, idx); // 4 : coûts
+  const cost = computeCosts(resolved, occurrences, idx, cat); // 4 : coûts
   const issues = validate(cat, list, resolved, idx); // 5 : contraintes
 
   // Affichage : tous les effets d'octroi / de statistique, y compris « en jeu », sur des clones.

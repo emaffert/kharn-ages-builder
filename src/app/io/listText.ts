@@ -1,4 +1,11 @@
-import { evaluateList, type Catalog, type ListDocument, type ProfileInstance } from "@core";
+import {
+  evaluateList,
+  munitionKindForEquip,
+  munitionLinesFor,
+  type Catalog,
+  type ListDocument,
+  type ProfileInstance,
+} from "@core";
 import { newListId } from "./ids";
 
 /**
@@ -39,8 +46,8 @@ export function exportText(cat: Catalog, doc: ListDocument): string {
     return out;
   };
   const equipItem = (m: ProfileInstance, id: string, suffix?: string) => {
-    const qty = m.munitions?.[id];
-    const mun = qty ? ` (×${qty} munitions)` : "";
+    const lines = munitionLinesFor(cat, m, id);
+    const mun = lines.length ? ` (munitions: ${lines.map((l) => `${l.qty} ${l.label}`).join(", ")})` : "";
     return `    équip. · ${equipName(id)}${mun}${suffix ? ` [${suffix}]` : ""}`;
   };
 
@@ -139,9 +146,9 @@ export function importText(cat: Catalog, text: string): TextImportResult {
       const kind = norm(detail[1]);
       let val = detail[2].trim();
       if (kind.startsWith("equip") || kind === "arme") {
-        const mun = val.match(/\(×?\s*(\d+)\s*munitions?\)/i);
+        const munText = val.match(/\(munitions?:\s*([^)]*)\)/i)?.[1];
         const tag = norm(val.match(/\[([^\]]*)\]\s*$/)?.[1] ?? ""); // "de base" | "retire" | ""
-        val = val.replace(/\s*\(×?\s*\d+\s*munitions?\)\s*/i, "").replace(/\s*\[.*\]\s*$/, "").trim();
+        val = val.replace(/\s*\(munitions?:[^)]*\)\s*/i, "").replace(/\s*\[.*\]\s*$/, "").trim();
         const e = byName(cat.equipment, val);
         const isBase = e != null && cat.profiles.find((p) => p.id === current!.profileId)?.baseEquipmentIds.includes(e.id);
         if (!e) unresolved.push(raw);
@@ -150,7 +157,19 @@ export function importText(cat: Catalog, text: string): TextImportResult {
           if (tag === "retire") current.removedBaseEquipmentIds.push(e.id);
         } else {
           current.addedEquipmentIds.push(e.id);
-          if (mun) current.munitions = { ...(current.munitions ?? {}), [e.id]: Number(mun[1]) };
+          // Munitions best-effort : chaque « quantité Libellé » → type + palier correspondant.
+          const kindDef = munText ? munitionKindForEquip(cat, e.id) : undefined;
+          if (munText && kindDef) {
+            const sel: Record<string, number> = {};
+            for (const part of munText.split(",")) {
+              const mm = part.trim().match(/^(\d+)\s+(.+)$/);
+              if (!mm) continue;
+              const type = kindDef.types.find((t) => norm(t.label) === norm(mm[2]));
+              const ti = type?.quantities.findIndex((q) => q === Number(mm[1])) ?? -1;
+              if (type && ti >= 0) sel[type.id] = ti;
+            }
+            if (Object.keys(sel).length) current.munitions = { ...(current.munitions ?? {}), [e.id]: sel };
+          }
         }
       } else if (kind === "grimoire") {
         const g = cat.grimoires.find((x) => norm(x.name) === norm(val) || x.id === norm(val));

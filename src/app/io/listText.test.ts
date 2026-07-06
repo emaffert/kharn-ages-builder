@@ -6,7 +6,7 @@ import { exportText, importText } from "./listText";
 function makeDoc(): ListDocument {
   const now = "2026-07-02T00:00:00Z";
   const apathee = { instanceId: "a", profileId: "fangs-apathee-3", addedEquipmentIds: [], removedBaseEquipmentIds: [], spellIds: ["seduction-du-fiel"] };
-  const executeur = { instanceId: "e", profileId: "fangs-executeur-2", addedEquipmentIds: ["arbalete-de-poing"], removedBaseEquipmentIds: [], spellIds: [], munitions: { "arbalete-de-poing": 4 } };
+  const executeur = { instanceId: "e", profileId: "fangs-executeur-2", addedEquipmentIds: ["arbalete-de-poing"], removedBaseEquipmentIds: [], spellIds: [], munitions: { "arbalete-de-poing": { simple: 1 } } };
   return {
     schemaVersion: "1",
     catalogVersion: catalog.version,
@@ -28,7 +28,7 @@ describe("export/import texte", () => {
     expect(txt).toContain("Fangs");
     expect(txt).toContain("Apathée III");
     expect(txt).toContain("meneur");
-    expect(txt).toContain("Arbalète de poing (×4 munitions)");
+    expect(txt).toContain("Arbalète de poing (munitions: 6 Simple)");
   });
 
   it("réimporte les figurines, l'arme, les munitions et le sort (best-effort)", () => {
@@ -38,7 +38,7 @@ describe("export/import texte", () => {
     expect(doc.fersDeLance[0].factionId).toBe("fangs");
     const exec = members.find((m) => m.profileId === "fangs-executeur-2")!;
     expect(exec.addedEquipmentIds).toContain("arbalete-de-poing");
-    expect(exec.munitions?.["arbalete-de-poing"]).toBe(4);
+    expect(exec.munitions?.["arbalete-de-poing"]).toEqual({ simple: 1 });
     const apathee = members.find((m) => m.profileId === "fangs-apathee-3")!;
     expect(apathee.spellIds).toContain("seduction-du-fiel");
     expect(doc.fersDeLance[0].leaderInstanceId).toBe(apathee.instanceId);

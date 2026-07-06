@@ -137,8 +137,11 @@ export const EquipmentSchema = z.object({
   allonge: z.number().optional(),
   range: z.object({ short: z.number(), long: z.number(), max: z.number().optional() }).optional(),
   reload: z.object({ cadence: z.number(), paCost: z.number() }).optional(),
-  /** Munitions achetables (armes de tir sans recharge) : coût par unité et quantité max éventuelle. */
-  munition: z.object({ unitCost: z.number(), max: z.number().optional() }).optional(),
+  /**
+   * Munitions achetables : identifiant de la sorte de munition (cf. `catalog.munitionKinds`,
+   * ex. "fleches" pour un arc, "carreaux" pour une arbalète). Sa présence active l'achat de munitions.
+   */
+  munitionKind: z.string().optional(),
   /** L'objet confère la capacité de lancer des sorts dans ces voies (ex. focus/relique). */
   grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   durability: z.number().optional(),
@@ -274,6 +277,27 @@ export const SpecialCardSchema = z.object({
 });
 export type SpecialCard = z.infer<typeof SpecialCardSchema>;
 
+/**
+ * Table de munitions achetables (règles p.46). Une « sorte » (flèches pour les arcs, carreaux pour
+ * les arbalètes) propose plusieurs `types` (Simple, Perce-armure…) ; pour chaque type, `quantities`
+ * donne le nombre de munitions obtenues à chaque palier de prix (`tierPrices`, ex. 5 Ko / 15 Ko).
+ * Une quantité de 0 = type indisponible à ce palier.
+ */
+export const MunitionTypeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  quantities: z.array(z.number()),
+});
+export type MunitionType = z.infer<typeof MunitionTypeSchema>;
+
+export const MunitionKindSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  tierPrices: z.array(z.number()),
+  types: z.array(MunitionTypeSchema),
+});
+export type MunitionKind = z.infer<typeof MunitionKindSchema>;
+
 export const CatalogSchema = z.object({
   version: z.string(),
   rulesVersion: z.string(),
@@ -290,6 +314,8 @@ export const CatalogSchema = z.object({
   pacts: z.array(PactSchema),
   orders: z.array(OrderSchema),
   specialCards: z.array(SpecialCardSchema),
+  /** Sortes de munitions achetables (flèches, carreaux…) ; référencées par `equipment.munitionKind`. */
+  munitionKinds: z.array(MunitionKindSchema).optional(),
   /**
    * Icônes/portraits recadrés, indexés par `cardImage` (data-URI). Comme plusieurs profils (les
    * niveaux d'un même modèle) partagent une illustration de carte, les indexer par `cardImage`

@@ -6,3 +6,4 @@
 
 export * from "./evaluate";
 export * from "./magic";
+export * from "./munitions";

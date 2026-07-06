@@ -265,15 +265,16 @@ describe("amélioration partagée (payée une fois par Fer de Lance)", () => {
 });
 
 describe("munitions", () => {
-  it("les munitions ajoutent quantité × coût unitaire au coût", () => {
+  it("les munitions ajoutent le prix du palier choisi (par type) au coût", () => {
     const base = evalFang([inst("fangs-executeur-1", { addedEquipmentIds: ["arbalete-de-poing"] })]).totalCost;
     const withMun = evalFang([
       inst("fangs-executeur-1", {
         addedEquipmentIds: ["arbalete-de-poing"],
-        munitions: { "arbalete-de-poing": 3 },
+        // Carreaux : Simple au palier 15 Ko + Perce-armure au palier 5 Ko.
+        munitions: { "arbalete-de-poing": { simple: 1, "perce-armure": 0 } },
       }),
     ]).totalCost;
-    expect(withMun - base).toBe(6); // 3 × 2 Ko
+    expect(withMun - base).toBe(20); // 15 + 5
   });
 });
 

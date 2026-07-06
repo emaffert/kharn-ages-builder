@@ -12,8 +12,11 @@ export const ProfileInstanceSchema = z.object({
   removedBaseEquipmentIds: z.array(z.string()),
   spellIds: z.array(z.string()),
   grimoireId: z.enum(["petit", "grand"]).optional(),
-  /** Quantité de munitions achetée par arme (armes de tir sans recharge). */
-  munitions: z.record(z.string(), z.number()).optional(),
+  /**
+   * Munitions achetées, par arme : `equipId → { typeId → indice de palier }` (indice dans
+   * `munitionKind.tierPrices`). Ex. `{ arc: { simple: 1, "perce-armure": 0 } }` = 15 Ko de Simple + 5 Ko de Perce-armure.
+   */
+  munitions: z.record(z.string(), z.record(z.string(), z.number())).optional(),
   mount: z.object({ mountId: z.string(), optionIds: z.array(z.string()) }).optional(),
   /** Instances rattachées (ex. Likans liés à cette Fang). */
   attachedInstanceIds: z.array(z.string()).optional(),

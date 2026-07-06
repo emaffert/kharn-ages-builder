@@ -67,7 +67,8 @@ export interface ListStore {
   toggleUpgrade: (instanceId: string, cardId: string) => void;
   /** Amélioration partagée (payée une fois par Fer de Lance) : active/retire sur tout le FdL. */
   toggleSharedAmelioration: (instanceId: string, cardId: string) => void;
-  setMunition: (instanceId: string, equipId: string, qty: number) => void;
+  /** Choisit (ou retire, tierIndex=null) le palier de munition d'un type, pour une arme d'une instance. */
+  setMunitionTier: (instanceId: string, equipId: string, typeId: string, tierIndex: number | null) => void;
   setGuard: (instanceId: string, ofInstanceId: string | null) => void;
   // Persistance locale (Dexie).
   savedLists: ListDocument[];
@@ -203,8 +204,16 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
           }),
         };
       }),
-    setMunition: (instanceId, equipId, qty) =>
-      patchMember(instanceId, (m) => ({ ...m, munitions: { ...(m.munitions ?? {}), [equipId]: Math.max(0, qty) } })),
+    setMunitionTier: (instanceId, equipId, typeId, tierIndex) =>
+      patchMember(instanceId, (m) => {
+        const all = { ...(m.munitions ?? {}) };
+        const forEquip = { ...(all[equipId] ?? {}) };
+        if (tierIndex == null) delete forEquip[typeId];
+        else forEquip[typeId] = tierIndex;
+        if (Object.keys(forEquip).length === 0) delete all[equipId];
+        else all[equipId] = forEquip;
+        return { ...m, munitions: all };
+      }),
     setGuard: (instanceId, ofInstanceId) =>
       patchMember(instanceId, (m) => ({ ...m, bodyguardOfInstanceId: ofInstanceId ?? undefined })),
     savedLists,

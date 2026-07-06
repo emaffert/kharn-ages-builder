@@ -1,5 +1,5 @@
 import { specialCardsForProfile } from "@ui/explain";
-import type { Catalog, Profile, Spell } from "@core";
+import { munitionKindForEquip, resolveMunitionLines, type Catalog, type Profile, type Spell } from "@core";
 import { equipInfo, type ItemInfo } from "./shared";
 
 type SummaryChip = { name: string; info: ItemInfo };
@@ -13,6 +13,7 @@ export function PurchaseSummary({
   grimoireId,
   spellIds,
   upgrades,
+  munitions,
   issues,
   onPick,
 }: {
@@ -23,6 +24,7 @@ export function PurchaseSummary({
   grimoireId?: string;
   spellIds: string[];
   upgrades: string[];
+  munitions: Record<string, Record<string, number>>;
   issues: string[];
   onPick: (info: ItemInfo) => void;
 }) {
@@ -31,7 +33,24 @@ export function PurchaseSummary({
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
-  const armes = equip.filter((e) => WEAPON_CATS.includes(e.category)).map((e) => chip(e.name, equipInfo(e)));
+  // Arme : coût affiché = arme + ses munitions (règles p.46) ; les munitions sont listées dans le détail.
+  const armes = equip
+    .filter((e) => WEAPON_CATS.includes(e.category))
+    .map((e) => {
+      const munLines = resolveMunitionLines(munitionKindForEquip(cat, e.id), munitions[e.id]);
+      const munCost = munLines.reduce((n, l) => n + l.price, 0);
+      const base = equipInfo(e);
+      if (munCost === 0) return chip(e.name, base);
+      const weaponCost = e.isFree || e.cost === 0 ? 0 : e.cost;
+      return chip(e.name, {
+        ...base,
+        price: `${weaponCost + munCost} Ko`,
+        lines: [
+          ...base.lines,
+          `Munitions (+${munCost} Ko) : ${munLines.map((l) => `${l.qty} ${l.label}`).join(", ")}`,
+        ],
+      });
+    });
   const objets = equip.filter((e) => !WEAPON_CATS.includes(e.category)).map((e) => chip(e.name, equipInfo(e)));
   // N'affiche que les cartes automatiques (appliquées d'office) et les améliorations réellement sélectionnées.
   const cartes = specialCardsForProfile(p, cat)

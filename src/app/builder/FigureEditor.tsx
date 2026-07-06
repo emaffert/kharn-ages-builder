@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SegmentedControl } from "@ui";
-import type { Catalog, Profile, Spell } from "@core";
+import { munitionKindForEquip, resolveMunitionLines, type Catalog, type Profile, type Spell } from "@core";
 import { ProfileStatCard, type ProfileMods } from "./ProfileStatCard";
 import { SectionTitle, SlotChip } from "./components";
 import {
@@ -94,8 +94,8 @@ export function FigureEditor({
   onAdd,
   onRemove,
   onToggleBase,
-  munQty,
-  onMun,
+  munitions,
+  onMunTier,
   onToggleUpgrade,
   onGrimoire,
   onToggleSpell,
@@ -112,8 +112,8 @@ export function FigureEditor({
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
   onToggleBase: (id: string) => void;
-  munQty: (id: string) => number;
-  onMun: (id: string, qty: number) => void;
+  munitions: Record<string, Record<string, number>>;
+  onMunTier: (equipId: string, typeId: string, tierIndex: number | null) => void;
   onToggleUpgrade: (id: string) => void;
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
@@ -164,8 +164,8 @@ export function FigureEditor({
           onAdd={onAdd}
           onRemove={onRemove}
           onToggleBase={onToggleBase}
-          munQty={munQty}
-          onMun={onMun}
+          munitions={munitions}
+          onMunTier={onMunTier}
           onInfo={onInfo}
         />
       )}
@@ -195,8 +195,8 @@ function EquipPanel({
   onAdd,
   onRemove,
   onToggleBase,
-  munQty,
-  onMun,
+  munitions,
+  onMunTier,
   onInfo,
 }: {
   profile: Profile;
@@ -206,11 +206,12 @@ function EquipPanel({
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
   onToggleBase: (id: string) => void;
-  munQty: (id: string) => number;
-  onMun: (id: string, qty: number) => void;
+  munitions: Record<string, Record<string, number>>;
+  onMunTier: (equipId: string, typeId: string, tierIndex: number | null) => void;
   onInfo: (info: ItemInfo) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [openMun, setOpenMun] = useState<Record<string, boolean>>({}); // blocs de munitions dépliés, par arme
   const eq = (id: string) => cat.equipment.find((e) => e.id === id);
   const forbidden = forbiddenCats(p, cat);
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
@@ -255,7 +256,12 @@ function EquipPanel({
     .filter(([, v]) => v.length > 0);
   const addedCost = added.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
   const removedCost = removed.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
-  const munTotal = worn.reduce((n, e) => n + (e.munition ? munQty(e.id) * e.munition.unitCost : 0), 0);
+  const munTotal = worn.reduce(
+    (n, e) =>
+      n +
+      resolveMunitionLines(munitionKindForEquip(cat, e.id), munitions[e.id]).reduce((s, l) => s + l.price, 0),
+    0,
+  );
 
   // Équipé regroupé par catégorie — mêmes en-têtes que « disponible » (base en tête de chaque groupe).
   const ownedResolved = [
@@ -270,23 +276,57 @@ function EquipPanel({
     .map((c) => [c, ownedResolved.filter((o) => o.e.category === c)] as const)
     .filter(([, v]) => v.length > 0);
 
+  // Munitions achetables (règles p.46) : pour chaque type, choix d'un palier (Aucun / prix → quantité).
   const munitionRow = (e: Catalog["equipment"][number]) => {
-    if (!e.munition) return null;
-    const n = munQty(e.id);
-    const m = e.munition;
+    const kind = munitionKindForEquip(cat, e.id);
+    if (!kind) return null;
+    const sel = munitions[e.id] ?? {};
+    const open = openMun[e.id] ?? false;
+    const lines = resolveMunitionLines(kind, sel);
+    const summary = lines.length ? lines.map((l) => `${l.qty} ${l.label}`).join(", ") : "aucune";
     return (
-      <div className="fe-mun">
-        <span className="lab">
-          ↳ Munitions ({m.unitCost} Ko/u{m.max != null ? `, max ${m.max}` : ""})
-        </span>
-        <button className="fe-step" onClick={() => onMun(e.id, n - 1)} disabled={n <= 0}>
-          −
+      <div className="fe-mun-block">
+        <button
+          type="button"
+          className="fe-mun-head"
+          onClick={() => setOpenMun((s) => ({ ...s, [e.id]: !open }))}
+          aria-expanded={open}
+        >
+          <span className="fe-mun-caret">{open ? "▾" : "▸"}</span>
+          Munitions ({kind.label})
+          {!open && <span className="fe-mun-sum">· {summary}</span>}
         </button>
-        <span style={{ width: 18, textAlign: "center", fontWeight: 600, color: "var(--bone)" }}>{n}</span>
-        <button className="fe-step" onClick={() => onMun(e.id, n + 1)} disabled={m.max != null && n >= m.max}>
-          +
-        </button>
-        <span style={{ width: 48, textAlign: "right" }}>{n * m.unitCost} Ko</span>
+        {open &&
+          kind.types.map((t) => {
+          const cur = sel[t.id]; // indice de palier sélectionné, ou undefined
+          return (
+            <div key={t.id} className="fe-mun-type">
+              <span className="lab">{t.label}</span>
+              <button
+                type="button"
+                className={`fe-mun-opt${cur == null ? " on" : ""}`}
+                onClick={() => onMunTier(e.id, t.id, null)}
+              >
+                Aucune
+              </button>
+              {kind.tierPrices.map((price, ti) => {
+                const qty = t.quantities[ti] ?? 0;
+                if (qty <= 0) return null; // type indisponible à ce palier
+                return (
+                  <button
+                    key={ti}
+                    type="button"
+                    className={`fe-mun-opt${cur === ti ? " on" : ""}`}
+                    onClick={() => onMunTier(e.id, t.id, ti)}
+                    title={`${qty} ${t.label.toLowerCase()} pour ${price} Ko`}
+                  >
+                    {price} Ko · {qty}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -340,7 +380,7 @@ function EquipPanel({
                           →
                         </button>
                       </div>
-                      {e.munition && munitionRow(e)}
+                      {munitionRow(e)}
                     </div>
                   ))}
                 </div>

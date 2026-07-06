@@ -197,36 +197,20 @@ export function EquipmentDetail({
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span>Munitions (Ko/u · max) :</span>
-            <input
-              type="number"
-              placeholder="coût/u"
-              value={e.munition?.unitCost ?? ""}
-              onChange={(ev) =>
-                onChange({
-                  munition:
-                    ev.target.value === ""
-                      ? undefined
-                      : { unitCost: Number(ev.target.value), max: e.munition?.max },
-                })
-              }
-              className={`${INPUT} w-24`}
-            />
-            <input
-              type="number"
-              placeholder="max"
-              value={e.munition?.max ?? ""}
-              disabled={!e.munition}
-              onChange={(ev) =>
-                onChange({ munition: { unitCost: e.munition?.unitCost ?? 0, max: numOrUndef(ev.target.value) } })
-              }
-              className={`${INPUT} w-20`}
-            />
-            {e.munition && (
-              <button type="button" onClick={() => onChange({ munition: undefined })} className="adm-x">
-                ✕
-              </button>
-            )}
+            <span>Munitions :</span>
+            <select
+              value={e.munitionKind ?? ""}
+              onChange={(ev) => onChange({ munitionKind: ev.target.value || undefined })}
+              className={INPUT}
+            >
+              <option value="">— aucune</option>
+              {(cat.munitionKinds ?? []).map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs adm-faint">(sorte de munition achetable, cf. table p.46)</span>
           </div>
           <GrantsCastingEditor value={e.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
           <label className="flex items-center gap-2">

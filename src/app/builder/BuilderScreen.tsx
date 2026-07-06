@@ -417,6 +417,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             grimoireId={x.inst.grimoireId}
             spellIds={x.inst.spellIds}
             upgrades={[...new Set([...(x.inst.specialCardIds ?? []), ...sharedActiveCardIds])]}
+            munitions={x.inst.munitions ?? {}}
             issues={rowIssues}
             onPick={setItemInfo}
           />
@@ -592,8 +593,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onAdd={(eid) => store.addEquip(editItem.inst.instanceId, eid)}
             onRemove={(eid) => store.removeEquip(editItem.inst.instanceId, eid)}
             onToggleBase={(eid) => store.toggleBase(editItem.inst.instanceId, eid)}
-            munQty={(eid) => editItem.inst.munitions?.[eid] ?? 0}
-            onMun={(eid, qty) => store.setMunition(editItem.inst.instanceId, eid, qty)}
+            munitions={editItem.inst.munitions ?? {}}
+            onMunTier={(eid, typeId, ti) => store.setMunitionTier(editItem.inst.instanceId, eid, typeId, ti)}
             onToggleUpgrade={(cid) =>
               cat.specialCards.find((c) => c.id === cid)?.shared
                 ? store.toggleSharedAmelioration(editItem.inst.instanceId, cid)

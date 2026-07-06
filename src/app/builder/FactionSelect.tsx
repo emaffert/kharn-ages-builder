@@ -51,6 +51,7 @@ export function FactionSelect({
   const [importError, setImportError] = useState<string | null>(null);
   const [importUnresolved, setImportUnresolved] = useState<string[]>([]);
   const [pendingImport, setPendingImport] = useState<ListDocument | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ListDocument | null>(null);
 
   const sceneVars = {
     "--faction": selected.color,
@@ -259,7 +260,7 @@ export function FactionSelect({
                       className="fs-scard-del"
                       title="Supprimer"
                       aria-label={`Supprimer ${doc.name}`}
-                      onClick={() => store.removeSaved(doc.id)}
+                      onClick={() => setPendingDelete(doc)}
                     >
                       ✕
                     </button>
@@ -270,6 +271,35 @@ export function FactionSelect({
           )}
         </div>
       </div>
+
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(o) => {
+          if (!o) setPendingDelete(null);
+        }}
+        size="sm"
+        title="Confirmer la suppression"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
+              Annuler
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (pendingDelete) store.removeSaved(pendingDelete.id);
+                setPendingDelete(null);
+              }}
+            >
+              Supprimer
+            </Button>
+          </>
+        }
+      >
+        <p>
+          Supprimer la liste « {pendingDelete?.name} » ? Cette action est <b>irréversible</b>.
+        </p>
+      </Dialog>
     </div>
   );
 }

@@ -82,10 +82,11 @@ export function FactionSelect({
                 type="button"
                 disabled={soon}
                 aria-pressed={!soon && f.id === selectedId}
-                className={`fs-tile${soon ? " is-soon" : f.id === selectedId ? " is-sel" : ""}`}
+                className={`fs-tile${f.transverse ? " is-transverse" : ""}${soon ? " is-soon" : f.id === selectedId ? " is-sel" : ""}`}
                 style={facVars}
                 onClick={() => !soon && setSelectedId(f.id)}
               >
+                {f.transverse && <span className="fs-eyebrow">Transverse</span>}
                 <FactionEmblem kind={f.emblem} className="fs-emblem" />
                 <h3>{f.name}</h3>
                 <p>{f.blurb}</p>

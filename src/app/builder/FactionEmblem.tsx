@@ -66,6 +66,15 @@ const SIGILS: Record<EmblemKind, React.JSX.Element> = {
       <path d="M20 17.5 L23.2 22 L20 26.5 L16.8 22 Z" fill={INK} />
     </>
   ),
+  // Hache à double tranchant dorée (les Affranchis) — labrys : hampe centrale + deux fers en croissant.
+  affranchis: (
+    <g fill="var(--gold)">
+      <rect x="19.1" y="9" width="1.8" height="27" rx="0.9" />
+      <circle cx="20" cy="36.5" r="1.7" />
+      <path d="M19.2 13 C12 13 8 16 7.4 20 C8 24 12 27 19.2 27 C16.6 23 16.6 17 19.2 13 Z" />
+      <path d="M20.8 13 C28 13 32 16 32.6 20 C32 24 28 27 20.8 27 C23.4 23 23.4 17 20.8 13 Z" />
+    </g>
+  ),
 };
 
 export function FactionEmblem({ kind, className }: { kind: EmblemKind; className?: string }) {

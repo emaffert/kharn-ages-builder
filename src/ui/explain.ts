@@ -22,6 +22,9 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
     if (sel.equipmentCategories?.length) {
       return `son équipement (${sel.equipmentCategories.join(", ")})`;
     }
+    if (sel.equipmentHands?.length) {
+      return `ses armes à ${sel.equipmentHands.join("/")} main(s)`;
+    }
     return "lui-même";
   }
   const parts: string[] = [];
@@ -40,6 +43,7 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
   if (sel.equipmentIds?.length) {
     parts.push(`équipement ${sel.equipmentIds.map((id) => equipName(cat, id)).join(", ")}`);
   }
+  if (sel.equipmentHands?.length) parts.push(`armes à ${sel.equipmentHands.join("/")} main(s)`);
   let s = parts.join(" et ") || "—";
   if (sel.countAtLeast) s = `au moins ${sel.countAtLeast} × ${s}`;
   return s;
@@ -86,7 +90,7 @@ export function describeEffect(e: Effect, cat: Catalog): string {
   let base: string;
   switch (op.kind) {
     case "cost-delta":
-      base = `${op.amount > 0 ? "+" : ""}${op.amount} Ko sur ${tgt}`;
+      base = `${op.amount > 0 ? "+" : ""}${op.amount} Ko sur ${tgt}${op.requiresBaseSwap ? " (si arme de base changée)" : ""}`;
       break;
     case "cost-set":
       base = `Coût fixé à ${op.amount} Ko pour ${tgt}${op.maxCount ? ` (1 par source, max ${op.maxCount})` : ""}`;
@@ -121,6 +125,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     }
     case "spell-pages":
       base = `${op.amount >= 0 ? "+" : ""}${op.amount} page(s) de sorts pour ${tgt}`;
+      break;
+    case "limit-modifier":
+      base = `${op.amount >= 0 ? "+" : ""}${op.amount} à la limitation (X) de ${tgt}`;
       break;
   }
   if (e.condition) {

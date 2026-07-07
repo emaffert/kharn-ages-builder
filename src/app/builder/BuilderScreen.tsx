@@ -124,10 +124,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       return cs != null && cs.modelId === modelId && cs.level === level;
     }).length;
   const atLimit = (p: Profile) => {
-    // 1) Limitation propre du profil (par groupe modèle#niveau) : U/P → 1, X → valeur.
+    // 1) Limitation propre du profil (par groupe modèle#niveau) : U/P → 1, X → valeur (+ bonus
+    //    `limit-modifier`, ex. Lieutenant khérops : +1 aux Khérops « X »).
     const own =
       p.limitation.kind === "X"
-        ? (p.limitation.value ?? Infinity)
+        ? (p.limitation.value ?? Infinity) + (evaluation.limitBonuses[groupKey(p)] ?? 0)
         : p.limitation.kind === "U" || p.limitation.kind === "P"
           ? 1
           : Infinity;

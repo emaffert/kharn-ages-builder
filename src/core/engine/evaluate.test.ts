@@ -390,6 +390,38 @@ describe("carte intrinsèque à effet ciblant la source (Syrga — Dévotion Int
   });
 });
 
+describe("Khérops — concepts (Lieutenant / Commandant / Ogodeï)", () => {
+  const g1 = () => inst("kherops-guerrier-1-1");
+
+  it("Lieutenant : +1 à la limite des Khérops « X » (4 Guerriers Lim 3 OK avec un Lieutenant)", () => {
+    const four = [g1(), g1(), g1(), g1()];
+    const sans = evaluateList(catalog, makeList(four, "kherops", "bataille"));
+    expect(sans.issues.some((i) => i.ruleId === "limitation:kherops-guerrier-1#1")).toBe(true);
+    const avec = evaluateList(catalog, makeList([...four, inst("kherops-lieutenant-2")], "kherops", "bataille"));
+    expect(avec.issues.some((i) => i.ruleId === "limitation:kherops-guerrier-1#1")).toBe(false);
+    expect(avec.limitBonuses["kherops-guerrier-1#1"]).toBe(1);
+  });
+
+  it("Ogodeï : −10 Ko sur une arme à 2 mains ajoutée, rien sur une arme à 1 main", () => {
+    const twoH = inst("kherops-ogodei-3", { addedEquipmentIds: ["fauchard-kherops"] });
+    const r2 = evaluateList(catalog, makeList([twoH], "kherops", "bataille"));
+    expect(r2.costByInstance[twoH.instanceId]).toBe(165 + 30 - 10);
+    const oneH = inst("kherops-ogodei-3", { addedEquipmentIds: ["etoile-de-mort"] });
+    const r1 = evaluateList(catalog, makeList([oneH], "kherops", "bataille"));
+    expect(r1.costByInstance[oneH.instanceId]).toBe(165 + 20);
+  });
+
+  it("Commandant : −5 Ko à un Guerrier qui change son arme de base (rien s'il ne fait qu'ajouter)", () => {
+    const cmd = inst("kherops-commandant-3");
+    const swap = inst("kherops-guerrier-1-1", { removedBaseEquipmentIds: ["kherops-marteau"], addedEquipmentIds: ["kherops-francisque"] });
+    const r = evaluateList(catalog, makeList([cmd, swap], "kherops", "bataille"));
+    expect(r.costByInstance[swap.instanceId]).toBe(79 - 14 + 9 - 5);
+    const addOnly = inst("kherops-guerrier-1-1", { addedEquipmentIds: ["kherops-francisque"] });
+    const r2 = evaluateList(catalog, makeList([cmd, addOnly], "kherops", "bataille"));
+    expect(r2.costByInstance[addOnly.instanceId]).toBe(79 + 9);
+  });
+});
+
 describe("stat-max (Doctrine de l'Ordre)", () => {
   it("n'affiche pas de modification quand le max du groupe n'excède pas la base (Maître seul)", () => {
     const maitre = inst("kharns-maitre-ordre");

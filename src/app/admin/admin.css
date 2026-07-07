@@ -34,7 +34,7 @@
   border: 1px solid transparent; padding: 4px 10px; font-size: 24px; font-weight: 700;
   font-family: "Cinzel", Georgia, serif; outline: none; }
 .adm-title:focus { box-shadow: 0 0 0 1px var(--ember); }
-.adm-cost { width: 64px; border-radius: var(--radius-sm); background: var(--tint-1); color: var(--bone);
+.adm-cost { width: 88px; border-radius: var(--radius-sm); background: var(--tint-1); color: var(--bone);
   padding: 4px 9px; text-align: right; font-size: 20px; font-weight: 600; outline: none; border: 1px solid transparent; }
 .adm-cost:focus { box-shadow: 0 0 0 1px var(--ember); }
 .adm-range { accent-color: var(--ember); }

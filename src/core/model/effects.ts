@@ -10,7 +10,16 @@ import { EffectScopeSchema, EquipmentCategorySchema, SelectorSchema } from "./co
 export const StatKeySchema = z.enum(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"]);
 
 export const EffectOperationSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("cost-delta"), amount: z.number() }),
+  z.object({
+    kind: z.literal("cost-delta"),
+    amount: z.number(),
+    /**
+     * `true` : le modificateur ne s'applique qu'aux figurines ayant *changé leur arme de base*
+     * (au moins un équipement de base retiré correspondant au filtre `target`). Ex. Commandant khérops :
+     * −5 Ko aux Guerriers qui remplacent leur arme de base.
+     */
+    requiresBaseSwap: z.boolean().optional(),
+  }),
   z.object({ kind: z.literal("cost-set"), amount: z.number(), maxCount: z.number().optional() }),
   // Octroie aux cibles la possibilité d'améliorer CHAQUE équipement des catégories visées (opt-in par
   // objet) pour `cost` Ko/objet. Ex. Key empoisonne son arme (10 Ko) ; « Borax » améliore armes+armures.
@@ -54,6 +63,12 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   // Budget de pages de sorts (ex. Fille de Nyx : +3 ; Crosse d'Ostéomancie : +3).
   // Enforcement (capacité vs sorts choisis) prévu côté constructeur de liste.
   z.object({ kind: z.literal("spell-pages"), amount: z.number() }),
+  /**
+   * Augmente (ou réduit) la limitation numérique (kind « X ») des groupes de profils ciblés, dans la
+   * portée. Ex. Lieutenant khérops : +1 à la limite des Khérops non uniques / non personnages de son FdL.
+   * Ne touche que les limitations « X » (U/P inchangées).
+   */
+  z.object({ kind: z.literal("limit-modifier"), amount: z.number() }),
 ]);
 export type EffectOperation = z.infer<typeof EffectOperationSchema>;
 

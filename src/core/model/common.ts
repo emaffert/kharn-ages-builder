@@ -75,6 +75,8 @@ export const SelectorSchema = z.object({
   equipmentCategories: z.array(EquipmentCategorySchema).optional(),
   /** Cible des équipements précis (par id), ex. l'« Arbalète de poing » de l'Exécuteur. */
   equipmentIds: z.array(z.string()).optional(),
+  /** Filtre les équipements par nombre de mains (ex. Ogodeï : −10 Ko aux armes à 2 mains). */
+  equipmentHands: z.array(z.number()).optional(),
   /** Seuil de comptage pour une condition (ex. ≥ 2 « frères d'armes »). */
   countAtLeast: z.number().optional(),
 });

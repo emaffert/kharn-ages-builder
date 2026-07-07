@@ -69,6 +69,8 @@ export interface EvaluationResult {
    * Permet d'expliquer, au clic sur une valeur colorée, quel effet la modifie.
    */
   effectSources: Record<string, Record<string, EffectSourceRef[]>>;
+  /** Bonus de limitation par groupe `modèle#niveau` (effet `limit-modifier`, ex. Lieutenant). Pour le constructeur. */
+  limitBonuses: Record<string, number>;
   issues: Issue[];
 }
 
@@ -449,17 +451,26 @@ function computeCosts(
     if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
 
     for (const ri of resolveTargets(occ, resolved)) {
-      const cats = occ.effect.target.equipmentCategories;
-      const ids = occ.effect.target.equipmentIds;
+      const sel = occ.effect.target;
+      const cats = sel.equipmentCategories;
+      const ids = sel.equipmentIds;
+      const hands = sel.equipmentHands;
+      const hasFilter = (cats?.length ?? 0) > 0 || (ids?.length ?? 0) > 0 || (hands?.length ?? 0) > 0;
+      const matches = (id: string) => {
+        if (cats?.includes((idx.equipmentCategory.get(id) ?? "") as never)) return true;
+        if (ids?.includes(id)) return true;
+        if (hands && hands.length > 0) {
+          const h = cat.equipment.find((e) => e.id === id)?.hands;
+          if (h != null && (h === "1-2" ? hands.some((x) => x === 1 || x === 2) : hands.includes(h))) return true;
+        }
+        return false;
+      };
       let delta = op.amount;
-      if ((cats && cats.length > 0) || (ids && ids.length > 0)) {
-        // Appliqué une fois par équipement ajouté ciblé (par catégorie et/ou par id).
-        const n = ri.instance.addedEquipmentIds.filter(
-          (id) =>
-            (cats?.includes((idx.equipmentCategory.get(id) ?? "") as never) ?? false) ||
-            (ids?.includes(id) ?? false),
-        ).length;
-        delta = op.amount * n;
+      if (hasFilter) {
+        // Gate « changement d'arme de base » : au moins un équipement de base retiré correspond au filtre.
+        if (op.requiresBaseSwap && !ri.instance.removedBaseEquipmentIds.some(matches)) continue;
+        // Appliqué une fois par équipement ajouté ciblé (catégorie / id / mains).
+        delta = op.amount * ri.instance.addedEquipmentIds.filter(matches).length;
       }
       cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + delta);
     }
@@ -511,12 +522,13 @@ function validate(
   list: ListDocument,
   resolved: ResolvedInstance[],
   idx: CatalogIndex,
+  limitBonuses: Map<string, number>,
 ): Issue[] {
   const issues: Issue[] = [];
 
   for (const fdl of list.fersDeLance) {
     const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdl.id);
-    validateLimitations(fdl, inFdl, issues);
+    validateLimitations(fdl, inFdl, issues, limitBonuses);
     validateConsumesSlot(cat, fdl, inFdl, issues);
     validateFactionMembership(fdl, inFdl, issues);
     validateLeader(fdl, inFdl, issues);
@@ -615,13 +627,46 @@ function validateSpecialCardScope(
   }
 }
 
-function validateLimitations(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
+/** Clé de regroupement d'une limitation : `modèle#niveau` (variantes de loadout partagent la limite). */
+function limitGroupKey(ri: ResolvedInstance): string {
+  return ri.profile.modelId != null ? `${ri.profile.modelId}#${ri.profile.level ?? 0}` : ri.profile.id;
+}
+
+/**
+ * Bonus de limitation (effet `limit-modifier`, ex. Lieutenant khérops : +1) par groupe `modèle#niveau`.
+ * N'affecte que les limitations « X » (numériques) ; +amount une fois par groupe et par source.
+ */
+function collectLimitBonuses(resolved: ResolvedInstance[], occurrences: EffectOccurrence[]): Map<string, number> {
+  const bonus = new Map<string, number>();
+  for (const occ of occurrences) {
+    if (occ.effect.operation.kind !== "limit-modifier") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+    const amount = occ.effect.operation.amount;
+    const seen = new Set<string>();
+    for (const ri of instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId)) {
+      if (ri.profile.limitation.kind !== "X") continue;
+      if (!instanceMatchesIdentity(occ.effect.target, ri)) continue;
+      const key = limitGroupKey(ri);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      bonus.set(key, (bonus.get(key) ?? 0) + amount);
+    }
+  }
+  return bonus;
+}
+
+function validateLimitations(
+  fdl: FerDeLance,
+  inFdl: ResolvedInstance[],
+  issues: Issue[],
+  limitBonuses: Map<string, number>,
+): void {
   // Compté par (modèle, niveau) : les variantes de loadout (même modèle ET même niveau, profils
   // distincts) partagent la même limitation ; des niveaux différents comptent séparément
   // (un modèle avec un N2 « U » et un N3 « U » peut aligner le N2 et le N3).
   const groups = new Map<string, { ri: ResolvedInstance; count: number }>();
   for (const ri of inFdl) {
-    const key = ri.profile.modelId != null ? `${ri.profile.modelId}#${ri.profile.level ?? 0}` : ri.profile.id;
+    const key = limitGroupKey(ri);
     const g = groups.get(key);
     if (g) g.count += 1;
     else groups.set(key, { ri, count: 1 });
@@ -629,7 +674,11 @@ function validateLimitations(fdl: FerDeLance, inFdl: ResolvedInstance[], issues:
   for (const [key, { ri, count }] of groups) {
     const lim = ri.profile.limitation;
     const max =
-      lim.kind === "X" ? (lim.value ?? Infinity) : lim.kind === "U" || lim.kind === "P" ? 1 : Infinity;
+      lim.kind === "X"
+        ? (lim.value ?? Infinity) + (limitBonuses.get(key) ?? 0)
+        : lim.kind === "U" || lim.kind === "P"
+          ? 1
+          : Infinity;
     if (count > max) {
       issues.push({
         severity: "error",
@@ -1079,7 +1128,8 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     const extra = upgradeCost(ri, grantedUp.get(ri.instance.instanceId) ?? new Map(), idx);
     if (extra) cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + extra);
   }
-  const issues = validate(cat, list, resolved, idx); // 5 : contraintes
+  const limitBonuses = collectLimitBonuses(resolved, occurrences); // +1 limite (Lieutenant…)
+  const issues = validate(cat, list, resolved, idx, limitBonuses); // 5 : contraintes
 
   // Affichage : tous les effets d'octroi / de statistique, y compris « en jeu », sur des clones.
   const display = cloneForDisplay(resolved);
@@ -1143,6 +1193,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     skillValues,
     grantedUpgrades,
     effectSources,
+    limitBonuses: Object.fromEntries(limitBonuses),
     issues,
   };
 }

@@ -125,6 +125,7 @@ function cleanSelector(sel: Selector): Selector {
   if (sel.isLeader != null) out.isLeader = sel.isLeader;
   if (sel.equipmentCategories?.length) out.equipmentCategories = sel.equipmentCategories;
   if (sel.equipmentIds?.length) out.equipmentIds = sel.equipmentIds;
+  if (sel.equipmentHands?.length) out.equipmentHands = sel.equipmentHands;
   if (sel.countAtLeast != null) out.countAtLeast = sel.countAtLeast;
   return out;
 }
@@ -216,6 +217,23 @@ function SelectorEditor({
         onChange={(v) => set({ equipmentIds: v })}
         options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
       />
+      <div className="flex items-center gap-2 text-xs adm-faint">
+        mains
+        {[1, 2].map((h) => (
+          <label key={h} className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={selector.equipmentHands?.includes(h) ?? false}
+              onChange={(e) => {
+                const cur = selector.equipmentHands ?? [];
+                const next = e.target.checked ? [...cur, h] : cur.filter((x) => x !== h);
+                set({ equipmentHands: next.length ? next : undefined });
+              }}
+            />
+            {h}
+          </label>
+        ))}
+      </div>
       <label className="flex items-center gap-1 text-xs adm-faint">
         au moins
         <input
@@ -255,6 +273,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, skillId: "", of: {}, per: 3 };
     case "spell-pages":
       return { kind, amount: 0 };
+    case "limit-modifier":
+      return { kind, amount: 1 };
   }
 }
 
@@ -291,6 +311,7 @@ function OperationEditor({
             "stat-max",
             "skill-count",
             "spell-pages",
+            "limit-modifier",
           ] as const
         ).map((k) => (
           <option key={k} value={k}>
@@ -299,6 +320,19 @@ function OperationEditor({
         ))}
       </select>
       {op.kind === "cost-delta" && (
+        <>
+          <Num label="montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
+          <label className="flex items-center gap-1 text-xs adm-faint">
+            <input
+              type="checkbox"
+              checked={op.requiresBaseSwap ?? false}
+              onChange={(e) => onChange({ ...op, requiresBaseSwap: e.target.checked || undefined })}
+            />
+            si arme de base changée
+          </label>
+        </>
+      )}
+      {op.kind === "limit-modifier" && (
         <Num label="montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
       )}
       {op.kind === "cost-set" && (

@@ -38,7 +38,6 @@ export const MagicWaySchema = z.object({
   id: z.string(),
   name: z.string(),
   factionId: z.string(),
-  castingBonusText: z.string(),
 });
 export type MagicWay = z.infer<typeof MagicWaySchema>;
 

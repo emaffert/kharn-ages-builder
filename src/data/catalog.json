@@ -418,20 +418,17 @@
     {
       "id": "osteomancie",
       "name": "Ostéomancie",
-      "factionId": "fangs",
-      "castingBonusText": "Une sorcière fang aura un bonus de + 1 par combattant terrassé au moment de l'incantation."
+      "factionId": "fangs"
     },
     {
       "id": "shamanisme",
       "name": "Shamanisme",
-      "factionId": "gouns",
-      "castingBonusText": "Chaque âme encore pure renforce les rituels des shamans goûns, ceux-ci obtiennent un bonus de +1 pour chaque Goûn niveau I vivant, sur le terrain."
+      "factionId": "gouns"
     },
     {
       "id": "sang-et-acier",
       "name": "Le Sang et l'Acier",
-      "factionId": "kharns",
-      "castingBonusText": "À vérifier (bonus d'incantation Le Sang et l'Acier)."
+      "factionId": "kharns"
     }
   ],
   "models": [

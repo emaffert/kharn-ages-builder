@@ -81,7 +81,10 @@ export function AdminCatalog() {
   );
 
   const filteredCards = useMemo(
-    () => catalog.specialCards.filter((s) => !q || s.name.toLowerCase().includes(q)),
+    () =>
+      catalog.specialCards
+        .filter((s) => !q || s.name.toLowerCase().includes(q))
+        .sort((a, b) => a.name.localeCompare(b.name, "fr")),
     [catalog, q],
   );
   const filteredSpells = useMemo(

@@ -87,7 +87,8 @@ export function EditableNumber({
   value: number | null;
   unverified: boolean;
   onChange: (v: FieldValue) => void;
-  onToggle: () => void;
+  /** Bouton « à vérifier » par champ. Absent → pas de bouton (le flag est géré ailleurs, ex. groupé). */
+  onToggle?: () => void;
 }) {
   return (
     <label className={`group adm-num ${unverified ? "adm-num--warn" : ""}`}>
@@ -97,7 +98,7 @@ export function EditableNumber({
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
       />
-      <FlagButton active={unverified} onClick={onToggle} />
+      {onToggle && <FlagButton active={unverified} onClick={onToggle} />}
     </label>
   );
 }

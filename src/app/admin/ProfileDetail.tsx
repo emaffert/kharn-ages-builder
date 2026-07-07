@@ -77,6 +77,13 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
   const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
   const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
   const flag = (key: string) => toggleUnverified(profile.id, key);
+  // Un seul indicateur « à vérifier » pour toutes les caractéristiques (fastidieux à retirer 1 par 1).
+  const STAT_PATHS = [...STAT_LABELS.map(([k]) => `stats.${k}`), "stature", "pa", "pv"];
+  const anyStatUnverified = STAT_PATHS.some(uv);
+  const toggleAllStats = () => {
+    const target = !anyStatUnverified; // état visé, décidé sur l'état pré-clic → chaque champ basculé au plus une fois
+    for (const path of STAT_PATHS) if (uv(path) !== target) flag(path);
+  };
   const setArmor = (p: Partial<NonNullable<Profile["armor"]>>) =>
     patch({ armor: { ...(profile.armor ?? {}), ...p } });
 
@@ -205,38 +212,40 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
         </div>
       </header>
 
-      <Section title="Caractéristiques (modifiables — ⚠ = lecture à vérifier)">
+      <Section title="Caractéristiques (modifiables)">
+        <div className="flex items-center gap-2">
+          <FlagButton active={anyStatUnverified} onClick={toggleAllStats} />
+          <span className="text-xs adm-faint">
+            à vérifier — un seul indicateur pour toutes les caractéristiques
+          </span>
+        </div>
         <div className="flex flex-wrap gap-2">
           {STAT_LABELS.map(([k, label]) => (
             <EditableNumber
               key={label}
               label={label}
               value={profile.stats[k]}
-              unverified={uv(`stats.${k}`)}
+              unverified={anyStatUnverified}
               onChange={(v) => upd(`stats.${k}`, v)}
-              onToggle={() => flag(`stats.${k}`)}
             />
           ))}
           <EditableNumber
             label="Stature"
             value={profile.stature}
-            unverified={uv("stature")}
+            unverified={anyStatUnverified}
             onChange={(v) => upd("stature", v ?? 0)}
-            onToggle={() => flag("stature")}
           />
           <EditableNumber
             label="PA"
             value={profile.pa}
-            unverified={uv("pa")}
+            unverified={anyStatUnverified}
             onChange={(v) => upd("pa", v ?? 0)}
-            onToggle={() => flag("pa")}
           />
           <EditableNumber
             label="PV"
             value={profile.pv}
-            unverified={uv("pv")}
+            unverified={anyStatUnverified}
             onChange={(v) => upd("pv", v ?? 0)}
-            onToggle={() => flag("pv")}
           />
         </div>
       </Section>

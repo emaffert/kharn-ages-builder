@@ -478,7 +478,7 @@ body {
   will-change: transform; }
 .bld-unit-main { display: flex; align-items: center; gap: 14px; cursor: pointer; }
 .bld-unit:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
-.bld-unit.is-leader { border-left-color: var(--ember);
+.bld-unit.is-leader { border-left-color: var(--faction);
   background: linear-gradient(180deg, color-mix(in srgb, var(--ember) 8%, var(--soot-2)), var(--soot)); }
 .bld-unit.is-error { border-left-color: var(--scorch); }
 .bld-unit.is-attached { margin-left: 34px; background: linear-gradient(180deg, var(--soot), var(--forge-2)); }

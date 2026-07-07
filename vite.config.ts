@@ -93,7 +93,12 @@ export default defineConfig(({ command }) => ({
     VitePWA({
       registerType: "autoUpdate",
       // Précache aussi les polices self-hostées (woff2) pour un fonctionnement hors-ligne complet.
-      workbox: { globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"] },
+      // Le catalogue (icônes base64 embarquées) grossit → on relève la limite de précache à 4 Mio
+      // (défaut 2 Mio) pour que le bundle JS reste précaché malgré sa taille.
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      },
       manifest: {
         name: "Khârn-Âges — Constructeur de listes",
         short_name: "Khârn-Âges",

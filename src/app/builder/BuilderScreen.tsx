@@ -38,6 +38,7 @@ import { TrashIcon, SearchIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { RosterGroup } from "./RosterGroup";
+import { OstPanel } from "./OstPanel";
 import { PurchaseSummary } from "./PurchaseSummary";
 import { encodeList } from "../io/listCode";
 import { exportText } from "../io/listText";
@@ -575,6 +576,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             <button className="bld-add-mobile" onClick={() => setShowRoster(true)}>
               + Ajouter depuis le roster
             </button>
+            <OstPanel cat={cat} list={store.list} issues={evaluation.issues} onToggle={store.toggleOstCard} />
             {groups.length === 0 && (
               <p className="bld-empty">Liste vide — ajoute des figurines depuis le roster.</p>
             )}

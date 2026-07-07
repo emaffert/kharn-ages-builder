@@ -25,6 +25,7 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
     return "lui-même";
   }
   const parts: string[] = [];
+  if (sel.all) parts.push("toutes les figurines");
   if (sel.profileIds?.length) {
     parts.push(sel.profileIds.map((id) => `« ${profileName(cat, id)} »`).join(", "));
   }

@@ -305,6 +305,7 @@ function EquipPanel({
           <label key={g.upgradeId} className="fe-upgrade">
             <input
               type="checkbox"
+              className="ui-check"
               checked={active.includes(g.upgradeId)}
               onChange={() => onToggleEquipmentUpgrade(e.id, g.upgradeId)}
             />

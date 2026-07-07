@@ -116,6 +116,7 @@ function modelOptions(cat: Catalog): Option[] {
 function cleanSelector(sel: Selector): Selector {
   const out: Selector = {};
   if (sel.self) out.self = true;
+  if (sel.all) out.all = true;
   if (sel.profileIds?.length) out.profileIds = sel.profileIds;
   if (sel.modelIds?.length) out.modelIds = sel.modelIds;
   if (sel.traits?.length) out.traits = sel.traits;
@@ -148,6 +149,10 @@ function SelectorEditor({
           lui-même (self)
         </label>
       )}
+      <label className="flex items-center gap-1 text-xs adm-muted">
+        <input type="checkbox" checked={selector.all ?? false} onChange={(e) => set({ all: e.target.checked })} />
+        toutes les figurines (portée entière)
+      </label>
       <StringList
         label="profils"
         values={selector.profileIds ?? []}

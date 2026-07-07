@@ -52,6 +52,8 @@ export interface ListStore {
   fdl: ListDocument["fersDeLance"][number];
   setName: (name: string) => void;
   setFormat: (format: ListDocument["format"]) => void;
+  /** Carte à portée Ost (sélection au niveau de la liste) : active/retire. */
+  toggleOstCard: (cardId: string) => void;
   setPointsLimit: (n: number | undefined) => void;
   newList: (factionId: string, opts?: { format?: ListDocument["format"]; pointsLimit?: number }) => void;
   addMember: (profileId: string) => void;
@@ -113,6 +115,12 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     fdl,
     setName: (name) => setList((l) => touch({ ...l, name })),
     setFormat: (format) => setList((l) => touch({ ...l, format })),
+    toggleOstCard: (cardId) =>
+      setList((l) => {
+        const cur = l.ost?.cardIds ?? [];
+        const next = cur.includes(cardId) ? cur.filter((x) => x !== cardId) : [...cur, cardId];
+        return touch({ ...l, ost: { ...(l.ost ?? {}), cardIds: next.length ? next : undefined } });
+      }),
     setPointsLimit: (pointsLimit) => setList((l) => touch({ ...l, pointsLimit })),
     newList: (factionId, opts) =>
       setList({

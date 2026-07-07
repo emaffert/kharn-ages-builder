@@ -62,6 +62,8 @@ export type SkillRef = z.infer<typeof SkillRefSchema>;
  */
 export const SelectorSchema = z.object({
   self: z.boolean().optional(),
+  /** Correspond à *toutes* les figurines de la portée (ex. « toutes les figurines de l'Ost »). */
+  all: z.boolean().optional(),
   profileIds: z.array(z.string()).optional(),
   modelIds: z.array(z.string()).optional(),
   traits: z.array(z.string()).optional(),

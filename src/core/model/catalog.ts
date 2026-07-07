@@ -4,6 +4,7 @@ import {
   MasteryDomainSchema,
   EquipmentCategorySchema,
   RuleTextSchema,
+  SelectorSchema,
   SkillRefSchema,
 } from "./common";
 import { ConstraintSchema } from "./constraints";
@@ -294,6 +295,18 @@ export const SpecialCardSchema = z.object({
    * La quantité choisie est stockée dans `ProfileInstance.specialCardCounts`.
    */
   perLevelStack: z.boolean().optional(),
+  /**
+   * `true` : carte à portée **Ost** — sélectionnée au niveau de la liste (pas d'une figurine), ses effets
+   * (portée `ost`) s'appliquent à toute la bande. `scope` sert alors de **disponibilité** (la carte n'est
+   * proposée que si la liste contient une figurine correspondante, ex. Myriam). Stockée dans `list.ost.cardIds`.
+   */
+  ostScope: z.boolean().optional(),
+  /**
+   * Condition d'activation d'une carte d'Ost (composition), évaluée sur toute la liste : la carte peut
+   * être sélectionnée mais reste **invalide → erreur** tant que la condition n'est pas remplie
+   * (ex. « ≥ 4 personnages parmi … »). Ses effets ne s'appliquent que si la condition est satisfaite.
+   */
+  activationCondition: z.union([SelectorSchema, z.array(SelectorSchema)]).optional(),
   rulesText: z.array(RuleTextSchema),
   constraints: z.array(ConstraintSchema),
   effects: z.array(EffectSchema),

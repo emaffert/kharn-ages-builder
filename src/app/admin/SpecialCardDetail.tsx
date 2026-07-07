@@ -16,6 +16,13 @@ export function SpecialCardDetail({
   onRemove: () => void;
 }) {
   const scope = card.scope;
+  const cond = Array.isArray(card.activationCondition)
+    ? card.activationCondition[0]
+    : card.activationCondition;
+  const setCond = (next: { profileIds?: string[]; countAtLeast?: number }) => {
+    const clean = Object.fromEntries(Object.entries(next).filter(([, v]) => v != null && (!Array.isArray(v) || v.length)));
+    onChange({ activationCondition: Object.keys(clean).length ? clean : undefined });
+  };
   return (
     <div className="space-y-5">
       <header className="flex items-center gap-3">
@@ -74,6 +81,43 @@ export function SpecialCardDetail({
         </>
       )}
       <GrantsCastingEditor value={card.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
+
+      <label className="flex items-center gap-2 text-sm adm-muted">
+        <input
+          type="checkbox"
+          checked={card.ostScope ?? false}
+          onChange={(e) => onChange({ ostScope: e.target.checked || undefined })}
+        />
+        Carte à portée Ost (sélectionnée au niveau de la liste)
+        <span className="text-xs adm-faint">
+          (la « Portée » ci-dessous sert alors de disponibilité — ex. Myriam présente)
+        </span>
+      </label>
+
+      {card.ostScope && (
+        <Section title="Condition d'activation (composition de l'Ost) — erreur si non remplie">
+          <div className="space-y-2">
+            <ProfileMultiSelect
+              label="parmi les profils"
+              ids={cond?.profileIds ?? []}
+              cat={cat}
+              onChange={(v) => setCond({ ...cond, profileIds: v.length ? v : undefined })}
+            />
+            <label className="flex items-center gap-2 text-xs adm-faint">
+              au moins
+              <input
+                type="number"
+                value={cond?.countAtLeast ?? ""}
+                onChange={(e) =>
+                  setCond({ ...cond, countAtLeast: e.target.value === "" ? undefined : Number(e.target.value) })
+                }
+                className={`${INPUT} w-16`}
+              />
+              figurine(s) présente(s)
+            </label>
+          </div>
+        </Section>
+      )}
 
       <Section title="Portée (à qui s'applique la carte)">
         <div className="space-y-2">

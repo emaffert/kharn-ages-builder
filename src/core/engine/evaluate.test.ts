@@ -335,6 +335,35 @@ describe("cartes spéciales payantes", () => {
   });
 });
 
+describe("carte à portée Ost (Pacte du Secret)", () => {
+  const withOst = (members: ProfileInstance[], cardIds: string[]) => ({
+    ...makeList(members, "kharns", "bataille"),
+    ost: { cardIds },
+  });
+  const has = (res: ReturnType<typeof evaluateList>, ruleId: string) =>
+    res.issues.some((i) => i.ruleId === ruleId);
+
+  it("active la carte et octroie « Rusé » à tout l'Ost quand ≥4 personnages requis sont présents", () => {
+    const myriam = inst("kharns-myriam");
+    const members = [myriam, inst("kharns-syrga"), inst("kharns-engueran"), inst("kharns-prince")];
+    const res = evaluateList(catalog, withOst(members, ["pacte-du-secret"]));
+    expect(has(res, "ost-card:pacte-du-secret")).toBe(false);
+    expect(res.grantedSkills[myriam.instanceId]?.some((s) => s.skillId === "rusee")).toBe(true);
+  });
+
+  it("erreur si la carte est sélectionnée mais la composition n'est pas remplie (< 4)", () => {
+    const members = [inst("kharns-myriam"), inst("kharns-syrga")];
+    const res = evaluateList(catalog, withOst(members, ["pacte-du-secret"]));
+    expect(has(res, "ost-card:pacte-du-secret")).toBe(true);
+  });
+
+  it("erreur d'indisponibilité si la figurine-source (Myriam) est absente", () => {
+    const members = [inst("kharns-syrga"), inst("kharns-engueran"), inst("kharns-prince")];
+    const res = evaluateList(catalog, withOst(members, ["pacte-du-secret"]));
+    expect(has(res, "ost-card-unavailable:pacte-du-secret")).toBe(true);
+  });
+});
+
 describe("amélioration d'équipement octroyée (unlock-upgrade)", () => {
   it("empoisonner une arme CaC de Key ajoute 10 Ko et l'octroi est exposé", () => {
     const plain = inst("kharns-key", { addedEquipmentIds: ["couteau"] });

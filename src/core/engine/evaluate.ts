@@ -119,6 +119,7 @@ function indexCatalog(cat: Catalog): CatalogIndex {
  */
 function instanceMatchesIdentity(sel: Selector, ri: ResolvedInstance): boolean {
   let any = false;
+  if (sel.all) any = true; // « toutes les figurines de la portée » (d'autres dimensions restreignent encore)
   if (sel.profileIds?.length) {
     any = true;
     if (!sel.profileIds.includes(ri.profile.id)) return false;
@@ -259,6 +260,72 @@ function specialCardScopeMatches(card: SpecialCard, ri: ResolvedInstance): boole
   if (card.scope.factionIds && ri.profile.factionId && card.scope.factionIds.includes(ri.profile.factionId))
     return true;
   return false;
+}
+
+// ── Cartes à portée Ost (sélectionnées au niveau de la liste) ────────────────
+
+/** Une carte d'Ost est-elle *disponible* ? = la liste contient une figurine correspondant à sa portée. */
+function ostCardAvailable(card: SpecialCard, resolved: ResolvedInstance[]): boolean {
+  return resolved.some((ri) => specialCardScopeMatches(card, ri));
+}
+
+/** Une carte d'Ost est-elle *active* ? = disponible ET sa condition de composition tient sur toute la liste. */
+function ostCardActive(card: SpecialCard, resolved: ResolvedInstance[]): boolean {
+  const anyFdl = resolved[0]?.ferDeLanceId ?? "";
+  return ostCardAvailable(card, resolved) && conditionHolds(card.activationCondition, "ost", anyFdl, resolved);
+}
+
+/** Effets des cartes d'Ost sélectionnées ET actives (portée « ost » → toute la bande). */
+function ostCardOccurrences(
+  list: ListDocument,
+  cat: Catalog,
+  resolved: ResolvedInstance[],
+  includeInGame: boolean,
+): EffectOccurrence[] {
+  const out: EffectOccurrence[] = [];
+  const anyFdl = resolved[0]?.ferDeLanceId ?? list.fersDeLance[0]?.id ?? "";
+  for (const id of list.ost?.cardIds ?? []) {
+    const card = cat.specialCards.find((c) => c.id === id);
+    if (!card?.ostScope || !ostCardActive(card, resolved)) continue;
+    for (const effect of card.effects) {
+      if (!includeInGame && !effect.appliesToListBuilding) continue;
+      out.push({ effect, ferDeLanceId: anyFdl, sourceCount: 1 });
+    }
+  }
+  return out;
+}
+
+/** Coût des cartes d'Ost sélectionnées (facturé dès la sélection, même si la condition n'est pas remplie). */
+function ostCardsCost(list: ListDocument, cat: Catalog): number {
+  let sum = 0;
+  for (const id of list.ost?.cardIds ?? []) {
+    const card = cat.specialCards.find((c) => c.id === id);
+    if (card?.ostScope) sum += card.cost;
+  }
+  return sum;
+}
+
+/** Erreur si une carte d'Ost est sélectionnée mais indisponible (source absente) ou non remplie. */
+function validateOstCards(cat: Catalog, list: ListDocument, resolved: ResolvedInstance[], issues: Issue[]): void {
+  for (const id of list.ost?.cardIds ?? []) {
+    const card = cat.specialCards.find((c) => c.id === id);
+    if (!card?.ostScope) continue;
+    if (!ostCardAvailable(card, resolved)) {
+      issues.push({
+        severity: "error",
+        ruleId: `ost-card-unavailable:${id}`,
+        message: `« ${card.name} » : la figurine requise pour cette carte d'Ost n'est pas dans la liste.`,
+        sourceText: card.rulesText[0]?.text ?? "",
+      });
+    } else if (!conditionHolds(card.activationCondition, "ost", resolved[0]?.ferDeLanceId ?? "", resolved)) {
+      issues.push({
+        severity: "error",
+        ruleId: `ost-card:${id}`,
+        message: `« ${card.name} » : condition de composition de l'Ost non remplie.`,
+        sourceText: card.rulesText[0]?.text ?? "",
+      });
+    }
+  }
 }
 
 /** Applique les octrois (grant-trait / grant-skill) jusqu'à atteindre un point fixe. */
@@ -435,6 +502,7 @@ function validate(
   validateAttachments(cat, list, resolved, issues);
   validateSpecialCardScope(idx, resolved, issues);
   validateMagicAndSlots(cat, resolved, issues);
+  validateOstCards(cat, list, resolved, issues);
 
   return issues;
 }
@@ -929,7 +997,10 @@ function upgradeCost(ri: ResolvedInstance, granted: Map<string, GrantedUpgrade>,
 export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult {
   const idx = indexCatalog(cat);
   const resolved = buildResolved(list, idx);
-  const occurrences = collectEffectOccurrences(resolved, cat, idx);
+  const occurrences = [
+    ...collectEffectOccurrences(resolved, cat, idx),
+    ...ostCardOccurrences(list, cat, resolved, false),
+  ];
 
   applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe (construction)
   const cost = computeCosts(resolved, occurrences, idx, cat); // 4 : coûts
@@ -943,7 +1014,10 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
 
   // Affichage : tous les effets d'octroi / de statistique, y compris « en jeu », sur des clones.
   const display = cloneForDisplay(resolved);
-  const displayOcc = collectEffectOccurrences(display, cat, idx, true);
+  const displayOcc = [
+    ...collectEffectOccurrences(display, cat, idx, true),
+    ...ostCardOccurrences(list, cat, display, true),
+  ];
   applyGrants(display, displayOcc);
   const statDeltasByInstance = computeStatDeltas(display, displayOcc);
   const skillValuesByInstance = computeSkillValues(display, displayOcc);
@@ -978,7 +1052,8 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     const sv = skillValuesByInstance.get(id);
     if (sv && sv.size > 0) skillValues[id] = Object.fromEntries(sv);
   }
-  const totalCost = Object.values(costByInstance).reduce((s, c) => s + c, 0);
+  const totalCost =
+    Object.values(costByInstance).reduce((s, c) => s + c, 0) + ostCardsCost(list, cat);
 
   return {
     totalCost,

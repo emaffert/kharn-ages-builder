@@ -5730,6 +5730,10 @@
       ],
       "rules": [
         {
+          "label": "Convaincre / négocier",
+          "text": "pas d'EC."
+        },
+        {
           "label": "Bourse bien remplie",
           "text": ""
         },
@@ -5739,10 +5743,6 @@
         },
         {
           "text": "Peut dépenser 1 PA pour quitter un CàC sans attaquer ou défendre."
-        },
-        {
-          "label": "Convaincre / négocier",
-          "text": "pas d'EC."
         },
         {
           "text": "Ne peut manier d'arme de tir ou à 2 mains."
@@ -7388,6 +7388,17 @@
           "kharns-myriam"
         ]
       },
+      "ostScope": true,
+      "activationCondition": {
+        "profileIds": [
+          "kharns-myriam",
+          "kharns-syrga",
+          "kharns-engueran",
+          "kharns-prince",
+          "kharns-martha"
+        ],
+        "countAtLeast": 4
+      },
       "rulesText": [
         {
           "text": "Au moins 4 personnages parmi Myriam, Martha, Syrga, Engueran et le prince Baudry doivent faire partie de votre Ost."
@@ -7397,7 +7408,26 @@
         }
       ],
       "constraints": [],
-      "effects": [],
+      "effects": [
+        {
+          "id": "pacte-secret-ruse",
+          "source": {
+            "kind": "special-card",
+            "id": "pacte-du-secret"
+          },
+          "scope": "ost",
+          "target": {
+            "all": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "rusee"
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "Toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé ».",
+          "autoEnforced": true
+        }
+      ],
       "cardImage": "cards/Kharns/kharns-myriam.jpg"
     }
   ],

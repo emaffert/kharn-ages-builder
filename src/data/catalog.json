@@ -5516,7 +5516,7 @@
             }
           },
           "appliesToListBuilding": true,
-          "sourceText": "",
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         },
         {
@@ -5539,7 +5539,7 @@
             }
           },
           "appliesToListBuilding": true,
-          "sourceText": "",
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         }
       ],
@@ -7215,7 +7215,7 @@
       "amelioration": true,
       "rulesText": [
         {
-          "text": "Protection -1 / 7 / -3."
+          "text": "Protection -1 / 7 / -3  durabilité 8"
         },
         {
           "text": "Ignore les EC."

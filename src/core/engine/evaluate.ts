@@ -1106,7 +1106,12 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
       }
     }
     const sd = statDeltasByInstance.get(id);
-    if (sd && sd.size > 0) statDeltas[id] = Object.fromEntries(sd);
+    if (sd && sd.size > 0) {
+      // Un delta nul (ex. `stat-max` dont le max du groupe n'excède pas la base) n'est pas une
+      // modification visible : on ne l'expose pas, pour ne pas colorer la stat comme « modifiée ».
+      const nonZero = Object.fromEntries([...sd].filter(([, v]) => v !== 0));
+      if (Object.keys(nonZero).length > 0) statDeltas[id] = nonZero;
+    }
     const sv = skillValuesByInstance.get(id);
     if (sv && sv.size > 0) skillValues[id] = Object.fromEntries(sv);
     const src = sourcesByInstance.get(id);

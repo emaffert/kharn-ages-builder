@@ -373,6 +373,15 @@ describe("carte à portée Ost (Pacte du Secret)", () => {
   });
 });
 
+describe("stat-max (Doctrine de l'Ordre)", () => {
+  it("n'affiche pas de modification quand le max du groupe n'excède pas la base (Maître seul)", () => {
+    const maitre = inst("kharns-maitre-ordre");
+    const res = evaluateList(catalog, makeList([maitre], "kharns", "bataille"));
+    expect(res.statDeltas[maitre.instanceId]?.t).toBeUndefined();
+    expect(res.statDeltas[maitre.instanceId]?.i).toBeUndefined();
+  });
+});
+
 describe("amélioration d'équipement octroyée (unlock-upgrade)", () => {
   it("empoisonner une arme CaC de Key ajoute 10 Ko et l'octroi est exposé", () => {
     const plain = inst("kharns-key", { addedEquipmentIds: ["couteau"] });

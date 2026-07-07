@@ -176,22 +176,22 @@ export function ProfileStatCard({
             {statCell("pv", "PV", p.pv)}
             {statCell("stature", "Stature", p.stature)}
           </div>
-          {p.armor && (
-            <div
-              className="fe-armor"
-              title="Armure — protection en cas d'échec / seuil / protection en cas de réussite"
-            >
-              <span className="fe-armor-lab">🛡 Armure</span>
-              <span className="fe-armor-vals">
-                {fmtArmor(p.armor.protectionEchec)} <i>/</i> {p.armor.seuil ?? "—"}{" "}
-                <i>/</i> {fmtArmor(p.armor.protectionReussite)}
-              </span>
-              {p.armor.durability != null && (
-                <span className="fe-armor-dur">durabilité {p.armor.durability}</span>
-              )}
-            </div>
-          )}
         </div>
+        {p.armor && (
+          <div
+            className="fe-armor"
+            title="Armure — protection en cas d'échec / seuil / protection en cas de réussite"
+          >
+            <span className="fe-armor-lab">🛡 Armure</span>
+            <span className="fe-armor-vals">
+              {fmtArmor(p.armor.protectionEchec)} <i>/</i> {p.armor.seuil ?? "—"}{" "}
+              <i>/</i> {fmtArmor(p.armor.protectionReussite)}
+            </span>
+            {p.armor.durability != null && (
+              <span className="fe-armor-dur">durabilité {p.armor.durability}</span>
+            )}
+          </div>
+        )}
         <div className="fe-skills">
           {skillOrder.map((id) => {
             const a = skillAgg.get(id)!;

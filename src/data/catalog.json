@@ -7215,8 +7215,7 @@
       "amelioration": true,
       "rulesText": [
         {
-          "label": "Armure",
-          "text": "Protection -1 / seuil 7 / -3."
+          "text": "Protection -1 / 7 / -3."
         },
         {
           "text": "Ignore les EC."

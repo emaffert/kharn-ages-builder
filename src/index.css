@@ -673,13 +673,13 @@ body {
   border-radius: 7px; font-size: 13.5px; }
 .fe-stat .k { color: var(--bone-faint); font-size: 12px; }
 .fe-stat .v { font-weight: 700; color: var(--bone); font-variant-numeric: tabular-nums; }
-/* Armure : échec / seuil / réussite (+ durabilité). */
-.fe-armor { display: inline-flex; align-items: baseline; gap: 8px; width: 100%; background: var(--tint-1);
-  padding: 5px 10px; border-radius: 7px; font-size: 13px; }
+/* Armure : échec / seuil / réussite (+ durabilité). Largeur de contenu, sur sa propre ligne. */
+.fe-armor { display: inline-flex; align-items: baseline; gap: 8px; width: fit-content; max-width: 100%;
+  background: var(--tint-1); padding: 5px 10px; border-radius: 7px; font-size: 13px; margin-top: 8px; }
 .fe-armor-lab { color: var(--bone-dim); font-weight: 600; }
 .fe-armor-vals { font-weight: 700; color: var(--bone); font-variant-numeric: tabular-nums; }
 .fe-armor-vals i { color: var(--bone-faint); font-style: normal; font-weight: 400; }
-.fe-armor-dur { color: var(--bone-faint); font-size: 12px; margin-left: auto; }
+.fe-armor-dur { color: var(--bone-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* Étiquette de bloc dans la carte (maîtrise, équipement). */
 .fe-block-label { display: block; margin: 20px 0 6px; font-family: "Cinzel", serif; font-size: 11px;

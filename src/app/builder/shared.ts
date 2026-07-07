@@ -45,7 +45,7 @@ export const FACTIONS: {
   { id: "kherops", name: "Khérops", accent: "#7a5a2b", deep: "#40300f", blurb: "Les soldats de l'Empereur des steppes et de ses fils.", color: "#9a6b2a", colorBright: "#d0a24a", colorDeep: "#40300f", emblem: "kherops" },
   { id: "tembos", name: "Tembos", accent: "#2f6a60", deep: "#123a34", blurb: "Anciens maîtres de Safar, retirés dans la forêt d'Euthéria.", color: "#2f7168", colorBright: "#5fa89c", colorDeep: "#123a34", emblem: "tembos" },
   { id: "guilde-noire", name: "Guilde Noire", accent: "#2f2a26", deep: "#141210", blurb: "Les renégats ayant choisi d'adhérer aux préceptes de la guilde.", color: "#736784", colorBright: "#a99bbd", colorDeep: "#241f2d", emblem: "guilde" },
-  { id: "affranchis", name: "Affranchis", accent: "#4a463f", deep: "#201d18", blurb: "Sans maison : recrute parmi toutes les factions.", color: "#54504a", colorBright: "#8a8278", colorDeep: "#2a2723", emblem: "affranchis", transverse: true },
+  { id: "affranchis", name: "Affranchis", accent: "#4a463f", deep: "#201d18", blurb: "Rassemblement de la plupart des peuples de Safar qui, fuyant la guerre, se sont trouvé une raison commune de s'unir.", color: "#54504a", colorBright: "#8a8278", colorDeep: "#2a2723", emblem: "affranchis", transverse: true },
 ];
 
 /** Porteur d'un profil dépendant, extrait de ses contraintes (attachment ou requires-present). */

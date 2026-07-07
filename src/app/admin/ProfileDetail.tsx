@@ -172,7 +172,6 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
               className={`${INPUT} w-28`}
             />
           </label>
-          <LimitationEditor limitation={profile.limitation} onChange={(l) => patch({ limitation: l })} />
           <label className="flex items-center gap-1 text-xs adm-muted">
             <input
               type="checkbox"
@@ -195,6 +194,14 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
             />
             Mage
           </label>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-xs adm-faint">Limitation</span>
+          <LimitationEditor
+            limitation={profile.limitation}
+            models={cat.models}
+            onChange={(l) => patch({ limitation: l })}
+          />
         </div>
       </header>
 

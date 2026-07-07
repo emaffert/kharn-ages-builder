@@ -1,12 +1,11 @@
 /**
  * Dérivations magie/équipement d'une figurine (fonctions pures, sans UI).
  * Servent au calcul de capacité de pages, aux voies lançables, aux sorts disponibles
- * et à la validation des emplacements (mains/armure) — cf. docs/regles-creation-liste.md.
+ * et à la validation de l'emplacement d'armure — cf. docs/regles-creation-liste.md.
+ * La limitation de mains ne s'applique qu'en jeu : elle n'est pas validée au recrutement.
  */
 import type { Catalog, Profile, SpecialCard, Spell } from "../model";
 import type { ProfileInstance } from "../model";
-
-const HAND_CAP = 2;
 
 /** Équipement effectivement porté : équipement de base non retiré + équipement acheté. */
 export function wornEquipmentIds(profile: Profile, inst: ProfileInstance): string[] {
@@ -103,19 +102,6 @@ export function castableSpells(
     }
     return true;
   });
-}
-
-/** Plafond de mains ; la compétence « Hors-norme » le lève. */
-export function handCapacity(profile: Profile): number {
-  return profile.skills.some((s) => s.skillId === "hors-norme") ? Infinity : HAND_CAP;
-}
-
-/** Mains occupées par l'équipement porté. */
-export function handsUsed(cat: Catalog, profile: Profile, inst: ProfileInstance): number {
-  return wornEquipmentIds(profile, inst).reduce(
-    (n, id) => n + (cat.equipment.find((e) => e.id === id)?.hands ?? 0),
-    0,
-  );
 }
 
 /** Nombre d'armures portées (pour le plafond d'une seule armure). */

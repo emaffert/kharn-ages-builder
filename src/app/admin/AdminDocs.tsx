@@ -102,11 +102,6 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
               <strong><code>equipment-reserved</code></strong> — interdit à la figurine d'acquérir certains
               grimoires. <em>Champ :</em> <strong>grimoires interdits</strong> (petit / grand).
             </li>
-            <li>
-              <strong><code>consumes-slot</code></strong> — un personnage (LIM P) occupe l'emplacement d'un couple
-              (modèle, niveau) : les combattants de ce profil générique <em>plus</em> les personnages occupant son
-              créneau ne peuvent dépasser sa limitation (ex. Engueran prend une place de Paladin III). <em>Champs :</em>{" "}
-              <strong>modèle</strong>, <strong>niveau</strong>.            </li>
           </ul>
 
           <p><strong>Types à saisir en JSON</strong> (champ « params (JSON) ») :</p>
@@ -129,10 +124,10 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
           <p>
             <strong>Bon à savoir.</strong> « <strong>Allié des X</strong> » n'est <em>pas</em> automatique : il faut
             une contrainte <code>faction-membership</code> listant la faction d'accueil (ou le trait{" "}
-            <code>apatride</code> pour « recrutable partout »). En revanche l'unicité d'un{" "}
+            <code>apatride</code> pour « recrutable partout »). L'unicité d'un{" "}
             <strong>personnage (LIM P)</strong> est automatique via le champ <strong>« Limitation » = P</strong> du
-            profil ; n'ajoutez une contrainte <code>consumes-slot</code> que s'il occupe <em>en plus</em> la place
-            d'un profil générique.
+            profil ; s'il occupe <em>en plus</em> la place d'un profil générique, renseignez{" "}
+            <strong>« occupe la place de »</strong> directement sur la limitation (modèle + niveau).
           </p>
 
           <H>Effets (Effect)</H>

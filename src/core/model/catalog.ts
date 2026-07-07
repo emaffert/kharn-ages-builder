@@ -138,8 +138,8 @@ export const EquipmentSchema = z.object({
   name: z.string(),
   category: EquipmentCategorySchema,
   cost: z.number(),
-  isFree: z.boolean().optional(),
-  hands: z.union([z.literal(1), z.literal(2)]).optional(),
+  /** Mains occupées (affichage seulement, pas de limite au recrutement). "1-2" = maniable à 1 ou 2 mains (bâtarde). */
+  hands: z.union([z.literal(1), z.literal(2), z.literal("1-2")]).optional(),
   allonge: z.number().optional(),
   range: z.object({ short: z.number(), long: z.number(), max: z.number().optional() }).optional(),
   reload: z.object({ cadence: z.number(), paCost: z.number() }).optional(),
@@ -148,9 +148,16 @@ export const EquipmentSchema = z.object({
    * ex. "fleches" pour un arc, "carreaux" pour une arbalète). Sa présence active l'achat de munitions.
    */
   munitionKind: z.string().optional(),
+  /** Quantité de munitions de base incluse (armes de tir). */
+  baseMunitions: z.number().optional(),
   /** L'objet confère la capacité de lancer des sorts dans ces voies (ex. focus/relique). */
   grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
+  /** Durée de vie (DV) — boucliers et armures. */
   durability: z.number().optional(),
+  /** Valeurs d'armure (équipement de catégorie « armure ») : cf. `Profile.armor`. */
+  protectionEchec: z.number().optional(),
+  seuil: z.number().optional(),
+  protectionReussite: z.number().optional(),
   perceArmure: z.union([z.number(), z.literal("1D5")]).optional(),
   effectsText: z.string(),
   /** Compétences conférées (ex. la Faucille d'Os confère « Riposte »). */

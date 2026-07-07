@@ -32,6 +32,7 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
   if (sel.traits?.length) parts.push(`les figurines « ${sel.traits.join(", ")} »`);
   if (sel.factionIds?.length) parts.push(`factions ${sel.factionIds.join(", ")}`);
   if (sel.levels?.length) parts.push(`niveau ${sel.levels.join("/")}`);
+  if (sel.isLeader != null) parts.push(sel.isLeader ? "le meneur" : "les non-meneurs");
   if (sel.equipmentCategories?.length) {
     parts.push(`équipement ${sel.equipmentCategories.join(", ")}`);
   }
@@ -67,10 +68,6 @@ export function describeConstraint(c: Constraint, cat: Catalog): string {
       const f = (c.params as { allowedFactions?: string[] }).allowedFactions ?? [];
       return `Recrutable dans les factions : ${f.join(", ")}.`;
     }
-    case "consumes-slot": {
-      const p = c.params as { modelId?: string; level?: number };
-      return `Occupe un emplacement de « ${p.modelId} » niveau ${p.level}.`;
-    }
     case "count-relative":
     case "mount-eligibility":
     case "pact-composition":
@@ -94,7 +91,7 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Coût fixé à ${op.amount} Ko pour ${tgt}${op.maxCount ? ` (1 par source, max ${op.maxCount})` : ""}`;
       break;
     case "unlock-upgrade":
-      base = `Débloque l'amélioration « ${op.upgradeId} » (+${op.perItemCost} Ko/objet) pour ${tgt}`;
+      base = `Débloque l'amélioration « ${op.label} » (+${op.cost} Ko/objet, sur ${op.equipmentCategories.join(", ")}) pour ${tgt}`;
       break;
     case "grant-skill":
       base = `Octroie la compétence « ${skillName(cat, op.skillId)}${op.value != null ? ` ${op.value}` : ""} » à ${tgt}`;
@@ -112,6 +109,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     }
     case "stat-count":
       base = `${op.stat.toUpperCase()} de ${tgt} = nombre de ${describeSelector(op.of, cat)}${op.atLeastBase ? " (minimum : valeur de base)" : ""}`;
+      break;
+    case "stat-max":
+      base = `${op.stat.toUpperCase()} de ${tgt} = la plus forte valeur de ${op.stat.toUpperCase()} parmi ${describeSelector(op.of, cat)}`;
       break;
     case "skill-count": {
       const per = op.per && op.per > 1 ? ` par groupe de ${op.per}` : "";
@@ -149,13 +149,23 @@ export function explainTraitUsage(trait: string, cat: Catalog): string[] {
     if (c.type === "equipment-reserved" && p.trait === trait) return true;
     return false;
   };
+  // Un effet référence le trait via sa cible, sa condition, le `of` de son opération
+  // (stat-count / stat-max / skill-count) ou la désignation garde du corps.
+  const effectUses = (e: Effect): boolean => {
+    if (selUses(e.target) || selUses(e.condition) || selUses(e.designation?.of)) return true;
+    const op = e.operation;
+    if ((op.kind === "stat-count" || op.kind === "stat-max" || op.kind === "skill-count") && selUses(op.of)) {
+      return true;
+    }
+    return false;
+  };
 
   for (const p of cat.profiles) {
     for (const c of p.recruitment) {
       if (constraintUses(c)) out.push(`« ${p.name} » — ${describeConstraint(c, cat)}`);
     }
     for (const e of p.effects ?? []) {
-      if (selUses(e.target) || selUses(e.condition)) out.push(`« ${p.name} » — ${describeEffect(e, cat)}`);
+      if (effectUses(e)) out.push(`« ${p.name} » — ${describeEffect(e, cat)}`);
     }
   }
   for (const card of cat.specialCards) {
@@ -164,7 +174,7 @@ export function explainTraitUsage(trait: string, cat: Catalog): string[] {
       if (constraintUses(c)) out.push(`carte « ${card.name} » — ${describeConstraint(c, cat)}`);
     }
     for (const e of card.effects) {
-      if (selUses(e.target) || selUses(e.condition)) {
+      if (effectUses(e)) {
         out.push(`carte « ${card.name} » — ${describeEffect(e, cat)}`);
       }
     }

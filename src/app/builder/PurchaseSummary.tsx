@@ -41,7 +41,7 @@ export function PurchaseSummary({
       const munCost = munLines.reduce((n, l) => n + l.price, 0);
       const base = equipInfo(e);
       if (munCost === 0) return chip(e.name, base);
-      const weaponCost = e.isFree || e.cost === 0 ? 0 : e.cost;
+      const weaponCost = e.cost;
       return chip(e.name, {
         ...base,
         price: `${weaponCost + munCost} Ko`,

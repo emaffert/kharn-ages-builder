@@ -30,6 +30,12 @@ export const ProfileInstanceSchema = z.object({
    * Présent uniquement pour ces cartes ; l'appartenance reste dans `specialCardIds` (quantité ≥ 1).
    */
   specialCardCounts: z.record(z.string(), z.number()).optional(),
+  /**
+   * Améliorations d'équipement achetées (opt-in par objet, ex. arme empoisonnée, armure « Borax ») :
+   * `equipmentId → upgradeIds`. Le surcoût et les catégories éligibles viennent de l'effet `unlock-upgrade`
+   * qui octroie l'amélioration.
+   */
+  equipmentUpgrades: z.record(z.string(), z.array(z.string())).optional(),
   note: z.string().optional(),
 });
 export type ProfileInstance = z.infer<typeof ProfileInstanceSchema>;

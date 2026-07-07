@@ -241,6 +241,21 @@ export function canBuy(p: Profile, cat: Catalog): boolean {
   return PURCHASE_CATS.some((c) => !forbidden.has(c));
 }
 
+/**
+ * Une figurine est-elle recrutable dans un Fer de Lance de faction `factionId` ?
+ * Même logique que le moteur (`validateFactionMembership`) : même faction, sans logo,
+ * trait `apatride`, ou contrainte `faction-membership` listant la faction d'accueil (« Allié des X »).
+ */
+export function isRecruitableIn(p: Profile, factionId: string): boolean {
+  if (!p.factionId || p.factionId === factionId) return true;
+  if (p.traits.includes("apatride")) return true;
+  return (p.recruitment ?? []).some(
+    (c) =>
+      c.type === "faction-membership" &&
+      ((c.params as { allowedFactions?: string[] }).allowedFactions ?? []).includes(factionId),
+  );
+}
+
 /** Une figurine correspond-elle à la réservation d'un équipement ? (toutes les dimensions fournies). */
 export function equipReservedOk(e: Catalog["equipment"][number], p: Profile): boolean {
   const r = e.reservedTo;
@@ -303,10 +318,11 @@ export function equipBits(e: Catalog["equipment"][number]): string {
   const bits: string[] = [];
   if (e.category === "arme-cac") bits.push("CaC");
   if (e.category === "arme-tir") bits.push("Tir");
-  if (e.hands) bits.push(`${e.hands}m`);
+  if (e.hands) bits.push(e.hands === "1-2" ? "1/2 m" : `${e.hands} m`);
   if (e.allonge != null) bits.push(`All.${e.allonge}`);
   if (e.range) bits.push(`Port.${e.range.short}/${e.range.long}`);
-  if (e.durability != null) bits.push(`Sol.${e.durability}`);
+  if (e.seuil != null) bits.push(`Arm.${e.protectionEchec ?? "—"}/${e.seuil}/${e.protectionReussite ?? "—"}`);
+  if (e.durability != null) bits.push(`DV ${e.durability}`);
   if (e.perceArmure != null) bits.push(`PA ${e.perceArmure}`);
   return bits.join(" · ");
 }
@@ -315,7 +331,7 @@ export function equipBits(e: Catalog["equipment"][number]): string {
 export function equipInfo(e: Catalog["equipment"][number]): ItemInfo {
   return {
     title: e.name,
-    price: e.isFree || e.cost === 0 ? "gratuit" : `${e.cost} Ko`,
+    price: e.cost === 0 ? "gratuit" : `${e.cost} Ko`,
     lines: [equipBits(e), e.effectsText].filter(Boolean),
   };
 }

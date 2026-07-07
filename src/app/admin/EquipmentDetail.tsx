@@ -15,15 +15,41 @@ export function EquipmentDetail({
   onRemove: () => void;
 }) {
   const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
+  const isCac = e.category === "arme-cac";
+  const isTir = e.category === "arme-tir";
+  const isBouclier = e.category === "bouclier";
+  const isArmure = e.category === "armure";
+  const isObjet = e.category === "objet";
+  const num = (label: string, value: number | undefined, key: keyof Equipment, w = "w-16") => (
+    <label className="flex items-center gap-1">
+      {label}
+      <input
+        type="number"
+        value={value ?? ""}
+        onChange={(ev) => onChange({ [key]: numOrUndef(ev.target.value) } as Partial<Equipment>)}
+        className={`${INPUT} ${w}`}
+      />
+    </label>
+  );
+  const perceArmureField = (
+    <label className="flex items-center gap-1">
+      perce-armure
+      <input
+        value={e.perceArmure == null ? "" : String(e.perceArmure)}
+        placeholder='nb ou "1D5"'
+        onChange={(ev) => {
+          const v = ev.target.value.trim();
+          onChange({ perceArmure: v === "" ? undefined : v === "1D5" ? "1D5" : Number(v) });
+        }}
+        className={`${INPUT} w-24`}
+      />
+    </label>
+  );
 
   return (
     <div className="space-y-5">
       <header className="flex items-center gap-3">
-        <input
-          value={e.name}
-          onChange={(ev) => onChange({ name: ev.target.value })}
-          className="adm-title flex-1"
-        />
+        <input value={e.name} onChange={(ev) => onChange({ name: ev.target.value })} className="adm-title flex-1" />
         <label className="flex items-center gap-1 adm-accent">
           <input
             type="number"
@@ -33,16 +59,12 @@ export function EquipmentDetail({
           />
           <span className="text-sm">Ko</span>
         </label>
-        <button
-          type="button"
-          onClick={onRemove}
-          title="Supprimer cet équipement"
-          className="adm-x"
-        >
+        <button type="button" onClick={onRemove} title="Supprimer cet équipement" className="adm-x">
           ✕
         </button>
       </header>
 
+      {/* Type + champs propres à ce type (on n'affiche que le nécessaire). */}
       <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
         <label className="flex items-center gap-1">
           catégorie
@@ -58,87 +80,47 @@ export function EquipmentDetail({
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-1">
-          mains
-          <select
-            value={e.hands ?? ""}
-            onChange={(ev) =>
-              onChange({ hands: ev.target.value === "" ? undefined : (Number(ev.target.value) as 1 | 2) })
-            }
-            className={INPUT}
-          >
-            <option value="">—</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={e.isFree ?? false}
-            onChange={(ev) => onChange({ isFree: ev.target.checked || undefined })}
-          />
-          arme gratuite
-        </label>
-        <label className="flex items-center gap-1">
-          allonge
-          <input
-            type="number"
-            value={e.allonge ?? ""}
-            onChange={(ev) => onChange({ allonge: numOrUndef(ev.target.value) })}
-            className={`${INPUT} w-16`}
-          />
-        </label>
-        <label className="flex items-center gap-1">
-          durabilité
-          <input
-            type="number"
-            value={e.durability ?? ""}
-            onChange={(ev) => onChange({ durability: numOrUndef(ev.target.value) })}
-            className={`${INPUT} w-16`}
-          />
-        </label>
+
+        {isBouclier && <span className="adm-faint">Occupe 1 main.</span>}
       </div>
 
-      <Section title="Effets (verbatim — fait foi)">
-        <textarea
-          value={e.effectsText}
-          rows={2}
-          onChange={(ev) => onChange({ effectsText: ev.target.value })}
-          className={`${INPUT} w-full`}
-        />
-      </Section>
+      {/* Armes de corps à corps : mains, allonge, perce-armure. */}
+      {isCac && (
+        <Section title="Corps à corps (mains, allonge, perce-armure)">
+          <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
+            <label className="flex items-center gap-1">
+              mains
+              <select
+                value={e.hands ?? ""}
+                onChange={(ev) => {
+                  const v = ev.target.value;
+                  onChange({ hands: v === "" ? undefined : v === "1-2" ? "1-2" : (Number(v) as 1 | 2) });
+                }}
+                className={INPUT}
+              >
+                <option value="">—</option>
+                <option value="1">1 main</option>
+                <option value="2">2 mains</option>
+                <option value="1-2">1 ou 2 mains</option>
+              </select>
+            </label>
+            {num("allonge", e.allonge, "allonge")}
+            {perceArmureField}
+          </div>
+        </Section>
+      )}
 
-      <Section title="Compétences conférées">
-        <SkillsEditor
-          skills={e.grantsSkills ?? []}
-          cat={cat}
-          onChange={(s) => onChange({ grantsSkills: s.length ? s : undefined })}
-        />
-      </Section>
-
-      <Section title="Réservé à (qui peut l'équiper)">
-        <ReservedToEditor value={e.reservedTo} cat={cat} onChange={(v) => onChange({ reservedTo: v })} />
-      </Section>
-
-      <details>
-        <summary className="cursor-pointer text-xs adm-faint">
-          Champs avancés (portée, recharge, perce-armure, image)
-        </summary>
-        <div className="mt-2 space-y-2 text-xs adm-muted">
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Portée (tir) :</span>
+      {/* Armes de tir : portée, recharge, munitions. */}
+      {isTir && (
+        <Section title="Tir (portée, recharge, munitions)">
+          <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
+            <span>Portée</span>
             <input
               type="number"
               placeholder="courte"
               value={e.range?.short ?? ""}
               onChange={(ev) =>
-                onChange({
-                  range:
-                    ev.target.value === "" && e.range?.long == null
-                      ? undefined
-                      : { short: Number(ev.target.value || 0), long: e.range?.long ?? 0, max: e.range?.max },
-                })
+                onChange({ range: { short: Number(ev.target.value || 0), long: e.range?.long ?? 0, max: e.range?.max } })
               }
               className={`${INPUT} w-20`}
             />
@@ -147,9 +129,7 @@ export function EquipmentDetail({
               placeholder="longue"
               value={e.range?.long ?? ""}
               onChange={(ev) =>
-                onChange({
-                  range: { short: e.range?.short ?? 0, long: Number(ev.target.value || 0), max: e.range?.max },
-                })
+                onChange({ range: { short: e.range?.short ?? 0, long: Number(ev.target.value || 0), max: e.range?.max } })
               }
               className={`${INPUT} w-20`}
             />
@@ -158,20 +138,13 @@ export function EquipmentDetail({
               placeholder="max"
               value={e.range?.max ?? ""}
               onChange={(ev) =>
-                onChange({
-                  range: { short: e.range?.short ?? 0, long: e.range?.long ?? 0, max: numOrUndef(ev.target.value) },
-                })
+                onChange({ range: { short: e.range?.short ?? 0, long: e.range?.long ?? 0, max: numOrUndef(ev.target.value) } })
               }
               className={`${INPUT} w-20`}
             />
-            {e.range && (
-              <button type="button" onClick={() => onChange({ range: undefined })} className="adm-x">
-                ✕ portée
-              </button>
-            )}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Recharge :</span>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs adm-muted">
+            <span>Recharge</span>
             <input
               type="number"
               placeholder="cadence"
@@ -195,47 +168,81 @@ export function EquipmentDetail({
               }
               className={`${INPUT} w-20`}
             />
+            <label className="flex items-center gap-1">
+              munitions
+              <select
+                value={e.munitionKind ?? ""}
+                onChange={(ev) => onChange({ munitionKind: ev.target.value || undefined })}
+                className={INPUT}
+              >
+                <option value="">— aucune</option>
+                {(cat.munitionKinds ?? []).map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {num("munitions de base", e.baseMunitions, "baseMunitions", "w-16")}
+            {num("allonge", e.allonge, "allonge")}
+            {perceArmureField}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Munitions :</span>
-            <select
-              value={e.munitionKind ?? ""}
-              onChange={(ev) => onChange({ munitionKind: ev.target.value || undefined })}
-              className={INPUT}
-            >
-              <option value="">— aucune</option>
-              {(cat.munitionKinds ?? []).map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label}
-                </option>
-              ))}
-            </select>
-            <span className="text-xs adm-faint">(sorte de munition achetable, cf. table p.46)</span>
+        </Section>
+      )}
+
+      {/* Bouclier / Armure : durée de vie (DV) et, pour l'armure, ses valeurs. */}
+      {(isBouclier || isArmure) && (
+        <Section title={isArmure ? "Armure (protection échec / seuil / réussite · DV)" : "Bouclier (durée de vie)"}>
+          <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
+            {isArmure && (
+              <>
+                {num("prot. échec", e.protectionEchec, "protectionEchec")}
+                {num("seuil", e.seuil, "seuil")}
+                {num("prot. réussite", e.protectionReussite, "protectionReussite")}
+              </>
+            )}
+            {num("durée de vie (DV)", e.durability, "durability")}
           </div>
+        </Section>
+      )}
+
+      <Section title="Effets (verbatim — fait foi)">
+        <textarea
+          value={e.effectsText}
+          rows={2}
+          onChange={(ev) => onChange({ effectsText: ev.target.value })}
+          className={`${INPUT} w-full`}
+        />
+      </Section>
+
+      <Section title="Compétences conférées">
+        <SkillsEditor
+          skills={e.grantsSkills ?? []}
+          cat={cat}
+          onChange={(s) => onChange({ grantsSkills: s.length ? s : undefined })}
+        />
+      </Section>
+
+      {/* Lancement de sorts conféré : armes de corps à corps et objets (focus/relique). */}
+      {(isCac || isObjet) && (
+        <Section title="Lancement de sorts conféré">
           <GrantsCastingEditor value={e.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
-          <label className="flex items-center gap-2">
-            Perce-armure :
-            <input
-              value={e.perceArmure == null ? "" : String(e.perceArmure)}
-              placeholder='nombre ou "1D5"'
-              onChange={(ev) => {
-                const v = ev.target.value.trim();
-                onChange({ perceArmure: v === "" ? undefined : v === "1D5" ? "1D5" : Number(v) });
-              }}
-              className={`${INPUT} w-32`}
-            />
-          </label>
-          <label className="flex items-center gap-2">
-            Image :
-            <input
-              value={e.cardImage ?? ""}
-              placeholder="cards/..."
-              onChange={(ev) => onChange({ cardImage: ev.target.value || undefined })}
-              className={`${INPUT} w-full max-w-md`}
-            />
-          </label>
-        </div>
-      </details>
+        </Section>
+      )}
+
+      <Section title="Réservé à (qui peut l'équiper)">
+        <ReservedToEditor value={e.reservedTo} cat={cat} onChange={(v) => onChange({ reservedTo: v })} />
+      </Section>
+
+      <label className="flex items-center gap-2 text-xs adm-muted">
+        Image :
+        <input
+          value={e.cardImage ?? ""}
+          placeholder="cards/..."
+          onChange={(ev) => onChange({ cardImage: ev.target.value || undefined })}
+          className={`${INPUT} w-full max-w-md`}
+        />
+      </label>
     </div>
   );
 }

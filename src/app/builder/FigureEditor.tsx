@@ -102,6 +102,8 @@ export function FigureEditor({
   onGrimoire,
   onToggleSpell,
   onInfo,
+  equipmentUpgrades,
+  onToggleEquipmentUpgrade,
   mods,
 }: {
   profile: Profile;
@@ -122,6 +124,8 @@ export function FigureEditor({
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
+  equipmentUpgrades: Record<string, string[]>;
+  onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
   mods?: ProfileMods;
 }) {
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
@@ -173,6 +177,9 @@ export function FigureEditor({
           munitions={munitions}
           onMunTier={onMunTier}
           onInfo={onInfo}
+          grantedUpgrades={mods?.grantedUpgrades ?? []}
+          equipmentUpgrades={equipmentUpgrades}
+          onToggleEquipmentUpgrade={onToggleEquipmentUpgrade}
         />
       )}
       {active === "magie" && (
@@ -204,6 +211,9 @@ function EquipPanel({
   munitions,
   onMunTier,
   onInfo,
+  grantedUpgrades,
+  equipmentUpgrades,
+  onToggleEquipmentUpgrade,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -215,6 +225,9 @@ function EquipPanel({
   munitions: Record<string, Record<string, number>>;
   onMunTier: (equipId: string, typeId: string, tierIndex: number | null) => void;
   onInfo: (info: ItemInfo) => void;
+  grantedUpgrades: NonNullable<ProfileMods["grantedUpgrades"]>;
+  equipmentUpgrades: Record<string, string[]>;
+  onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [openMun, setOpenMun] = useState<Record<string, boolean>>({}); // blocs de munitions dépliés, par arme
@@ -223,14 +236,12 @@ function EquipPanel({
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
 
   const worn = [...activeBase, ...added].map(eq).filter((e): e is NonNullable<typeof e> => Boolean(e));
-  const handCap = p.skills.some((s) => s.skillId === "hors-norme") ? Infinity : 2;
-  const handsUsed = worn.reduce((n, e) => n + (e.hands ?? 0), 0);
+  // La limitation de mains ne s'applique qu'en jeu : on peut acheter autant d'armes que voulu.
   const armorCap = 1;
   const armorUsed = worn.filter((e) => e.category === "armure").length;
   const canWearArmor = !forbidden.has("armure");
 
   const blockReason = (e: Catalog["equipment"][number]): string | null => {
-    if (e.hands && handsUsed + e.hands > handCap) return "Plus assez de mains libres";
     if (e.category === "armure" && armorUsed >= armorCap) return "Emplacement d'armure déjà occupé";
     return null;
   };
@@ -283,6 +294,27 @@ function EquipPanel({
     .filter(([, v]) => v.length > 0);
 
   // Munitions achetables (règles p.46) : pour chaque type, choix d'un palier (Aucun / prix → quantité).
+  // Améliorations octroyées (opt-in par objet, ex. arme empoisonnée) applicables à cet équipement.
+  const upgradeRow = (e: Catalog["equipment"][number]) => {
+    const ups = grantedUpgrades.filter((g) => g.equipmentCategories.includes(e.category));
+    if (ups.length === 0) return null;
+    const active = equipmentUpgrades[e.id] ?? [];
+    return (
+      <div className="fe-upgrades">
+        {ups.map((g) => (
+          <label key={g.upgradeId} className="fe-upgrade">
+            <input
+              type="checkbox"
+              checked={active.includes(g.upgradeId)}
+              onChange={() => onToggleEquipmentUpgrade(e.id, g.upgradeId)}
+            />
+            <span>{g.label}</span>
+            <span className="fe-upgrade-cost">+{g.cost} Ko</span>
+          </label>
+        ))}
+      </div>
+    );
+  };
   const munitionRow = (e: Catalog["equipment"][number]) => {
     const kind = munitionKindForEquip(cat, e.id);
     if (!kind) return null;
@@ -337,20 +369,16 @@ function EquipPanel({
     );
   };
 
-  const equipWarning =
-    handsUsed > handCap
-      ? `Trop d'équipement à mains (${handsUsed} / ${handCap}).`
-      : armorUsed > armorCap
-        ? "Plusieurs armures équipées."
-        : null;
+  const equipWarning = armorUsed > armorCap ? "Plusieurs armures équipées." : null;
 
   return (
     <div className="fe-root">
       {equipWarning && <p className="fe-warn">⚠ {equipWarning}</p>}
-      <div className="flex flex-wrap items-center gap-2">
-        <SlotChip label="Mains" used={handsUsed} cap={handCap} />
-        {canWearArmor && <SlotChip label="Armure" used={armorUsed} cap={armorCap} />}
-      </div>
+      {canWearArmor && (
+        <div className="flex flex-wrap items-center gap-2">
+          <SlotChip label="Armure" used={armorUsed} cap={armorCap} />
+        </div>
+      )}
 
       <div className="fe-panes">
         {/* Volet équipé — à gauche (près de la fiche) ; l'équipement de base reste toujours en tête. */}
@@ -387,6 +415,7 @@ function EquipPanel({
                         </button>
                       </div>
                       {munitionRow(e)}
+                      {upgradeRow(e)}
                     </div>
                   ))}
                 </div>

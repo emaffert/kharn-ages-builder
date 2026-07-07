@@ -301,13 +301,6 @@ describe("validation magie & emplacements", () => {
     const petit = evalFang([inst("fangs-meneuse-1", { grimoireId: "petit" })]);
     expect(petit.issues.some((i) => i.ruleId === "grimoire-forbidden")).toBe(false);
   });
-
-  it("trop d'équipement à mains → invalide (couteau + 2 armes = 3 mains)", () => {
-    const res = evalFang([
-      inst("fangs-executeur-1", { addedEquipmentIds: ["faucille-os", "croc-de-fiel"] }),
-    ]);
-    expect(res.issues.some((i) => i.ruleId === "hands-over-capacity")).toBe(true);
-  });
 });
 
 describe("cartes spéciales payantes", () => {
@@ -339,5 +332,60 @@ describe("cartes spéciales payantes", () => {
   it("n'alerte pas quand la figurine éligible porte l'équipement réservé", () => {
     const res = evaluateList(catalog, makeList([inst("gouns-guerrier-albinos-3", { addedEquipmentIds: ["madrier"] })], "gouns"));
     expect(res.issues.some((i) => i.ruleId === "reserved-madrier")).toBe(false);
+  });
+});
+
+describe("amélioration d'équipement octroyée (unlock-upgrade)", () => {
+  it("empoisonner une arme CaC de Key ajoute 10 Ko et l'octroi est exposé", () => {
+    const plain = inst("kharns-key", { addedEquipmentIds: ["couteau"] });
+    const poisoned = inst("kharns-key", {
+      addedEquipmentIds: ["couteau"],
+      equipmentUpgrades: { couteau: ["poison"] },
+    });
+    const r1 = evaluateList(catalog, makeList([plain], "kharns"));
+    const r2 = evaluateList(catalog, makeList([poisoned], "kharns"));
+    expect(r2.costByInstance[poisoned.instanceId]).toBe(r1.costByInstance[plain.instanceId] + 10);
+    expect(r2.grantedUpgrades[poisoned.instanceId]?.some((u) => u.upgradeId === "poison")).toBe(true);
+  });
+  it("ne facture pas une amélioration non octroyée à la figurine", () => {
+    // Un Guerrier n'a pas l'octroi « poison » : la cocher ne change rien au coût.
+    const g = inst("kharns-guerrier-1", {
+      addedEquipmentIds: ["couteau"],
+      equipmentUpgrades: { couteau: ["poison"] },
+    });
+    const ref = inst("kharns-guerrier-1", { addedEquipmentIds: ["couteau"] });
+    const rg = evaluateList(catalog, makeList([g], "kharns"));
+    const rref = evaluateList(catalog, makeList([ref], "kharns"));
+    expect(rg.costByInstance[g.instanceId]).toBe(rref.costByInstance[ref.instanceId]);
+  });
+});
+
+describe("consommation d'emplacement (Gaubert, LIM P → place de Paladin III)", () => {
+  const hasSlotErr = (res: ReturnType<typeof evaluateList>) =>
+    res.issues.some((i) => i.ruleId === "consumes-slot:paladin#3");
+  it("Gaubert + 2 Paladins III dépasse la limite de 2", () => {
+    const res = evaluateList(
+      catalog,
+      makeList([inst("kharns-paladin-3"), inst("kharns-paladin-3"), inst("kharns-gaubert")], "kharns", "bataille"),
+    );
+    expect(hasSlotErr(res)).toBe(true);
+  });
+  it("Gaubert + 1 Paladin III reste dans la limite", () => {
+    const res = evaluateList(
+      catalog,
+      makeList([inst("kharns-paladin-3"), inst("kharns-gaubert")], "kharns", "bataille"),
+    );
+    expect(hasSlotErr(res)).toBe(false);
+  });
+});
+
+describe("effet conditionné au meneur (Engueran)", () => {
+  // makeList désigne le premier membre comme meneur.
+  it("les Paladins coûtent 15 Ko de moins quand Engueran est meneur", () => {
+    const eng = inst("kharns-engueran");
+    const pal = inst("kharns-paladin-3");
+    const leader = evaluateList(catalog, makeList([eng, pal], "kharns", "bataille"));
+    const notLeader = evaluateList(catalog, makeList([pal, eng], "kharns", "bataille"));
+    expect(leader.costByInstance[pal.instanceId]).toBe(notLeader.costByInstance[pal.instanceId] - 15);
   });
 });

@@ -21,6 +21,8 @@ export type ProfileMods = {
   /** Compétences octroyées par effet, avec valeur éventuelle (ex. Héroïque « défense »). */
   grantedSkills?: { skillId: string; value?: string | number }[];
   grantedTraitIds?: string[];
+  /** Améliorations d'équipement octroyées (opt-in par objet, ex. arme empoisonnée). */
+  grantedUpgrades?: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
 };
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */

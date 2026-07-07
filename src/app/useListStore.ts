@@ -69,6 +69,8 @@ export interface ListStore {
   setUpgradeCount: (instanceId: string, cardId: string, qty: number) => void;
   /** Amélioration partagée (payée une fois par Fer de Lance) : active/retire sur tout le FdL. */
   toggleSharedAmelioration: (instanceId: string, cardId: string) => void;
+  /** Amélioration d'équipement (opt-in par objet, ex. arme empoisonnée) : active/retire sur un équipement. */
+  toggleEquipmentUpgrade: (instanceId: string, equipmentId: string, upgradeId: string) => void;
   /** Choisit (ou retire, tierIndex=null) le palier de munition d'un type, pour une arme d'une instance. */
   setMunitionTier: (instanceId: string, equipId: string, typeId: string, tierIndex: number | null) => void;
   setGuard: (instanceId: string, ofInstanceId: string | null) => void;
@@ -210,6 +212,17 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
           ? current.filter((id) => catalog.specialCards.find((c) => c.id === id)?.choiceGroup !== group)
           : current;
         return { ...m, specialCardIds: [...kept, cardId] };
+      }),
+    toggleEquipmentUpgrade: (instanceId, equipmentId, upgradeId) =>
+      patchMember(instanceId, (m) => {
+        const map = { ...(m.equipmentUpgrades ?? {}) };
+        const cur = map[equipmentId] ?? [];
+        const next = cur.includes(upgradeId)
+          ? cur.filter((u) => u !== upgradeId)
+          : [...cur, upgradeId];
+        if (next.length) map[equipmentId] = next;
+        else delete map[equipmentId];
+        return { ...m, equipmentUpgrades: Object.keys(map).length ? map : undefined };
       }),
     toggleSharedAmelioration: (instanceId, cardId) =>
       patchFdl((f) => {

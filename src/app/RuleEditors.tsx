@@ -20,7 +20,6 @@ const CONSTRAINT_TYPES: ConstraintType[] = [
   "requires-present",
   "faction-membership",
   "equipment-reserved",
-  "consumes-slot",
   "attachment",
   "custom",
 ];
@@ -122,6 +121,7 @@ function cleanSelector(sel: Selector): Selector {
   if (sel.traits?.length) out.traits = sel.traits;
   if (sel.factionIds?.length) out.factionIds = sel.factionIds;
   if (sel.levels?.length) out.levels = sel.levels;
+  if (sel.isLeader != null) out.isLeader = sel.isLeader;
   if (sel.equipmentCategories?.length) out.equipmentCategories = sel.equipmentCategories;
   if (sel.equipmentIds?.length) out.equipmentIds = sel.equipmentIds;
   if (sel.countAtLeast != null) out.countAtLeast = sel.countAtLeast;
@@ -178,6 +178,20 @@ function SelectorEditor({
           </label>
         ))}
       </div>
+      <label className="flex items-center gap-2 text-xs adm-faint">
+        meneur
+        <select
+          value={selector.isLeader == null ? "" : selector.isLeader ? "yes" : "no"}
+          onChange={(e) =>
+            set({ isLeader: e.target.value === "" ? undefined : e.target.value === "yes" })
+          }
+          className={INPUT}
+        >
+          <option value="">indifférent</option>
+          <option value="yes">est le meneur</option>
+          <option value="no">n'est pas le meneur</option>
+        </select>
+      </label>
       <StringList label="traits" values={selector.traits ?? []} onChange={(v) => set({ traits: v })} placeholder="trait" />
       <StringList
         label="factions"
@@ -219,7 +233,7 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
     case "cost-set":
       return { kind, amount: 0 };
     case "unlock-upgrade":
-      return { kind, upgradeId: "", perItemCost: 0 };
+      return { kind, upgradeId: "", label: "", cost: 0, equipmentCategories: [] };
     case "grant-skill":
       return { kind, skillId: "" };
     case "grant-trait":
@@ -230,6 +244,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, stat: "i", amount: "level" };
     case "stat-count":
       return { kind, stat: "t", of: {}, atLeastBase: true };
+    case "stat-max":
+      return { kind, stat: "t", of: {} };
     case "skill-count":
       return { kind, skillId: "", of: {}, per: 3 };
     case "spell-pages":
@@ -256,16 +272,18 @@ function OperationEditor({
         {/*
           Seules les opérations réellement appliquées par le moteur sont proposées.
           `stat-modifier` est gardé car utilisé « en jeu » (affiché, non calculé au coût).
-          `unlock-upgrade` et `cap` sont retirés tant qu'ils ne sont pas implémentés.
+          `cap` reste retiré tant qu'il n'est pas implémenté.
         */}
         {(
           [
             "cost-delta",
             "cost-set",
+            "unlock-upgrade",
             "grant-skill",
             "grant-trait",
             "stat-modifier",
             "stat-count",
+            "stat-max",
             "skill-count",
             "spell-pages",
           ] as const
@@ -291,7 +309,25 @@ function OperationEditor({
       {op.kind === "unlock-upgrade" && (
         <>
           <Txt label="upgradeId" value={op.upgradeId} onChange={(v) => onChange({ ...op, upgradeId: v })} />
-          <Num label="coût/objet" value={op.perItemCost} onChange={(v) => onChange({ ...op, perItemCost: v })} />
+          <Txt label="libellé" value={op.label} onChange={(v) => onChange({ ...op, label: v })} />
+          <Num label="coût/objet" value={op.cost} onChange={(v) => onChange({ ...op, cost: v ?? 0 })} />
+          <div className="flex w-full flex-wrap items-center gap-2 text-xs adm-faint">
+            catégories
+            {EQUIPMENT_CATEGORIES.map((c) => (
+              <label key={c} className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={op.equipmentCategories.includes(c)}
+                  onChange={(e) => {
+                    const cur = op.equipmentCategories;
+                    const next = e.target.checked ? [...cur, c] : cur.filter((x) => x !== c);
+                    onChange({ ...op, equipmentCategories: next });
+                  }}
+                />
+                {c}
+              </label>
+            ))}
+          </div>
         </>
       )}
       {op.kind === "grant-skill" && (
@@ -364,6 +400,26 @@ function OperationEditor({
           </label>
           <div className="w-full">
             <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée)</div>
+            <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
+          </div>
+        </>
+      )}
+      {op.kind === "stat-max" && (
+        <>
+          <select
+            value={op.stat}
+            onChange={(ev) => onChange({ ...op, stat: ev.target.value as typeof op.stat })}
+            className={INPUT}
+          >
+            {(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"] as const).map((s) => (
+              <option key={s} value={s}>
+                {s.toUpperCase()}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs adm-faint">= valeur la plus forte parmi</span>
+          <div className="w-full">
+            <div className="mb-1 text-xs adm-faint">groupe de figurines (dans la portée)</div>
             <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
           </div>
         </>
@@ -491,22 +547,6 @@ function ParamsEditor({
             { value: "grand", label: "grand" },
           ]}
         />
-      );
-    case "consumes-slot":
-      return (
-        <div className="flex flex-wrap items-center gap-2">
-          <Select
-            label="modèle"
-            value={str("modelId")}
-            onChange={(v) => set({ modelId: v })}
-            options={cat.models.map((m) => ({ value: m.id, label: m.name }))}
-          />
-          <Num
-            label="niveau"
-            value={typeof params.level === "number" ? (params.level as number) : null}
-            onChange={(v) => set({ level: v })}
-          />
-        </div>
       );
     default:
       return (

@@ -8,7 +8,6 @@ import { ConstraintScopeSchema } from "./common";
  */
 export const ConstraintTypeSchema = z.enum([
   "limitation",
-  "consumes-slot",
   "requires-present",
   "attachment",
   "forbids-equipment",

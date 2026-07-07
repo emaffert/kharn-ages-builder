@@ -123,6 +123,44 @@ export function useCatalogStore() {
     [apply],
   );
 
+  /**
+   * Renomme l'id d'une compétence et met à jour toutes les références en cascade
+   * (`skillId` des profils/équipements/effets). Retourne false si l'id est vide,
+   * inchangé, ou déjà pris par une autre compétence.
+   */
+  const renameSkillId = useCallback(
+    (oldId: string, rawNewId: string): boolean => {
+      const newId = rawNewId.trim();
+      if (!newId || newId === oldId) return false;
+      let ok = true;
+      apply((c) => {
+        if (c.skills.some((s) => s.id === newId)) {
+          ok = false;
+          return c;
+        }
+        // Remplace le champ `skillId` partout, et l'`id` de l'objet compétence lui-même
+        // (détecté par la présence de `keyword`, pour ne pas toucher aux voies de magie homonymes).
+        const walk = (node: unknown): unknown => {
+          if (Array.isArray(node)) return node.map(walk);
+          if (node && typeof node === "object") {
+            const o = node as Record<string, unknown>;
+            const next: Record<string, unknown> = {};
+            for (const [k, v] of Object.entries(o)) {
+              if (k === "skillId" && v === oldId) next[k] = newId;
+              else if (k === "id" && v === oldId && "keyword" in o) next[k] = newId;
+              else next[k] = walk(v);
+            }
+            return next;
+          }
+          return node;
+        };
+        return walk(c) as typeof c;
+      });
+      return ok;
+    },
+    [apply],
+  );
+
   const updateSpecialCard = useCallback(
     (id: string, patch: Partial<SpecialCard>) =>
       apply((c) => ({
@@ -268,6 +306,7 @@ export function useCatalogStore() {
     updateSkill,
     addSkill,
     removeSkill,
+    renameSkillId,
     updateSpecialCard,
     addSpecialCard,
     removeSpecialCard,

@@ -304,33 +304,79 @@ export function EquipmentEditor({
 
 export function LimitationEditor({
   limitation,
+  models,
   onChange,
 }: {
   limitation: Limitation;
+  /** Modèles du catalogue, pour l'emplacement occupé par un personnage (LIM P). */
+  models: { id: string; name: string }[];
   onChange: (l: Limitation) => void;
 }) {
+  const slot = limitation.consumesSlotOf;
   return (
-    <div className="flex items-center gap-2">
-      <select
-        value={limitation.kind}
-        onChange={(e) => onChange({ ...limitation, kind: e.target.value as Limitation["kind"] })}
-        className={INPUT}
-      >
-        <option value="X">X (multiple)</option>
-        <option value="U">U (unique)</option>
-        <option value="P">P (personnage)</option>
-        <option value="special">special</option>
-      </select>
-      {limitation.kind === "X" && (
-        <input
-          type="number"
-          value={limitation.value ?? ""}
-          onChange={(e) =>
-            onChange({ ...limitation, value: e.target.value === "" ? undefined : Number(e.target.value) })
-          }
-          className={`${INPUT} w-16`}
-          placeholder="X"
-        />
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <select
+          value={limitation.kind}
+          onChange={(e) => onChange({ ...limitation, kind: e.target.value as Limitation["kind"] })}
+          className={INPUT}
+        >
+          <option value="X">X (multiple)</option>
+          <option value="U">U (unique)</option>
+          <option value="P">P (personnage)</option>
+          <option value="special">special</option>
+        </select>
+        {limitation.kind === "X" && (
+          <input
+            type="number"
+            value={limitation.value ?? ""}
+            onChange={(e) =>
+              onChange({ ...limitation, value: e.target.value === "" ? undefined : Number(e.target.value) })
+            }
+            className={`${INPUT} w-16`}
+            placeholder="X"
+          />
+        )}
+      </div>
+      {/* LIM P : occupe éventuellement l'emplacement d'un profil générique (modèle + niveau). */}
+      {limitation.kind === "P" && (
+        <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
+          occupe la place de
+          <select
+            value={slot?.modelId ?? ""}
+            onChange={(e) =>
+              onChange({
+                ...limitation,
+                consumesSlotOf: e.target.value
+                  ? { modelId: e.target.value, level: slot?.level ?? 3 }
+                  : undefined,
+              })
+            }
+            className={INPUT}
+          >
+            <option value="">— (aucun emplacement)</option>
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+          {slot && (
+            <select
+              value={slot.level}
+              onChange={(e) =>
+                onChange({ ...limitation, consumesSlotOf: { modelId: slot.modelId, level: Number(e.target.value) as 1 | 2 | 3 } })
+              }
+              className={INPUT}
+            >
+              {[1, 2, 3].map((lv) => (
+                <option key={lv} value={lv}>
+                  niveau {["I", "II", "III"][lv - 1]}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       )}
     </div>
   );

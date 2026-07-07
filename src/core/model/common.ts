@@ -20,9 +20,7 @@ export const EquipmentCategorySchema = z.enum([
   "arme-tir",
   "bouclier",
   "armure",
-  "munition",
   "objet",
-  "monture-option",
 ]);
 export type EquipmentCategory = z.infer<typeof EquipmentCategorySchema>;
 
@@ -70,6 +68,8 @@ export const SelectorSchema = z.object({
   factionIds: z.array(z.string()).optional(),
   /** Niveaux ciblés (I/II/III). */
   levels: z.array(z.number()).optional(),
+  /** Statut de meneur : true => uniquement le leader du Fer de Lance ; false => uniquement les non-leaders. */
+  isLeader: z.boolean().optional(),
   equipmentCategories: z.array(EquipmentCategorySchema).optional(),
   /** Cible des équipements précis (par id), ex. l'« Arbalète de poing » de l'Exécuteur. */
   equipmentIds: z.array(z.string()).optional(),

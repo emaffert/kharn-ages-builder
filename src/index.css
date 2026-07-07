@@ -713,6 +713,10 @@ body {
 /* Munitions par type + palier (arcs/arbalètes). */
 .fe-mun-block { margin-left: 18px; padding: 6px 9px; border-radius: 7px; background: var(--tint-1);
   font-size: 12px; color: var(--bone-dim); display: flex; flex-direction: column; gap: 4px; }
+.fe-upgrades { margin-left: 18px; display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 2px 0 2px; }
+.fe-upgrade { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--bone-dim);
+  cursor: pointer; }
+.fe-upgrade-cost { color: var(--ember); font-weight: 600; }
 .fe-mun-head { display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0;
   cursor: pointer; font-weight: 600; font-size: 12px; color: var(--bone); text-align: left; }
 .fe-mun-caret { color: var(--bone-faint); font-size: 10px; width: 10px; }

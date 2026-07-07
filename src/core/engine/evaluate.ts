@@ -10,15 +10,7 @@ import type {
   Selector,
   SpecialCard,
 } from "../model";
-import {
-  armorsWorn,
-  castWays,
-  forbiddenGrimoires,
-  handCapacity,
-  handsUsed,
-  pageCapacity,
-  pagesUsed,
-} from "./magic";
+import { armorsWorn, castWays, forbiddenGrimoires, pageCapacity, pagesUsed, wornEquipmentIds } from "./magic";
 import { totalMunitionCost } from "./munitions";
 
 /**
@@ -29,12 +21,23 @@ import { totalMunitionCost } from "./munitions";
  * Opérations d'effet prises en charge ici : `cost-delta`, `cost-set`, `grant-trait`,
  * `grant-skill` (`spell-pages` est traité par engine/magic.ts pour la capacité de pages).
  * TODO — opérations définies au schéma mais PAS encore appliquées à l'évaluation :
- *   `stat-modifier` (ex. Apprentie de Nyx : +niveau en I), `unlock-upgrade`, `cap`.
+ *   `stat-modifier` (ex. Apprentie de Nyx : +niveau en I), `cap`.
  *   Tant qu'elles ne sont pas implémentées, ces effets sont sans incidence sur coût/stats.
  */
 
 /** Compétence octroyée par un effet (avec sa valeur éventuelle pour les compétences « à valeur »). */
 export type GrantedSkill = { skillId: string; value?: string | number };
+
+/**
+ * Amélioration d'équipement octroyée par un effet `unlock-upgrade` : la figurine peut acheter
+ * cette amélioration (opt-in) sur chacun de ses équipements des catégories visées, pour `cost` Ko/objet.
+ */
+export type GrantedUpgrade = {
+  upgradeId: string;
+  label: string;
+  cost: number;
+  equipmentCategories: string[];
+};
 
 export interface Issue {
   severity: "error" | "warning";
@@ -58,6 +61,8 @@ export interface EvaluationResult {
   statDeltas: Record<string, Record<string, number>>;
   /** Valeurs de compétences calculées par effet, par instance (skillId -> valeur). Pour l'affichage. */
   skillValues: Record<string, Record<string, number>>;
+  /** Améliorations d'équipement disponibles (octroyées par effet), par instance. Pour le constructeur. */
+  grantedUpgrades: Record<string, GrantedUpgrade[]>;
   issues: Issue[];
 }
 
@@ -79,6 +84,8 @@ interface ResolvedInstance {
   instance: ProfileInstance;
   profile: Profile;
   traits: Set<string>;
+  /** Cette figurine est-elle le meneur de son Fer de Lance ? */
+  isLeader: boolean;
   /** Compétences octroyées par effet : skillId → valeur éventuelle (compétence « à valeur »). */
   grantedSkills: Map<string, string | number | undefined>;
 }
@@ -131,6 +138,10 @@ function instanceMatchesIdentity(sel: Selector, ri: ResolvedInstance): boolean {
   if (sel.levels?.length) {
     any = true;
     if (!(ri.profile.level != null && sel.levels.includes(ri.profile.level))) return false;
+  }
+  if (sel.isLeader != null) {
+    any = true;
+    if (ri.isLeader !== sel.isLeader) return false;
   }
   return any;
 }
@@ -392,6 +403,7 @@ function buildResolved(list: ListDocument, idx: CatalogIndex): ResolvedInstance[
         instance: inst,
         profile,
         traits: new Set(profile.traits),
+        isLeader: inst.instanceId === fdl.leaderInstanceId,
         grantedSkills: new Map(),
       });
     }
@@ -476,9 +488,7 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
       }
     }
 
-    const hands = handsUsed(cat, p, inst);
-    const cap = handCapacity(p);
-    if (hands > cap) push("hands-over-capacity", `« ${p.name} » : trop d'équipement à mains (${hands} / ${cap}).`);
+    // La limitation de mains ne s'applique qu'en jeu : on n'en fait pas une contrainte de recrutement.
     if (armorsWorn(cat, p, inst) > 1) push("multiple-armor", `« ${p.name} » porte plusieurs armures.`);
   }
 }
@@ -539,38 +549,48 @@ function validateLimitations(fdl: FerDeLance, inFdl: ResolvedInstance[], issues:
 }
 
 /**
- * LIM P : un personnage « occupe la place » d'un profil générique (modèle, niveau) via une contrainte
- * `consumes-slot` { modelId, level }. Combattants du profil cible + personnages consommant son créneau
- * ne peuvent dépasser la limitation du profil cible (ex. Engueran prend une place de Paladin III).
+ * Plafond d'un emplacement (modèle, niveau) = limitation du profil générique cible
+ * (X → sa valeur ; U/P → 1). Partagé entre le moteur et le constructeur.
+ */
+export function slotCapacity(cat: Catalog, modelId: string, level: number): number {
+  const target =
+    cat.profiles.find((p) => p.modelId === modelId && p.level === level && !p.isNamed) ??
+    cat.profiles.find((p) => p.modelId === modelId && p.level === level);
+  if (!target) return Infinity;
+  return target.limitation.kind === "X" ? (target.limitation.value ?? Infinity) : 1;
+}
+
+/**
+ * LIM P : un personnage « occupe la place » d'un profil générique (modèle, niveau) via le champ
+ * `limitation.consumesSlotOf` { modelId, level }. Génériques du profil cible + personnages consommant
+ * son créneau ne peuvent dépasser la limitation du profil cible (ex. Gaubert prend une place de Paladin III).
  */
 function validateConsumesSlot(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
   const bySlot = new Map<string, { modelId: string; level: number; consumers: ResolvedInstance[] }>();
   for (const ri of inFdl) {
-    for (const c of ri.profile.recruitment) {
-      if (c.type !== "consumes-slot") continue;
-      const { modelId, level } = c.params as { modelId?: string; level?: number };
-      if (!modelId || typeof level !== "number") continue;
-      const key = `${modelId}#${level}`;
-      const slot = bySlot.get(key) ?? { modelId, level, consumers: [] };
-      slot.consumers.push(ri);
-      bySlot.set(key, slot);
-    }
+    const cs = ri.profile.limitation.consumesSlotOf;
+    if (!cs) continue;
+    const key = `${cs.modelId}#${cs.level}`;
+    const slot = bySlot.get(key) ?? { modelId: cs.modelId, level: cs.level, consumers: [] };
+    slot.consumers.push(ri);
+    bySlot.set(key, slot);
   }
   for (const { modelId, level, consumers } of bySlot.values()) {
     const target =
       cat.profiles.find((p) => p.modelId === modelId && p.level === level && !p.isNamed) ??
       cat.profiles.find((p) => p.modelId === modelId && p.level === level);
     if (!target) continue;
-    const allowed = target.limitation.kind === "X" ? (target.limitation.value ?? Infinity) : 1;
-    const total = inFdl.filter((ri) => ri.profile.id === target.id).length + consumers.length;
+    const allowed = slotCapacity(cat, modelId, level);
+    // Génériques comptés par (modèle, niveau) : les variantes de loadout partagent l'emplacement.
+    const generics = inFdl.filter((ri) => ri.profile.modelId === modelId && ri.profile.level === level).length;
+    const total = generics + consumers.length;
     if (total > allowed) {
-      const src = consumers[0].profile.recruitment.find((c) => c.type === "consumes-slot");
       issues.push({
         severity: "error",
         ferDeLanceId: fdl.id,
         ruleId: `consumes-slot:${modelId}#${level}`,
         message: `${total} occupant(s) de la place de « ${target.name} » (niveau ${level}) pour une limite de ${allowed}.`,
-        sourceText: src?.sourceText ?? "",
+        sourceText: `Occupe l'emplacement d'un « ${target.name} » de niveau ${level}.`,
       });
     }
   }
@@ -804,9 +824,22 @@ function computeStatDeltas(
   };
   for (const occ of occurrences) {
     const op = occ.effect.operation;
-    if (op.kind !== "stat-modifier" && op.kind !== "stat-count") continue;
+    if (op.kind !== "stat-modifier" && op.kind !== "stat-count" && op.kind !== "stat-max") continue;
     if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
-    if (op.kind === "stat-count") {
+    if (op.kind === "stat-max") {
+      // Caractéristique fixée au MAX de cette carac. (valeurs de base) parmi le groupe `of` dans la portée.
+      const pool = instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId);
+      const group = pool.filter((ri) => instanceMatchesIdentity(op.of, ri));
+      const groupMax = group.reduce((mx, ri) => Math.max(mx, baseStat(ri.profile, op.stat)), -Infinity);
+      for (const ri of resolveTargets(occ, resolved)) {
+        const base = baseStat(ri.profile, op.stat);
+        const value = Number.isFinite(groupMax) ? Math.max(base, groupMax) : base;
+        // SET (non cumulatif, idempotent si plusieurs membres portent l'effet) exprimé en delta sur la base.
+        const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
+        m.set(op.stat, value - base);
+        out.set(ri.instance.instanceId, m);
+      }
+    } else if (op.kind === "stat-count") {
       // Caractéristique fixée au nombre de figurines correspondant à `of` dans la portée.
       const pool = instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId);
       const count = pool.filter((ri) => instanceMatchesIdentity(op.of, ri)).length;
@@ -850,6 +883,47 @@ function computeSkillValues(
   return out;
 }
 
+/** Améliorations d'équipement octroyées (effets `unlock-upgrade`), par instance : upgradeId → détail. */
+function collectGrantedUpgrades(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+): Map<string, Map<string, GrantedUpgrade>> {
+  const out = new Map<string, Map<string, GrantedUpgrade>>();
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "unlock-upgrade") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+    for (const ri of resolveTargets(occ, resolved)) {
+      const m = out.get(ri.instance.instanceId) ?? new Map<string, GrantedUpgrade>();
+      m.set(op.upgradeId, {
+        upgradeId: op.upgradeId,
+        label: op.label,
+        cost: op.cost,
+        equipmentCategories: op.equipmentCategories,
+      });
+      out.set(ri.instance.instanceId, m);
+    }
+  }
+  return out;
+}
+
+/** Surcoût des améliorations d'équipement cochées (opt-in par objet), pour une instance. */
+function upgradeCost(ri: ResolvedInstance, granted: Map<string, GrantedUpgrade>, idx: CatalogIndex): number {
+  const ups = ri.instance.equipmentUpgrades;
+  if (!ups) return 0;
+  const worn = new Set(wornEquipmentIds(ri.profile, ri.instance));
+  let cost = 0;
+  for (const [equipId, upIds] of Object.entries(ups)) {
+    if (!worn.has(equipId)) continue; // amélioration sur un équipement retiré : ignorée
+    const category = idx.equipmentCategory.get(equipId);
+    for (const upId of upIds) {
+      const g = granted.get(upId);
+      if (g && category && g.equipmentCategories.includes(category)) cost += g.cost;
+    }
+  }
+  return cost;
+}
+
 // ── Point d'entrée ───────────────────────────────────────────────────────────
 
 export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult {
@@ -859,6 +933,12 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
 
   applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe (construction)
   const cost = computeCosts(resolved, occurrences, idx, cat); // 4 : coûts
+  // 4b : améliorations d'équipement octroyées (unlock-upgrade) + surcoût des options cochées.
+  const grantedUp = collectGrantedUpgrades(resolved, occurrences);
+  for (const ri of resolved) {
+    const extra = upgradeCost(ri, grantedUp.get(ri.instance.instanceId) ?? new Map(), idx);
+    if (extra) cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + extra);
+  }
   const issues = validate(cat, list, resolved, idx); // 5 : contraintes
 
   // Affichage : tous les effets d'octroi / de statistique, y compris « en jeu », sur des clones.
@@ -875,11 +955,14 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const grantedSkills: Record<string, GrantedSkill[]> = {};
   const statDeltas: Record<string, Record<string, number>> = {};
   const skillValues: Record<string, Record<string, number>> = {};
+  const grantedUpgrades: Record<string, GrantedUpgrade[]> = {};
   for (const ri of resolved) {
     const id = ri.instance.instanceId;
     const c = cost.get(id) ?? 0;
     costByInstance[id] = c;
     costByFerDeLance[ri.ferDeLanceId] = (costByFerDeLance[ri.ferDeLanceId] ?? 0) + c;
+    const gu = grantedUp.get(id);
+    if (gu && gu.size > 0) grantedUpgrades[id] = [...gu.values()];
 
     const dri = displayById.get(id);
     if (dri) {
@@ -905,6 +988,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     grantedSkills,
     statDeltas,
     skillValues,
+    grantedUpgrades,
     issues,
   };
 }

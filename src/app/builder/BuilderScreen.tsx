@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { iconFor, type Profile } from "@core";
+import { iconFor, slotCapacity, type Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import {
   FACTIONS,
@@ -7,6 +7,7 @@ import {
   canBuy,
   isAttachmentDependent,
   isDependent,
+  isRecruitableIn,
   profileMatchesAnySelector,
   protecteeSelectorsFor,
   recruitableDependentGroups,
@@ -93,8 +94,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         .sort((a, b) => (a.level ?? 0) - (b.level ?? 0)),
     }))
     .map((m) => ({ ...m, icon: m.profiles[0] ? iconFor(cat, m.profiles[0]) : undefined }))
-    // Roster restreint à la faction choisie (les autres factions n'ont pas encore de profils).
-    .filter((m) => m.profiles.length > 0 && m.profiles[0].factionId === factionId)
+    // Roster de la faction choisie + profils recrutables inter-factions (sans logo, apatride,
+    // « Allié des X » via une contrainte faction-membership).
+    .filter((m) => m.profiles.length > 0 && m.profiles.some((p) => isRecruitableIn(p, factionId)))
     .filter((m) => rosterQuery.trim() === "" || m.name.toLowerCase().includes(rosterQuery.trim().toLowerCase()));
   const kindOf = (m: ModelEntry) => {
     const p0 = m.profiles[0];
@@ -111,20 +113,39 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   // même niveau) partagent la limite ; des niveaux différents comptent séparément (un Père de Famille
   // N2 « U » et un N3 « U » coexistent). Lim U/P → 1 ; Lim X → `value`.
   const groupKey = (p: Profile) => (p.modelId != null ? `${p.modelId}#${p.level ?? 0}` : p.id);
+  // Occupation d'un emplacement (modèle, niveau) : génériques de ce couple + personnages qui le consomment (LIM P).
+  const slotOccupancy = (modelId: string, level: number) =>
+    fdl.members.filter((m) => {
+      const mp = cat.profiles.find((x) => x.id === m.profileId);
+      if (!mp) return false;
+      if (mp.modelId === modelId && mp.level === level) return true;
+      const cs = mp.limitation.consumesSlotOf;
+      return cs != null && cs.modelId === modelId && cs.level === level;
+    }).length;
   const atLimit = (p: Profile) => {
-    const max =
+    // 1) Limitation propre du profil (par groupe modèle#niveau) : U/P → 1, X → valeur.
+    const own =
       p.limitation.kind === "X"
         ? (p.limitation.value ?? Infinity)
         : p.limitation.kind === "U" || p.limitation.kind === "P"
           ? 1
           : Infinity;
-    if (max === Infinity) return false;
-    const key = groupKey(p);
-    const count = fdl.members.filter((m) => {
-      const mp = cat.profiles.find((x) => x.id === m.profileId);
-      return mp != null && groupKey(mp) === key;
-    }).length;
-    return count >= max;
+    if (own !== Infinity) {
+      const key = groupKey(p);
+      const count = fdl.members.filter((m) => {
+        const mp = cat.profiles.find((x) => x.id === m.profileId);
+        return mp != null && groupKey(mp) === key;
+      }).length;
+      if (count >= own) return true;
+    }
+    // 2) Emplacement que ce personnage consomme (LIM P) déjà plein.
+    const cs = p.limitation.consumesSlotOf;
+    if (cs && slotOccupancy(cs.modelId, cs.level) >= slotCapacity(cat, cs.modelId, cs.level)) return true;
+    // 3) Ce profil est un générique dont l'emplacement est saturé par des consommateurs (ex. Paladin III + Gaubert).
+    if (p.modelId != null && p.level != null && slotOccupancy(p.modelId, p.level) >= slotCapacity(cat, p.modelId, p.level)) {
+      return true;
+    }
+    return false;
   };
   const modelMaxed = (m: ModelEntry) => m.profiles.every(atLimit);
 
@@ -642,11 +663,16 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onGrimoire={(g) => store.setGrimoire(editItem.inst.instanceId, g)}
             onToggleSpell={(sid) => store.toggleSpell(editItem.inst.instanceId, sid)}
             onInfo={setItemInfo}
+            equipmentUpgrades={editItem.inst.equipmentUpgrades ?? {}}
+            onToggleEquipmentUpgrade={(eid, uid) =>
+              store.toggleEquipmentUpgrade(editItem.inst.instanceId, eid, uid)
+            }
             mods={{
               statDeltas: evaluation.statDeltas[editItem.inst.instanceId],
               skillValues: evaluation.skillValues[editItem.inst.instanceId],
               grantedSkills: evaluation.grantedSkills[editItem.inst.instanceId],
               grantedTraitIds: evaluation.grantedTraits[editItem.inst.instanceId],
+              grantedUpgrades: evaluation.grantedUpgrades[editItem.inst.instanceId],
             }}
           />
         </Dialog>

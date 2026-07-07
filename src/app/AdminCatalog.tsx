@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { Button, Dialog } from "@ui";
 import { useCatalogStore } from "./useCatalogStore";
 import { LEVEL_LABEL } from "./admin/shared";
@@ -9,6 +9,16 @@ import { SpecialCardDetail } from "./admin/SpecialCardDetail";
 import { SpellDetail } from "./admin/SpellDetail";
 import { AdminDocs } from "./admin/AdminDocs";
 import "./admin/admin.css";
+
+// Ordre et libellés des catégories d'équipement pour le regroupement de la barre latérale.
+const EQUIP_CAT_ORDER = ["arme-cac", "arme-tir", "bouclier", "armure", "objet"];
+const EQUIP_CAT_LABEL: Record<string, string> = {
+  "arme-cac": "Corps à corps",
+  "arme-tir": "Tir",
+  bouclier: "Boucliers",
+  armure: "Armures",
+  objet: "Objets",
+};
 
 export function AdminCatalog() {
   const store = useCatalogStore();
@@ -52,10 +62,15 @@ export function AdminCatalog() {
       ),
     [catalog, q, factionFilter],
   );
-  const filteredEquipment = useMemo(
-    () => catalog.equipment.filter((e) => !q || e.name.toLowerCase().includes(q)),
-    [catalog, q],
-  );
+  const filteredEquipment = useMemo(() => {
+    const rank = (c: string) => {
+      const i = EQUIP_CAT_ORDER.indexOf(c);
+      return i < 0 ? 99 : i;
+    };
+    return catalog.equipment
+      .filter((e) => !q || e.name.toLowerCase().includes(q))
+      .sort((a, b) => rank(a.category) - rank(b.category) || a.name.localeCompare(b.name, "fr"));
+  }, [catalog, q]);
 
   const filteredSkills = useMemo(
     () =>
@@ -200,17 +215,27 @@ export function AdminCatalog() {
             ))}
           {view === "equipment" && (
             <>
-              {filteredEquipment.map((e) => (
-                <li key={e.id}>
-                  <button onClick={() => setSelectedEquipId(e.id)} className={itemClass(e.id === selectedEquipId)}>
-                    <span>
-                      {e.name}
-                      <span className="ml-1 adm-faint">{e.category}</span>
-                    </span>
-                    <span className="text-xs adm-faint">{e.cost}</span>
-                  </button>
-                </li>
-              ))}
+              {filteredEquipment.map((e, i) => {
+                const showHeader = i === 0 || filteredEquipment[i - 1].category !== e.category;
+                return (
+                  <Fragment key={e.id}>
+                    {showHeader && (
+                      <li className="mt-3 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider adm-faint">
+                        {EQUIP_CAT_LABEL[e.category] ?? e.category}
+                      </li>
+                    )}
+                    <li>
+                      <button
+                        onClick={() => setSelectedEquipId(e.id)}
+                        className={itemClass(e.id === selectedEquipId)}
+                      >
+                        <span>{e.name}</span>
+                        <span className="text-xs adm-faint">{e.cost}</span>
+                      </button>
+                    </li>
+                  </Fragment>
+                );
+              })}
               <li className="mt-2">
                 <button
                   onClick={() => setSelectedEquipId(store.addEquipment())}
@@ -326,8 +351,14 @@ export function AdminCatalog() {
             (selectedSkill ? (
               <div className="mx-auto max-w-2xl">
                 <SkillCatalogDetail
+                  key={selectedSkill.id}
                   skill={selectedSkill}
                   onChange={(patch) => store.updateSkill(selectedSkill.id, patch)}
+                  onRenameId={(newId) => {
+                    const ok = store.renameSkillId(selectedSkill.id, newId);
+                    if (ok) setSelectedSkillId(newId);
+                    return ok;
+                  }}
                   onRemove={() =>
                     setPendingDelete({
                       what: `la compétence « ${selectedSkill.keyword} »`,

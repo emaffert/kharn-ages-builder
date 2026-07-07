@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EffectScopeSchema, SelectorSchema } from "./common";
+import { EffectScopeSchema, EquipmentCategorySchema, SelectorSchema } from "./common";
 
 /**
  * Effet = modificateur dynamique (coût, déblocage d'option, octroi de compétence/trait),
@@ -12,7 +12,15 @@ export const StatKeySchema = z.enum(["v", "p", "a", "c", "t", "i", "stature", "p
 export const EffectOperationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("cost-delta"), amount: z.number() }),
   z.object({ kind: z.literal("cost-set"), amount: z.number(), maxCount: z.number().optional() }),
-  z.object({ kind: z.literal("unlock-upgrade"), upgradeId: z.string(), perItemCost: z.number() }),
+  // Octroie aux cibles la possibilité d'améliorer CHAQUE équipement des catégories visées (opt-in par
+  // objet) pour `cost` Ko/objet. Ex. Key empoisonne son arme (10 Ko) ; « Borax » améliore armes+armures.
+  z.object({
+    kind: z.literal("unlock-upgrade"),
+    upgradeId: z.string(),
+    label: z.string(),
+    cost: z.number(),
+    equipmentCategories: z.array(EquipmentCategorySchema),
+  }),
   // `value` : pour une compétence « à valeur » (ex. octroie « Héroïque défense » → value "défense").
   z.object({ kind: z.literal("grant-skill"), skillId: z.string(), value: z.union([z.string(), z.number()]).optional() }),
   z.object({ kind: z.literal("grant-trait"), trait: z.string() }),
@@ -31,6 +39,10 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     of: SelectorSchema,
     atLeastBase: z.boolean().optional(),
   }),
+  // Fixe une caractéristique à la valeur MAXIMALE de cette carac. parmi les figurines correspondant
+  // à `of` dans la portée (ex. « Doctrine » de l'Ordre : T et I = les plus fortes des membres de
+  // l'Ordre présents dans le Fer de Lance). Lit les valeurs de BASE (imprimées) ; plancher = base.
+  z.object({ kind: z.literal("stat-max"), stat: StatKeySchema, of: SelectorSchema }),
   // Valeur d'une compétence (à valeur, ex. Seigneur de guerre X) dérivée d'un décompte :
   // X = ⌊ nombre de figurines « of » dans la portée / per ⌋ (per défaut 1, arrondi inférieur).
   z.object({

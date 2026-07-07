@@ -351,6 +351,13 @@ describe("carte à portée Ost (Pacte du Secret)", () => {
     expect(res.grantedSkills[myriam.instanceId]?.some((s) => s.skillId === "rusee")).toBe(true);
   });
 
+  it("n'octroie RIEN tant que la carte n'est pas sélectionnée, même si la composition est réunie", () => {
+    const myriam = inst("kharns-myriam");
+    const members = [myriam, inst("kharns-syrga"), inst("kharns-engueran"), inst("kharns-prince")];
+    const res = evaluateList(catalog, withOst(members, [])); // carte non sélectionnée
+    expect(res.grantedSkills[myriam.instanceId]?.some((s) => s.skillId === "rusee")).toBeFalsy();
+  });
+
   it("erreur si la carte est sélectionnée mais la composition n'est pas remplie (< 4)", () => {
     const members = [inst("kharns-myriam"), inst("kharns-syrga")];
     const res = evaluateList(catalog, withOst(members, ["pacte-du-secret"]));

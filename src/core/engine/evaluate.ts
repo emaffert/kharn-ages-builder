@@ -220,8 +220,9 @@ function collectEffectOccurrences(
   const fdlIds = [...new Set(resolved.map((ri) => ri.ferDeLanceId))];
   for (const card of cat.specialCards) {
     // Intrinsèque = appliquée d'office : coût 0 ET pas une amélioration (celles-ci relèvent
-    // d'un choix du joueur, appliquées via `instance.specialCardIds`).
-    if (card.cost !== 0 || card.amelioration) continue;
+    // d'un choix du joueur, appliquées via `instance.specialCardIds`). Les cartes d'Ost sont
+    // exclues : elles ne s'appliquent que sélectionnées + valides (cf. `ostCardOccurrences`).
+    if (card.cost !== 0 || card.amelioration || card.ostScope) continue;
     for (const fdlId of fdlIds) {
       const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdlId);
       const matchCount = inFdl.filter((ri) => specialCardScopeMatches(card, ri)).length;

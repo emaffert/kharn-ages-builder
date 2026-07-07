@@ -62,8 +62,14 @@ export const StatsSchema = z.object({
 export type Stats = z.infer<typeof StatsSchema>;
 
 export const ArmorSchema = z.object({
-  sourceText: z.string(),
+  sourceText: z.string().optional(),
+  /** Seuil de l'armure : valeur à atteindre pour un jet de protection réussi (chiffre central). */
   seuil: z.number().optional(),
+  /** Protection en cas d'échec du jet (chiffre de gauche). */
+  protectionEchec: z.number().optional(),
+  /** Protection en cas de réussite du jet (chiffre de droite). */
+  protectionReussite: z.number().optional(),
+  /** Durabilité de l'armure = nombre de cercles blancs affichés à côté. */
   durability: z.number().optional(),
   natural: z.boolean().optional(),
 });
@@ -251,7 +257,12 @@ export const SpecialCardSchema = z.object({
   id: z.string(),
   name: z.string(),
   cost: z.number(),
-  scope: z.object({ profileIds: z.array(z.string()).optional(), trait: z.string().optional() }),
+  scope: z.object({
+    profileIds: z.array(z.string()).optional(),
+    trait: z.string().optional(),
+    /** Réservée à une (ou plusieurs) faction entière, ex. « Ordre de Mission Royale » → Khârns. */
+    factionIds: z.array(z.string()).optional(),
+  }),
   /**
    * `true` : amélioration *choisie* par le joueur (achat optionnel, ex. Apprentie de Nyx, Crosse).
    * Absent/`false` : carte automatique appliquée d'office (ex. Fille de Nyx, Xayìn & Muskh).
@@ -270,6 +281,12 @@ export const SpecialCardSchema = z.object({
   shared: z.boolean().optional(),
   /** La carte confère la capacité de lancer des sorts dans ces voies (ex. Apprentie de Nyx → ostéomancie). */
   grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
+  /**
+   * `true` : amélioration *empilable* — achetable en plusieurs exemplaires sur une même figurine,
+   * plafonnée à son **niveau** (ex. « Ordre de Mission Royale » : autant d'ordres que le Niveau).
+   * La quantité choisie est stockée dans `ProfileInstance.specialCardCounts`.
+   */
+  perLevelStack: z.boolean().optional(),
   rulesText: z.array(RuleTextSchema),
   constraints: z.array(ConstraintSchema),
   effects: z.array(EffectSchema),

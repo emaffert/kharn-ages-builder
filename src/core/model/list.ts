@@ -25,6 +25,11 @@ export const ProfileInstanceSchema = z.object({
   orderIds: z.array(z.string()).optional(),
   /** Cartes spéciales payantes sélectionnées (opt-in), ex. « Apprentie de Nyx ». */
   specialCardIds: z.array(z.string()).optional(),
+  /**
+   * Quantité par carte spéciale *empilable* (`perLevelStack`), plafonnée au niveau de la figurine.
+   * Présent uniquement pour ces cartes ; l'appartenance reste dans `specialCardIds` (quantité ≥ 1).
+   */
+  specialCardCounts: z.record(z.string(), z.number()).optional(),
   note: z.string().optional(),
 });
 export type ProfileInstance = z.infer<typeof ProfileInstanceSchema>;

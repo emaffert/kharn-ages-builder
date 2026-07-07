@@ -424,8 +424,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             grimoireId={x.inst.grimoireId}
             spellIds={x.inst.spellIds}
             upgrades={[...new Set([...(x.inst.specialCardIds ?? []), ...sharedActiveCardIds])]}
+            upgradeCounts={x.inst.specialCardCounts}
             munitions={x.inst.munitions ?? {}}
-            issues={rowIssues}
             onPick={setItemInfo}
           />
         )}
@@ -637,6 +637,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 ? store.toggleSharedAmelioration(editItem.inst.instanceId, cid)
                 : store.toggleUpgrade(editItem.inst.instanceId, cid)
             }
+            upgradeCounts={editItem.inst.specialCardCounts}
+            onSetUpgradeCount={(cid, qty) => store.setUpgradeCount(editItem.inst.instanceId, cid, qty)}
             onGrimoire={(g) => store.setGrimoire(editItem.inst.instanceId, g)}
             onToggleSpell={(sid) => store.toggleSpell(editItem.inst.instanceId, sid)}
             onInfo={setItemInfo}

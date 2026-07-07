@@ -77,6 +77,8 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
   const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
   const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
   const flag = (key: string) => toggleUnverified(profile.id, key);
+  const setArmor = (p: Partial<NonNullable<Profile["armor"]>>) =>
+    patch({ armor: { ...(profile.armor ?? {}), ...p } });
 
   // Une contrainte de carte ne concerne ce profil que si son sujet est ce profil
   // (ou si elle n'a pas de sujet précis). Évite que Xayìn hérite des contraintes de Muskh.
@@ -230,6 +232,44 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
             onToggle={() => flag("pv")}
           />
         </div>
+      </Section>
+
+      <Section title="Armure (protection en cas d'échec / seuil / protection en cas de réussite)">
+        {profile.armor ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <EditableNumber
+              label="Prot. échec"
+              value={profile.armor.protectionEchec ?? null}
+              unverified={uv("armor.protectionEchec")}
+              onChange={(v) => setArmor({ protectionEchec: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.protectionEchec")}
+            />
+            <EditableNumber
+              label="Seuil"
+              value={profile.armor.seuil ?? null}
+              unverified={uv("armor.seuil")}
+              onChange={(v) => setArmor({ seuil: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.seuil")}
+            />
+            <EditableNumber
+              label="Prot. réussite"
+              value={profile.armor.protectionReussite ?? null}
+              unverified={uv("armor.protectionReussite")}
+              onChange={(v) => setArmor({ protectionReussite: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.protectionReussite")}
+            />
+            <EditableNumber
+              label="Durabilité"
+              value={profile.armor.durability ?? null}
+              unverified={uv("armor.durability")}
+              onChange={(v) => setArmor({ durability: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.durability")}
+            />
+            <RemoveButton onClick={() => patch({ armor: undefined })} />
+          </div>
+        ) : (
+          <AddButton onClick={() => patch({ armor: {} })}>Ajouter une armure</AddButton>
+        )}
       </Section>
 
       <Section title="Dés de maîtrise (chaque dé porte 1 à 5 domaines)">

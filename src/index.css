@@ -618,6 +618,13 @@ body {
   border-radius: 7px; font-size: 13.5px; }
 .fe-stat .k { color: var(--bone-faint); font-size: 12px; }
 .fe-stat .v { font-weight: 700; color: var(--bone); font-variant-numeric: tabular-nums; }
+/* Armure : échec / seuil / réussite (+ durabilité). */
+.fe-armor { display: inline-flex; align-items: baseline; gap: 8px; width: 100%; background: var(--tint-1);
+  padding: 5px 10px; border-radius: 7px; font-size: 13px; }
+.fe-armor-lab { color: var(--bone-dim); font-weight: 600; }
+.fe-armor-vals { font-weight: 700; color: var(--bone); font-variant-numeric: tabular-nums; }
+.fe-armor-vals i { color: var(--bone-faint); font-style: normal; font-weight: 400; }
+.fe-armor-dur { color: var(--bone-faint); font-size: 12px; margin-left: auto; }
 
 /* Étiquette de bloc dans la carte (maîtrise, équipement). */
 .fe-block-label { display: block; margin: 20px 0 6px; font-family: "Cinzel", serif; font-size: 11px;
@@ -742,6 +749,14 @@ body {
 .fe-check .nm { flex: 1; color: var(--bone); background: none; border: 0; cursor: pointer; text-align: left;
   text-decoration: underline dotted; text-underline-offset: 2px; font-weight: 500; }
 .fe-check .px { font-size: 12px; color: var(--gold-dim); }
+/* Amélioration empilable : quantité + boutons +/− empilés à gauche, puis nom, puis coût (largeur figée). */
+.fe-upstep { gap: 8px; }
+.fe-stepper { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.fe-stepper .qty { min-width: 14px; text-align: center; font-weight: 700; font-size: 15px; color: var(--bone); font-variant-numeric: tabular-nums; }
+.fe-stepbtns { display: inline-flex; flex-direction: column; gap: 2px; }
+.fe-stepbtns .fe-step { display: flex; align-items: center; justify-content: center; width: 18px; height: 14px;
+  border-radius: 4px; font-size: 11px; line-height: 1; padding: 0; }
+.fe-upstep .px { flex: none; white-space: nowrap; min-width: 62px; text-align: right; }
 .fe-mag-bonus { font-size: 12px; color: var(--bone-dim); }
 .fe-preview-note { margin-right: auto; font-size: 12px; font-style: italic; color: var(--bone-dim); }
 

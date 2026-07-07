@@ -20,7 +20,8 @@ export function wornEquipmentIds(profile: Profile, inst: ProfileInstance): strin
 function cardApplies(card: SpecialCard, profile: Profile, traits: ReadonlySet<string>, selected: string[]): boolean {
   const scope =
     (card.scope.profileIds?.includes(profile.id) ?? false) ||
-    (card.scope.trait ? traits.has(card.scope.trait) : false);
+    (card.scope.trait ? traits.has(card.scope.trait) : false) ||
+    (card.scope.factionIds && profile.factionId ? card.scope.factionIds.includes(profile.factionId) : false);
   return card.amelioration ? scope && selected.includes(card.id) : scope;
 }
 

@@ -245,6 +245,8 @@ function collectEffectOccurrences(
 function specialCardScopeMatches(card: SpecialCard, ri: ResolvedInstance): boolean {
   if (card.scope.profileIds?.includes(ri.profile.id)) return true;
   if (card.scope.trait && ri.traits.has(card.scope.trait)) return true;
+  if (card.scope.factionIds && ri.profile.factionId && card.scope.factionIds.includes(ri.profile.factionId))
+    return true;
   return false;
 }
 
@@ -305,7 +307,9 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog)
     const card = idx.specialCard.get(id);
     // Les améliorations partagées sont facturées une fois par Fer de Lance (cf. computeCosts), pas par instance.
     if (card?.shared) continue;
-    cost += card?.cost ?? 0;
+    // Amélioration empilable : coût × quantité (plafond appliqué côté store/UI).
+    const qty = card?.perLevelStack ? (inst.specialCardCounts?.[id] ?? 1) : 1;
+    cost += (card?.cost ?? 0) * qty;
   }
   return cost;
 }
@@ -488,17 +492,19 @@ function validateSpecialCardScope(
     for (const cardId of ri.instance.specialCardIds ?? []) {
       const card = idx.specialCard.get(cardId);
       if (!card) continue;
-      const matches =
-        (card.scope.profileIds?.includes(ri.profile.id) ?? false) ||
-        (card.scope.trait ? ri.traits.has(card.scope.trait) : false);
-      if (!matches) {
+      if (!specialCardScopeMatches(card, ri)) {
+        const reserve = card.scope.trait
+          ? card.scope.trait
+          : card.scope.factionIds
+            ? `la faction ${card.scope.factionIds.join(", ")}`
+            : "des profils spécifiques";
         issues.push({
           severity: "error",
           ferDeLanceId: ri.ferDeLanceId,
           instanceId: ri.instance.instanceId,
           ruleId: `special-card-scope:${cardId}`,
           message: `La carte « ${card.name} » ne peut pas être attribuée à « ${ri.profile.name} ».`,
-          sourceText: `Réservée à ${card.scope.trait ?? "des profils spécifiques"}.`,
+          sourceText: `Réservée à ${reserve}.`,
         });
       }
     }

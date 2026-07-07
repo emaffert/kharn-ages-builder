@@ -92,6 +92,26 @@ export function SpecialCardDetail({
             cat={cat}
             onChange={(v) => onChange({ scope: { ...scope, profileIds: v.length ? v : undefined } })}
           />
+          <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
+            factions
+            {cat.factions.map((f) => {
+              const on = scope.factionIds?.includes(f.id) ?? false;
+              return (
+                <label key={f.id} className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={() => {
+                      const cur = scope.factionIds ?? [];
+                      const next = on ? cur.filter((x) => x !== f.id) : [...cur, f.id];
+                      onChange({ scope: { ...scope, factionIds: next.length ? next : undefined } });
+                    }}
+                  />
+                  {f.name}
+                </label>
+              );
+            })}
+          </div>
         </div>
       </Section>
 

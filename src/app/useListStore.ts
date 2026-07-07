@@ -65,6 +65,8 @@ export interface ListStore {
   setGrimoire: (instanceId: string, g: "none" | "petit" | "grand") => void;
   toggleSpell: (instanceId: string, spellId: string) => void;
   toggleUpgrade: (instanceId: string, cardId: string) => void;
+  /** Quantité d'une amélioration *empilable* (`perLevelStack`) ; 0 = retirée, plafonnée au niveau. */
+  setUpgradeCount: (instanceId: string, cardId: string, qty: number) => void;
   /** Amélioration partagée (payée une fois par Fer de Lance) : active/retire sur tout le FdL. */
   toggleSharedAmelioration: (instanceId: string, cardId: string) => void;
   /** Choisit (ou retire, tierIndex=null) le palier de munition d'un type, pour une arme d'une instance. */
@@ -179,10 +181,29 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
       patchMember(instanceId, (m) => ({ ...m, grimoireId: g === "none" ? undefined : g })),
     toggleSpell: (instanceId, spellId) =>
       patchMember(instanceId, (m) => ({ ...m, spellIds: toggle(m.spellIds, spellId) })),
+    setUpgradeCount: (instanceId, cardId, qty) =>
+      patchMember(instanceId, (m) => {
+        const level = catalog.profiles.find((p) => p.id === m.profileId)?.level ?? 1;
+        const clamped = Math.max(0, Math.min(level, Math.floor(qty)));
+        const counts = { ...(m.specialCardCounts ?? {}) };
+        let ids = m.specialCardIds ?? [];
+        if (clamped <= 0) {
+          ids = ids.filter((id) => id !== cardId);
+          delete counts[cardId];
+        } else {
+          if (!ids.includes(cardId)) ids = [...ids, cardId];
+          counts[cardId] = clamped;
+        }
+        return { ...m, specialCardIds: ids, specialCardCounts: counts };
+      }),
     toggleUpgrade: (instanceId, cardId) =>
       patchMember(instanceId, (m) => {
         const current = m.specialCardIds ?? [];
-        if (current.includes(cardId)) return { ...m, specialCardIds: current.filter((id) => id !== cardId) };
+        if (current.includes(cardId)) {
+          const counts = { ...(m.specialCardCounts ?? {}) };
+          delete counts[cardId];
+          return { ...m, specialCardIds: current.filter((id) => id !== cardId), specialCardCounts: counts };
+        }
         // Ajout : si la carte relève d'un groupe de choix exclusif, retirer les autres du même groupe.
         const group = catalog.specialCards.find((c) => c.id === cardId)?.choiceGroup;
         const kept = group

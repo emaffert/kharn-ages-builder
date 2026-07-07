@@ -13,8 +13,8 @@ export function PurchaseSummary({
   grimoireId,
   spellIds,
   upgrades,
+  upgradeCounts,
   munitions,
-  issues,
   onPick,
 }: {
   p: Profile;
@@ -24,8 +24,8 @@ export function PurchaseSummary({
   grimoireId?: string;
   spellIds: string[];
   upgrades: string[];
+  upgradeCounts?: Record<string, number>;
   munitions: Record<string, Record<string, number>>;
-  issues: string[];
   onPick: (info: ItemInfo) => void;
 }) {
   const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier", "armure"];
@@ -55,18 +55,20 @@ export function PurchaseSummary({
   // N'affiche que les cartes automatiques (appliquées d'office) et les améliorations réellement sélectionnées.
   const cartes = specialCardsForProfile(p, cat)
     .filter((c) => !c.amelioration || upgrades.includes(c.id))
-    .map((c) =>
-      chip(c.name, {
+    .map((c) => {
+      // Amélioration empilable : quantité × coût, avec « ×N » dans le nom.
+      const qty = c.perLevelStack ? (upgradeCounts?.[c.id] ?? 1) : 1;
+      return chip(qty > 1 ? `${c.name} ×${qty}` : c.name, {
         // Partagée : payée une fois pour le Fer de Lance → « … Ko · partagée » (pas un coût par ligne).
         title: c.name,
         price: c.shared
           ? `${c.cost > 0 ? `${c.cost} Ko · ` : ""}partagée`
           : c.cost > 0
-            ? `${c.cost} Ko`
+            ? `${c.cost * qty} Ko`
             : "auto",
         lines: c.rulesText.map((r) => r.text),
-      }),
-    );
+      });
+    });
   // Magie : le grimoire acheté (avec son coût) puis une entrée « N sorts » (coût total).
   const magie: SummaryChip[] = [];
   const grim = grimoireId ? cat.grimoires.find((g) => g.id === grimoireId) : undefined;
@@ -97,17 +99,10 @@ export function PurchaseSummary({
     ["Magie", magie],
   ];
   const shown = rows.filter(([, v]) => v.length > 0);
-  // Rien à montrer (ni achat, ni alerte) → pas de panneau du tout (plus de « Aucun achat »).
-  if (shown.length === 0 && issues.length === 0) return null;
+  // Rien à acheter → pas de panneau (les erreurs sont affichées sur la ligne de la figurine).
+  if (shown.length === 0) return null;
   return (
     <div className="bld-loadout">
-      {issues.length > 0 && (
-        <div className="bld-loadout-issues">
-          {issues.map((m, k) => (
-            <span key={k}>⚠ {m}</span>
-          ))}
-        </div>
-      )}
       {shown.length > 0 && (
         <div className="bld-loadout-groups">
           {shown.map(([label, vals]) => (

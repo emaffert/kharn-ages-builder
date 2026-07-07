@@ -97,6 +97,8 @@ export function FigureEditor({
   munitions,
   onMunTier,
   onToggleUpgrade,
+  upgradeCounts,
+  onSetUpgradeCount,
   onGrimoire,
   onToggleSpell,
   onInfo,
@@ -115,6 +117,8 @@ export function FigureEditor({
   munitions: Record<string, Record<string, number>>;
   onMunTier: (equipId: string, typeId: string, tierIndex: number | null) => void;
   onToggleUpgrade: (id: string) => void;
+  upgradeCounts?: Record<string, number>;
+  onSetUpgradeCount: (id: string, qty: number) => void;
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
@@ -152,6 +156,8 @@ export function FigureEditor({
           onInfo={onInfo}
           upgrades={upgrades}
           onToggleUpgrade={onToggleUpgrade}
+          upgradeCounts={upgradeCounts}
+          onSetUpgradeCount={onSetUpgradeCount}
           mods={mods}
         />
       )}

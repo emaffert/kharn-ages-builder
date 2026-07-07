@@ -180,6 +180,9 @@ export function specialCardsForProfile(profile: Profile, cat: Catalog): SpecialC
   return cat.specialCards.filter(
     (card) =>
       card.scope.profileIds?.includes(profile.id) ||
-      (card.scope.trait ? profile.traits.includes(card.scope.trait) : false),
+      (card.scope.trait ? profile.traits.includes(card.scope.trait) : false) ||
+      (card.scope.factionIds && profile.factionId
+        ? card.scope.factionIds.includes(profile.factionId)
+        : false),
   );
 }

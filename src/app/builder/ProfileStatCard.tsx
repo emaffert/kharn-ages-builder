@@ -31,6 +31,8 @@ export function ProfileStatCard({
   showEquipment = false,
   upgrades,
   onToggleUpgrade,
+  upgradeCounts,
+  onSetUpgradeCount,
   mods,
 }: {
   p: Profile;
@@ -40,10 +42,14 @@ export function ProfileStatCard({
   /** En édition : liste des améliorations achetées + bascule (cases à cocher dans la carte). */
   upgrades?: string[];
   onToggleUpgrade?: (id: string) => void;
+  /** Quantités des améliorations *empilables* (`perLevelStack`), + setter (stepper 0..niveau). */
+  upgradeCounts?: Record<string, number>;
+  onSetUpgradeCount?: (id: string, qty: number) => void;
   /** Modifications d'effets à refléter sur le profil affiché (stats/compétences/traits). */
   mods?: ProfileMods;
 }) {
   // Rend une caractéristique en tenant compte d'un éventuel modificateur d'effet.
+  const fmtArmor = (n: number | undefined) => (n == null ? "—" : n > 0 ? `+${n}` : String(n));
   const statCell = (k: string, label: string, base: number | null | undefined) => {
     const d = mods?.statDeltas?.[k];
     const value = d != null ? (typeof base === "number" ? base : 0) + d : base;
@@ -106,7 +112,9 @@ export function ProfileStatCard({
   const limLabel =
     p.limitation.kind === "special"
       ? "Limitation •"
-      : `Limitation ${p.limitation.kind}${p.limitation.value != null ? ` ${p.limitation.value}` : ""}`;
+      : p.limitation.kind === "X"
+        ? `Limitation ${p.limitation.value ?? ""}`.trim() // X : on n'affiche que la valeur
+        : `Limitation ${p.limitation.kind}`;
   return (
     <div className="fe-statcard">
       <div className="fe-card">
@@ -141,6 +149,21 @@ export function ProfileStatCard({
             {statCell("pv", "PV", p.pv)}
             {statCell("stature", "Stature", p.stature)}
           </div>
+          {p.armor && (
+            <div
+              className="fe-armor"
+              title="Armure — protection en cas d'échec / seuil / protection en cas de réussite"
+            >
+              <span className="fe-armor-lab">🛡 Armure</span>
+              <span className="fe-armor-vals">
+                {fmtArmor(p.armor.protectionEchec)} <i>/</i> {p.armor.seuil ?? "—"}{" "}
+                <i>/</i> {fmtArmor(p.armor.protectionReussite)}
+              </span>
+              {p.armor.durability != null && (
+                <span className="fe-armor-dur">durabilité {p.armor.durability}</span>
+              )}
+            </div>
+          )}
         </div>
         <div className="fe-skills">
           {skillOrder.map((id) => {
@@ -202,28 +225,64 @@ export function ProfileStatCard({
             <SectionTitle>Améliorations</SectionTitle>
             {canEditUpgrades ? (
               <div className="fe-col">
-                {ameliorations.map((c) => (
-                  <label key={c.id} className="fe-check">
-                    <input
-                      type="checkbox"
-                      checked={upgrades?.includes(c.id) ?? false}
-                      onChange={() => onToggleUpgrade?.(c.id)}
-                    />
-                    <button
-                      className="nm"
-                      onClick={() =>
-                        onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "gratuit", lines: c.rulesText.map((r) => r.text) })
-                      }
-                      title="Voir le détail"
-                    >
-                      {c.name}
-                    </button>
-                    <span className="px">
-                      {c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}
-                      {c.shared ? " · partagée" : ""}
-                    </span>
-                  </label>
-                ))}
+                {ameliorations.map((c) => {
+                  const detail = () =>
+                    onInfo({
+                      title: c.name,
+                      price: c.cost > 0 ? `${c.cost} Ko` : "gratuit",
+                      lines: c.rulesText.map((r) => r.text),
+                    });
+                  // Amélioration empilable : stepper 0..niveau, coût = quantité × coût unitaire.
+                  if (c.perLevelStack && onSetUpgradeCount) {
+                    const max = p.level ?? 1;
+                    const n = upgradeCounts?.[c.id] ?? (upgrades?.includes(c.id) ? 1 : 0);
+                    return (
+                      <div key={c.id} className="fe-check fe-upstep">
+                        <span className="fe-stepper">
+                          <span className="qty">{n}</span>
+                          <span className="fe-stepbtns">
+                            <button
+                              className="fe-step"
+                              onClick={() => onSetUpgradeCount(c.id, n + 1)}
+                              disabled={n >= max}
+                              aria-label="Ajouter"
+                            >
+                              +
+                            </button>
+                            <button
+                              className="fe-step"
+                              onClick={() => onSetUpgradeCount(c.id, n - 1)}
+                              disabled={n <= 0}
+                              aria-label="Retirer"
+                            >
+                              −
+                            </button>
+                          </span>
+                        </span>
+                        <button className="nm" onClick={detail} title="Voir le détail">
+                          {c.name}
+                        </button>
+                        <span className="px">{n > 0 ? `+${n * c.cost} Ko` : `${c.cost} Ko/u`}</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <label key={c.id} className="fe-check">
+                      <input
+                        type="checkbox"
+                        checked={upgrades?.includes(c.id) ?? false}
+                        onChange={() => onToggleUpgrade?.(c.id)}
+                      />
+                      <button className="nm" onClick={detail} title="Voir le détail">
+                        {c.name}
+                      </button>
+                      <span className="px">
+                        {c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}
+                        {c.shared ? " · partagée" : ""}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             ) : (
               <div className="fe-linked">

@@ -3,6 +3,7 @@ import {
   parseCatalog,
   type Catalog,
   type Equipment,
+  type Model,
   type Profile,
   type Skill,
   type SpecialCard,
@@ -41,6 +42,30 @@ function toggle(list: string[], key: string): string[] {
   return list.includes(key) ? list.filter((k) => k !== key) : [...list, key];
 }
 
+/** Un modèle est-il référencé ailleurs que par ses profils (consumesSlotOf, sélecteurs `modelIds`) ? */
+function isModelReferenced(cat: Catalog, modelId: string): boolean {
+  if (cat.profiles.some((p) => p.limitation?.consumesSlotOf?.modelId === modelId)) return true;
+  let found = false;
+  const walk = (n: unknown): void => {
+    if (found || n == null) return;
+    if (Array.isArray(n)) {
+      n.forEach(walk);
+      return;
+    }
+    if (typeof n === "object") {
+      for (const [k, v] of Object.entries(n as Record<string, unknown>)) {
+        if (k === "modelIds" && Array.isArray(v) && v.includes(modelId)) {
+          found = true;
+          return;
+        }
+        walk(v);
+      }
+    }
+  };
+  walk({ profiles: cat.profiles, specialCards: cat.specialCards, spells: cat.spells });
+  return found;
+}
+
 /**
  * Édition locale du catalogue (admin). Les modifications sont conservées dans le navigateur
  * (localStorage) et peuvent être exportées en JSON pour être commitées par un mainteneur.
@@ -74,6 +99,56 @@ export function useCatalogStore() {
   const updateProfile = useCallback(
     (id: string, patch: Partial<Profile>) =>
       apply((c) => mapProfile(c, id, (p) => ({ ...p, ...patch }))),
+    [apply],
+  );
+
+  /** Modifie un modèle (groupe de figurines partageant un socle, ex. « du Sacrifice » = Prêtre + Bourreau). */
+  const updateModel = useCallback(
+    (id: string, patch: Partial<Model>) =>
+      apply((c) => ({ ...c, models: c.models.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
+    [apply],
+  );
+
+  /** Crée un nouveau modèle (groupe) vide et renvoie son id. */
+  const addModel = useCallback((factionId?: string): string => {
+    const id = `model-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      models: [...c.models, { id, name: "Nouveau groupe", factionId, profileIds: [] }],
+    }));
+    return id;
+  }, [apply]);
+
+  /**
+   * Rattache un profil à un autre modèle (regroupe des variantes, ex. tous les Guerriers khérops).
+   * Met à jour `profile.modelId` ET les `profileIds` des modèles, puis supprime les modèles vidés
+   * par le déplacement (sauf s'ils sont encore référencés ailleurs).
+   */
+  const assignProfileToModel = useCallback(
+    (profileId: string, targetModelId: string) =>
+      apply((c) => {
+        const profiles = c.profiles.map((p) =>
+          p.id === profileId ? { ...p, modelId: targetModelId } : p,
+        );
+        const models = c.models.map((m) => ({
+          ...m,
+          profileIds:
+            m.id === targetModelId
+              ? [...new Set([...m.profileIds, profileId])]
+              : m.profileIds.filter((id) => id !== profileId),
+        }));
+        const next = { ...c, profiles, models };
+        // Nettoie les modèles désormais vides, sauf la cible et ceux encore référencés.
+        return {
+          ...next,
+          models: models.filter(
+            (m) =>
+              m.id === targetModelId ||
+              m.profileIds.length > 0 ||
+              isModelReferenced(next, m.id),
+          ),
+        };
+      }),
     [apply],
   );
 
@@ -300,6 +375,9 @@ export function useCatalogStore() {
     unverifiedCount,
     updateField,
     updateProfile,
+    updateModel,
+    addModel,
+    assignProfileToModel,
     updateEquipment,
     addEquipment,
     removeEquipment,

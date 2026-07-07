@@ -322,6 +322,9 @@ export function AdminCatalog() {
                   cat={catalog}
                   updateField={store.updateField}
                   updateProfile={store.updateProfile}
+                  updateModel={store.updateModel}
+                  addModel={store.addModel}
+                  assignProfileToModel={store.assignProfileToModel}
                   setIcon={store.setIcon}
                   toggleUnverified={store.toggleUnverified}
                 />

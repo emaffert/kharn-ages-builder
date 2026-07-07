@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { iconFor } from "@core";
-import type { Catalog, Constraint, Effect, Level, Profile } from "@core";
+import type { Catalog, Constraint, Effect, Level, Model, Profile } from "@core";
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
@@ -16,9 +16,14 @@ interface DetailProps {
   cat: Catalog;
   updateField: (id: string, path: string, value: FieldValue) => void;
   updateProfile: (id: string, patch: Partial<Profile>) => void;
+  updateModel: (id: string, patch: Partial<Model>) => void;
+  addModel: (factionId?: string) => string;
+  assignProfileToModel: (profileId: string, targetModelId: string) => void;
   setIcon: (cardImage: string, dataUrl: string | null) => void;
   toggleUnverified: (id: string, key: string) => void;
 }
+
+const ROMAN: Record<number, string> = { 1: "I", 2: "II", 3: "III" };
 
 /** Emplacement d'icône (partagée ou propre au niveau) : aperçu + boutons éditer/retirer. */
 export function IconSlot({
@@ -66,7 +71,7 @@ export function IconSlot({
   );
 }
 
-export function ProfileDetail({ profile, cat, updateField, updateProfile, setIcon, toggleUnverified }: DetailProps) {
+export function ProfileDetail({ profile, cat, updateField, updateProfile, updateModel, addModel, assignProfileToModel, setIcon, toggleUnverified }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
   const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
@@ -86,6 +91,18 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
   };
   const setArmor = (p: Partial<NonNullable<Profile["armor"]>>) =>
     patch({ armor: { ...(profile.armor ?? {}), ...p } });
+  // Modèle = groupe de figurines (ex. « du Sacrifice » = Prêtre + Bourreau). Le nom est partagé.
+  const model = profile.modelId != null ? cat.models.find((m) => m.id === profile.modelId) : undefined;
+  const siblings = model ? cat.profiles.filter((p) => p.modelId === model.id) : [];
+  // Modèles proposés au rattachement : ceux de la même faction (+ le modèle courant), par nom.
+  const groupOptions = cat.models
+    .filter((m) => (m.factionId ?? null) === (profile.factionId ?? null) || m.id === profile.modelId)
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  const NEW_GROUP = "__new__";
+  const onGroupChange = (value: string) => {
+    const target = value === NEW_GROUP ? addModel(profile.factionId) : value;
+    assignProfileToModel(profile.id, target);
+  };
 
   // Une contrainte de carte ne concerne ce profil que si son sujet est ce profil
   // (ou si elle n'a pas de sujet précis). Évite que Xayìn hérite des contraintes de Muskh.
@@ -201,6 +218,39 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, setIco
             />
             Mage
           </label>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-xs adm-faint">Groupe (modèle)</span>
+          <select
+            value={profile.modelId ?? ""}
+            onChange={(e) => onGroupChange(e.target.value)}
+            className={INPUT}
+            title="Rattache cette figurine à un groupe (regroupe les variantes, ex. les Guerriers)"
+          >
+            {profile.modelId == null && <option value="">— aucun —</option>}
+            {groupOptions.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
+              </option>
+            ))}
+            <option value={NEW_GROUP}>＋ Nouveau groupe…</option>
+          </select>
+          {model && (
+            <input
+              value={model.name}
+              onChange={(e) => updateModel(model.id, { name: e.target.value })}
+              className={`${INPUT} w-48`}
+              title="Renomme le groupe (nom partagé par toutes ses figurines)"
+            />
+          )}
+          {model && siblings.length > 1 && (
+            <span className="text-xs adm-faint">
+              regroupe{" "}
+              {siblings
+                .map((s) => `${s.name}${s.level != null ? ` (${ROMAN[s.level] ?? s.level})` : ""}`)
+                .join(", ")}
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-xs adm-faint">Limitation</span>

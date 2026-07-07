@@ -48,6 +48,38 @@ describe("useCatalogStore", () => {
     ]);
   });
 
+  it("rattache un profil à un autre modèle et supprime le modèle vidé", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    const moved = result.current.catalog.profiles.find((p) => p.modelId != null)!;
+    const origin = moved.modelId!;
+    const originCount = () =>
+      result.current.catalog.profiles.filter((p) => p.modelId === origin).length;
+    const before = originCount();
+    // Déplace le profil dans un nouveau groupe dédié.
+    let dest = "";
+    act(() => {
+      dest = result.current.addModel(moved.factionId);
+    });
+    act(() => result.current.assignProfileToModel(moved.id, dest));
+    expect(result.current.catalog.profiles.find((p) => p.id === moved.id)!.modelId).toBe(dest);
+    expect(result.current.catalog.models.find((m) => m.id === dest)!.profileIds).toContain(moved.id);
+    expect(originCount()).toBe(before - 1);
+    // Le renvoie vers son groupe d'origine → le groupe dédié, désormais vide, est supprimé.
+    act(() => result.current.assignProfileToModel(moved.id, origin));
+    expect(result.current.catalog.models.find((m) => m.id === dest)).toBeUndefined();
+    expect(originCount()).toBe(before);
+  });
+
+  it("crée un nouveau modèle vide via addModel", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    let id = "";
+    act(() => {
+      id = result.current.addModel("kherops");
+    });
+    const m = result.current.catalog.models.find((x) => x.id === id);
+    expect(m).toMatchObject({ factionId: "kherops", profileIds: [] });
+  });
+
   it("importe un catalogue JSON valide (round-trip)", () => {
     const { result } = renderHook(() => useCatalogStore());
     const json = JSON.stringify({ ...result.current.catalog, version: "importe" });

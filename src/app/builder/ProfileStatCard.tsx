@@ -1,6 +1,6 @@
 import { specialCardsForProfile } from "@ui/explain";
 import { Tag, STAT_FULL } from "@ui";
-import { iconFor, type Catalog, type Profile } from "@core";
+import { iconFor, type Catalog, type MasteryDomain, type Profile } from "@core";
 import { SectionTitle } from "./components";
 import { MasteryDie } from "./MasteryDie";
 import {
@@ -25,6 +25,8 @@ export type ProfileMods = {
   grantedUpgrades?: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
   /** Provenance des modifications (clé « stat:… » / « skill:… » / « trait:… » → effets responsables). */
   effectSources?: Record<string, { label: string; text: string }[]>;
+  /** Dés de maîtrise octroyés par effet (ex. Bannière Khéropse). */
+  grantedMasteryDice?: MasteryDomain[][];
 };
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
@@ -234,11 +236,16 @@ export function ProfileStatCard({
           </div>
         )}
         {/* Dés de maîtrise : tout en bas de la carte (comme sur la carte officielle). */}
-        {p.masteryDice.length > 0 && (
+        {(p.masteryDice.length > 0 || (mods?.grantedMasteryDice?.length ?? 0) > 0) && (
           <div className="fe-mastery">
             <div className="fe-dice">
               {p.masteryDice.map((die, i) => (
                 <MasteryDie key={i} domains={die} />
+              ))}
+              {mods?.grantedMasteryDice?.map((die, i) => (
+                <span key={`g${i}`} className="fe-die-granted" title="Dé de maîtrise octroyé par un effet">
+                  <MasteryDie domains={die} />
+                </span>
               ))}
             </div>
           </div>

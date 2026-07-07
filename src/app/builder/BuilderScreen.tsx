@@ -679,6 +679,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               grantedTraitIds: evaluation.grantedTraits[editItem.inst.instanceId],
               grantedUpgrades: evaluation.grantedUpgrades[editItem.inst.instanceId],
               effectSources: evaluation.effectSources[editItem.inst.instanceId],
+              grantedMasteryDice: evaluation.grantedMasteryDice[editItem.inst.instanceId],
             }}
           />
         </Dialog>

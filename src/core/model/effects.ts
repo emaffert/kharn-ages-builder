@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EffectScopeSchema, EquipmentCategorySchema, SelectorSchema } from "./common";
+import { EffectScopeSchema, EquipmentCategorySchema, MasteryDomainSchema, SelectorSchema } from "./common";
 
 /**
  * Effet = modificateur dynamique (coût, déblocage d'option, octroi de compétence/trait),
@@ -69,6 +69,11 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
    * Ne touche que les limitations « X » (U/P inchangées).
    */
   z.object({ kind: z.literal("limit-modifier"), amount: z.number() }),
+  /**
+   * Octroie un **dé de maîtrise** supplémentaire aux cibles (ex. Bannière Khéropse). `domains` = les
+   * domaines actifs de ce dé (offensive/defensive/objectif/tir/esoterique). Affiché sur la fiche.
+   */
+  z.object({ kind: z.literal("grant-mastery-die"), domains: z.array(MasteryDomainSchema) }),
 ]);
 export type EffectOperation = z.infer<typeof EffectOperationSchema>;
 

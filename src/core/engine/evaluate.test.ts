@@ -420,6 +420,15 @@ describe("Khérops — concepts (Lieutenant / Commandant / Ogodeï)", () => {
     const r2 = evaluateList(catalog, makeList([cmd, addOnly], "kherops", "bataille"));
     expect(r2.costByInstance[addOnly.instanceId]).toBe(79 + 9);
   });
+
+  it("Bannière Khéropse : octroie un dé de maîtrise au Porte-Bannière qui la porte", () => {
+    const pb = inst("kherops-porte-banniere-2", { specialCardIds: ["banniere-kheropse"] });
+    const r = evaluateList(catalog, makeList([pb], "kherops", "bataille"));
+    expect(r.grantedMasteryDice[pb.instanceId]?.length).toBe(1);
+    const sans = inst("kherops-porte-banniere-2");
+    const r2 = evaluateList(catalog, makeList([sans], "kherops", "bataille"));
+    expect(r2.grantedMasteryDice[sans.instanceId]).toBeUndefined();
+  });
 });
 
 describe("stat-max (Doctrine de l'Ordre)", () => {

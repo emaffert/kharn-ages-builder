@@ -129,6 +129,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     case "limit-modifier":
       base = `${op.amount >= 0 ? "+" : ""}${op.amount} à la limitation (X) de ${tgt}`;
       break;
+    case "grant-mastery-die":
+      base = `Octroie un dé de maîtrise (${op.domains.join(", ") || "vierge"}) à ${tgt}`;
+      break;
   }
   if (e.condition) {
     const clauses = Array.isArray(e.condition) ? e.condition : [e.condition];

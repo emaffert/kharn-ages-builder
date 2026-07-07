@@ -5,6 +5,7 @@ import type {
   EffectScope,
   FerDeLance,
   ListDocument,
+  MasteryDomain,
   Profile,
   ProfileInstance,
   Selector,
@@ -71,6 +72,8 @@ export interface EvaluationResult {
   effectSources: Record<string, Record<string, EffectSourceRef[]>>;
   /** Bonus de limitation par groupe `modèle#niveau` (effet `limit-modifier`, ex. Lieutenant). Pour le constructeur. */
   limitBonuses: Record<string, number>;
+  /** Dés de maîtrise octroyés par effet, par instance (ex. Bannière Khéropse). Pour l'affichage. */
+  grantedMasteryDice: Record<string, MasteryDomain[][]>;
   issues: Issue[];
 }
 
@@ -1048,6 +1051,25 @@ function collectEffectSources(
   return out;
 }
 
+/** Dés de maîtrise octroyés par effet (ex. Bannière Khéropse), par instance. Pour l'affichage. */
+function collectGrantedMasteryDice(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+): Map<string, MasteryDomain[][]> {
+  const out = new Map<string, MasteryDomain[][]>();
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "grant-mastery-die") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+    for (const ri of resolveTargets(occ, resolved)) {
+      const arr = out.get(ri.instance.instanceId) ?? [];
+      arr.push(op.domains);
+      out.set(ri.instance.instanceId, arr);
+    }
+  }
+  return out;
+}
+
 function computeSkillValues(
   resolved: ResolvedInstance[],
   occurrences: EffectOccurrence[],
@@ -1141,6 +1163,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const statDeltasByInstance = computeStatDeltas(display, displayOcc);
   const skillValuesByInstance = computeSkillValues(display, displayOcc);
   const sourcesByInstance = collectEffectSources(display, displayOcc, cat);
+  const grantedDiceByInstance = collectGrantedMasteryDice(display, displayOcc);
   const displayById = new Map(display.map((ri) => [ri.instance.instanceId, ri]));
 
   const costByInstance: Record<string, number> = {};
@@ -1151,6 +1174,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const skillValues: Record<string, Record<string, number>> = {};
   const grantedUpgrades: Record<string, GrantedUpgrade[]> = {};
   const effectSources: Record<string, Record<string, EffectSourceRef[]>> = {};
+  const grantedMasteryDice: Record<string, MasteryDomain[][]> = {};
   for (const ri of resolved) {
     const id = ri.instance.instanceId;
     const c = cost.get(id) ?? 0;
@@ -1179,6 +1203,8 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     if (sv && sv.size > 0) skillValues[id] = Object.fromEntries(sv);
     const src = sourcesByInstance.get(id);
     if (src && src.size > 0) effectSources[id] = Object.fromEntries(src);
+    const gd = grantedDiceByInstance.get(id);
+    if (gd && gd.length > 0) grantedMasteryDice[id] = gd;
   }
   const totalCost =
     Object.values(costByInstance).reduce((s, c) => s + c, 0) + ostCardsCost(list, cat);
@@ -1194,6 +1220,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     grantedUpgrades,
     effectSources,
     limitBonuses: Object.fromEntries(limitBonuses),
+    grantedMasteryDice,
     issues,
   };
 }

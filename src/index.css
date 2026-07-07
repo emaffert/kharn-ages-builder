@@ -687,6 +687,8 @@ body {
 /* Bloc dés en bas de carte : le titre a été retiré, on garde la séparation d'avec le contenu au-dessus. */
 .fe-mastery { margin-top: 26px; }
 .fe-dice { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+/* Dé de maîtrise octroyé par un effet (ex. Bannière Khéropse) : halo braise pour le distinguer. */
+.fe-die-granted { display: inline-flex; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ember) 65%, transparent)); }
 /* Dé de maîtrise : `vide.png` en fond, chaque icône positionnée dans sa section (registration alpha,
    cf. MasteryDie.tsx). Assets N&B utilisés tels quels en thème clair ; en sombre, `--km-tune`
    (défini par thème) inverse et réchauffe l'ensemble en teinte os pour ressortir sur le fond. */

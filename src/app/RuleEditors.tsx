@@ -7,8 +7,8 @@ import type {
   Selector,
 } from "@core";
 import { describeConstraint, describeEffect } from "@ui/explain";
-import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared";
-import { Combobox } from "./admin/primitives";
+import { EQUIPMENT_CATEGORIES, MASTERY_DOMAINS, INPUT, removeAt, replaceAt } from "./admin/shared";
+import { Combobox, DomainIcon } from "./admin/primitives";
 
 /** Éditeurs structurés des contraintes et effets (propres à un profil). */
 
@@ -275,6 +275,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, amount: 0 };
     case "limit-modifier":
       return { kind, amount: 1 };
+    case "grant-mastery-die":
+      return { kind, domains: [] };
   }
 }
 
@@ -312,6 +314,7 @@ function OperationEditor({
             "skill-count",
             "spell-pages",
             "limit-modifier",
+            "grant-mastery-die",
           ] as const
         ).map((k) => (
           <option key={k} value={k}>
@@ -334,6 +337,27 @@ function OperationEditor({
       )}
       {op.kind === "limit-modifier" && (
         <Num label="montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
+      )}
+      {op.kind === "grant-mastery-die" && (
+        <div className="flex w-full flex-wrap items-center gap-3 text-xs adm-faint">
+          domaines du dé
+          {MASTERY_DOMAINS.map((d) => {
+            const on = op.domains.includes(d);
+            return (
+              <label key={d} className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() =>
+                    onChange({ ...op, domains: on ? op.domains.filter((x) => x !== d) : [...op.domains, d] })
+                  }
+                />
+                <DomainIcon domain={d} />
+                {d}
+              </label>
+            );
+          })}
+        </div>
       )}
       {op.kind === "cost-set" && (
         <>

@@ -349,6 +349,8 @@ describe("carte à portée Ost (Pacte du Secret)", () => {
     const res = evaluateList(catalog, withOst(members, ["pacte-du-secret"]));
     expect(has(res, "ost-card:pacte-du-secret")).toBe(false);
     expect(res.grantedSkills[myriam.instanceId]?.some((s) => s.skillId === "rusee")).toBe(true);
+    // Provenance : la compétence octroyée pointe vers la carte responsable.
+    expect(res.effectSources[myriam.instanceId]?.["skill:rusee"]?.[0]?.label).toBe("Pacte du Secret");
   });
 
   it("n'octroie RIEN tant que la carte n'est pas sélectionnée, même si la composition est réunie", () => {

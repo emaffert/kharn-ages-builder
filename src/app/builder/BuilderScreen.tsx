@@ -677,6 +677,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               grantedSkills: evaluation.grantedSkills[editItem.inst.instanceId],
               grantedTraitIds: evaluation.grantedTraits[editItem.inst.instanceId],
               grantedUpgrades: evaluation.grantedUpgrades[editItem.inst.instanceId],
+              effectSources: evaluation.effectSources[editItem.inst.instanceId],
             }}
           />
         </Dialog>
@@ -786,14 +787,27 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         })()}
       {itemInfo && (
         <Dialog open onOpenChange={(o) => !o && setItemInfo(null)} title={itemInfo.title} size="sm">
-          <span className="mdl-price">{itemInfo.price}</span>
-          <div>
-            {itemInfo.lines.map((l, k) => (
-              <p key={k} className="mdl-line">
-                {l}
-              </p>
-            ))}
-          </div>
+          {itemInfo.price && <span className="mdl-price">{itemInfo.price}</span>}
+          {itemInfo.lines.length > 0 && (
+            <div>
+              {itemInfo.lines.map((l, k) => (
+                <p key={k} className="mdl-line">
+                  {l}
+                </p>
+              ))}
+            </div>
+          )}
+          {itemInfo.sources && itemInfo.sources.length > 0 && (
+            <div className={`mdl-sources${itemInfo.lines.length === 0 ? " mdl-sources--bare" : ""}`}>
+              <div className="mdl-sources-label">Modifiée par</div>
+              {itemInfo.sources.map((s, k) => (
+                <p key={k} className="mdl-source">
+                  <b>{s.label}</b>
+                  {s.text ? ` — ${s.text}` : ""}
+                </p>
+              ))}
+            </div>
+          )}
         </Dialog>
       )}
       {io === "export" && (

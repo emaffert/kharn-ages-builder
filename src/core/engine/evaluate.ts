@@ -63,7 +63,19 @@ export interface EvaluationResult {
   skillValues: Record<string, Record<string, number>>;
   /** Améliorations d'équipement disponibles (octroyées par effet), par instance. Pour le constructeur. */
   grantedUpgrades: Record<string, GrantedUpgrade[]>;
+  /**
+   * Provenance des modifications affichées (stats/compétences/traits), par instance puis par clé
+   * (`stat:<carac>`, `skill:<id>`, `trait:<id>`) → liste des effets responsables (nom + texte).
+   * Permet d'expliquer, au clic sur une valeur colorée, quel effet la modifie.
+   */
+  effectSources: Record<string, Record<string, EffectSourceRef[]>>;
   issues: Issue[];
+}
+
+/** Un effet responsable d'une modification affichée : nom de la source + texte de la règle. */
+export interface EffectSourceRef {
+  label: string;
+  text: string;
 }
 
 interface CatalogIndex {
@@ -931,6 +943,49 @@ function computeStatDeltas(
 }
 
 /** Valeurs de compétences dérivées d'un décompte (skill-count), par instance : skillId -> valeur. */
+/** Nom lisible de la source d'un effet (carte, profil, monture, équipement). */
+function effectSourceLabel(effect: Effect, cat: Catalog): string {
+  const { kind, id } = effect.source;
+  if (kind === "special-card") return cat.specialCards.find((c) => c.id === id)?.name ?? id;
+  if (kind === "profile") return cat.profiles.find((p) => p.id === id)?.name ?? id;
+  if (kind === "mount") return cat.mounts.find((m) => m.id === id)?.name ?? id;
+  if (kind === "equipment") return cat.equipment.find((e) => e.id === id)?.name ?? id;
+  return id;
+}
+
+/**
+ * Provenance des modifications : pour chaque instance et chaque clé modifiée (`stat:…`, `skill:…`,
+ * `trait:…`), la liste des effets responsables. Mêmes gardes que les fonctions de calcul
+ * (condition + cibles) pour rester cohérent avec ce qui est réellement appliqué.
+ */
+function collectEffectSources(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+  cat: Catalog,
+): Map<string, Map<string, EffectSourceRef[]>> {
+  const out = new Map<string, Map<string, EffectSourceRef[]>>();
+  const add = (id: string, key: string, ref: EffectSourceRef) => {
+    const m = out.get(id) ?? new Map<string, EffectSourceRef[]>();
+    const arr = m.get(key) ?? [];
+    if (!arr.some((r) => r.label === ref.label && r.text === ref.text)) arr.push(ref);
+    m.set(key, arr);
+    out.set(id, m);
+  };
+  for (const occ of occurrences) {
+    const { effect } = occ;
+    const op = effect.operation;
+    let key: string | null = null;
+    if (op.kind === "stat-modifier" || op.kind === "stat-count" || op.kind === "stat-max") key = `stat:${op.stat}`;
+    else if (op.kind === "grant-skill" || op.kind === "skill-count") key = `skill:${op.skillId}`;
+    else if (op.kind === "grant-trait") key = `trait:${op.trait}`;
+    if (!key) continue;
+    if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
+    const ref: EffectSourceRef = { label: effectSourceLabel(effect, cat), text: effect.sourceText };
+    for (const ri of resolveTargets(occ, resolved)) add(ri.instance.instanceId, key, ref);
+  }
+  return out;
+}
+
 function computeSkillValues(
   resolved: ResolvedInstance[],
   occurrences: EffectOccurrence[],
@@ -1022,6 +1077,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   applyGrants(display, displayOcc);
   const statDeltasByInstance = computeStatDeltas(display, displayOcc);
   const skillValuesByInstance = computeSkillValues(display, displayOcc);
+  const sourcesByInstance = collectEffectSources(display, displayOcc, cat);
   const displayById = new Map(display.map((ri) => [ri.instance.instanceId, ri]));
 
   const costByInstance: Record<string, number> = {};
@@ -1031,6 +1087,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const statDeltas: Record<string, Record<string, number>> = {};
   const skillValues: Record<string, Record<string, number>> = {};
   const grantedUpgrades: Record<string, GrantedUpgrade[]> = {};
+  const effectSources: Record<string, Record<string, EffectSourceRef[]>> = {};
   for (const ri of resolved) {
     const id = ri.instance.instanceId;
     const c = cost.get(id) ?? 0;
@@ -1052,6 +1109,8 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     if (sd && sd.size > 0) statDeltas[id] = Object.fromEntries(sd);
     const sv = skillValuesByInstance.get(id);
     if (sv && sv.size > 0) skillValues[id] = Object.fromEntries(sv);
+    const src = sourcesByInstance.get(id);
+    if (src && src.size > 0) effectSources[id] = Object.fromEntries(src);
   }
   const totalCost =
     Object.values(costByInstance).reduce((s, c) => s + c, 0) + ostCardsCost(list, cat);
@@ -1065,6 +1124,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     statDeltas,
     skillValues,
     grantedUpgrades,
+    effectSources,
     issues,
   };
 }

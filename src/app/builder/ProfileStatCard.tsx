@@ -1,5 +1,5 @@
 import { specialCardsForProfile } from "@ui/explain";
-import { Tag } from "@ui";
+import { Tag, STAT_FULL } from "@ui";
 import { iconFor, type Catalog, type Profile } from "@core";
 import { SectionTitle } from "./components";
 import { MasteryDie } from "./MasteryDie";
@@ -23,6 +23,8 @@ export type ProfileMods = {
   grantedTraitIds?: string[];
   /** Améliorations d'équipement octroyées (opt-in par objet, ex. arme empoisonnée). */
   grantedUpgrades?: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
+  /** Provenance des modifications (clé « stat:… » / « skill:… » / « trait:… » → effets responsables). */
+  effectSources?: Record<string, { label: string; text: string }[]>;
 };
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
@@ -50,6 +52,8 @@ export function ProfileStatCard({
   /** Modifications d'effets à refléter sur le profil affiché (stats/compétences/traits). */
   mods?: ProfileMods;
 }) {
+  // Effets responsables d'une modification affichée (clé « stat:… » / « skill:… »).
+  const sourceRefs = (key: string) => mods?.effectSources?.[key] ?? [];
   // Rend une caractéristique en tenant compte d'un éventuel modificateur d'effet.
   const fmtArmor = (n: number | undefined) => (n == null ? "—" : n > 0 ? `+${n}` : String(n));
   const statCell = (k: string, label: string, base: number | null | undefined) => {
@@ -58,12 +62,25 @@ export function ProfileStatCard({
     return (
       <span key={label} className="fe-stat">
         <span className="k">{label}</span>
-        <span
-          className={`v${d != null ? " is-fx" : ""}`}
-          title={d != null ? `base ${base ?? "—"}, ${d > 0 ? "+" : ""}${d} (effet)` : undefined}
-        >
-          {value ?? "—"}
-        </span>
+        {d != null ? (
+          <button
+            className="v is-fx"
+            title="Modifiée par un effet — voir la source"
+            onClick={() => {
+              const src = sourceRefs(`stat:${k}`);
+              onInfo({
+                title: STAT_FULL[k] ?? label,
+                price: "",
+                lines: [],
+                sources: src.length ? src : [{ label: "Effet", text: "Caractéristique modifiée par un effet." }],
+              });
+            }}
+          >
+            {value ?? "—"}
+          </button>
+        ) : (
+          <span className="v">{value ?? "—"}</span>
+        )}
       </span>
     );
   };
@@ -107,9 +124,17 @@ export function ProfileStatCard({
   const baseEq = p.baseEquipmentIds
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
-  const showSkill = (skillId: string, label: string) => {
+  // `fx` : la compétence est *affichée comme modifiée* (couleur braise) → on montre la provenance.
+  // Une compétence native que l'effet ne fait que redonder n'est pas « fx » et n'affiche pas de source.
+  const showSkill = (skillId: string, label: string, fx = false) => {
     const sk = cat.skills.find((x) => x.id === skillId);
-    onInfo({ title: label, price: "compétence", lines: [sk?.sourceText ?? "Description indisponible."] });
+    const src = fx ? sourceRefs(`skill:${skillId}`) : [];
+    onInfo({
+      title: label,
+      price: "compétence",
+      lines: [sk?.sourceText ?? "Description indisponible."],
+      sources: src.length ? src : undefined,
+    });
   };
   const limLabel =
     p.limitation.kind === "special"
@@ -179,7 +204,7 @@ export function ProfileStatCard({
               <button
                 key={id}
                 className={`fe-skill${isFx ? " is-fx" : ""}`}
-                onClick={() => showSkill(id, label)}
+                onClick={() => showSkill(id, label, isFx)}
                 title={isFx ? "Compétence ou valeur modifiée par un effet" : undefined}
               >
                 {label}

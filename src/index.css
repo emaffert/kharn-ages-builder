@@ -619,6 +619,14 @@ body {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent); margin-bottom: 12px; }
 .mdl-line { font-size: 13.5px; line-height: 1.5; color: var(--bone); }
 .mdl-line + .mdl-line { margin-top: 5px; }
+/* Bloc « Modifiée par » : détaché du descriptif, teinté braise pour bien le distinguer. */
+.mdl-sources { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--hair); }
+.mdl-sources--bare { margin-top: 0; padding-top: 0; border-top: 0; }
+.mdl-sources-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
+  color: var(--ember); margin-bottom: 6px; }
+.mdl-source { font-size: 12.5px; line-height: 1.45; color: var(--bone-dim); }
+.mdl-source + .mdl-source { margin-top: 4px; }
+.mdl-source b { color: var(--bone); font-weight: 600; }
 .mdl-list { display: flex; flex-direction: column; gap: 8px; }
 .mdl-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px;
   border-radius: 10px; text-align: left; font-size: 14px; color: var(--bone); background: var(--tint-1); border: 0;
@@ -701,6 +709,11 @@ body {
   border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px var(--hair); transition: .16s var(--ease); }
 .fe-skill:hover { background: var(--tint-3); color: var(--bone); }
 /* Élément modifié par un effet (stat, compétence, trait) : accent braise + infobulle base→valeur. */
+.fe-stat button.v { font-family: inherit; font-size: inherit; line-height: inherit; background: none; border: 0;
+  padding: 0; cursor: pointer; }
+.fe-stat button.v.is-fx { text-decoration: underline dotted; text-underline-offset: 2px; }
+.fe-stat button.v.is-fx:hover { color: var(--ember-bright); }
+.fe-stat button.v:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; border-radius: 3px; }
 .fe-stat .v.is-fx { color: var(--ember); }
 .fe-skill.is-fx { color: var(--ember); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ember) 40%, transparent); }
 .fe-skill.is-fx:hover { color: var(--ember-bright); background: color-mix(in srgb, var(--ember) 12%, transparent); }

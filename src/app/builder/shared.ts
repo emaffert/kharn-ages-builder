@@ -347,4 +347,10 @@ export type Modal =
   | { kind: "recruit-level"; modelId: string };
 
 /** Fiche courte d'un achat (arme, équipement, carte) affichée au clic depuis le résumé. */
-export type ItemInfo = { title: string; price: string; lines: string[] };
+export type ItemInfo = {
+  title: string;
+  price: string;
+  lines: string[];
+  /** Effets responsables d'une modification (bloc « Modifiée par », visuellement séparé du descriptif). */
+  sources?: { label: string; text: string }[];
+};

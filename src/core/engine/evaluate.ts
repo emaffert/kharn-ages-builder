@@ -237,11 +237,24 @@ function collectEffectOccurrences(
     if (card.cost !== 0 || card.amelioration || card.ostScope) continue;
     for (const fdlId of fdlIds) {
       const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdlId);
-      const matchCount = inFdl.filter((ri) => specialCardScopeMatches(card, ri)).length;
-      if (matchCount > 0) {
-        for (const effect of card.effects) {
-          if ((!includeInGame && !effect.appliesToListBuilding) || effect.optIn) continue;
-          occurrences.push({ effect, ferDeLanceId: fdlId, sourceCount: matchCount });
+      const sources = inFdl.filter((ri) => specialCardScopeMatches(card, ri));
+      if (sources.length === 0) continue;
+      for (const effect of card.effects) {
+        if ((!includeInGame && !effect.appliesToListBuilding) || effect.optIn) continue;
+        if (effect.target.self) {
+          // Effet ciblant la source elle-même (ex. Syrga → « Embuscade ») : il faut l'identité de
+          // chaque porteuse, donc une occurrence par figurine-source.
+          for (const src of sources) {
+            occurrences.push({
+              effect,
+              ferDeLanceId: fdlId,
+              sourceInstanceId: src.instance.instanceId,
+              sourceCount: 1,
+            });
+          }
+        } else {
+          // Effet agrégé (ex. Larbin PAR Fille de Nyx) : une occurrence, modulée par le nombre de sources.
+          occurrences.push({ effect, ferDeLanceId: fdlId, sourceCount: sources.length });
         }
       }
     }

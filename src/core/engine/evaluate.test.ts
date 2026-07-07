@@ -373,6 +373,23 @@ describe("carte à portée Ost (Pacte du Secret)", () => {
   });
 });
 
+describe("carte intrinsèque à effet ciblant la source (Syrga — Dévotion Intrépide)", () => {
+  const skills = (res: ReturnType<typeof evaluateList>, id: string) =>
+    (res.grantedSkills[id] ?? []).map((s) => s.skillId);
+
+  it("Syrga gagne « Embuscade » et « Héroïque » si le Prince est dans son Fer de Lance", () => {
+    const syrga = inst("kharns-syrga");
+    const res = evaluateList(catalog, makeList([syrga, inst("kharns-prince")], "kharns", "bataille"));
+    expect(skills(res, syrga.instanceId)).toEqual(expect.arrayContaining(["embuscade", "heroique"]));
+  });
+
+  it("Syrga ne gagne rien si ni le Prince ni Engueran ne sont présents", () => {
+    const syrga = inst("kharns-syrga");
+    const res = evaluateList(catalog, makeList([syrga, inst("kharns-maitre-ordre")], "kharns", "bataille"));
+    expect(skills(res, syrga.instanceId)).not.toContain("embuscade");
+  });
+});
+
 describe("stat-max (Doctrine de l'Ordre)", () => {
   it("n'affiche pas de modification quand le max du groupe n'excède pas la base (Maître seul)", () => {
     const maitre = inst("kharns-maitre-ordre");

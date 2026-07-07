@@ -108,7 +108,7 @@
       "id": "carnivore",
       "keyword": "Carnivore",
       "hasValue": false,
-      "sourceText": "Permet d'utiliser l'action « dévorer ». Tous les combattants khârns et fangs sont par nature « carnivores », ce n'est pas écrit sur leur carte de profil, mais c'est un fait."
+      "sourceText": "Permet d'utiliser l'action « dévorer »."
     },
     {
       "id": "charge-brutale",
@@ -788,6 +788,9 @@
         },
         {
           "skillId": "endurance"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -863,6 +866,9 @@
         {
           "skillId": "aliene",
           "value": "femelle Fang"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -953,6 +959,9 @@
         {
           "skillId": "aliene",
           "value": "femelle Fang"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -1049,6 +1058,9 @@
         {
           "skillId": "aliene",
           "value": "femelle Fang"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -1149,6 +1161,9 @@
         },
         {
           "skillId": "harcelement"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1208,6 +1223,9 @@
         },
         {
           "skillId": "rusee"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1274,6 +1292,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1334,6 +1355,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1426,6 +1450,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1517,6 +1544,9 @@
         {
           "skillId": "le-sang-m-attire",
           "value": 1
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1604,6 +1634,9 @@
         },
         {
           "skillId": "rusee"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1679,6 +1712,9 @@
         {
           "skillId": "harcelement",
           "precision": "Ajoute l'effet de V lors des attaques de corps à corps à 2 et 3 PA."
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -1761,6 +1797,9 @@
         },
         {
           "skillId": "sadique"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1838,6 +1877,9 @@
         },
         {
           "skillId": "sadique"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -1918,6 +1960,9 @@
         },
         {
           "skillId": "immunise-effroi-terreur"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -1992,6 +2037,9 @@
         {
           "skillId": "seigneur-de-guerre",
           "value": 1
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -2086,6 +2134,9 @@
         {
           "skillId": "seigneur-de-guerre",
           "value": 1
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -2180,6 +2231,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -2273,6 +2327,9 @@
         {
           "skillId": "effroi",
           "value": 13
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -2334,6 +2391,9 @@
         {
           "skillId": "receptif",
           "value": "ostéomancie"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -3856,7 +3916,11 @@
         "protectionReussite": -1,
         "durability": 6
       },
-      "skills": [],
+      "skills": [
+        {
+          "skillId": "carnivore"
+        }
+      ],
       "baseEquipmentIds": [
         "lance"
       ],
@@ -3900,7 +3964,11 @@
         "protectionReussite": -2,
         "durability": 6
       },
-      "skills": [],
+      "skills": [
+        {
+          "skillId": "carnivore"
+        }
+      ],
       "baseEquipmentIds": [
         "lance"
       ],
@@ -3948,7 +4016,11 @@
         "protectionReussite": -2,
         "durability": 6
       },
-      "skills": [],
+      "skills": [
+        {
+          "skillId": "carnivore"
+        }
+      ],
       "baseEquipmentIds": [
         "pertuisane"
       ],
@@ -4013,6 +4085,9 @@
         },
         {
           "skillId": "merci"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4076,6 +4151,9 @@
         },
         {
           "skillId": "merci"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4143,6 +4221,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4204,6 +4285,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4279,6 +4363,9 @@
         {
           "skillId": "bond",
           "value": 4
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4356,6 +4443,9 @@
         {
           "skillId": "bretteur",
           "value": 1
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4419,6 +4509,9 @@
         {
           "skillId": "bretteur",
           "value": 2
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4490,6 +4583,9 @@
         {
           "skillId": "eclaireur",
           "value": 2
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4547,6 +4643,9 @@
         {
           "skillId": "eclaireur",
           "value": 3
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4616,6 +4715,9 @@
         {
           "skillId": "eclaireur",
           "value": 3
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4670,6 +4772,9 @@
       "skills": [
         {
           "skillId": "skill-1783417945899"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -4779,7 +4884,11 @@
       "stature": 4,
       "pa": 8,
       "pv": 26,
-      "skills": [],
+      "skills": [
+        {
+          "skillId": "carnivore"
+        }
+      ],
       "baseEquipmentIds": [
         "fleau"
       ],
@@ -4900,7 +5009,11 @@
         "protectionReussite": -1,
         "durability": 6
       },
-      "skills": [],
+      "skills": [
+        {
+          "skillId": "carnivore"
+        }
+      ],
       "baseEquipmentIds": [
         "hache-2-mains"
       ],
@@ -4944,7 +5057,11 @@
         "protectionReussite": -2,
         "durability": 6
       },
-      "skills": [],
+      "skills": [
+        {
+          "skillId": "carnivore"
+        }
+      ],
       "baseEquipmentIds": [
         "hache-2-mains"
       ],
@@ -4992,7 +5109,11 @@
         "protectionReussite": -2,
         "durability": 6
       },
-      "skills": [],
+      "skills": [
+        {
+          "skillId": "carnivore"
+        }
+      ],
       "baseEquipmentIds": [
         "hache-2-mains"
       ],
@@ -5064,6 +5185,9 @@
         {
           "skillId": "seigneur-de-guerre",
           "value": 3
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -5147,6 +5271,9 @@
         {
           "skillId": "seigneur-de-guerre",
           "value": 2
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -5262,6 +5389,9 @@
         {
           "skillId": "seigneur-de-guerre",
           "value": 1
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -5332,6 +5462,9 @@
         },
         {
           "skillId": "skill-1783417945899"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -5469,6 +5602,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -5547,6 +5683,9 @@
         {
           "skillId": "specialiste",
           "value": "objectif"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -5564,6 +5703,31 @@
       ],
       "traits": [],
       "recruitment": [],
+      "effects": [
+        {
+          "id": "key-empoisonner-arme",
+          "source": {
+            "kind": "profile",
+            "id": "kharns-key"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "unlock-upgrade",
+            "upgradeId": "poison",
+            "label": "Empoisonner l'arme",
+            "cost": 10,
+            "equipmentCategories": [
+              "arme-cac"
+            ]
+          },
+          "appliesToListBuilding": true,
+          "sourceText": "Peut empoisonner son arme pour 10 Ko mais elle devient incessible.",
+          "autoEnforced": true
+        }
+      ],
       "rules": [
         {
           "label": "Bourse bien remplie",
@@ -5591,32 +5755,7 @@
         "Key le Sénéchal ne reçoit PAS Indépendant (exception des Règles de bataille)."
       ],
       "cardImage": "cards/Kharns/kharns-key-gn-negociateur.jpg",
-      "unverifiedFields": [],
-      "effects": [
-        {
-          "id": "key-empoisonner-arme",
-          "source": {
-            "kind": "profile",
-            "id": "kharns-key"
-          },
-          "scope": "fer-de-lance",
-          "target": {
-            "self": true
-          },
-          "operation": {
-            "kind": "unlock-upgrade",
-            "upgradeId": "poison",
-            "label": "Empoisonner l'arme",
-            "cost": 10,
-            "equipmentCategories": [
-              "arme-cac"
-            ]
-          },
-          "appliesToListBuilding": true,
-          "autoEnforced": true,
-          "sourceText": "Peut empoisonner son arme pour 10 Ko mais elle devient incessible."
-        }
-      ]
+      "unverifiedFields": []
     },
     {
       "id": "kharns-myriam",
@@ -5659,6 +5798,9 @@
         },
         {
           "skillId": "independant"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -5744,6 +5886,9 @@
         },
         {
           "skillId": "merci"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -5813,6 +5958,9 @@
         },
         {
           "skillId": "merci"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -5877,6 +6025,9 @@
         },
         {
           "skillId": "merci"
+        },
+        {
+          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [

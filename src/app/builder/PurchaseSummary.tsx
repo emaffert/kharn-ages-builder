@@ -15,6 +15,8 @@ export function PurchaseSummary({
   upgrades,
   upgradeCounts,
   munitions,
+  equipmentUpgrades,
+  grantedUpgrades,
   onPick,
 }: {
   p: Profile;
@@ -26,6 +28,10 @@ export function PurchaseSummary({
   upgrades: string[];
   upgradeCounts?: Record<string, number>;
   munitions: Record<string, Record<string, number>>;
+  /** Améliorations d'armes/armures sélectionnées, par équipement (ex. Empoisonner sur l'arme de Key). */
+  equipmentUpgrades: Record<string, string[]>;
+  /** Améliorations octroyées à cette figurine (définitions : coût + catégories concernées). */
+  grantedUpgrades: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
   onPick: (info: ItemInfo) => void;
 }) {
   const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier", "armure"];
@@ -33,21 +39,28 @@ export function PurchaseSummary({
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
-  // Arme : coût affiché = arme + ses munitions (règles p.46) ; les munitions sont listées dans le détail.
+  // Arme : coût affiché = arme + ses munitions (règles p.46) + ses améliorations (ex. Empoisonner) ;
+  // le détail est listé dans la fiche de l'objet.
   const armes = equip
     .filter((e) => WEAPON_CATS.includes(e.category))
     .map((e) => {
       const munLines = resolveMunitionLines(munitionKindForEquip(cat, e.id), munitions[e.id]);
       const munCost = munLines.reduce((n, l) => n + l.price, 0);
+      const upsForE = (equipmentUpgrades[e.id] ?? [])
+        .map((uid) => grantedUpgrades.find((g) => g.upgradeId === uid))
+        .filter((g): g is (typeof grantedUpgrades)[number] => Boolean(g) && g!.equipmentCategories.includes(e.category));
+      const upCost = upsForE.reduce((n, g) => n + g.cost, 0);
       const base = equipInfo(e);
-      if (munCost === 0) return chip(e.name, base);
-      const weaponCost = e.cost;
+      if (munCost === 0 && upCost === 0) return chip(e.name, base);
       return chip(e.name, {
         ...base,
-        price: `${weaponCost + munCost} Ko`,
+        price: `${e.cost + munCost + upCost} Ko`,
         lines: [
           ...base.lines,
-          `Munitions (+${munCost} Ko) : ${munLines.map((l) => `${l.qty} ${l.label}`).join(", ")}`,
+          ...(munCost > 0
+            ? [`Munitions (+${munCost} Ko) : ${munLines.map((l) => `${l.qty} ${l.label}`).join(", ")}`]
+            : []),
+          ...upsForE.map((g) => `${g.label} (+${g.cost} Ko)`),
         ],
       });
     });

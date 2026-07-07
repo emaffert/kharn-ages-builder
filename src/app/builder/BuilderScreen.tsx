@@ -448,6 +448,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             upgrades={[...new Set([...(x.inst.specialCardIds ?? []), ...sharedActiveCardIds])]}
             upgradeCounts={x.inst.specialCardCounts}
             munitions={x.inst.munitions ?? {}}
+            equipmentUpgrades={x.inst.equipmentUpgrades ?? {}}
+            grantedUpgrades={evaluation.grantedUpgrades[x.inst.instanceId] ?? []}
             onPick={setItemInfo}
           />
         )}

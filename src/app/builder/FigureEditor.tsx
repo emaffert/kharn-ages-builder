@@ -321,8 +321,13 @@ function EquipPanel({
     if (!kind) return null;
     const sel = munitions[e.id] ?? {};
     const open = openMun[e.id] ?? false;
+    const base = e.baseMunitions ?? 0;
     const lines = resolveMunitionLines(kind, sel);
-    const summary = lines.length ? lines.map((l) => `${l.qty} ${l.label}`).join(", ") : "aucune";
+    const summaryParts = [
+      ...(base > 0 ? [`${base} de base`] : []),
+      ...lines.map((l) => `${l.qty} ${l.label}`),
+    ];
+    const summary = summaryParts.length ? summaryParts.join(", ") : "aucune";
     return (
       <div className="fe-mun-block">
         <button
@@ -335,6 +340,12 @@ function EquipPanel({
           Munitions ({kind.label})
           {!open && <span className="fe-mun-sum">· {summary}</span>}
         </button>
+        {open && base > 0 && (
+          <div className="fe-mun-type">
+            <span className="lab">De base</span>
+            <span className="fe-mun-base">{base} incluses · gratuit</span>
+          </div>
+        )}
         {open &&
           kind.types.map((t) => {
           const cur = sel[t.id]; // indice de palier sélectionné, ou undefined

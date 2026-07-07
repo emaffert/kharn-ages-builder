@@ -770,6 +770,7 @@ body {
 .fe-mun-sum { font-weight: 400; color: var(--bone-faint); }
 .fe-mun-type { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .fe-mun-type .lab { width: 96px; flex: none; }
+.fe-mun-base { font-size: 11px; color: var(--bone-faint); font-style: italic; }
 .fe-mun-opt { border-radius: 6px; border: 0; padding: 2px 8px; font-size: 11px; cursor: pointer;
   color: var(--bone-dim); background: transparent; box-shadow: inset 0 0 0 1px var(--hair-strong); }
 .fe-mun-opt:hover { color: var(--bone); }

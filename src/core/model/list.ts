@@ -17,7 +17,22 @@ export const ProfileInstanceSchema = z.object({
    * `munitionKind.tierPrices`). Ex. `{ arc: { simple: 1, "perce-armure": 0 } }` = 15 Ko de Simple + 5 Ko de Perce-armure.
    */
   munitions: z.record(z.string(), z.record(z.string(), z.number())).optional(),
-  mount: z.object({ mountId: z.string(), optionIds: z.array(z.string()) }).optional(),
+  /**
+   * Monture recrutée avec la figurine (« équipement inaccessible »). Figurine à part entière : elle a
+   * son propre équipement, ses améliorations et ses compétences/options achetées. `mountId` = le niveau
+   * choisi (gabarit `catalog.mounts`). Les options réservées AU CAVALIER sont dans `riderMountOptionIds`.
+   */
+  mount: z
+    .object({
+      mountId: z.string(),
+      addedEquipmentIds: z.array(z.string()).optional(),
+      removedBaseEquipmentIds: z.array(z.string()).optional(),
+      equipmentUpgrades: z.record(z.string(), z.array(z.string())).optional(),
+      skillOptionIds: z.array(z.string()).optional(),
+    })
+    .optional(),
+  /** Options (compétences/équipements) réservées au CAVALIER, débloquées par la possession d'une monture. */
+  riderMountOptionIds: z.array(z.string()).optional(),
   /** Instances rattachées (ex. Likans liés à cette Fang). */
   attachedInstanceIds: z.array(z.string()).optional(),
   /** Si cette instance occupe un emplacement gratuit « garde du corps » offert par une autre instance. */

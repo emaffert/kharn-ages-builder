@@ -116,6 +116,7 @@ function modelOptions(cat: Catalog): Option[] {
 function cleanSelector(sel: Selector): Selector {
   const out: Selector = {};
   if (sel.self) out.self = true;
+  if (sel.cavalier) out.cavalier = true;
   if (sel.all) out.all = true;
   if (sel.profileIds?.length) out.profileIds = sel.profileIds;
   if (sel.modelIds?.length) out.modelIds = sel.modelIds;
@@ -150,6 +151,10 @@ function SelectorEditor({
           lui-même (self)
         </label>
       )}
+      <label className="flex items-center gap-1 text-xs adm-muted">
+        <input type="checkbox" checked={selector.cavalier ?? false} onChange={(e) => set({ cavalier: e.target.checked })} />
+        le cavalier (effet de monture)
+      </label>
       <label className="flex items-center gap-1 text-xs adm-muted">
         <input type="checkbox" checked={selector.all ?? false} onChange={(e) => set({ all: e.target.checked })} />
         toutes les figurines (portée entière)
@@ -255,6 +260,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, amount: 0 };
     case "cost-set":
       return { kind, amount: 0 };
+    case "grimoire-discount":
+      return { kind, amount: 0 };
     case "unlock-upgrade":
       return { kind, upgradeId: "", label: "", cost: 0, equipmentCategories: [] };
     case "grant-skill":
@@ -307,6 +314,7 @@ function OperationEditor({
           [
             "cost-delta",
             "cost-set",
+            "grimoire-discount",
             "unlock-upgrade",
             "grant-skill",
             "grant-trait",
@@ -370,6 +378,21 @@ function OperationEditor({
             value={op.maxCount ?? null}
             onChange={(v) => onChange({ ...op, maxCount: v ?? undefined })}
           />
+        </>
+      )}
+      {op.kind === "grimoire-discount" && (
+        <>
+          <Num label="réduction (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
+          <select
+            value={op.tier ?? ""}
+            onChange={(e) => onChange({ ...op, tier: (e.target.value || undefined) as "petit" | "grand" | undefined })}
+            className={INPUT}
+            title="Type de grimoire concerné"
+          >
+            <option value="">tous grimoires</option>
+            <option value="petit">petit</option>
+            <option value="grand">grand</option>
+          </select>
         </>
       )}
       {op.kind === "unlock-upgrade" && (

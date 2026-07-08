@@ -64,6 +64,8 @@ export interface ListStore {
   addEquip: (instanceId: string, equipId: string) => void;
   removeEquip: (instanceId: string, equipId: string) => void;
   toggleBase: (instanceId: string, equipId: string) => void;
+  /** Attribue (ou retire avec `null`) une monture à la figurine. Conserve les options éventuelles. */
+  setMount: (instanceId: string, mountId: string | null) => void;
   setGrimoire: (instanceId: string, g: "none" | "petit" | "grand") => void;
   toggleSpell: (instanceId: string, spellId: string) => void;
   toggleUpgrade: (instanceId: string, cardId: string) => void;
@@ -187,6 +189,11 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
       })),
     toggleBase: (instanceId, equipId) =>
       patchMember(instanceId, (m) => ({ ...m, removedBaseEquipmentIds: toggle(m.removedBaseEquipmentIds, equipId) })),
+    setMount: (instanceId, mountId) =>
+      patchMember(instanceId, (m) => ({
+        ...m,
+        mount: mountId ? { ...m.mount, mountId } : undefined,
+      })),
     setGrimoire: (instanceId, g) =>
       patchMember(instanceId, (m) => ({ ...m, grimoireId: g === "none" ? undefined : g })),
     toggleSpell: (instanceId, spellId) =>

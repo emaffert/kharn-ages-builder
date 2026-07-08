@@ -8,6 +8,7 @@ import { SkillCatalogDetail } from "./admin/SkillCatalogDetail";
 import { SpecialCardDetail } from "./admin/SpecialCardDetail";
 import { SpellDetail } from "./admin/SpellDetail";
 import { MagicWaysDetail } from "./admin/MagicWaysDetail";
+import { MountsDetail } from "./admin/MountsDetail";
 import { AdminDocs } from "./admin/AdminDocs";
 import "./admin/admin.css";
 
@@ -25,13 +26,14 @@ export function AdminCatalog() {
   const store = useCatalogStore();
   const { catalog } = store;
   const [view, setView] = useState<
-    "profiles" | "equipment" | "skills" | "special-cards" | "spells" | "magic-ways"
+    "profiles" | "equipment" | "skills" | "special-cards" | "spells" | "magic-ways" | "mounts"
   >("profiles");
   const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
   const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
   const [selectedSkillId, setSelectedSkillId] = useState(catalog.skills[0]?.id ?? "");
   const [selectedCardId, setSelectedCardId] = useState(catalog.specialCards[0]?.id ?? "");
   const [selectedSpellId, setSelectedSpellId] = useState(catalog.spells[0]?.id ?? "");
+  const [selectedMountId, setSelectedMountId] = useState(catalog.mounts[0]?.id ?? "");
   const [query, setQuery] = useState("");
   // Suppression d'entité en attente de confirmation (modale au skin de l'app, action irréversible).
   const [pendingDelete, setPendingDelete] = useState<{ what: string; run: () => void } | null>(null);
@@ -98,6 +100,10 @@ export function AdminCatalog() {
   const selectedSkill = catalog.skills.find((s) => s.id === selectedSkillId);
   const selectedCard = catalog.specialCards.find((s) => s.id === selectedCardId);
   const selectedSpell = catalog.spells.find((s) => s.id === selectedSpellId);
+  const selectedMount = catalog.mounts.find((m) => m.id === selectedMountId);
+  const selectedMountType = selectedMount
+    ? catalog.mountTypes.find((t) => t.id === selectedMount.typeId)
+    : undefined;
 
   const previewImage =
     view === "profiles"
@@ -108,7 +114,9 @@ export function AdminCatalog() {
           ? selectedCard?.cardImage
           : view === "spells"
             ? selectedSpell?.cardImage
-            : undefined;
+            : view === "mounts"
+              ? selectedMountType?.cardImage
+              : undefined;
 
   const tabClass = (active: boolean) => `adm-tab ${active ? "adm-tab--on" : ""}`;
   const itemClass = (active: boolean) => `adm-item ${active ? "adm-item--on" : ""}`;
@@ -141,6 +149,9 @@ export function AdminCatalog() {
             </button>
             <button onClick={() => setView("magic-ways")} className={tabClass(view === "magic-ways")}>
               Voies
+            </button>
+            <button onClick={() => setView("mounts")} className={tabClass(view === "mounts")}>
+              Montures
             </button>
           </div>
           <div className="relative">
@@ -201,6 +212,7 @@ export function AdminCatalog() {
             {view === "special-cards" && `${filteredCards.length} carte(s) spéciale(s)`}
             {view === "spells" && `${filteredSpells.length} sort(s)`}
             {view === "magic-ways" && `${catalog.magicWays.length} voie(s) de magie`}
+            {view === "mounts" && `${catalog.mountTypes.length} type(s) · ${catalog.mounts.length} niveau(x)`}
             {store.dirty && <span className="adm-accent"> · modifié</span>}
           </p>
         </div>
@@ -310,6 +322,44 @@ export function AdminCatalog() {
                   className="adm-add w-full py-1.5"
                 >
                   + sort
+                </button>
+              </li>
+            </>
+          )}
+          {view === "mounts" && (
+            <>
+              {catalog.mountTypes.map((t) => (
+                <Fragment key={t.id}>
+                  <li className="mt-3 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider adm-faint">
+                    {t.name}
+                  </li>
+                  {catalog.mounts
+                    .filter((m) => m.typeId === t.id)
+                    .sort((a, b) => a.level - b.level)
+                    .map((m) => (
+                      <li key={m.id}>
+                        <button onClick={() => setSelectedMountId(m.id)} className={itemClass(m.id === selectedMountId)}>
+                          <span>Niveau {LEVEL_LABEL[m.level]}</span>
+                          <span className="text-xs adm-faint">{m.cost}</span>
+                        </button>
+                      </li>
+                    ))}
+                  <li>
+                    <button onClick={() => setSelectedMountId(store.addMount(t.id))} className="adm-add w-full py-1 text-xs">
+                      + niveau
+                    </button>
+                  </li>
+                </Fragment>
+              ))}
+              <li className="mt-2">
+                <button
+                  onClick={() => {
+                    const tid = store.addMountType();
+                    setSelectedMountId(store.addMount(tid));
+                  }}
+                  className="adm-add w-full py-1.5"
+                >
+                  + type de monture
                 </button>
               </li>
             </>
@@ -432,6 +482,23 @@ export function AdminCatalog() {
               onAdd={store.addMagicWay}
               onChange={store.updateMagicWay}
               onRemove={store.removeMagicWay}
+            />
+          )}
+          {view === "mounts" && (
+            <MountsDetail
+              cat={catalog}
+              mountId={selectedMountId}
+              onChangeType={store.updateMountType}
+              onRemoveType={(id) => {
+                store.removeMountType(id);
+                setSelectedMountId(catalog.mounts.find((m) => m.typeId !== id)?.id ?? "");
+              }}
+              onChangeMount={store.updateMount}
+              onRemoveMount={(id) => {
+                store.removeMount(id);
+                setSelectedMountId(catalog.mounts.find((m) => m.id !== id)?.id ?? "");
+              }}
+              setIcon={store.setIcon}
             />
           )}
         </div>

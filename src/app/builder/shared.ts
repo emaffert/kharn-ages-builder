@@ -344,7 +344,10 @@ export type Modal =
   | { kind: "edit"; instanceId: string }
   | { kind: "guard"; instanceId: string }
   | { kind: "recruit-attached"; carrierInstanceId: string; modelId: string }
-  | { kind: "recruit-level"; modelId: string };
+  | { kind: "recruit-level"; modelId: string }
+  | { kind: "mount"; instanceId: string }
+  | { kind: "mount-sheet"; instanceId: string }
+  | { kind: "mount-preview"; typeId: string };
 
 /** Fiche courte d'un achat (arme, équipement, carte) affichée au clic depuis le résumé. */
 export type ItemInfo = {

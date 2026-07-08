@@ -27,6 +27,7 @@ export function PurchaseSummary({
   equipmentUpgrades,
   grantedUpgrades,
   costRules,
+  grimoireDiscount,
   onPick,
 }: {
   p: Profile;
@@ -35,6 +36,8 @@ export function PurchaseSummary({
   removed: string[];
   /** Règles de remise par objet applicables à cette figurine (Ogodeï, Commandant…). */
   costRules: EquipmentCostRule[];
+  /** Réduction de prix de grimoire par palier (ex. Mochère), appliquée à la ligne « Magie ». */
+  grimoireDiscount?: Record<string, number>;
   grimoireId?: string;
   spellIds: string[];
   upgrades: string[];
@@ -112,11 +115,15 @@ export function PurchaseSummary({
   const magie: SummaryChip[] = [];
   const grim = grimoireId ? cat.grimoires.find((g) => g.id === grimoireId) : undefined;
   if (grim) {
+    const disc = Math.min(grimoireDiscount?.[grim.id] ?? 0, grim.cost);
     magie.push(
       chip(grim.name, {
         title: grim.name,
-        price: `${grim.cost} Ko`,
-        lines: [`${grim.pages === "illimite" ? "∞" : grim.pages} pages`],
+        price: `${grim.cost - disc} Ko`,
+        lines: [
+          `${grim.pages === "illimite" ? "∞" : grim.pages} pages`,
+          ...(disc > 0 ? [`🐎 Réduction monture : −${disc} Ko${disc >= grim.cost ? " (offert)" : ""}`] : []),
+        ],
       }),
     );
   }

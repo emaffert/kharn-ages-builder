@@ -15,6 +15,7 @@ const equipName = (cat: Catalog, id: string) =>
   cat.equipment.find((e) => e.id === id)?.name ?? id;
 
 export function describeSelector(sel: Selector, cat: Catalog): string {
+  if (sel.cavalier) return "le cavalier";
   if (sel.self) {
     if (sel.equipmentIds?.length) {
       return `son « ${sel.equipmentIds.map((id) => equipName(cat, id)).join(", ")} »`;
@@ -94,6 +95,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       break;
     case "cost-set":
       base = `Coût fixé à ${op.amount} Ko pour ${tgt}${op.maxCount ? ` (1 par source, max ${op.maxCount})` : ""}`;
+      break;
+    case "grimoire-discount":
+      base = `−${op.amount} Ko sur le${op.tier ? ` ${op.tier}` : ""} grimoire de ${tgt}`;
       break;
     case "unlock-upgrade": {
       const skills = (op.grantsSkills ?? [])

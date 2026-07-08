@@ -45,4 +45,18 @@ describe("catalogue", () => {
     const unknown = referenced.filter((id) => !modelIds.has(id));
     expect(unknown).toEqual([]);
   });
+
+  it("montures : chaque niveau référence un type, une faction et des compétences existants", () => {
+    const typeIds = new Set(catalog.mountTypes.map((t) => t.id));
+    const factionIds = new Set(catalog.factions.map((f) => f.id));
+    const skillIds = new Set(catalog.skills.map((s) => s.id));
+    const profileIds = new Set(catalog.profiles.map((p) => p.id));
+    expect(catalog.mounts.filter((m) => !typeIds.has(m.typeId))).toEqual([]);
+    const badFactions = catalog.mountTypes.flatMap((t) => t.factionEligibility.filter((f) => !factionIds.has(f)));
+    expect(badFactions).toEqual([]);
+    const badExcluded = catalog.mountTypes.flatMap((t) => (t.excludedProfileIds ?? []).filter((p) => !profileIds.has(p)));
+    expect(badExcluded).toEqual([]);
+    const badSkills = catalog.mounts.flatMap((m) => (m.grantedSkills ?? []).map((s) => s.skillId).filter((id) => !skillIds.has(id)));
+    expect(badSkills).toEqual([]);
+  });
 });

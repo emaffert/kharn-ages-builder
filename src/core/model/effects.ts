@@ -21,6 +21,11 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     requiresBaseSwap: z.boolean().optional(),
   }),
   z.object({ kind: z.literal("cost-set"), amount: z.number(), maxCount: z.number().optional() }),
+  /**
+   * Réduit le prix d'un grimoire de la CIBLE (ex. Mochère : grimoire du cavalier moins cher). `tier`
+   * limite à « petit » ou « grand » (absent = tous) ; `amount` = Ko retranchés (prix plancher 0).
+   */
+  z.object({ kind: z.literal("grimoire-discount"), tier: z.enum(["petit", "grand"]).optional(), amount: z.number() }),
   // Octroie aux cibles la possibilité d'améliorer CHAQUE équipement des catégories visées (opt-in par
   // objet) pour `cost` Ko/objet. Ex. Key empoisonne son arme (10 Ko) ; « Borax » améliore armes+armures.
   z.object({

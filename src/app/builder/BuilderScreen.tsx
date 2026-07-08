@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { iconFor, slotCapacity, type Profile } from "@core";
+import { eligibleMountsFor, iconFor, mountLabel, slotCapacity, type Profile } from "@core";
 import type { ListStore } from "../useListStore";
 import {
   FACTIONS,
@@ -37,6 +37,7 @@ import { SortableUnit } from "./SortableUnit";
 import { TrashIcon, SearchIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
+import { MountPicker, MountPreview, MountStatCard } from "./MountDialog";
 import { RosterGroup } from "./RosterGroup";
 import { OstPanel } from "./OstPanel";
 import { PurchaseSummary } from "./PurchaseSummary";
@@ -109,6 +110,22 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const personnages = models.filter((m) => kindOf(m) === "perso").sort(byName);
   const troupes = models.filter((m) => kindOf(m) === "troupe").sort(byName);
   const conditionnels = models.filter((m) => kindOf(m) === "cond").sort(byName);
+  // Montures éligibles à la faction : consultables (fiche) depuis le roster, comme Likans/Muskh.
+  const q = rosterQuery.trim().toLowerCase();
+  const mountTypesForFaction = cat.mountTypes
+    .filter((t) => t.factionEligibility.includes(factionId))
+    .filter((t) => q === "" || t.name.toLowerCase().includes(q))
+    .map((t) => {
+      const levels = cat.mounts.filter((m) => m.typeId === t.id).sort((a, b) => a.level - b.level);
+      const first = levels[0];
+      return {
+        type: t,
+        minCost: levels.length ? Math.min(...levels.map((m) => m.cost)) : 0,
+        icon: first?.icon ?? (t.cardImage ? cat.icons?.[t.cardImage] : undefined),
+      };
+    })
+    .filter((e) => e.type && cat.mounts.some((m) => m.typeId === e.type.id))
+    .sort((a, b) => a.type.name.localeCompare(b.type.name));
 
   // Limite de recrutement comptée par (modèle, niveau) : les variantes de loadout (même modèle ET
   // même niveau) partagent la limite ; des niveaux différents comptent séparément (un Père de Famille
@@ -262,6 +279,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
   const modalModel = modal?.kind === "preview" ? models.find((m) => m.id === modal.modelId) : undefined;
   const editItem = modal?.kind === "edit" ? memberOf(modal.instanceId) : undefined;
+  const mountItem =
+    modal?.kind === "mount" || modal?.kind === "mount-sheet" ? memberOf(modal.instanceId) : undefined;
   // Améliorations partagées actives dans le Fer de Lance (payées une fois, cochées sur tous les éligibles).
   const sharedActiveCardIds = [...new Set((store.fdl?.members ?? []).flatMap((m) => m.specialCardIds ?? []))].filter(
     (id) => cat.specialCards.find((c) => c.id === id)?.shared,
@@ -302,6 +321,26 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               onOpen={(id) => setModal({ kind: "preview", modelId: id })}
               conditional
             />
+            {mountTypesForFaction.length > 0 && (
+              <div>
+                <div className="bld-grp-label">
+                  Montures<span className="line" />
+                </div>
+                {mountTypesForFaction.map(({ type, minCost, icon }) => (
+                  <div key={type.id} className="bld-ritem is-cond">
+                    <button
+                      className="bld-rmain"
+                      onClick={() => setModal({ kind: "mount-preview", typeId: type.id })}
+                      title="Voir la fiche"
+                    >
+                      <span className="bld-rmed">{icon ? <img className="bld-rmed-img" src={icon} alt="" /> : "🐎"}</span>
+                      <span className="bld-rname">{type.name}</span>
+                      <span className="bld-rcost">{minCost}+</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -339,7 +378,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       if (free.length === 0) return true;
       return g.capacityLimited && !free.some((p) => (p.level ?? 0) <= remainingCapacity);
     };
-    const hasActions = depGroups.length > 0 || eligible;
+    // Monture : proposée sur une figurine éligible non montée (et pas sur une sous-ligne).
+    const canAddMount = !attached && !x.inst.mount && eligibleMountsFor(cat, x.p).length > 0;
+    const hasActions = depGroups.length > 0 || eligible || canAddMount;
     return (
       <div
         key={id}
@@ -438,6 +479,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 {guarded ? `✓ Garde du corps de ${guardOf}` : "Garde du corps"}
               </button>
             )}
+            {canAddMount && (
+              <RecruitPill label="+ Monture" onClick={() => setModal({ kind: "mount", instanceId: id })} />
+            )}
           </div>
         )}
 
@@ -455,9 +499,51 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             equipmentUpgrades={x.inst.equipmentUpgrades ?? {}}
             grantedUpgrades={evaluation.grantedUpgrades[x.inst.instanceId] ?? []}
             costRules={evaluation.equipmentCostRules[x.inst.instanceId] ?? []}
+            grimoireDiscount={evaluation.grimoireDiscount[x.inst.instanceId] ?? {}}
             onPick={setItemInfo}
           />
         )}
+      </div>
+    );
+  };
+
+  // Sous-ligne de la monture (rendue comme une figurine rattachée, mais nichée dans le cavalier).
+  const renderMountSubline = (x: Item) => {
+    const id = x.inst.instanceId;
+    const mid = x.inst.mount!.mountId;
+    const mc = evaluation.mountCost[id] ?? 0;
+    const mount = cat.mounts.find((m) => m.id === mid);
+    const mType = cat.mountTypes.find((t) => t.id === mount?.typeId);
+    const mIcon = mount?.icon ?? (mType?.cardImage ? cat.icons?.[mType.cardImage] : undefined);
+    return (
+      <div className="bld-unit is-attached">
+        <div
+          className="bld-unit-main"
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest("button, input, a")) return;
+            setModal({ kind: "mount-sheet", instanceId: id });
+          }}
+        >
+          <div className="bld-thumb sm">
+            {mIcon ? <img className="bld-thumb-img" src={mIcon} alt="" /> : <span className="lvl">🐎</span>}
+          </div>
+          <div className="bld-uinfo">
+            <div className="bld-uname">
+              <button className="nm" onClick={() => setModal({ kind: "mount-sheet", instanceId: id })}>
+                {mountLabel(cat, mid)}
+              </button>
+              <span className="lvltag">Monture</span>
+            </div>
+          </div>
+          <div className="bld-ucost">
+            {mc} <span className="ko">Ko</span>
+          </div>
+          <div className="bld-uactions">
+            <button className="bld-icon danger" title="Retirer la monture" onClick={() => store.setMount(id, null)}>
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -594,6 +680,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                     {(handle) => (
                       <>
                         {renderUnit(x, false, handle)}
+                        {x.inst.mount && renderMountSubline(x)}
                         {children.map((c) => renderUnit(c, true))}
                       </>
                     )}
@@ -686,8 +773,69 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               grantedMasteryDice: evaluation.grantedMasteryDice[editItem.inst.instanceId],
               limitBonus: evaluation.limitBonuses[groupKey(editItem.p)] ?? 0,
               equipmentCostRules: evaluation.equipmentCostRules[editItem.inst.instanceId],
+              mountAllonge: evaluation.mountAllonge[editItem.inst.instanceId],
+              grimoireDiscount: evaluation.grimoireDiscount[editItem.inst.instanceId],
             }}
           />
+        </Dialog>
+      )}
+      {modal?.kind === "mount" && mountItem && (
+        <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Monture - ${mountItem.p.name}`} size="sm">
+          <p className="mdl-note">Choisir une monture :</p>
+          <MountPicker
+            cat={cat}
+            rider={mountItem.p}
+            currentId={mountItem.inst.mount?.mountId}
+            onSet={(mid) => {
+              store.setMount(mountItem.inst.instanceId, mid);
+              setModal(null);
+            }}
+          />
+        </Dialog>
+      )}
+      {modal?.kind === "mount-sheet" &&
+        mountItem &&
+        (() => {
+          const mid = mountItem.inst.mount?.mountId;
+          const mount = mid ? cat.mounts.find((m) => m.id === mid) : undefined;
+          const type = mount ? cat.mountTypes.find((t) => t.id === mount.typeId) : undefined;
+          const instId = mountItem.inst.instanceId;
+          return (
+            <Dialog
+              open
+              onOpenChange={(o) => !o && setModal(null)}
+              title={mount ? mountLabel(cat, mount.id) : "Monture"}
+              size="md"
+              footer={
+                <>
+                  <Button variant="ghost" onClick={() => setModal({ kind: "mount", instanceId: instId })}>
+                    Changer
+                  </Button>
+                  <Button variant="danger" onClick={() => { store.setMount(instId, null); setModal(null); }}>
+                    Retirer
+                  </Button>
+                  <span style={{ flex: 1 }} />
+                  <Button variant="ghost" onClick={() => setModal(null)}>Fermer</Button>
+                </>
+              }
+            >
+              {mount ? (
+                <MountStatCard cat={cat} mount={mount} type={type} rider={mountItem.p} onInfo={setItemInfo} />
+              ) : (
+                <p className="mdl-note">Monture introuvable.</p>
+              )}
+            </Dialog>
+          );
+        })()}
+      {modal?.kind === "mount-preview" && (
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setModal(null)}
+          title={cat.mountTypes.find((t) => t.id === modal.typeId)?.name ?? "Monture"}
+          size="md"
+          footer={<><span style={{ flex: 1 }} /><Button variant="ghost" onClick={() => setModal(null)}>Fermer</Button></>}
+        >
+          <MountPreview cat={cat} typeId={modal.typeId} onInfo={setItemInfo} />
         </Dialog>
       )}
       {modal?.kind === "guard" &&

@@ -126,7 +126,6 @@ export const ProfileSchema = z.object({
    * avoir sa propre illustration. Par défaut on préfère `Catalog.icons` (partagé entre niveaux).
    */
   icon: z.string().optional(),
-  mountEligible: z.boolean().optional(),
   /** Champs dont la lecture sur la carte est incertaine (chemins, ex. "stature", "stats.t"). */
   unverifiedFields: z.array(z.string()).optional(),
 });
@@ -206,14 +205,28 @@ export const SpellSchema = z.object({
 });
 export type Spell = z.infer<typeof SpellSchema>;
 
-export const MountSchema = z.object({
+/**
+ * Type de monture (Quagga, Koelod, Mochère…) : porte l'éligibilité *partagée par tous ses niveaux*.
+ * Éligible = faction du cavalier ∈ `factionEligibility` ET profil ∉ `excludedProfileIds`
+ * (la règle de niveau ±1 et l'interdiction Berseker sont gérées par le moteur).
+ */
+export const MountTypeSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(["quagga", "koelod", "mochere"]),
+  kind: z.enum(["quagga", "koelod", "mochere"]),
+  factionEligibility: z.array(z.string()),
+  /** Profils qui ne peuvent pas prendre cette monture malgré leur faction (ex. Affranchis d'origine khéropse/fang). */
+  excludedProfileIds: z.array(z.string()).optional(),
+  cardImage: z.string().optional(),
+});
+export type MountType = z.infer<typeof MountTypeSchema>;
+
+/** Un niveau concret d'une monture (coût + bonus + compétences), rattaché à un `MountType`. */
+export const MountSchema = z.object({
+  id: z.string(),
+  typeId: z.string(),
   level: LevelSchema,
   cost: z.number(),
-  factionEligibility: z.array(z.string()),
-  bonusesText: z.string(),
   bonuses: z
     .object({
       pa: z.number().optional(),
@@ -227,8 +240,12 @@ export const MountSchema = z.object({
     })
     .optional(),
   grantedSkills: z.array(SkillRefSchema).optional(),
-  specialActionsText: z.string().optional(),
-  cardImage: z.string().optional(),
+  /** Effets appliqués quand cette monture est recrutée (ex. Mochère → grimoire du cavalier). Cible `cavalier`. */
+  effects: z.array(EffectSchema).optional(),
+  /** Règles verbatim propres à ce niveau (ex. Ruade, Piétinement), comme `Profile.rules`. */
+  rules: z.array(RuleTextSchema).optional(),
+  /** Icône propre à ce niveau : déroge à l'icône partagée du type (`MountType.cardImage`). Cf. `Profile.icon`. */
+  icon: z.string().optional(),
 });
 export type Mount = z.infer<typeof MountSchema>;
 
@@ -344,6 +361,7 @@ export const CatalogSchema = z.object({
   equipment: z.array(EquipmentSchema),
   grimoires: z.array(GrimoireSchema),
   spells: z.array(SpellSchema),
+  mountTypes: z.array(MountTypeSchema),
   mounts: z.array(MountSchema),
   mountOptions: z.array(MountOptionSchema),
   pacts: z.array(PactSchema),

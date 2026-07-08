@@ -62,6 +62,11 @@ export type SkillRef = z.infer<typeof SkillRefSchema>;
  */
 export const SelectorSchema = z.object({
   self: z.boolean().optional(),
+  /**
+   * Cible le CAVALIER qui porte la source (uniquement pour un effet de monture). Distinct de `self`
+   * (qui viserait la monture elle-même, non résolue pour l'instant). Ex. Mochère → grimoire du cavalier.
+   */
+  cavalier: z.boolean().optional(),
   /** Correspond à *toutes* les figurines de la portée (ex. « toutes les figurines de l'Ost »). */
   all: z.boolean().optional(),
   profileIds: z.array(z.string()).optional(),

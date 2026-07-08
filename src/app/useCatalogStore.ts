@@ -5,6 +5,8 @@ import {
   type Equipment,
   type MagicWay,
   type Model,
+  type Mount,
+  type MountType,
   type Profile,
   type Skill,
   type SpecialCard,
@@ -174,6 +176,62 @@ export function useCatalogStore() {
 
   const removeMagicWay = useCallback(
     (id: string) => apply((c) => ({ ...c, magicWays: c.magicWays.filter((w) => w.id !== id) })),
+    [apply],
+  );
+
+  // ── Montures (types + niveaux, éditables dans l'admin) ──
+  const addMountType = useCallback((): string => {
+    const id = `mount-type-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      mountTypes: [
+        ...c.mountTypes,
+        { id, name: "Nouvelle monture", kind: "quagga", factionEligibility: [], excludedProfileIds: [] },
+      ],
+    }));
+    return id;
+  }, [apply]);
+
+  const updateMountType = useCallback(
+    (id: string, patch: Partial<MountType>) =>
+      apply((c) => ({
+        ...c,
+        mountTypes: c.mountTypes.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+      })),
+    [apply],
+  );
+
+  const removeMountType = useCallback(
+    (id: string) =>
+      apply((c) => ({
+        ...c,
+        mountTypes: c.mountTypes.filter((t) => t.id !== id),
+        mounts: c.mounts.filter((m) => m.typeId !== id), // retire aussi les niveaux rattachés
+      })),
+    [apply],
+  );
+
+  const addMount = useCallback(
+    (typeId: string): string => {
+      const id = `mount-${Date.now()}`;
+      apply((c) => {
+        const used = new Set(c.mounts.filter((m) => m.typeId === typeId).map((m) => m.level));
+        const level = ([1, 2, 3] as const).find((l) => !used.has(l)) ?? 1;
+        return { ...c, mounts: [...c.mounts, { id, typeId, level, cost: 0, bonuses: {}, grantedSkills: [] }] };
+      });
+      return id;
+    },
+    [apply],
+  );
+
+  const updateMount = useCallback(
+    (id: string, patch: Partial<Mount>) =>
+      apply((c) => ({ ...c, mounts: c.mounts.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
+    [apply],
+  );
+
+  const removeMount = useCallback(
+    (id: string) => apply((c) => ({ ...c, mounts: c.mounts.filter((m) => m.id !== id) })),
     [apply],
   );
 
@@ -406,6 +464,12 @@ export function useCatalogStore() {
     addMagicWay,
     updateMagicWay,
     removeMagicWay,
+    addMountType,
+    updateMountType,
+    removeMountType,
+    addMount,
+    updateMount,
+    removeMount,
     updateEquipment,
     addEquipment,
     removeEquipment,

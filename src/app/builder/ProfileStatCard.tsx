@@ -31,6 +31,10 @@ export type ProfileMods = {
   limitBonus?: number;
   /** Règles de remise par objet applicables à la figurine (ex. Ogodeï, Commandant). */
   equipmentCostRules?: EquipmentCostRule[];
+  /** Bonus d'allonge (toises) apporté par la monture. Affiché en ligne dédiée. */
+  mountAllonge?: number;
+  /** Réduction de prix de grimoire par palier (ex. Mochère : { petit } / { grand }). Affichée dans « Magie ». */
+  grimoireDiscount?: Record<string, number>;
 };
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
@@ -211,6 +215,17 @@ export function ProfileStatCard({
             {statCell("pv", "PV", p.pv)}
             {statCell("stature", "Stature", p.stature)}
           </div>
+          {mods?.mountAllonge != null && mods.mountAllonge !== 0 && (
+            <div className="fe-statrow fe-statrow--allonge">
+              <span className="fe-stat" title="Allonge apportée par la monture">
+                <span className="k">Allonge</span>
+                <span className="v is-fx">
+                  {mods.mountAllonge > 0 ? "+" : ""}
+                  {mods.mountAllonge}
+                </span>
+              </span>
+            </div>
+          )}
         </div>
         {p.armor && (
           <div

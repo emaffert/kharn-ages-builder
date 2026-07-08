@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
-import { equipmentDiscount, evaluateList } from "./evaluate";
+import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills } from "./evaluate";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -532,5 +532,76 @@ describe("effet conditionné au meneur (Engueran)", () => {
     const leader = evaluateList(catalog, makeList([eng, pal], "kharns", "bataille"));
     const notLeader = evaluateList(catalog, makeList([pal, eng], "kharns", "bataille"));
     expect(leader.costByInstance[pal.instanceId]).toBe(notLeader.costByInstance[pal.instanceId] - 15);
+  });
+});
+
+describe("montures", () => {
+  it("éligibilité : faction + écart de niveau ±1", () => {
+    const g1 = catalog.profiles.find((p) => p.id === "kharns-guerrier-1")!; // niv1 khârn
+    const ids = eligibleMountsFor(catalog, g1).map((m) => m.id);
+    expect(ids).toContain("quagga-1");
+    expect(ids).toContain("quagga-2");
+    expect(ids).not.toContain("quagga-3"); // niveau 3 hors ±1
+    expect(ids.every((id) => id.startsWith("quagga"))).toBe(true); // pas de koelod/mochère
+  });
+
+  it("Berseker : aucune monture éligible, et une monture posée est une erreur", () => {
+    const b = catalog.profiles.find((p) => p.id === "kherops-berserker-2")!;
+    expect(eligibleMountsFor(catalog, b)).toHaveLength(0);
+    const bad = inst("kherops-berserker-2", { mount: { mountId: "koelod-2" } });
+    const r = evaluateList(catalog, makeList([bad], "kherops", "bataille"));
+    expect(r.issues.some((i) => i.severity === "error" && i.ruleId === "mount-koelod-2")).toBe(true);
+  });
+
+  it("partage cavalier : stats + allonge seulement (PV/stature/compétences NON partagés)", () => {
+    const g = inst("kharns-paladin-cavalier-2", { mount: { mountId: "quagga-2" } });
+    const r = evaluateList(catalog, makeList([g], "kharns", "bataille"));
+    expect(r.statDeltas[g.instanceId]?.v).toBe(1); // stat partagée
+    expect(r.statDeltas[g.instanceId]?.pv).toBeUndefined(); // PV propre à la monture
+    expect(r.statDeltas[g.instanceId]?.stature).toBeUndefined(); // stature propre à la monture
+    expect(r.mountAllonge[g.instanceId]).toBe(0.5);
+    // La compétence de la monture (sacrifice) reste sur SA fiche, pas sur le cavalier.
+    expect((r.grantedSkills[g.instanceId] ?? []).some((s) => s.skillId === "sacrifice")).toBe(false);
+    expect(r.issues.filter((i) => i.severity === "error")).toEqual([]);
+  });
+
+  it("coût de la monture séparé du cavalier mais compté dans le total", () => {
+    const solo = inst("kharns-paladin-cavalier-2");
+    const base = evaluateList(catalog, makeList([solo], "kharns", "bataille")).costByInstance[solo.instanceId];
+    const g = inst("kharns-paladin-cavalier-2", { mount: { mountId: "quagga-2" } });
+    const r = evaluateList(catalog, makeList([g], "kharns", "bataille"));
+    expect(r.costByInstance[g.instanceId]).toBe(base); // coût cavalier inchangé
+    expect(r.mountCost[g.instanceId]).toBe(45); // coût monture à part
+    expect(r.totalCost).toBe(base + 45); // total = cavalier + monture
+  });
+
+  it("mountSheetSkills : natives de la monture + 3 transmises (endurance/harcèlement/instinct), meilleure valeur", () => {
+    const koelod3 = catalog.mounts.find((m) => m.id === "koelod-3")!; // charge-brutale 3, peau-dure, stable
+    const guerrier = catalog.profiles.find((p) => p.id === "kherops-guerrier-1-2")!; // charge-brutale 1 (non transmise)
+    const sk = mountSheetSkills(koelod3, guerrier);
+    // charge-brutale reste la valeur de la monture (3) : elle n'est PAS transmise par le cavalier.
+    expect(sk.find((s) => s.skillId === "charge-brutale")?.value).toBe(3);
+    expect(sk.some((s) => s.skillId === "peau-dure")).toBe(true);
+    // Une compétence transmissible native du cavalier apparaît sur la monture.
+    const withEndurance: typeof guerrier = { ...guerrier, skills: [...guerrier.skills, { skillId: "endurance" }] };
+    expect(mountSheetSkills(koelod3, withEndurance).some((s) => s.skillId === "endurance")).toBe(true);
+  });
+
+  it("effet de monture : la Mochère II rend gratuit le petit grimoire du cavalier", () => {
+    const gid = catalog.profiles.find((p) => p.factionId === "gouns" && p.level === 2)!.id;
+    const noMount = inst(gid, { grimoireId: "petit" });
+    const withMount = inst(gid, { grimoireId: "petit", mount: { mountId: "mochere-2" } });
+    const base = evaluateList(catalog, makeList([noMount], "gouns", "bataille")).costByInstance[noMount.instanceId];
+    const r = evaluateList(catalog, makeList([withMount], "gouns", "bataille"));
+    expect(r.costByInstance[withMount.instanceId]).toBe(base - 20); // petit grimoire (20 Ko) offert
+    expect(r.mountCost[withMount.instanceId]).toBe(45); // coût de la Mochère II à part
+    expect(r.grimoireDiscount[withMount.instanceId]?.petit).toBe(20); // exposé par palier (Magie / résumé)
+  });
+
+  it("best-value : compétence commune cavalier/monture conservée à la meilleure valeur", () => {
+    // Guerrier Khérops (Charge Brutale 1) + Koelod II (Charge Brutale 2) → 2 sur la fiche du cavalier.
+    const g = inst("kherops-guerrier-1-1", { mount: { mountId: "koelod-2" } });
+    const r = evaluateList(catalog, makeList([g], "kherops", "bataille"));
+    expect(r.skillValues[g.instanceId]?.["charge-brutale"]).toBe(2);
   });
 });

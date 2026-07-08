@@ -45,6 +45,7 @@ function MagiePanel({
   onGrimoire,
   onToggleSpell,
   onInfo,
+  grimoireDiscount,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -55,9 +56,15 @@ function MagiePanel({
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
+  grimoireDiscount?: Record<string, number>;
 }) {
   const forbiddenGrims = forbiddenGrimoires(p);
   const pages = grimoire === "none" ? 0 : cat.grimoires.find((g) => g.id === grimoire)?.pages;
+  // Prix net d'un palier de grimoire, réduction de monture (ex. Mochère) déduite.
+  const netCost = (tier: "petit" | "grand") => {
+    const base = cat.grimoires.find((x) => x.id === tier)?.cost ?? (tier === "petit" ? 20 : 40);
+    return Math.max(0, base - Math.min(grimoireDiscount?.[tier] ?? 0, base));
+  };
   const pageCap = (pages === "illimite" ? Infinity : ((pages as number) ?? 0)) + pageBonus(p, cat, upgrades);
   const sources = pageBonusSources(p, cat, upgrades);
   const pagesUsed = spells.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
@@ -77,8 +84,8 @@ function MagiePanel({
           onChange={onGrimoire}
           options={[
             { value: "none", label: "Sans grimoire", disabled: forbiddenGrims.has("none") },
-            { value: "petit", label: `Petit +${cat.grimoires.find((x) => x.id === "petit")?.cost ?? 20}`, disabled: forbiddenGrims.has("petit") },
-            { value: "grand", label: `Grand +${cat.grimoires.find((x) => x.id === "grand")?.cost ?? 40}`, disabled: forbiddenGrims.has("grand") },
+            { value: "petit", label: `Petit +${netCost("petit")}`, disabled: forbiddenGrims.has("petit") },
+            { value: "grand", label: `Grand +${netCost("grand")}`, disabled: forbiddenGrims.has("grand") },
           ]}
         />
         {sources.length > 0 && (
@@ -202,6 +209,7 @@ export function FigureEditor({
           onGrimoire={onGrimoire}
           onToggleSpell={onToggleSpell}
           onInfo={onInfo}
+          grimoireDiscount={mods?.grimoireDiscount}
         />
       )}
     </div>

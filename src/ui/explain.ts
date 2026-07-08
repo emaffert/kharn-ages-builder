@@ -95,9 +95,13 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     case "cost-set":
       base = `Coût fixé à ${op.amount} Ko pour ${tgt}${op.maxCount ? ` (1 par source, max ${op.maxCount})` : ""}`;
       break;
-    case "unlock-upgrade":
-      base = `Débloque l'amélioration « ${op.label} » (+${op.cost} Ko/objet, sur ${op.equipmentCategories.join(", ")}) pour ${tgt}`;
+    case "unlock-upgrade": {
+      const skills = (op.grantsSkills ?? [])
+        .map((gs) => `${skillName(cat, gs.skillId)}${gs.value != null ? ` ${gs.value}` : ""}`)
+        .join(", ");
+      base = `Débloque l'amélioration « ${op.label} » (+${op.cost} Ko/objet, sur ${op.equipmentCategories.join(", ")}) pour ${tgt}${skills ? ` ; confère « ${skills} » tant qu'équipée` : ""}`;
       break;
+    }
     case "grant-skill":
       base = `Octroie la compétence « ${skillName(cat, op.skillId)}${op.value != null ? ` ${op.value}` : ""} » à ${tgt}`;
       break;

@@ -9137,6 +9137,16 @@
             "equipmentCategories": [
               "arme-cac",
               "arme-tir"
+            ],
+            "grantsSkills": [
+              {
+                "skillId": "specialiste",
+                "value": "attaque"
+              },
+              {
+                "skillId": "specialiste",
+                "value": "défense"
+              }
             ]
           },
           "appliesToListBuilding": true,
@@ -9162,6 +9172,11 @@
             "cost": 10,
             "equipmentCategories": [
               "armure"
+            ],
+            "grantsSkills": [
+              {
+                "skillId": "instinct-de-survie"
+              }
             ]
           },
           "appliesToListBuilding": true,

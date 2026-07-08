@@ -448,6 +448,27 @@ describe("Khérops - concepts (Lieutenant / Commandant / Ogodeï)", () => {
     const r2 = evaluateList(catalog, makeList([sans], "kherops", "bataille"));
     expect(r2.grantedMasteryDice[sans.instanceId]).toBeUndefined();
   });
+
+  it("Borax : une arme/armure améliorée confère ses compétences au Guerrier équipé", () => {
+    const forge = inst("kherops-forgeronne-2");
+    const g = inst("kherops-guerrier-1-1", {
+      addedEquipmentIds: ["brigandine"],
+      equipmentUpgrades: { "kherops-marteau": ["borax-arme"], brigandine: ["borax-armure"] },
+    });
+    const r = evaluateList(catalog, makeList([forge, g], "kherops", "bataille"));
+    const gs = r.grantedSkills[g.instanceId] ?? [];
+    const has = (skillId: string, value?: string) => gs.some((s) => s.skillId === skillId && s.value === value);
+    expect(has("specialiste", "attaque")).toBe(true);
+    expect(has("specialiste", "défense")).toBe(true);
+    expect(has("instinct-de-survie")).toBe(true);
+  });
+
+  it("Borax : aucune compétence conférée sans l'amélioration appliquée", () => {
+    const forge = inst("kherops-forgeronne-2");
+    const g = inst("kherops-guerrier-1-1");
+    const r = evaluateList(catalog, makeList([forge, g], "kherops", "bataille"));
+    expect((r.grantedSkills[g.instanceId] ?? []).some((s) => s.skillId === "specialiste")).toBe(false);
+  });
 });
 
 describe("stat-max (Doctrine de l'Ordre)", () => {

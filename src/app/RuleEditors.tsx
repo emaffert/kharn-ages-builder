@@ -394,6 +394,36 @@ function OperationEditor({
               </label>
             ))}
           </div>
+          <div className="flex w-full flex-col gap-1 text-xs adm-faint">
+            <span>compétences conférées (tant que l'objet amélioré est équipé)</span>
+            {(op.grantsSkills ?? []).map((gs, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Combobox
+                  value={gs.skillId}
+                  className="w-44"
+                  placeholder="Compétence…"
+                  options={[...cat.skills]
+                    .sort((a, b) => a.keyword.localeCompare(b.keyword, "fr"))
+                    .map((s) => ({ value: s.id, label: s.keyword }))}
+                  onChange={(v) => onChange({ ...op, grantsSkills: replaceAt(op.grantsSkills ?? [], i, { ...gs, skillId: v }) })}
+                />
+                <Txt
+                  label="valeur (option.)"
+                  value={gs.value != null ? String(gs.value) : ""}
+                  onChange={(v) => onChange({ ...op, grantsSkills: replaceAt(op.grantsSkills ?? [], i, { ...gs, value: v || undefined }) })}
+                />
+                <RemoveButton
+                  onClick={() => {
+                    const next = removeAt(op.grantsSkills ?? [], i);
+                    onChange({ ...op, grantsSkills: next.length ? next : undefined });
+                  }}
+                />
+              </div>
+            ))}
+            <AddButton onClick={() => onChange({ ...op, grantsSkills: [...(op.grantsSkills ?? []), { skillId: "" }] })}>
+              + compétence
+            </AddButton>
+          </div>
         </>
       )}
       {op.kind === "grant-skill" && (

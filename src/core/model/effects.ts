@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EffectScopeSchema, EquipmentCategorySchema, MasteryDomainSchema, SelectorSchema } from "./common";
+import { EffectScopeSchema, EquipmentCategorySchema, MasteryDomainSchema, SelectorSchema, SkillRefSchema } from "./common";
 
 /**
  * Effet = modificateur dynamique (coût, déblocage d'option, octroi de compétence/trait),
@@ -29,6 +29,11 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     label: z.string(),
     cost: z.number(),
     equipmentCategories: z.array(EquipmentCategorySchema),
+    /**
+     * Compétences (avec valeur éventuelle) conférées à la figurine tant qu'elle porte un équipement
+     * amélioré ainsi. Ex. Borax armes : « Spécialiste » valeur "attaque" + valeur "défense".
+     */
+    grantsSkills: z.array(SkillRefSchema).optional(),
   }),
   // `value` : pour une compétence « à valeur » (ex. octroie « Héroïque défense » → value "défense").
   z.object({ kind: z.literal("grant-skill"), skillId: z.string(), value: z.union([z.string(), z.number()]).optional() }),

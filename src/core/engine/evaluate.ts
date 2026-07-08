@@ -38,6 +38,8 @@ export type GrantedUpgrade = {
   label: string;
   cost: number;
   equipmentCategories: string[];
+  /** Compétences (avec valeur éventuelle) conférées tant qu'un équipement porte cette amélioration (Borax). */
+  grantsSkills?: GrantedSkill[];
 };
 
 export interface Issue {
@@ -1188,6 +1190,7 @@ function collectGrantedUpgrades(
         label: op.label,
         cost: op.cost,
         equipmentCategories: op.equipmentCategories,
+        grantsSkills: op.grantsSkills,
       });
       out.set(ri.instance.instanceId, m);
     }
@@ -1210,6 +1213,48 @@ function upgradeCost(ri: ResolvedInstance, granted: Map<string, GrantedUpgrade>,
     }
   }
   return cost;
+}
+
+/**
+ * Compétences (avec valeurs) conférées par les améliorations d'équipement APPLIQUÉES (ex. Borax :
+ * « Spécialiste » attaque/défense sur une arme, « Instinct de survie » sur une armure). Renvoie la
+ * liste par instance (une même compétence peut apparaître avec plusieurs valeurs) et renseigne la
+ * provenance (bloc « Modifiée par »).
+ */
+function collectUpgradeGrantedSkills(
+  display: ResolvedInstance[],
+  grantedUp: Map<string, Map<string, GrantedUpgrade>>,
+  idx: CatalogIndex,
+  sources: Map<string, Map<string, EffectSourceRef[]>>,
+): Map<string, GrantedSkill[]> {
+  const out = new Map<string, GrantedSkill[]>();
+  for (const ri of display) {
+    const id = ri.instance.instanceId;
+    const ups = ri.instance.equipmentUpgrades;
+    const granted = grantedUp.get(id);
+    if (!ups || !granted) continue;
+    const worn = new Set(wornEquipmentIds(ri.profile, ri.instance));
+    for (const [equipId, upIds] of Object.entries(ups)) {
+      if (!worn.has(equipId)) continue;
+      const category = idx.equipmentCategory.get(equipId);
+      for (const upId of upIds) {
+        const g = granted.get(upId);
+        if (!g || !category || !g.equipmentCategories.includes(category)) continue;
+        for (const gs of g.grantsSkills ?? []) {
+          const arr = out.get(id) ?? [];
+          if (!arr.some((s) => s.skillId === gs.skillId && s.value === gs.value)) arr.push(gs);
+          out.set(id, arr);
+          const m = sources.get(id) ?? new Map<string, EffectSourceRef[]>();
+          const refs = m.get(`skill:${gs.skillId}`) ?? [];
+          const ref: EffectSourceRef = { label: g.label, text: `Conférée par l'amélioration « ${g.label} ».` };
+          if (!refs.some((r) => r.label === ref.label && r.text === ref.text)) refs.push(ref);
+          m.set(`skill:${gs.skillId}`, refs);
+          sources.set(id, m);
+        }
+      }
+    }
+  }
+  return out;
 }
 
 // ── Point d'entrée ───────────────────────────────────────────────────────────
@@ -1244,6 +1289,8 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const statDeltasByInstance = computeStatDeltas(display, displayOcc);
   const skillValuesByInstance = computeSkillValues(display, displayOcc);
   const sourcesByInstance = collectEffectSources(display, displayOcc, cat);
+  // Compétences conférées par les améliorations d'équipement appliquées (ex. Borax) → grantedSkills + sources.
+  const upgradeSkillsByInstance = collectUpgradeGrantedSkills(display, grantedUp, idx, sourcesByInstance);
   const grantedDiceByInstance = collectGrantedMasteryDice(display, displayOcc);
   const displayById = new Map(display.map((ri) => [ri.instance.instanceId, ri]));
 
@@ -1269,8 +1316,14 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
       const base = new Set(ri.profile.traits);
       const traits = [...dri.traits].filter((t) => !base.has(t));
       if (traits.length > 0) grantedTraits[id] = traits;
-      if (dri.grantedSkills.size > 0) {
-        grantedSkills[id] = [...dri.grantedSkills].map(([skillId, value]) => ({ skillId, value }));
+      const upSkills = upgradeSkillsByInstance.get(id) ?? [];
+      if (dri.grantedSkills.size > 0 || upSkills.length > 0) {
+        const merged: GrantedSkill[] = [...dri.grantedSkills].map(([skillId, value]) => ({ skillId, value }));
+        // Fusionne les compétences des améliorations (Borax…), en évitant les doublons skillId+valeur.
+        for (const gs of upSkills) {
+          if (!merged.some((s) => s.skillId === gs.skillId && s.value === gs.value)) merged.push(gs);
+        }
+        grantedSkills[id] = merged;
       }
     }
     const sd = statDeltasByInstance.get(id);

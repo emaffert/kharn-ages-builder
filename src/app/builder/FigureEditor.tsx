@@ -266,8 +266,14 @@ function EquipPanel({
       matches(e),
   );
   const UNIQUE = "__unique";
-  const groupOf = (e: Catalog["equipment"][number]) => (isUnique(e) ? UNIQUE : e.category);
-  const GROUP_LABEL: Record<string, string> = { ...CAT_LABEL, [UNIQUE]: "Équipement propre (retiré)" };
+  // Spécifique au personnage : réservé à ce profil/modèle (ex. Marteau Tonnerre d'Ogodeï), ou son
+  // équipement de base unique retiré. Regroupé dans une catégorie à part, en tête de liste.
+  const isCharSpecific = (e: Catalog["equipment"][number]) =>
+    (e.reservedTo?.profileIds?.includes(p.id) ?? false) ||
+    (p.modelId != null && (e.reservedTo?.modelIds?.includes(p.modelId) ?? false)) ||
+    isUnique(e);
+  const groupOf = (e: Catalog["equipment"][number]) => (isCharSpecific(e) ? UNIQUE : e.category);
+  const GROUP_LABEL: Record<string, string> = { ...CAT_LABEL, [UNIQUE]: "Spécifique au personnage" };
   const byCat = [UNIQUE, ...PURCHASE_CATS]
     .map((g) => [g, avail.filter((e) => groupOf(e) === g)] as [string, typeof avail])
     .filter(([, v]) => v.length > 0);

@@ -1043,6 +1043,7 @@ function collectEffectSources(
     if (op.kind === "stat-modifier" || op.kind === "stat-count" || op.kind === "stat-max") key = `stat:${op.stat}`;
     else if (op.kind === "grant-skill" || op.kind === "skill-count") key = `skill:${op.skillId}`;
     else if (op.kind === "grant-trait") key = `trait:${op.trait}`;
+    else if (op.kind === "limit-modifier") key = "limit";
     if (!key) continue;
     if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
     const ref: EffectSourceRef = { label: effectSourceLabel(effect, cat), text: effect.sourceText };

@@ -721,6 +721,11 @@ body {
 .fe-skill.is-fx:hover { color: var(--ember-bright); background: color-mix(in srgb, var(--ember) 12%, transparent); }
 .fe-fx-tag { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px; font-size: 12px;
   font-weight: 500; color: var(--ember); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ember) 40%, transparent); }
+/* Limitation modifiée par un effet (ex. Lieutenant +1) : pastille braise cliquable, façon fe-fx-tag. */
+.fe-lim-fx { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px; font-size: 12px;
+  font-weight: 500; color: var(--ember); background: none; border: 0; cursor: pointer;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ember) 40%, transparent); }
+.fe-lim-fx:hover { color: var(--ember-bright); background: color-mix(in srgb, var(--ember) 12%, transparent); }
 .fe-rules { margin-top: 20px; display: flex; flex-direction: column; gap: 9px; font-size: 13.5px; color: var(--bone-dim); }
 .fe-rules b { color: var(--bone); }
 .fe-rule-btn { color: var(--bone); font-weight: 600; background: none; border: 0; cursor: pointer;

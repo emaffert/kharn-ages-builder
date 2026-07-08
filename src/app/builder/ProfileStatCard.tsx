@@ -27,6 +27,8 @@ export type ProfileMods = {
   effectSources?: Record<string, { label: string; text: string }[]>;
   /** Dés de maîtrise octroyés par effet (ex. Bannière Khéropse). */
   grantedMasteryDice?: MasteryDomain[][];
+  /** Bonus à la limitation « X » (effet `limit-modifier`, ex. Lieutenant : +1). Source dans `effectSources["limit"]`. */
+  limitBonus?: number;
 };
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
@@ -138,12 +140,25 @@ export function ProfileStatCard({
       sources: src.length ? src : undefined,
     });
   };
+  // Limitation « X » corrigée par un effet `limit-modifier` (ex. Lieutenant : +1) → affichée en braise, cliquable.
+  const limBonus = p.limitation.kind === "X" ? (mods?.limitBonus ?? 0) : 0;
+  const limIsFx = limBonus > 0 && p.limitation.value != null;
+  const limValue = p.limitation.kind === "X" ? (p.limitation.value ?? 0) + limBonus : null;
   const limLabel =
     p.limitation.kind === "special"
       ? "Limitation •"
       : p.limitation.kind === "X"
-        ? `Limitation ${p.limitation.value ?? ""}`.trim() // X : on n'affiche que la valeur
+        ? `Limitation ${limValue ?? ""}`.trim() // X : on n'affiche que la valeur (corrigée)
         : `Limitation ${p.limitation.kind}`;
+  const showLimitSource = () => {
+    const src = sourceRefs("limit");
+    onInfo({
+      title: "Limitation",
+      price: "",
+      lines: [`Base ${p.limitation.value} + ${limBonus} = ${limValue}`],
+      sources: src.length ? src : [{ label: "Effet", text: "Limitation modifiée par un effet." }],
+    });
+  };
   return (
     <div className="fe-statcard">
       <div className="fe-card">
@@ -158,7 +173,17 @@ export function ProfileStatCard({
           <span className="fe-cost-chip">{p.cost} Ko</span>
         </div>
         <div className="fe-taglist">
-          <Tag>{limLabel}</Tag>
+          {limIsFx ? (
+            <button
+              className="fe-lim-fx"
+              title="Limitation modifiée par un effet — voir la source"
+              onClick={showLimitSource}
+            >
+              {limLabel}
+            </button>
+          ) : (
+            <Tag>{limLabel}</Tag>
+          )}
           {p.magic?.canCast && <Tag tone="amber">Mage</Tag>}
           {grantedTraits.map((t) => (
             <span key={t} className="fe-fx-tag" title="Trait octroyé par un effet">

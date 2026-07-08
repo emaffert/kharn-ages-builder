@@ -140,11 +140,14 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       }).length;
       if (count >= own) return true;
     }
+    // Capacité d'un emplacement = limitation de base + bonus `limit-modifier` (ex. Lieutenant : +1).
+    const capacityOf = (modelId: string, level: number) =>
+      slotCapacity(cat, modelId, level) + (evaluation.limitBonuses[`${modelId}#${level}`] ?? 0);
     // 2) Emplacement que ce personnage consomme (LIM P) déjà plein.
     const cs = p.limitation.consumesSlotOf;
-    if (cs && slotOccupancy(cs.modelId, cs.level) >= slotCapacity(cat, cs.modelId, cs.level)) return true;
+    if (cs && slotOccupancy(cs.modelId, cs.level) >= capacityOf(cs.modelId, cs.level)) return true;
     // 3) Ce profil est un générique dont l'emplacement est saturé par des consommateurs (ex. Paladin III + Gaubert).
-    if (p.modelId != null && p.level != null && slotOccupancy(p.modelId, p.level) >= slotCapacity(cat, p.modelId, p.level)) {
+    if (p.modelId != null && p.level != null && slotOccupancy(p.modelId, p.level) >= capacityOf(p.modelId, p.level)) {
       return true;
     }
     return false;
@@ -680,6 +683,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               grantedUpgrades: evaluation.grantedUpgrades[editItem.inst.instanceId],
               effectSources: evaluation.effectSources[editItem.inst.instanceId],
               grantedMasteryDice: evaluation.grantedMasteryDice[editItem.inst.instanceId],
+              limitBonus: evaluation.limitBonuses[groupKey(editItem.p)] ?? 0,
             }}
           />
         </Dialog>

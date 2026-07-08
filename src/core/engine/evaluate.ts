@@ -74,6 +74,8 @@ export interface EvaluationResult {
   limitBonuses: Record<string, number>;
   /** Dés de maîtrise octroyés par effet, par instance (ex. Bannière Khéropse). Pour l'affichage. */
   grantedMasteryDice: Record<string, MasteryDomain[][]>;
+  /** Règles de remise par objet, par instance (ex. Ogodeï, Commandant). Appliquées via `equipmentDiscount`. */
+  equipmentCostRules: Record<string, EquipmentCostRule[]>;
   issues: Issue[];
 }
 
@@ -81,6 +83,57 @@ export interface EvaluationResult {
 export interface EffectSourceRef {
   label: string;
   text: string;
+}
+
+/**
+ * Règle de remise/surcoût par objet (effet `cost-delta` filtré par équipement) applicable à une
+ * figurine, ex. Ogodeï (−10 Ko aux armes à 2 mains), Commandant (−5 Ko si arme de base changée).
+ * Sérialisable : l'UI l'applique à un équipement donné via `equipmentDiscount`.
+ */
+export interface EquipmentCostRule {
+  amount: number;
+  label: string;
+  equipmentCategories?: string[];
+  equipmentIds?: string[];
+  equipmentHands?: number[];
+  requiresBaseSwap?: boolean;
+}
+
+/** Un équipement correspond-il au filtre d'équipement (catégorie / id / mains ; « 1-2 » matche 1 et 2) ? */
+export function equipmentMatchesEquipFilter(
+  cat: Catalog,
+  equipId: string,
+  sel: { equipmentCategories?: readonly string[]; equipmentIds?: readonly string[]; equipmentHands?: readonly number[] },
+): boolean {
+  const e = cat.equipment.find((x) => x.id === equipId);
+  if (!e) return false;
+  if (sel.equipmentCategories?.includes(e.category)) return true;
+  if (sel.equipmentIds?.includes(equipId)) return true;
+  const hands = sel.equipmentHands;
+  if (hands && hands.length > 0 && e.hands != null) {
+    if (e.hands === "1-2" ? hands.some((x) => x === 1 || x === 2) : hands.includes(e.hands)) return true;
+  }
+  return false;
+}
+
+/**
+ * Remise cumulée (négatif) / surcoût pour un équipement donné, d'après les règles applicables à la
+ * figurine et son état (équipement de base retiré, pour le gate « arme de base changée »).
+ */
+export function equipmentDiscount(
+  cat: Catalog,
+  equipId: string,
+  rules: EquipmentCostRule[] | undefined,
+  removedBaseIds: readonly string[],
+): number {
+  if (!rules) return 0;
+  let d = 0;
+  for (const r of rules) {
+    if (!equipmentMatchesEquipFilter(cat, equipId, r)) continue;
+    if (r.requiresBaseSwap && !removedBaseIds.some((id) => equipmentMatchesEquipFilter(cat, id, r))) continue;
+    d += r.amount;
+  }
+  return d;
 }
 
 interface CatalogIndex {
@@ -455,19 +508,11 @@ function computeCosts(
 
     for (const ri of resolveTargets(occ, resolved)) {
       const sel = occ.effect.target;
-      const cats = sel.equipmentCategories;
-      const ids = sel.equipmentIds;
-      const hands = sel.equipmentHands;
-      const hasFilter = (cats?.length ?? 0) > 0 || (ids?.length ?? 0) > 0 || (hands?.length ?? 0) > 0;
-      const matches = (id: string) => {
-        if (cats?.includes((idx.equipmentCategory.get(id) ?? "") as never)) return true;
-        if (ids?.includes(id)) return true;
-        if (hands && hands.length > 0) {
-          const h = cat.equipment.find((e) => e.id === id)?.hands;
-          if (h != null && (h === "1-2" ? hands.some((x) => x === 1 || x === 2) : hands.includes(h))) return true;
-        }
-        return false;
-      };
+      const hasFilter =
+        (sel.equipmentCategories?.length ?? 0) > 0 ||
+        (sel.equipmentIds?.length ?? 0) > 0 ||
+        (sel.equipmentHands?.length ?? 0) > 0;
+      const matches = (id: string) => equipmentMatchesEquipFilter(cat, id, sel);
       let delta = op.amount;
       if (hasFilter) {
         // Gate « changement d'arme de base » : au moins un équipement de base retiré correspond au filtre.
@@ -1052,6 +1097,40 @@ function collectEffectSources(
   return out;
 }
 
+/** Règles de remise par objet (cost-delta filtré par équipement) applicables à chaque instance. */
+function collectEquipmentCostRules(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+  cat: Catalog,
+): Map<string, EquipmentCostRule[]> {
+  const out = new Map<string, EquipmentCostRule[]>();
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "cost-delta") continue;
+    const sel = occ.effect.target;
+    const hasFilter =
+      (sel.equipmentCategories?.length ?? 0) > 0 ||
+      (sel.equipmentIds?.length ?? 0) > 0 ||
+      (sel.equipmentHands?.length ?? 0) > 0;
+    if (!hasFilter) continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+    const rule: EquipmentCostRule = {
+      amount: op.amount,
+      label: effectSourceLabel(occ.effect, cat),
+      equipmentCategories: sel.equipmentCategories,
+      equipmentIds: sel.equipmentIds,
+      equipmentHands: sel.equipmentHands,
+      requiresBaseSwap: op.requiresBaseSwap,
+    };
+    for (const ri of resolveTargets(occ, resolved)) {
+      const arr = out.get(ri.instance.instanceId) ?? [];
+      arr.push(rule);
+      out.set(ri.instance.instanceId, arr);
+    }
+  }
+  return out;
+}
+
 /** Dés de maîtrise octroyés par effet (ex. Bannière Khéropse), par instance. Pour l'affichage. */
 function collectGrantedMasteryDice(
   resolved: ResolvedInstance[],
@@ -1152,6 +1231,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     if (extra) cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + extra);
   }
   const limitBonuses = collectLimitBonuses(resolved, occurrences); // +1 limite (Lieutenant…)
+  const equipmentCostRules = collectEquipmentCostRules(resolved, occurrences, cat); // remises par objet
   const issues = validate(cat, list, resolved, idx, limitBonuses); // 5 : contraintes
 
   // Affichage : tous les effets d'octroi / de statistique, y compris « en jeu », sur des clones.
@@ -1221,6 +1301,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     grantedUpgrades,
     effectSources,
     limitBonuses: Object.fromEntries(limitBonuses),
+    equipmentCostRules: Object.fromEntries(equipmentCostRules),
     grantedMasteryDice,
     issues,
   };

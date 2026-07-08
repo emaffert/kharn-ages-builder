@@ -1,6 +1,6 @@
 import { specialCardsForProfile } from "@ui/explain";
 import { Tag, STAT_FULL } from "@ui";
-import { iconFor, type Catalog, type MasteryDomain, type Profile } from "@core";
+import { iconFor, type Catalog, type EquipmentCostRule, type MasteryDomain, type Profile } from "@core";
 import { SectionTitle } from "./components";
 import { MasteryDie } from "./MasteryDie";
 import {
@@ -29,6 +29,8 @@ export type ProfileMods = {
   grantedMasteryDice?: MasteryDomain[][];
   /** Bonus à la limitation « X » (effet `limit-modifier`, ex. Lieutenant : +1). Source dans `effectSources["limit"]`. */
   limitBonus?: number;
+  /** Règles de remise par objet applicables à la figurine (ex. Ogodeï, Commandant). */
+  equipmentCostRules?: EquipmentCostRule[];
 };
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */

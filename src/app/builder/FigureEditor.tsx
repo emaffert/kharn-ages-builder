@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { SegmentedControl } from "@ui";
-import { munitionKindForEquip, resolveMunitionLines, type Catalog, type Profile, type Spell } from "@core";
+import {
+  equipmentDiscount,
+  equipmentMatchesEquipFilter,
+  munitionKindForEquip,
+  resolveMunitionLines,
+  type Catalog,
+  type Profile,
+  type Spell,
+} from "@core";
 import { ProfileStatCard, type ProfileMods } from "./ProfileStatCard";
 import { SectionTitle, SlotChip } from "./components";
 import {
@@ -178,6 +186,7 @@ export function FigureEditor({
           onMunTier={onMunTier}
           onInfo={onInfo}
           grantedUpgrades={mods?.grantedUpgrades ?? []}
+          costRules={mods?.equipmentCostRules ?? []}
           equipmentUpgrades={equipmentUpgrades}
           onToggleEquipmentUpgrade={onToggleEquipmentUpgrade}
         />
@@ -212,6 +221,7 @@ function EquipPanel({
   onMunTier,
   onInfo,
   grantedUpgrades,
+  costRules,
   equipmentUpgrades,
   onToggleEquipmentUpgrade,
 }: {
@@ -226,6 +236,7 @@ function EquipPanel({
   onMunTier: (equipId: string, typeId: string, tierIndex: number | null) => void;
   onInfo: (info: ItemInfo) => void;
   grantedUpgrades: NonNullable<ProfileMods["grantedUpgrades"]>;
+  costRules: NonNullable<ProfileMods["equipmentCostRules"]>;
   equipmentUpgrades: Record<string, string[]>;
   onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
 }) {
@@ -266,15 +277,22 @@ function EquipPanel({
       matches(e),
   );
   const UNIQUE = "__unique";
-  // Spécifique au personnage : réservé à ce profil/modèle (ex. Marteau Tonnerre d'Ogodeï), ou son
-  // équipement de base unique retiré. Regroupé dans une catégorie à part, en tête de liste.
+  const BASE_REMOVED = "__base_removed";
+  // Spécifique au personnage : réservé à ce profil/modèle (ex. Marteau Tonnerre d'Ogodeï) ou base unique.
   const isCharSpecific = (e: Catalog["equipment"][number]) =>
     (e.reservedTo?.profileIds?.includes(p.id) ?? false) ||
     (p.modelId != null && (e.reservedTo?.modelIds?.includes(p.modelId) ?? false)) ||
     isUnique(e);
-  const groupOf = (e: Catalog["equipment"][number]) => (isCharSpecific(e) ? UNIQUE : e.category);
-  const GROUP_LABEL: Record<string, string> = { ...CAT_LABEL, [UNIQUE]: "Spécifique au personnage" };
-  const byCat = [UNIQUE, ...PURCHASE_CATS]
+  // Catégories de tête : l'équipement de base RETIRÉ (pour identifier/remettre l'arme d'origine,
+  // ex. swap d'arme des Guerriers via le Commandant), puis le spécifique au personnage.
+  const groupOf = (e: Catalog["equipment"][number]) =>
+    removed.includes(e.id) ? BASE_REMOVED : isCharSpecific(e) ? UNIQUE : e.category;
+  const GROUP_LABEL: Record<string, string> = {
+    ...CAT_LABEL,
+    [BASE_REMOVED]: "Équipement de base retiré",
+    [UNIQUE]: "Spécifique au personnage",
+  };
+  const byCat = [BASE_REMOVED, UNIQUE, ...PURCHASE_CATS]
     .map((g) => [g, avail.filter((e) => groupOf(e) === g)] as [string, typeof avail])
     .filter(([, v]) => v.length > 0);
   const addedCost = added.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
@@ -387,6 +405,31 @@ function EquipPanel({
     );
   };
 
+  // Prix d'un objet, remise incluse. La remise (Ogodeï, Commandant…) ne s'applique qu'aux objets
+  // ACHETÉS (pas l'équipement de base) : on la neutralise pour `isBase`.
+  const priceCell = (e: Catalog["equipment"][number], isBase: boolean) => {
+    const disc = isBase ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
+    if (disc < 0 && e.cost > 0) {
+      const sources = [
+        ...new Set(
+          costRules
+            .filter(
+              (r) =>
+                equipmentMatchesEquipFilter(cat, e.id, r) &&
+                (!r.requiresBaseSwap || removed.some((id) => equipmentMatchesEquipFilter(cat, id, r))),
+            )
+            .map((r) => r.label),
+        ),
+      ];
+      return (
+        <span className="fe-item-cost fe-item-cost--disc" title={`Remise de ${-disc} Ko (${sources.join(", ")})`}>
+          <s className="fe-item-cost-was">{e.cost}</s> {Math.max(0, e.cost + disc)} Ko
+        </span>
+      );
+    }
+    return <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>;
+  };
+
   const equipWarning = armorUsed > armorCap ? "Plusieurs armures équipées." : null;
 
   return (
@@ -419,7 +462,7 @@ function EquipPanel({
                           <span className="fe-item-name">{e.name}</span>
                           {isBase && <span className="fe-badge-base">base</span>}
                         </span>
-                        <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
+                        {priceCell(e, isBase)}
                         <button
                           className="fe-move rem"
                           onClick={(ev) => {
@@ -484,7 +527,7 @@ function EquipPanel({
                           {isBase && <span className="fe-badge-base">base</span>}
                           {equipBits(e) && <span className="fe-item-bits">{equipBits(e)}</span>}
                         </span>
-                        <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>
+                        {priceCell(e, isBase)}
                       </div>
                     );
                   })}

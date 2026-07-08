@@ -454,6 +454,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             munitions={x.inst.munitions ?? {}}
             equipmentUpgrades={x.inst.equipmentUpgrades ?? {}}
             grantedUpgrades={evaluation.grantedUpgrades[x.inst.instanceId] ?? []}
+            costRules={evaluation.equipmentCostRules[x.inst.instanceId] ?? []}
             onPick={setItemInfo}
           />
         )}
@@ -684,6 +685,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               effectSources: evaluation.effectSources[editItem.inst.instanceId],
               grantedMasteryDice: evaluation.grantedMasteryDice[editItem.inst.instanceId],
               limitBonus: evaluation.limitBonuses[groupKey(editItem.p)] ?? 0,
+              equipmentCostRules: evaluation.equipmentCostRules[editItem.inst.instanceId],
             }}
           />
         </Dialog>

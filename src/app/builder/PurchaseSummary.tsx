@@ -1,5 +1,14 @@
 import { specialCardsForProfile } from "@ui/explain";
-import { munitionKindForEquip, resolveMunitionLines, type Catalog, type Profile, type Spell } from "@core";
+import {
+  equipmentDiscount,
+  equipmentMatchesEquipFilter,
+  munitionKindForEquip,
+  resolveMunitionLines,
+  type Catalog,
+  type EquipmentCostRule,
+  type Profile,
+  type Spell,
+} from "@core";
 import { equipInfo, type ItemInfo } from "./shared";
 
 type SummaryChip = { name: string; info: ItemInfo };
@@ -17,12 +26,15 @@ export function PurchaseSummary({
   munitions,
   equipmentUpgrades,
   grantedUpgrades,
+  costRules,
   onPick,
 }: {
   p: Profile;
   cat: Catalog;
   added: string[];
   removed: string[];
+  /** Règles de remise par objet applicables à cette figurine (Ogodeï, Commandant…). */
+  costRules: EquipmentCostRule[];
   grimoireId?: string;
   spellIds: string[];
   upgrades: string[];
@@ -50,17 +62,31 @@ export function PurchaseSummary({
         .map((uid) => grantedUpgrades.find((g) => g.upgradeId === uid))
         .filter((g): g is (typeof grantedUpgrades)[number] => Boolean(g) && g!.equipmentCategories.includes(e.category));
       const upCost = upsForE.reduce((n, g) => n + g.cost, 0);
+      // Remise (Ogodeï, Commandant…) : seulement sur les armes ACHETÉES (pas l'équipement de base).
+      const disc = p.baseEquipmentIds.includes(e.id) ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
+      const discSources = [
+        ...new Set(
+          costRules
+            .filter(
+              (r) =>
+                equipmentMatchesEquipFilter(cat, e.id, r) &&
+                (!r.requiresBaseSwap || removed.some((id) => equipmentMatchesEquipFilter(cat, id, r))),
+            )
+            .map((r) => r.label),
+        ),
+      ];
       const base = equipInfo(e);
-      if (munCost === 0 && upCost === 0) return chip(e.name, base);
+      if (munCost === 0 && upCost === 0 && disc === 0) return chip(e.name, base);
       return chip(e.name, {
         ...base,
-        price: `${e.cost + munCost + upCost} Ko`,
+        price: `${e.cost + munCost + upCost + disc} Ko`,
         lines: [
           ...base.lines,
           ...(munCost > 0
             ? [`Munitions (+${munCost} Ko) : ${munLines.map((l) => `${l.qty} ${l.label}`).join(", ")}`]
             : []),
           ...upsForE.map((g) => `${g.label} (+${g.cost} Ko)`),
+          ...(disc < 0 ? [`Remise ${disc} Ko (${discSources.join(", ")})`] : []),
         ],
       });
     });

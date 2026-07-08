@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
-import { evaluateList } from "./evaluate";
+import { equipmentDiscount, evaluateList } from "./evaluate";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -419,6 +419,25 @@ describe("Khérops - concepts (Lieutenant / Commandant / Ogodeï)", () => {
     const addOnly = inst("kherops-guerrier-1-1", { addedEquipmentIds: ["kherops-francisque"] });
     const r2 = evaluateList(catalog, makeList([cmd, addOnly], "kherops", "bataille"));
     expect(r2.costByInstance[addOnly.instanceId]).toBe(79 + 9);
+  });
+
+  it("Ogodeï : règle de remise −10 exposée, applicable aux armes à 2 mains uniquement", () => {
+    const og = inst("kherops-ogodei-3");
+    const r = evaluateList(catalog, makeList([og], "kherops", "bataille"));
+    const rules = r.equipmentCostRules[og.instanceId];
+    expect(rules?.length ?? 0).toBeGreaterThan(0);
+    expect(equipmentDiscount(catalog, "fauchard-kherops", rules, [])).toBe(-10);
+    expect(equipmentDiscount(catalog, "etoile-de-mort", rules, [])).toBe(0);
+  });
+
+  it("Commandant : règle de remise −5 aux Guerriers, seulement si l'arme de base est retirée", () => {
+    const cmd = inst("kherops-commandant-3");
+    const g = inst("kherops-guerrier-1-1");
+    const r = evaluateList(catalog, makeList([cmd, g], "kherops", "bataille"));
+    const rules = r.equipmentCostRules[g.instanceId];
+    expect(rules?.some((x) => x.requiresBaseSwap)).toBe(true);
+    expect(equipmentDiscount(catalog, "kherops-francisque", rules, [])).toBe(0);
+    expect(equipmentDiscount(catalog, "kherops-francisque", rules, ["kherops-marteau"])).toBe(-5);
   });
 
   it("Bannière Khéropse : octroie un dé de maîtrise au Porte-Bannière qui la porte", () => {

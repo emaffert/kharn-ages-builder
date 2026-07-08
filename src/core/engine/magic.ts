@@ -24,9 +24,13 @@ function cardApplies(card: SpecialCard, profile: Profile, traits: ReadonlySet<st
   return card.amelioration ? scope && selected.includes(card.id) : scope;
 }
 
-/** Voies de magie lançables : inné + améliorations sélectionnées + objets portés. */
+/** Voies de magie lançables : innées (compétence de voie possédée) + améliorations + objets portés. */
 export function castWays(cat: Catalog, profile: Profile, inst: ProfileInstance, traits: ReadonlySet<string>): string[] {
-  const ways = new Set<string>(profile.magic?.canCast ? profile.magic.magicWayIds : []);
+  // Voie innée = la figurine possède la compétence qui maîtrise cette voie (MagicWay.skillId).
+  const skillIds = new Set(profile.skills.map((s) => s.skillId));
+  const ways = new Set<string>(
+    cat.magicWays.filter((w) => w.skillId != null && skillIds.has(w.skillId)).map((w) => w.id),
+  );
   const selected = inst.specialCardIds ?? [];
   for (const c of cat.specialCards) {
     if (c.grantsCasting && cardApplies(c, profile, traits, selected)) {

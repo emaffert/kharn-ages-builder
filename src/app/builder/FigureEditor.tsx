@@ -517,14 +517,13 @@ function SpellPanel({
   const pagesUsed = chosen.reduce((n, s) => n + (s.pages ?? 0), 0);
   const q = query.trim().toLowerCase();
 
-  // Sorts connus d'office (signature du profil) : affichés sur la fiche, jamais dans la liste payante.
-  const innateIds = new Set(p.magic?.knownReservedSpellIds ?? []);
-
   const GENERIC = "Génériques";
   const wayName = (id?: string) => cat.magicWays.find((w) => w.id === id)?.name ?? id ?? "Autres";
   const groupOf = (s: Spell) => (s.kind === "generique" ? GENERIC : wayName(s.magicWayId));
+  // On ne filtre PAS les sorts connus d'office : l'éligibilité est gérée par `spell.reservedTo`,
+  // et un sort générique connu d'office doit rester ajoutable.
   const avail = spellsFor(p, cat, ways).filter(
-    (s) => !selected.includes(s.id) && !innateIds.has(s.id) && (q === "" || s.name.toLowerCase().includes(q)),
+    (s) => !selected.includes(s.id) && (q === "" || s.name.toLowerCase().includes(q)),
   );
   const groupNames = [...new Set(avail.map(groupOf))].sort((a, b) =>
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),

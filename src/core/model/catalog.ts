@@ -38,6 +38,11 @@ export const MagicWaySchema = z.object({
   id: z.string(),
   name: z.string(),
   factionId: z.string(),
+  /**
+   * Compétence qui *maîtrise* cette voie : une figurine peut lancer la voie dès qu'elle possède
+   * cette compétence (ex. « Ostéomancie », « Le Sacrifice »). Source de vérité du statut de lanceur.
+   */
+  skillId: z.string().optional(),
 });
 export type MagicWay = z.infer<typeof MagicWaySchema>;
 
@@ -84,11 +89,6 @@ export const LimitationSchema = z.object({
 });
 export type Limitation = z.infer<typeof LimitationSchema>;
 
-export const ProfileMagicSchema = z.object({
-  canCast: z.boolean(),
-  magicWayIds: z.array(z.string()),
-  knownReservedSpellIds: z.array(z.string()).optional(),
-});
 
 export const ProfileSchema = z.object({
   /** Slug stable généré par nous (ex. "fangs-larbin-1"), PAS le code imprimé. */
@@ -111,7 +111,6 @@ export const ProfileSchema = z.object({
   baseEquipmentIds: z.array(z.string()),
   /** Un tableau de dés de maîtrise ; chaque dé porte 1 à 5 domaines. */
   masteryDice: z.array(z.array(MasteryDomainSchema)),
-  magic: ProfileMagicSchema.optional(),
   /** Vocabulaire ouvert (ex. "apatride", "tembo", "femelle-fang", "frere-d-armes"…). */
   traits: z.array(z.string()),
   recruitment: z.array(ConstraintSchema),

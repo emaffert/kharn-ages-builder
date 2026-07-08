@@ -33,6 +33,9 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   // `value` : pour une compétence « à valeur » (ex. octroie « Héroïque défense » → value "défense").
   z.object({ kind: z.literal("grant-skill"), skillId: z.string(), value: z.union([z.string(), z.number()]).optional() }),
   z.object({ kind: z.literal("grant-trait"), trait: z.string() }),
+  // Octroie la connaissance d'un sort « de signature » (connu d'office, gratuit, hors budget de pages).
+  // Ex. Alaric connaît « Lien Mental ». Affiché sur la fiche même pour un non-lanceur.
+  z.object({ kind: z.literal("grant-spell"), spellId: z.string() }),
   z.object({ kind: z.literal("cap"), value: z.number() }),
   z.object({
     kind: z.literal("stat-modifier"),

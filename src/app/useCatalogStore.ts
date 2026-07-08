@@ -3,6 +3,7 @@ import {
   parseCatalog,
   type Catalog,
   type Equipment,
+  type MagicWay,
   type Model,
   type Profile,
   type Skill,
@@ -149,6 +150,30 @@ export function useCatalogStore() {
           ),
         };
       }),
+    [apply],
+  );
+
+  // ── Voies de magie (table éditable dans l'admin) ──
+  const addMagicWay = useCallback((): string => {
+    const id = `way-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      magicWays: [...c.magicWays, { id, name: "Nouvelle voie", factionId: "" }],
+    }));
+    return id;
+  }, [apply]);
+
+  const updateMagicWay = useCallback(
+    (id: string, patch: Partial<MagicWay>) =>
+      apply((c) => ({
+        ...c,
+        magicWays: c.magicWays.map((w) => (w.id === id ? { ...w, ...patch } : w)),
+      })),
+    [apply],
+  );
+
+  const removeMagicWay = useCallback(
+    (id: string) => apply((c) => ({ ...c, magicWays: c.magicWays.filter((w) => w.id !== id) })),
     [apply],
   );
 
@@ -378,6 +403,9 @@ export function useCatalogStore() {
     updateModel,
     addModel,
     assignProfileToModel,
+    addMagicWay,
+    updateMagicWay,
+    removeMagicWay,
     updateEquipment,
     addEquipment,
     removeEquipment,

@@ -7,6 +7,7 @@ import { EquipmentDetail } from "./admin/EquipmentDetail";
 import { SkillCatalogDetail } from "./admin/SkillCatalogDetail";
 import { SpecialCardDetail } from "./admin/SpecialCardDetail";
 import { SpellDetail } from "./admin/SpellDetail";
+import { MagicWaysDetail } from "./admin/MagicWaysDetail";
 import { AdminDocs } from "./admin/AdminDocs";
 import "./admin/admin.css";
 
@@ -23,9 +24,9 @@ const EQUIP_CAT_LABEL: Record<string, string> = {
 export function AdminCatalog() {
   const store = useCatalogStore();
   const { catalog } = store;
-  const [view, setView] = useState<"profiles" | "equipment" | "skills" | "special-cards" | "spells">(
-    "profiles",
-  );
+  const [view, setView] = useState<
+    "profiles" | "equipment" | "skills" | "special-cards" | "spells" | "magic-ways"
+  >("profiles");
   const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
   const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
   const [selectedSkillId, setSelectedSkillId] = useState(catalog.skills[0]?.id ?? "");
@@ -138,6 +139,9 @@ export function AdminCatalog() {
             <button onClick={() => setView("spells")} className={tabClass(view === "spells")}>
               Sorts
             </button>
+            <button onClick={() => setView("magic-ways")} className={tabClass(view === "magic-ways")}>
+              Voies
+            </button>
           </div>
           <div className="relative">
             <input
@@ -196,6 +200,7 @@ export function AdminCatalog() {
             {view === "skills" && `${filteredSkills.length} compétence(s)`}
             {view === "special-cards" && `${filteredCards.length} carte(s) spéciale(s)`}
             {view === "spells" && `${filteredSpells.length} sort(s)`}
+            {view === "magic-ways" && `${catalog.magicWays.length} voie(s) de magie`}
             {store.dirty && <span className="adm-accent"> · modifié</span>}
           </p>
         </div>
@@ -421,6 +426,14 @@ export function AdminCatalog() {
             ) : (
               <p className="adm-faint">Sélectionnez un sort.</p>
             ))}
+          {view === "magic-ways" && (
+            <MagicWaysDetail
+              cat={catalog}
+              onAdd={store.addMagicWay}
+              onChange={store.updateMagicWay}
+              onRemove={store.removeMagicWay}
+            />
+          )}
         </div>
 
         {import.meta.env.DEV && previewImage && (

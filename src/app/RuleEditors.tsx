@@ -261,6 +261,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, skillId: "" };
     case "grant-trait":
       return { kind, trait: "" };
+    case "grant-spell":
+      return { kind, spellId: "" };
     case "cap":
       return { kind, value: 0 };
     case "stat-modifier":
@@ -308,6 +310,7 @@ function OperationEditor({
             "unlock-upgrade",
             "grant-skill",
             "grant-trait",
+            "grant-spell",
             "stat-modifier",
             "stat-count",
             "stat-max",
@@ -413,6 +416,17 @@ function OperationEditor({
       )}
       {op.kind === "grant-trait" && (
         <Txt label="trait" value={op.trait} onChange={(v) => onChange({ ...op, trait: v })} />
+      )}
+      {op.kind === "grant-spell" && (
+        <Combobox
+          value={op.spellId}
+          className="w-56"
+          placeholder="Rechercher un sort…"
+          options={[...cat.spells]
+            .sort((a, b) => a.name.localeCompare(b.name, "fr"))
+            .map((s) => ({ value: s.id, label: s.name }))}
+          onChange={(v) => onChange({ ...op, spellId: v })}
+        />
       )}
       {op.kind === "cap" && <Num label="valeur" value={op.value} onChange={(v) => onChange({ ...op, value: v })} />}
       {op.kind === "stat-modifier" && (

@@ -104,6 +104,11 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     case "grant-trait":
       base = `Octroie le trait « ${op.trait} » à ${tgt}`;
       break;
+    case "grant-spell": {
+      const sp = cat.spells.find((s) => s.id === op.spellId)?.name ?? op.spellId;
+      base = `Connaît d'office le sort « ${sp} » (${tgt})`;
+      break;
+    }
     case "cap":
       base = `Plafond ${op.value} pour ${tgt}`;
       break;

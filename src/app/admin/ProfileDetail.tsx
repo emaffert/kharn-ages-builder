@@ -103,6 +103,10 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
     const target = value === NEW_GROUP ? addModel(profile.factionId) : value;
     assignProfileToModel(profile.id, target);
   };
+  // Voies maîtrisées (dérivées) : le profil possède la compétence liée à la voie.
+  const casterWays = cat.magicWays.filter(
+    (w) => w.skillId != null && profile.skills.some((s) => s.skillId === w.skillId),
+  );
 
   // Une contrainte de carte ne concerne ce profil que si son sujet est ce profil
   // (ou si elle n'a pas de sujet précis). Évite que Xayìn hérite des contraintes de Muskh.
@@ -204,20 +208,14 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
             />
             Personnage
           </label>
-          <label className="flex items-center gap-1 text-xs adm-muted">
-            <input
-              type="checkbox"
-              checked={profile.magic?.canCast ?? false}
-              onChange={(e) =>
-                patch({
-                  magic: e.target.checked
-                    ? { canCast: true, magicWayIds: profile.magic?.magicWayIds ?? [] }
-                    : undefined,
-                })
-              }
-            />
-            Mage
-          </label>
+          {casterWays.length > 0 && (
+            <span
+              className="flex items-center gap-1 text-xs adm-accent"
+              title="Lanceur dérivé de ses compétences de voie (onglet « Voies de magie »)"
+            >
+              Mage : {casterWays.map((w) => w.name).join(", ")}
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-xs adm-faint">Groupe (modèle)</span>

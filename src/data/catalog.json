@@ -418,17 +418,32 @@
     {
       "id": "osteomancie",
       "name": "Ostéomancie",
-      "factionId": "fangs"
+      "factionId": "fangs",
+      "skillId": "osteomancie"
     },
     {
       "id": "shamanisme",
       "name": "Shamanisme",
-      "factionId": "gouns"
+      "factionId": "gouns",
+      "skillId": "shamanisme"
     },
     {
       "id": "sang-et-acier",
       "name": "Le Sang et l'Acier",
-      "factionId": "kharns"
+      "factionId": "kharns",
+      "skillId": "skill-1783417945899"
+    },
+    {
+      "id": "le-sacrifice",
+      "name": "Le Sacrifice",
+      "factionId": "kherops",
+      "skillId": "skill-1783418059003"
+    },
+    {
+      "id": "way-1783500043343",
+      "name": "Adansonia l'arbre de vie",
+      "factionId": "tembos",
+      "skillId": "skill-1783418079004"
     }
   ],
   "models": [
@@ -1667,12 +1682,6 @@
           "defensive"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang",
         "meneuse"
@@ -1758,12 +1767,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang",
         "meneuse"
@@ -1845,12 +1848,6 @@
           "objectif"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang",
         "meneuse"
@@ -1926,12 +1923,6 @@
           "tir"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang"
       ],
@@ -2010,12 +2001,6 @@
           "defensive"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang"
       ],
@@ -2167,12 +2152,6 @@
           "tir"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang",
         "fille-de-nyx"
@@ -2267,12 +2246,6 @@
           "objectif"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang",
         "fille-de-nyx"
@@ -2359,12 +2332,6 @@
           "objectif"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [
         "femelle-fang",
         "fille-de-nyx"
@@ -2517,12 +2484,6 @@
           "objectif"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "traits": [],
       "recruitment": [],
       "effects": [
@@ -2973,15 +2934,6 @@
           "defensive"
         ]
       ],
-      "magic": {
-        "canCast": false,
-        "magicWayIds": [
-          "shamanisme"
-        ],
-        "knownReservedSpellIds": [
-          "onde-revigorante"
-        ]
-      },
       "traits": [
         "synkherces"
       ],
@@ -2997,7 +2949,27 @@
         }
       ],
       "cardImage": "cards/Gouns/guerrier-albinos.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "grant-spell-onde-revigorante",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-guerrier-albinos-3"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-spell",
+            "spellId": "onde-revigorante"
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "Connaît le sort « Onde revigorante » d'office.",
+          "autoEnforced": true
+        }
+      ]
     },
     {
       "id": "gouns-eclaireur-mongo-1",
@@ -3326,12 +3298,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "shamanisme"
-        ]
-      },
       "traits": [],
       "recruitment": [],
       "rules": [],
@@ -3383,12 +3349,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "shamanisme"
-        ]
-      },
       "traits": [],
       "recruitment": [],
       "rules": [],
@@ -3458,12 +3418,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "shamanisme"
-        ]
-      },
       "traits": [],
       "recruitment": [],
       "effects": [
@@ -3545,15 +3499,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": false,
-        "magicWayIds": [
-          "shamanisme"
-        ],
-        "knownReservedSpellIds": [
-          "lien-mental"
-        ]
-      },
       "traits": [
         "dogon"
       ],
@@ -3575,7 +3520,27 @@
         }
       ],
       "cardImage": "cards/Gouns/alaric.jpg",
-      "unverifiedFields": []
+      "unverifiedFields": [],
+      "effects": [
+        {
+          "id": "grant-spell-lien-mental",
+          "source": {
+            "kind": "profile",
+            "id": "gouns-alaric-1"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-spell",
+            "spellId": "lien-mental"
+          },
+          "appliesToListBuilding": false,
+          "sourceText": "Connaît le sort « Lien Mental » d'office.",
+          "autoEnforced": true
+        }
+      ]
     },
     {
       "id": "gouns-pere-de-famille-2",
@@ -4896,12 +4861,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "sang-et-acier"
-        ]
-      },
       "traits": [
         "ordre-du-sang-et-acier"
       ],
@@ -4995,6 +4954,9 @@
       "skills": [
         {
           "skillId": "carnivore"
+        },
+        {
+          "skillId": "skill-1783417945899"
         }
       ],
       "baseEquipmentIds": [
@@ -5013,12 +4975,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "sang-et-acier"
-        ]
-      },
       "traits": [
         "ordre-du-sang-et-acier"
       ],
@@ -5593,12 +5549,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": [
-          "sang-et-acier"
-        ]
-      },
       "traits": [
         "ordre-du-sang-et-acier"
       ],
@@ -6783,10 +6733,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": []
-      },
       "traits": [],
       "recruitment": [],
       "effects": [],
@@ -6850,10 +6796,6 @@
           "esoterique"
         ]
       ],
-      "magic": {
-        "canCast": true,
-        "magicWayIds": []
-      },
       "traits": [],
       "recruitment": [],
       "effects": [],

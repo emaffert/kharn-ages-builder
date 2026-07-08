@@ -117,7 +117,9 @@ export function ProfileStatCard({
   }
   const grantedTraits = mods?.grantedTraitIds ?? [];
   // Sorts connus d'office (signature) - affichés même pour les non-mages, cliquables.
-  const innateSpells = (p.magic?.knownReservedSpellIds ?? [])
+  // Sorts connus d'office = effets `grant-spell` du profil ciblant lui-même (affichés même sans voie).
+  const innateSpells = (p.effects ?? [])
+    .flatMap((e) => (e.operation.kind === "grant-spell" && e.target.self ? [e.operation.spellId] : []))
     .map((id) => cat.spells.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => Boolean(s));
   const cards = specialCardsForProfile(p, cat);
@@ -144,6 +146,10 @@ export function ProfileStatCard({
   const limBonus = p.limitation.kind === "X" ? (mods?.limitBonus ?? 0) : 0;
   const limIsFx = limBonus > 0 && p.limitation.value != null;
   const limValue = p.limitation.kind === "X" ? (p.limitation.value ?? 0) + limBonus : null;
+  // Lanceur = possède la compétence d'une voie de magie (source de vérité : MagicWay.skillId).
+  const isCaster = cat.magicWays.some(
+    (w) => w.skillId != null && p.skills.some((s) => s.skillId === w.skillId),
+  );
   const limLabel =
     p.limitation.kind === "special"
       ? "Limitation •"
@@ -184,7 +190,7 @@ export function ProfileStatCard({
           ) : (
             <Tag>{limLabel}</Tag>
           )}
-          {p.magic?.canCast && <Tag tone="amber">Mage</Tag>}
+          {isCaster && <Tag tone="amber">Mage</Tag>}
           {grantedTraits.map((t) => (
             <span key={t} className="fe-fx-tag" title="Trait octroyé par un effet">
               {t}

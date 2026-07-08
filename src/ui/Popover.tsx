@@ -2,7 +2,7 @@ import * as RP from "@radix-ui/react-popover";
 import type { ReactNode } from "react";
 
 /**
- * Popover (backé Radix) — pour les fiches d'info (équipement, sort) au lieu d'une
+ * Popover (backé Radix) - pour les fiches d'info (équipement, sort) au lieu d'une
  * grande modale. Le déclencheur reçoit le focus/aria automatiquement.
  */
 export function Popover({ trigger, children }: { trigger: ReactNode; children: ReactNode }) {

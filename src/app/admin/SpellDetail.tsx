@@ -58,7 +58,7 @@ export function SpellDetail({
             className="w-44"
             placeholder="Rechercher une voie…"
             options={[
-              { value: "", label: "— (aucune)" },
+              { value: "", label: "- (aucune)" },
               ...cat.magicWays.map((m) => ({ value: m.id, label: m.name })),
             ]}
             onChange={(v) => onChange({ magicWayId: v || undefined })}

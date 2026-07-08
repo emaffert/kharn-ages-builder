@@ -101,7 +101,7 @@ export function PurchaseSummary({
       chip(`${spells.length} sort${spells.length > 1 ? "s" : ""}`, {
         title: "Sorts sélectionnés",
         price: `${sCost} Ko`,
-        lines: spells.map((s) => `${s.name} — ${s.pages ?? 0} p${s.cost ? ` · ${s.cost} Ko` : ""}`),
+        lines: spells.map((s) => `${s.name} - ${s.pages ?? 0} p${s.cost ? ` · ${s.cost} Ko` : ""}`),
       }),
     );
   }

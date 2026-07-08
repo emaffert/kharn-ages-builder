@@ -6,7 +6,7 @@
 export * from "./explain";
 export * from "./labels";
 
-// Kit de primitives (Phase 1) — backées Radix, stylées sur les tokens Forge/Braise.
+// Kit de primitives (Phase 1) - backées Radix, stylées sur les tokens Forge/Braise.
 export { Button } from "./Button";
 export { Tag } from "./Tag";
 export { Coin } from "./Coin";

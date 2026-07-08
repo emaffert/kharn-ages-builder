@@ -5,7 +5,7 @@ import {
   castableSpells as coreCastableSpells,
 } from "@core";
 import type { Catalog, Profile, ProfileInstance, Selector, Spell } from "@core";
-// Libellés de présentation partagés avec l'admin (source unique dans @ui) — alias pour garder les noms locaux.
+// Libellés de présentation partagés avec l'admin (source unique dans @ui) - alias pour garder les noms locaux.
 import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
 
 /**
@@ -24,7 +24,7 @@ export type EmblemKind = "fangs" | "kharns" | "gouns" | "kherops" | "tembos" | "
 /**
  * Les 6 factions (livre de règles, p. 6) + les Affranchis. `accent`/`deep` : ancienne palette
  * (écrans non migrés). `color`/`colorBright`/`colorDeep`/`emblem` : identité « Forge/Braise »
- * (blasons placeholders — à remplacer par les vrais logos quand ils seront disponibles).
+ * (blasons placeholders - à remplacer par les vrais logos quand ils seront disponibles).
  * `transverse` : « faction » sans figurines propres qui recrute parmi les autres (Affranchis).
  */
 export const FACTIONS: {
@@ -71,7 +71,7 @@ function carrierSpec(p: Profile, cat: Catalog): CarrierSpec | null {
   return null;
 }
 
-/** Une figurine recrutée uniquement via un porteur (ex. Likan, Muskh) — pas d'achat propre. */
+/** Une figurine recrutée uniquement via un porteur (ex. Likan, Muskh) - pas d'achat propre. */
 export const isDependent = (p: Profile, cat: Catalog): boolean => carrierSpec(p, cat) != null;
 
 /** Le dépendant occupe-t-il la capacité de rattachement du porteur (contrainte `attachment`) ? */
@@ -304,7 +304,7 @@ export function spellInfo(s: Spell, cat: Catalog): ItemInfo {
   const way = cat.magicWays.find((w) => w.id === s.magicWayId)?.name;
   return {
     title: s.name,
-    price: s.cost != null && s.cost > 0 ? `${s.cost} Ko` : "—",
+    price: s.cost != null && s.cost > 0 ? `${s.cost} Ko` : "-",
     lines: [
       `${s.pages ?? 0} page(s)${way ? ` · ${way}` : ""}`,
       `Cible : ${s.target}`,
@@ -321,7 +321,7 @@ export function equipBits(e: Catalog["equipment"][number]): string {
   if (e.hands) bits.push(e.hands === "1-2" ? "1/2 m" : `${e.hands} m`);
   if (e.allonge != null) bits.push(`All.${e.allonge}`);
   if (e.range) bits.push(`Port.${e.range.short}/${e.range.long}`);
-  if (e.seuil != null) bits.push(`Arm.${e.protectionEchec ?? "—"}/${e.seuil}/${e.protectionReussite ?? "—"}`);
+  if (e.seuil != null) bits.push(`Arm.${e.protectionEchec ?? "-"}/${e.seuil}/${e.protectionReussite ?? "-"}`);
   if (e.durability != null) bits.push(`DV ${e.durability}`);
   if (e.perceArmure != null) bits.push(`PA ${e.perceArmure}`);
   return bits.join(" · ");

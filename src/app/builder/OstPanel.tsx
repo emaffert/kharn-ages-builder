@@ -67,7 +67,7 @@ export function OstPanel({
   return (
     <div className="bld-ost">
       <div className="bld-ost-head">
-        <span className="bld-ost-sigil">❖</span> Ost — Cartes &amp; Pactes
+        <span className="bld-ost-sigil">❖</span> Ost - Cartes &amp; Pactes
       </div>
       <div className="bld-ost-cards">
         {available.map((card) => {

@@ -90,12 +90,12 @@ export function SpecialCardDetail({
         />
         Carte à portée Ost (sélectionnée au niveau de la liste)
         <span className="text-xs adm-faint">
-          (la « Portée » ci-dessous sert alors de disponibilité — ex. Myriam présente)
+          (la « Portée » ci-dessous sert alors de disponibilité - ex. Myriam présente)
         </span>
       </label>
 
       {card.ostScope && (
-        <Section title="Condition d'activation (composition de l'Ost) — erreur si non remplie">
+        <Section title="Condition d'activation (composition de l'Ost) - erreur si non remplie">
           <div className="space-y-2">
             <ProfileMultiSelect
               label="parmi les profils"
@@ -159,7 +159,7 @@ export function SpecialCardDetail({
         </div>
       </Section>
 
-      <Section title="Texte de la carte (verbatim — fait foi)">
+      <Section title="Texte de la carte (verbatim - fait foi)">
         <TextLinesEditor items={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
       </Section>
 

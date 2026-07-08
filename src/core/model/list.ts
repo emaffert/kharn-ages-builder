@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * Document de liste utilisateur (format portable et versionné).
- * Référence : docs/schema-donnees.md — couche 3.
+ * Référence : docs/schema-donnees.md - couche 3.
  */
 
 export const ProfileInstanceSchema = z.object({

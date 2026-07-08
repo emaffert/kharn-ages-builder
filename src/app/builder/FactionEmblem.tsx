@@ -1,7 +1,7 @@
 import type { EmblemKind } from "./shared";
 
 /**
- * Blason héraldique de faction (placeholder — remplaçable par les vraies icônes).
+ * Blason héraldique de faction (placeholder - remplaçable par les vraies icônes).
  * Se teinte via les variables `--faction` / `--faction-deep` / `--gold` du parent.
  */
 const INK = "#f4e6c8";
@@ -66,7 +66,7 @@ const SIGILS: Record<EmblemKind, React.JSX.Element> = {
       <path d="M20 17.5 L23.2 22 L20 26.5 L16.8 22 Z" fill={INK} />
     </>
   ),
-  // Hache à double tranchant dorée (les Affranchis) — labrys : hampe centrale + deux fers en croissant.
+  // Hache à double tranchant dorée (les Affranchis) - labrys : hampe centrale + deux fers en croissant.
   affranchis: (
     <g fill="var(--gold)">
       <rect x="19.1" y="9" width="1.8" height="27" rx="0.9" />

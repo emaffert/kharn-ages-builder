@@ -2,7 +2,7 @@ import Dexie, { type Table } from "dexie";
 import { parseListDocument, type ListDocument } from "@core";
 
 /**
- * Persistance locale des listes joueur (IndexedDB via Dexie) — couche local-first.
+ * Persistance locale des listes joueur (IndexedDB via Dexie) - couche local-first.
  * La synchro cloud viendra se brancher par-dessus plus tard (cf. mémoire archi).
  */
 class ListsDb extends Dexie {

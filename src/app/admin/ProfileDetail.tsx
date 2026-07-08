@@ -159,7 +159,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           />
         </div>
         {displayed == null && (
-          <p className="text-[10px] adm-faint">Aucune icône — l'app affichera le blason + niveau.</p>
+          <p className="text-[10px] adm-faint">Aucune icône - l'app affichera le blason + niveau.</p>
         )}
         {editingIcon && (
           <IconEditor
@@ -182,7 +182,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
               }
               className={INPUT}
             >
-              <option value="">—</option>
+              <option value="">-</option>
               <option value="1">I</option>
               <option value="2">II</option>
               <option value="3">III</option>
@@ -227,7 +227,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
             className={INPUT}
             title="Rattache cette figurine à un groupe (regroupe les variantes, ex. les Guerriers)"
           >
-            {profile.modelId == null && <option value="">— aucun —</option>}
+            {profile.modelId == null && <option value="">- aucun -</option>}
             {groupOptions.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
@@ -266,7 +266,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
         <div className="flex items-center gap-2">
           <FlagButton active={anyStatUnverified} onClick={toggleAllStats} />
           <span className="text-xs adm-faint">
-            à vérifier — un seul indicateur pour toutes les caractéristiques
+            à vérifier - un seul indicateur pour toutes les caractéristiques
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -382,7 +382,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
         <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
       </Section>
 
-      <Section title="Traits (tags internes — non imprimés sur les cartes)">
+      <Section title="Traits (tags internes - non imprimés sur les cartes)">
         <TraitsEditor traits={profile.traits} onChange={(t) => patch({ traits: t })} />
         <div className="space-y-1 text-xs">
           {profile.traits.map((t) => {
@@ -391,7 +391,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
               <div key={t}>
                 <span className="font-semibold adm-muted">{t}</span>
                 {usages.length === 0 ? (
-                  <span className="adm-faint"> — tag interne, non référencé par une règle</span>
+                  <span className="adm-faint"> - tag interne, non référencé par une règle</span>
                 ) : (
                   <ul className="ml-4 list-disc adm-faint">
                     {usages.map((u, i) => (
@@ -413,11 +413,11 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
         />
       </Section>
 
-      <Section title="Règles de la carte (verbatim — fait foi)">
+      <Section title="Règles de la carte (verbatim - fait foi)">
         <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
       </Section>
 
-      <Section title="Notes (hors carte — non verbatim)">
+      <Section title="Notes (hors carte - non verbatim)">
         <div className="space-y-2">
           {(profile.notes ?? []).map((n, i) => (
             <div key={i} className="flex items-start gap-2">

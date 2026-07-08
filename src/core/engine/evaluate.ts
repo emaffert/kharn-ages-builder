@@ -17,11 +17,11 @@ import { totalMunitionCost } from "./munitions";
 /**
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
  * des effets dynamiques (octrois, déblocages, modificateurs de coût).
- * Référence : docs/schema-donnees.md — couche 2 (ordre de résolution).
+ * Référence : docs/schema-donnees.md - couche 2 (ordre de résolution).
  *
  * Opérations d'effet prises en charge ici : `cost-delta`, `cost-set`, `grant-trait`,
  * `grant-skill` (`spell-pages` est traité par engine/magic.ts pour la capacité de pages).
- * TODO — opérations définies au schéma mais PAS encore appliquées à l'évaluation :
+ * TODO - opérations définies au schéma mais PAS encore appliquées à l'évaluation :
  *   `stat-modifier` (ex. Apprentie de Nyx : +niveau en I), `cap`.
  *   Tant qu'elles ne sont pas implémentées, ces effets sont sans incidence sur coût/stats.
  */
@@ -46,7 +46,7 @@ export interface Issue {
   instanceId?: string;
   ruleId?: string;
   message: string;
-  /** Wording officiel — fait foi. */
+  /** Wording officiel - fait foi. */
   sourceText: string;
 }
 
@@ -210,13 +210,13 @@ function collectEffectOccurrences(
   resolved: ResolvedInstance[],
   cat: Catalog,
   idx: CatalogIndex,
-  /** true => inclut aussi les effets « en jeu » (appliesToListBuilding false) — pour l'affichage. */
+  /** true => inclut aussi les effets « en jeu » (appliesToListBuilding false) - pour l'affichage. */
   includeInGame = false,
 ): EffectOccurrence[] {
   const occurrences: EffectOccurrence[] = [];
 
   // Effets portés par les profils présents. Un effet « optIn » (choix du joueur) n'est appliqué
-  // que si l'instance a explicitement opté — désignée garde du corps (ex. Djouked → −35 pour Broutcha).
+  // que si l'instance a explicitement opté - désignée garde du corps (ex. Djouked → −35 pour Broutcha).
   // Les effets `appliesToListBuilding: false` sont « en jeu seulement » : jamais calculés ici.
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
@@ -480,7 +480,7 @@ function computeCosts(
   }
 
   // cost-set : fixe le coût (ex. larbins « garde du corps » gratuits). Seules les cibles
-  // *désignées* (bodyguardOfInstanceId) en bénéficient — le joueur choisit qui occupe l'emplacement —
+  // *désignées* (bodyguardOfInstanceId) en bénéficient - le joueur choisit qui occupe l'emplacement -
   // dans la limite de maxCount et du nombre de sources (sourceCount).
   for (const occ of occurrences) {
     const op = occ.effect.operation;
@@ -578,7 +578,7 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
         instanceId: inst.instanceId,
         ruleId,
         message,
-        sourceText: "Règles de création de liste — équipement & magie.",
+        sourceText: "Règles de création de liste - équipement & magie.",
       });
 
     if (inst.grimoireId && forbiddenGrimoires(p).has(inst.grimoireId)) {
@@ -831,7 +831,7 @@ function reservedOk(eq: Catalog["equipment"][number], p: Profile): boolean {
 
 /**
  * Défense en profondeur : le constructeur empêche déjà d'ajouter un équipement réservé à une
- * figurine non éligible, mais une liste importée pourrait en contenir un — on le signale ici.
+ * figurine non éligible, mais une liste importée pourrait en contenir un - on le signale ici.
  * On ne contrôle que l'équipement AJOUTÉ (l'équipement de base est défini par la carte).
  */
 function validateReservedEquipment(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
@@ -912,7 +912,7 @@ function validateAttachments(
       if (!carrierRi) continue;
 
       // Seuls les rattachés soumis à une contrainte d'attachement (les Likans) comptent dans la
-      // capacité — un Muskh rattaché à Xàyin, par ex., ne consomme pas la capacité Likan.
+      // capacité - un Muskh rattaché à Xàyin, par ex., ne consomme pas la capacité Likan.
       const attachedRis = attached
         .map((id) => byInstanceId.get(id))
         .filter((ri): ri is ResolvedInstance => Boolean(ri))

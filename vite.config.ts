@@ -100,7 +100,7 @@ export default defineConfig(({ command }) => ({
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
       manifest: {
-        name: "Khârn-Âges — Constructeur de listes",
+        name: "Khârn-Âges - Constructeur de listes",
         short_name: "Khârn-Âges",
         lang: "fr",
         start_url: ".",

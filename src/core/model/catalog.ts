@@ -12,7 +12,7 @@ import { EffectSchema } from "./effects";
 
 /**
  * Catalogue de référence (lecture seule, versionné).
- * Référence : docs/schema-donnees.md — couche 1.
+ * Référence : docs/schema-donnees.md - couche 1.
  */
 
 export const FactionSchema = z.object({
@@ -152,7 +152,7 @@ export const EquipmentSchema = z.object({
   baseMunitions: z.number().optional(),
   /** L'objet confère la capacité de lancer des sorts dans ces voies (ex. focus/relique). */
   grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
-  /** Durée de vie (DV) — boucliers et armures. */
+  /** Durée de vie (DV) - boucliers et armures. */
   durability: z.number().optional(),
   /** Valeurs d'armure (équipement de catégorie « armure ») : cf. `Profile.armor`. */
   protectionEchec: z.number().optional(),
@@ -281,7 +281,7 @@ export const SpecialCardSchema = z.object({
    */
   choiceGroup: z.string().optional(),
   /**
-   * `true` : amélioration *partagée* au niveau du Fer de Lance — payée **une seule fois** quel que soit
+   * `true` : amélioration *partagée* au niveau du Fer de Lance - payée **une seule fois** quel que soit
    * le nombre de figurines qui en bénéficient (ex. Lien de la Terre). On l'active depuis n'importe quel
    * modèle éligible ; l'effet (portée `fer-de-lance`) profite à toute sa cible.
    */
@@ -289,13 +289,13 @@ export const SpecialCardSchema = z.object({
   /** La carte confère la capacité de lancer des sorts dans ces voies (ex. Apprentie de Nyx → ostéomancie). */
   grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   /**
-   * `true` : amélioration *empilable* — achetable en plusieurs exemplaires sur une même figurine,
+   * `true` : amélioration *empilable* - achetable en plusieurs exemplaires sur une même figurine,
    * plafonnée à son **niveau** (ex. « Ordre de Mission Royale » : autant d'ordres que le Niveau).
    * La quantité choisie est stockée dans `ProfileInstance.specialCardCounts`.
    */
   perLevelStack: z.boolean().optional(),
   /**
-   * `true` : carte à portée **Ost** — sélectionnée au niveau de la liste (pas d'une figurine), ses effets
+   * `true` : carte à portée **Ost** - sélectionnée au niveau de la liste (pas d'une figurine), ses effets
    * (portée `ost`) s'appliquent à toute la bande. `scope` sert alors de **disponibilité** (la carte n'est
    * proposée que si la liste contient une figurine correspondante, ex. Myriam). Stockée dans `list.ost.cardIds`.
    */
@@ -362,8 +362,8 @@ export const CatalogSchema = z.object({
 export type Catalog = z.infer<typeof CatalogSchema>;
 
 /**
- * Icône à afficher pour un profil : l'icône *propre au profil* (`p.icon`) si définie — elle déroge
- * au partage pour ce niveau précis —, sinon celle partagée par `cardImage` (commune aux niveaux),
+ * Icône à afficher pour un profil : l'icône *propre au profil* (`p.icon`) si définie - elle déroge
+ * au partage pour ce niveau précis -, sinon celle partagée par `cardImage` (commune aux niveaux),
  * sinon aucune.
  */
 export function iconFor(cat: Catalog, p: Profile): string | undefined {

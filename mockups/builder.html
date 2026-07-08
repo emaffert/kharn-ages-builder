@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Khârn-Âges — Maquette constructeur (Forge/Braise)</title>
+<title>Khârn-Âges - Maquette constructeur (Forge/Braise)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -12,7 +12,7 @@
 body{overflow:hidden}
 .app{height:100vh}
 
-/* ————— Bandeau de liste (teinté faction) ————— */
+/* ----- Bandeau de liste (teinté faction) ----- */
 .listbar{
   position:relative;display:flex;align-items:center;gap:18px;padding:14px 20px;
   border-bottom:1px solid var(--hair);
@@ -63,7 +63,7 @@ body{overflow:hidden}
 
 .actions{display:flex;align-items:center;gap:8px;margin-left:4px}
 
-/* ————— Corps ————— */
+/* ----- Corps ----- */
 .body{flex:1;display:flex;min-height:0}
 
 /* Roster */
@@ -160,7 +160,7 @@ body{overflow:hidden}
 </style>
 </head>
 <body>
-<!-- Sigils héraldiques (placeholders faction — remplaçables par les vraies icônes) -->
+<!-- Sigils héraldiques (placeholders faction - remplaçables par les vraies icônes) -->
 <svg width="0" height="0" style="position:absolute"><defs>
   <symbol id="sig-fang" viewBox="0 0 40 44">
     <path d="M20 2 L37 8 V22 C37 33 29 40 20 43 C11 40 3 33 3 22 V8 Z" fill="#5e1a13" stroke="#c99a3e" stroke-width="2"/>
@@ -239,7 +239,7 @@ body{overflow:hidden}
         <div class="ritem"><div class="rmed">I</div><div class="rname">Larbin<small>Éprouvé</small></div><span class="rcost">35</span><button class="radd">+</button></div>
         <div class="ritem"><div class="rmed">I</div><div class="rname">Affamé<small>Carnivore</small></div><span class="rcost">40</span><button class="radd">+</button></div>
 
-        <div class="grp-label">Recrutement conditionnel <span class="hint">— via un porteur</span></div>
+        <div class="grp-label">Recrutement conditionnel <span class="hint">- via un porteur</span></div>
         <div class="ritem cond"><div class="rmed">II</div><div class="rname">Likan<small>rattaché à une femelle Fang</small></div><span class="rcost">40</span></div>
         <div class="ritem cond"><div class="rmed">I</div><div class="rname">Muskh<small>rattaché à Xayìn</small></div><span class="rcost">60</span></div>
       </div>
@@ -304,14 +304,14 @@ body{overflow:hidden}
           </div>
         </div>
 
-        <!-- Exécuteur — en erreur -->
+        <!-- Exécuteur - en erreur -->
         <div class="unit error">
           <span class="grip">⠿</span>
           <div class="thumb"><svg class="sig"><use href="#sig-fang"/></svg><span class="lvl">II</span></div>
           <div class="uinfo">
             <div class="uname"><b>Exécuteur</b><span class="lvltag">II</span></div>
             <div class="tags"><span class="tag">Tir · embuscade</span><span class="tag warn">Mains 3 / 2</span></div>
-            <div class="urow-msg">⚠ Trop d'équipement à mains — retire une arme ou un bouclier.</div>
+            <div class="urow-msg">⚠ Trop d'équipement à mains - retire une arme ou un bouclier.</div>
           </div>
           <div class="ucost"><span class="coin"></span>95 <span class="ko">Ko</span></div>
           <div class="uactions">
@@ -335,7 +335,7 @@ body{overflow:hidden}
     <span class="leg"><span class="swatch" style="background:var(--moss)"></span> Gratuit</span>
     <span class="leg"><span class="swatch" style="background:var(--scorch)"></span> Erreur</span>
     <span class="spacer" style="flex:1"></span>
-    <span style="color:var(--bone-faint)">Maquette — direction « Forge / Braise »</span>
+    <span style="color:var(--bone-faint)">Maquette - direction « Forge / Braise »</span>
   </footer>
 </div>
 <script src="mockups.js"></script>

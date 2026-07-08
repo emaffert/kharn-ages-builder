@@ -1,5 +1,5 @@
 /* ============================================================================
-   Khârn-Âges — Système visuel « Forge / Braise » (maquettes)
+   Khârn-Âges - Système visuel « Forge / Braise » (maquettes)
    Tokens + primitives partagés par les écrans. Le mode clair (à venir) se fera
    par surcharge de tokens sous [data-theme="light"].
    ============================================================================ */
@@ -11,7 +11,7 @@
   --bone:#f0e6ce; --bone-dim:#c6b593; --bone-faint:#95835f;
   --ember:#ee7a2e; --ember-bright:#ffab5e; --ember-deep:#b6491a;
   --ember-glow:rgba(238,122,46,.45);
-  /* Accent de faction (surchargeable par écran/tuile) — défaut : Fangs */
+  /* Accent de faction (surchargeable par écran/tuile) - défaut : Fangs */
   --faction:#b8392a; --faction-2:#e0553f; --faction-deep:#5e1a13;
   --gold:#d0a24a; --gold-dim:#a07d33;
   --moss:#8aa64d; --amber:#e0a93c; --scorch:#e0532e;
@@ -89,9 +89,9 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--ember);outline-offset:2px;border-radius:6px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* ————— Thème clair : « Parchemin d'os » (parchemin chaud avec profondeur) ————— */
+/* ----- Thème clair : « Parchemin d'os » (parchemin chaud avec profondeur) ----- */
 [data-theme="light"]{
-  --forge:#dccb9f; --forge-2:#e7d9bb;        /* page / en-têtes — écart tonal creusé vs cartes */
+  --forge:#dccb9f; --forge-2:#e7d9bb;        /* page / en-têtes - écart tonal creusé vs cartes */
   --soot:#f1e8d2; --soot-2:#faf3e1;          /* surfaces surélevées / cartes (plus claires) */
   --ash:#cdb890; --ash-2:#bda676;
   --bone:#2c2015; --bone-dim:#6a5942; --bone-faint:#93805f;  /* textes (encre bark) */

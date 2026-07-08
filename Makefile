@@ -1,4 +1,4 @@
-# Makefile — Khârn-Âges list builder
+# Makefile - Khârn-Âges list builder
 #
 # Charge automatiquement la version Node de .nvmrc via nvm (le Node système n'a pas npm),
 # la même que celle utilisée en CI. Surcharger si besoin : make dev NVM_DIR=/autre/chemin

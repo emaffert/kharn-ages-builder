@@ -502,7 +502,7 @@ function OperationEditor({
           <span className="text-xs adm-faint">= nombre de figurines ÷</span>
           <Num label="par groupe de" value={op.per ?? 1} onChange={(v) => onChange({ ...op, per: v || 1 })} />
           <div className="w-full">
-            <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée) — arrondi à l'inférieur</div>
+            <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée) - arrondi à l'inférieur</div>
             <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
           </div>
         </>
@@ -791,7 +791,7 @@ export function EffectListEditor({
           <SelectorEditor selector={e.target} cat={cat} onChange={(s) => update(i, { ...e, target: s })} />
           <details>
             <summary className="cursor-pointer text-xs adm-faint">
-              conditions (optionnelles) — toutes doivent être vraies
+              conditions (optionnelles) - toutes doivent être vraies
             </summary>
             <div className="mt-1 space-y-1.5">
               {(() => {

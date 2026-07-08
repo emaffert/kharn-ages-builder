@@ -117,7 +117,7 @@ export function AdminCatalog() {
       <aside className="adm-sidebar flex w-72 shrink-0 flex-col">
         <div className="adm-sidebar-head space-y-2 p-3">
           <div className="flex items-center justify-between gap-2">
-            <h1 className="adm-accent text-sm font-bold">Khârn-Âges — Admin catalogue</h1>
+            <h1 className="adm-accent text-sm font-bold">Khârn-Âges - Admin catalogue</h1>
             <button onClick={() => setShowDocs(true)} className="adm-tab" title="Aide sur l'édition du catalogue">
               Aide
             </button>
@@ -425,7 +425,7 @@ export function AdminCatalog() {
 
         {import.meta.env.DEV && previewImage && (
           <aside className="adm-preview hidden w-[600px] shrink-0 overflow-y-auto p-4 xl:block">
-            <p className="adm-section-title mb-2">Carte (dev) — cliquer pour agrandir</p>
+            <p className="adm-section-title mb-2">Carte (dev) - cliquer pour agrandir</p>
             <img
               key={previewImage}
               src={`/${previewImage}`}

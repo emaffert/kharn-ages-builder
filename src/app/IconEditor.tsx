@@ -50,7 +50,7 @@ export function IconEditor({
     el.onerror = () => {
       imgRef.current = null;
       setNat(null);
-      setError("Image de référence introuvable — charge un fichier.");
+      setError("Image de référence introuvable - charge un fichier.");
     };
     el.src = src;
   }, [src]);

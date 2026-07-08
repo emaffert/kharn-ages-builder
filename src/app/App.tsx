@@ -12,7 +12,7 @@ export function App() {
   const [view, setView] = useState<"builder" | "admin">("builder");
   const [theme, setTheme] = useTheme();
   // Garde-fou dev : signale qu'une copie locale du catalogue masque `catalog.json`.
-  // Recalculé au changement de vue (ex. après un Réinit. dans l'Admin) — `view` est volontaire.
+  // Recalculé au changement de vue (ex. après un Réinit. dans l'Admin) - `view` est volontaire.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const staleCatalog = useMemo(() => import.meta.env.DEV && localCatalogDivergesFromFile(), [view]);
   return (
@@ -39,9 +39,9 @@ export function App() {
               type="button"
               className="kh-stale"
               onClick={() => location.reload()}
-              title="Une copie locale du catalogue (Admin) masque catalog.json — les modifications du fichier ne sont pas reflétées. Recharger la page, ou Admin › Réinit. pour repartir du fichier."
+              title="Une copie locale du catalogue (Admin) masque catalog.json - les modifications du fichier ne sont pas reflétées. Recharger la page, ou Admin › Réinit. pour repartir du fichier."
             >
-              ⚠ catalogue local ≠ fichier — recharger
+              ⚠ catalogue local ≠ fichier - recharger
             </button>
           )}
           <ThemeToggle theme={theme} setTheme={setTheme} />

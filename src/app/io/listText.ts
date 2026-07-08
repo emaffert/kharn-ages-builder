@@ -11,7 +11,7 @@ import { newListId } from "./ids";
 /**
  * Format TEXTE lisible d'une liste (partage/impression) + import best-effort par nom.
  * Le code portable reste le format fiable ; le texte est tolérant et signale les lignes
- * non reconnues (cf. docs/regles-creation-liste.md — import dans les deux formats).
+ * non reconnues (cf. docs/regles-creation-liste.md - import dans les deux formats).
  */
 
 const LEVEL = ["", "I", "II", "III"];
@@ -66,12 +66,12 @@ export function exportText(cat: Catalog, doc: ListDocument): string {
     for (const m of fdl.members) {
       if (attached.has(m.instanceId)) continue;
       const leader = m.instanceId === fdl.leaderInstanceId ? " · meneur" : "";
-      lines.push(`• ${nameOf(m)} — ${cost(m)}${leader}`);
+      lines.push(`• ${nameOf(m)} - ${cost(m)}${leader}`);
       lines.push(...details(m));
       for (const cid of m.attachedInstanceIds ?? []) {
         const child = fdl.members.find((x) => x.instanceId === cid);
         if (child) {
-          lines.push(`  ↳ ${nameOf(child)} — ${cost(child)}`);
+          lines.push(`  ↳ ${nameOf(child)} - ${cost(child)}`);
           lines.push(...details(child).map((l) => `  ${l}`));
         }
       }
@@ -189,6 +189,7 @@ export function importText(cat: Catalog, text: string): TextImportResult {
 
     // Ligne de figurine (top-level « • » ou rattachée « ↳ »).
     const attached = /^↳/.test(line);
+    // On coupe sur « - » (format actuel) ou « — » (listes exportées avant, compat conservée).
     const label = line.replace(/^[•↳*\-\s]+/, "").split(/\s+—\s+|\s+-\s+/)[0].trim();
     const prof = profByName(label);
     if (!prof) {

@@ -55,9 +55,9 @@ function MagiePanel({
   const pagesUsed = spells.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
   const warning =
     ways.length === 0
-      ? "La figurine ne peut pas lancer de sorts — retire les sorts ci-dessous."
+      ? "La figurine ne peut pas lancer de sorts - retire les sorts ci-dessous."
       : pagesUsed > pageCap
-        ? `Capacité de pages dépassée (${pagesUsed} / ${pageCap === Infinity ? "∞" : pageCap}) — retire un sort ou prends un grimoire plus grand.`
+        ? `Capacité de pages dépassée (${pagesUsed} / ${pageCap === Infinity ? "∞" : pageCap}) - retire un sort ou prends un grimoire plus grand.`
         : null;
   return (
     <div className="fe-root">
@@ -280,7 +280,7 @@ function EquipPanel({
     0,
   );
 
-  // Équipé regroupé par catégorie — mêmes en-têtes que « disponible » (base en tête de chaque groupe).
+  // Équipé regroupé par catégorie - mêmes en-têtes que « disponible » (base en tête de chaque groupe).
   const ownedResolved = [
     ...activeBase.map((id) => ({ id, isBase: true, e: eq(id) })),
     ...added.map((id) => ({ id, isBase: false, e: eq(id) })),
@@ -393,7 +393,7 @@ function EquipPanel({
       )}
 
       <div className="fe-panes">
-        {/* Volet équipé — à gauche (près de la fiche) ; l'équipement de base reste toujours en tête. */}
+        {/* Volet équipé - à gauche (près de la fiche) ; l'équipement de base reste toujours en tête. */}
         <div>
           <div className="fe-section-head">
             <SectionTitle>Équipé</SectionTitle>
@@ -437,7 +437,7 @@ function EquipPanel({
           </div>
         </div>
 
-        {/* Volet disponible — à droite. */}
+        {/* Volet disponible - à droite. */}
         <div>
           <SectionTitle>Disponible</SectionTitle>
           <input
@@ -493,7 +493,7 @@ function EquipPanel({
   );
 }
 
-/** Panneau de sélection des sorts (deux volets, budget de pages) — dans l'esprit du choix d'armes. */
+/** Panneau de sélection des sorts (deux volets, budget de pages) - dans l'esprit du choix d'armes. */
 function SpellPanel({
   profile: p,
   cat,
@@ -530,7 +530,7 @@ function SpellPanel({
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
   );
   const blocked = (s: Spell) => pagesUsed + (s.pages ?? 0) > pageCap;
-  // Sélectionnés regroupés par voie — mêmes en-têtes que « disponible ».
+  // Sélectionnés regroupés par voie - mêmes en-têtes que « disponible ».
   const chosenGroups = [...new Set(chosen.map(groupOf))].sort((a, b) =>
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
   );
@@ -542,7 +542,7 @@ function SpellPanel({
       </div>
 
       <div className="fe-panes">
-        {/* Volet sélectionnés — à gauche (près de la fiche). */}
+        {/* Volet sélectionnés - à gauche (près de la fiche). */}
         <div>
           <div className="fe-section-head">
             <SectionTitle>Sélectionnés</SectionTitle>
@@ -584,7 +584,7 @@ function SpellPanel({
           </div>
         </div>
 
-        {/* Volet disponible — à droite. */}
+        {/* Volet disponible - à droite. */}
         <div>
           <SectionTitle>Disponible</SectionTitle>
           <input

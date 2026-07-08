@@ -53,7 +53,7 @@ représenté dans le moteur `evaluateList`.
 - Choisir le **leader** parmi les deux plus hauts niveaux, ou un personnage.
 - **[Bataille]** : un **Vassal** par FdL + un **Seigneur de guerre** pour l'Ost.
 - Impact en jeu (aura, marqueurs SDG) ; pas d'impact de coût.
-- UI : le leader ayant un impact en jeu, le **mettre en avant** — épinglé en tête de liste, **icône
+- UI : le leader ayant un impact en jeu, le **mettre en avant** - épinglé en tête de liste, **icône
   dédiée**, et/ou section à part. Sélection/changement du leader explicite.
 
 ## 5. Équipement par figurine [v1] [+]
@@ -112,7 +112,7 @@ représenté dans le moteur `evaluateList`.
 
 ## 11. Choix dynamiques & exclusifs [+ partiel]
 
-- **Garde rapproché (Fille de Nyx)** : chaque Fille de Nyx assigne **un** garde rapproché — en
+- **Garde rapproché (Fille de Nyx)** : chaque Fille de Nyx assigne **un** garde rapproché - en
   général un **Larbin gratuit**, mais **Broutcha** peut l'assigner à **Djouked** (qui obtient alors
   −35). Choix **exclusif**, budget partagé, **max 2 par FdL**. Deux approches UI possibles :
   - (a) **choix explicite** du garde rapproché par chaque Fille de Nyx ;
@@ -137,11 +137,11 @@ représenté dans le moteur `evaluateList`.
 
 ## Décisions UX (v1)
 
-- **Disposition** : **deux colonnes** — roster de la faction (gauche) ↔ liste en cours (droite),
+- **Disposition** : **deux colonnes** - roster de la faction (gauche) ↔ liste en cours (droite),
   coût/validation en direct.
 - **Édition des options d'une figurine** : **modale en onglets** (Carte / Équipement / Améliorations /
   Magie) ouverte au clic sur la figurine.
-- **Validation** : **stricte** — on empêche l'action qui viole une règle dure (limitation atteinte,
+- **Validation** : **stricte** - on empêche l'action qui viole une règle dure (limitation atteinte,
   arme sur un Larbin, mains, etc.). Les cas **conditionnels à la composition** (frères d'armes ≥ 2,
   rattachement des Aliénés) restent validés au **niveau liste** (ajout possible, liste invalide tant
   que la condition n'est pas remplie). Dépendances simples (Muskh→Xayìn) gérées par activation

@@ -44,7 +44,7 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
     parts.push(`équipement ${sel.equipmentIds.map((id) => equipName(cat, id)).join(", ")}`);
   }
   if (sel.equipmentHands?.length) parts.push(`armes à ${sel.equipmentHands.join("/")} main(s)`);
-  let s = parts.join(" et ") || "—";
+  let s = parts.join(" et ") || "-";
   if (sel.countAtLeast) s = `au moins ${sel.countAtLeast} × ${s}`;
   return s;
 }
@@ -135,9 +135,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
   }
   if (e.condition) {
     const clauses = Array.isArray(e.condition) ? e.condition : [e.condition];
-    base += ` — si ${clauses.map((c) => describeSelector(c, cat)).join(" et ")}`;
+    base += ` - si ${clauses.map((c) => describeSelector(c, cat)).join(" et ")}`;
   }
-  if (e.designation) base += ` — garde du corps de ${describeSelector(e.designation.of, cat)}`;
+  if (e.designation) base += ` - garde du corps de ${describeSelector(e.designation.of, cat)}`;
   if (e.optIn) base += " (au choix du joueur)";
   if (!e.appliesToListBuilding) base += " (effet en jeu uniquement)";
   return base;
@@ -173,25 +173,25 @@ export function explainTraitUsage(trait: string, cat: Catalog): string[] {
 
   for (const p of cat.profiles) {
     for (const c of p.recruitment) {
-      if (constraintUses(c)) out.push(`« ${p.name} » — ${describeConstraint(c, cat)}`);
+      if (constraintUses(c)) out.push(`« ${p.name} » - ${describeConstraint(c, cat)}`);
     }
     for (const e of p.effects ?? []) {
-      if (effectUses(e)) out.push(`« ${p.name} » — ${describeEffect(e, cat)}`);
+      if (effectUses(e)) out.push(`« ${p.name} » - ${describeEffect(e, cat)}`);
     }
   }
   for (const card of cat.specialCards) {
-    if (card.scope.trait === trait) out.push(`carte « ${card.name} » — portée de la carte`);
+    if (card.scope.trait === trait) out.push(`carte « ${card.name} » - portée de la carte`);
     for (const c of card.constraints) {
-      if (constraintUses(c)) out.push(`carte « ${card.name} » — ${describeConstraint(c, cat)}`);
+      if (constraintUses(c)) out.push(`carte « ${card.name} » - ${describeConstraint(c, cat)}`);
     }
     for (const e of card.effects) {
       if (effectUses(e)) {
-        out.push(`carte « ${card.name} » — ${describeEffect(e, cat)}`);
+        out.push(`carte « ${card.name} » - ${describeEffect(e, cat)}`);
       }
     }
   }
   for (const s of cat.spells) {
-    if (s.reservedTo?.trait === trait) out.push(`sort « ${s.name} » — réservé à ce trait`);
+    if (s.reservedTo?.trait === trait) out.push(`sort « ${s.name} » - réservé à ce trait`);
   }
   return [...new Set(out)];
 }

@@ -24,7 +24,7 @@ export function DomainIcon({ domain, className = "h-4 w-4" }: { domain: string; 
   return <img src={src} alt={domain} className={`adm-domain-icon ${className}`} />;
 }
 
-/** Pastille de règle — réutilise `@ui` Tag (mêmes tons que le builder). */
+/** Pastille de règle - réutilise `@ui` Tag (mêmes tons que le builder). */
 export function Badge({ children, tone = "slate" }: { children: ReactNode; tone?: string }) {
   const map: Record<string, "neutral" | "warn" | "amber" | "moss"> = {
     slate: "neutral",

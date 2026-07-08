@@ -354,7 +354,7 @@ export function LimitationEditor({
             }
             className={INPUT}
           >
-            <option value="">— (aucun emplacement)</option>
+            <option value="">- (aucun emplacement)</option>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
@@ -381,7 +381,7 @@ export function LimitationEditor({
     </div>
   );
 }
-/** Éditeur de texte multi-lignes (RuleText[] sans label) — pour cartes spéciales. */
+/** Éditeur de texte multi-lignes (RuleText[] sans label) - pour cartes spéciales. */
 export function TextLinesEditor({ items, onChange }: { items: RuleText[]; onChange: (r: RuleText[]) => void }) {
   return (
     <div className="space-y-2">

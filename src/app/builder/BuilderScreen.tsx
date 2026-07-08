@@ -584,7 +584,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             </button>
             <OstPanel cat={cat} list={store.list} issues={evaluation.issues} onToggle={store.toggleOstCard} />
             {groups.length === 0 && (
-              <p className="bld-empty">Liste vide — ajoute des figurines depuis le roster.</p>
+              <p className="bld-empty">Liste vide - ajoute des figurines depuis le roster.</p>
             )}
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={topLevelIds} strategy={verticalListSortingStrategy}>
@@ -604,7 +604,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         </section>
       </div>
 
-      {/* Pied réservé (vide pour l'instant) — masqué tant qu'il n'a pas de contenu (.bld-foot:empty). */}
+      {/* Pied réservé (vide pour l'instant) - masqué tant qu'il n'a pas de contenu (.bld-foot:empty). */}
       <footer className="bld-foot" />
 
       {/* Modale roster (mobile) : l'aside étant masqué sous `md`. */}
@@ -717,7 +717,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           const m = models.find((mm) => mm.id === modal.modelId);
           if (!m) return null;
           return (
-            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter — ${m.name}`} size="sm">
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter - ${m.name}`} size="sm">
               <p className="mdl-note">Choisir le niveau :</p>
               <div className="mdl-list">
                 {m.profiles.map((p) => {
@@ -760,7 +760,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             .reduce((n, p) => n + (p.level ?? 0), 0);
           const remaining = carrierLevel - usedLevels;
           return (
-            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter — ${modelName}`} size="sm">
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter - ${modelName}`} size="sm">
               {capacityLimited && (
                 <p className="mdl-note">
                   Capacité restante de {carrier?.p.name} : {remaining} (somme des niveaux des rattachés ≤ niveau du porteur).
@@ -809,7 +809,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               {itemInfo.sources.map((s, k) => (
                 <p key={k} className="mdl-source">
                   <b>{s.label}</b>
-                  {s.text ? ` — ${s.text}` : ""}
+                  {s.text ? ` - ${s.text}` : ""}
                 </p>
               ))}
             </div>

@@ -98,7 +98,7 @@ export function EquipmentDetail({
                 }}
                 className={INPUT}
               >
-                <option value="">—</option>
+                <option value="">-</option>
                 <option value="1">1 main</option>
                 <option value="2">2 mains</option>
                 <option value="1-2">1 ou 2 mains</option>
@@ -175,7 +175,7 @@ export function EquipmentDetail({
                 onChange={(ev) => onChange({ munitionKind: ev.target.value || undefined })}
                 className={INPUT}
               >
-                <option value="">— aucune</option>
+                <option value="">- aucune</option>
                 {(cat.munitionKinds ?? []).map((k) => (
                   <option key={k.id} value={k.id}>
                     {k.label}
@@ -206,7 +206,7 @@ export function EquipmentDetail({
         </Section>
       )}
 
-      <Section title="Effets (verbatim — fait foi)">
+      <Section title="Effets (verbatim - fait foi)">
         <textarea
           value={e.effectsText}
           rows={2}

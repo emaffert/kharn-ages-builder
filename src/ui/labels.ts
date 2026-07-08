@@ -1,7 +1,7 @@
 import type { Profile } from "@core";
 
 /**
- * Libellés de présentation partagés (admin ↔ builder) — source unique.
+ * Libellés de présentation partagés (admin ↔ builder) - source unique.
  * Les *listes* de valeurs (domaines, catégories) se dérivent des schémas `@core`
  * côté consommateur ; ici on ne garde que les libellés purement présentationnels.
  */

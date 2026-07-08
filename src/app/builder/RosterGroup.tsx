@@ -23,7 +23,7 @@ export function RosterGroup({
     <div>
       <div className="bld-grp-label">
         {label}
-        {hint ? <span className="hint">— {hint}</span> : <span className="line" />}
+        {hint ? <span className="hint">- {hint}</span> : <span className="line" />}
       </div>
       {items.map((m) => {
         const first = m.profiles[0];

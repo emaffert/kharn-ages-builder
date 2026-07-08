@@ -15,7 +15,7 @@ const ADMIN_CATALOG_KEY = "kharn-admin-catalog-v1";
 
 /**
  * Retourne le catalogue actif : les éditions admin locales (localStorage) si présentes et valides,
- * sinon le catalogue bundlé. Permet à toute l'app (constructeur inclus) de refléter les éditions —
+ * sinon le catalogue bundlé. Permet à toute l'app (constructeur inclus) de refléter les éditions -
  * notamment les icônes de profil.
  */
 export function loadCatalog(): Catalog {

@@ -5,7 +5,7 @@ import { Button, Tag, Coin, SegmentedControl, Dialog, Tabs } from "./index";
 
 afterEach(cleanup);
 
-describe("Kit UI — primitives", () => {
+describe("Kit UI - primitives", () => {
   it("Button déclenche onClick et porte la variante", () => {
     const onClick = vi.fn();
     render(

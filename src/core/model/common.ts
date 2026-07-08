@@ -32,7 +32,7 @@ export type ConstraintScope = z.infer<typeof ConstraintScopeSchema>;
 export const EffectScopeSchema = z.enum(["fer-de-lance", "ost"]);
 export type EffectScope = z.infer<typeof EffectScopeSchema>;
 
-/** Bloc de texte de règle. `text` est le wording officiel verbatim — il fait foi. */
+/** Bloc de texte de règle. `text` est le wording officiel verbatim - il fait foi. */
 export const RuleTextSchema = z.object({
   label: z.string().optional(),
   text: z.string(),
@@ -46,7 +46,7 @@ export const SkillRefSchema = z.object({
   /**
    * Précision propre à ce profil qui complète la description générique de la compétence
    * (ex. « embuscade » de l'Exécuteur : bonus au seuil/dégâts sur sa 1ʳᵉ attaque révélée).
-   * N'apparaît pas dans le tag — seulement dans la description dépliée.
+   * N'apparaît pas dans le tag - seulement dans la description dépliée.
    */
   precision: z.string().optional(),
 });

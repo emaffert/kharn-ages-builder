@@ -26,10 +26,10 @@ yarn-error.log*
 .env.*
 !.env.example
 
-# Matériel sous copyright TGCM — non versionné
+# Matériel sous copyright TGCM - non versionné
 # PDF : volumineux + reproduction interdite. Cartes : à héberger ailleurs / décider selon la visibilité du dépôt.
 rules corpus/
 cards/
 
-# Références visuelles (captures de sites tiers, logo) — inputs de travail, non versionnés
+# Références visuelles (captures de sites tiers, logo) - inputs de travail, non versionnés
 graphic/

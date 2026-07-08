@@ -1,4 +1,4 @@
-# Khârn-Âges — Règles de création de liste
+# Khârn-Âges - Règles de création de liste
 
 Synthèse issue du corpus de règles (livret de base, règles de bataille saison 2, FAQ jan. 2026).
 Sert de référence pour le moteur de construction de liste de l'application.
@@ -137,7 +137,7 @@ Types de contraintes à prévoir : exclusion d'équipement, dépendance de prés
 - **Likans** recrutés par les femelles Fangs ; somme des niveaux des Likans ≤ niveau de la Fang.
 - Coûts : 25 / 35 / 50 Ko (niveaux I / II / III).
 
-## Mode Bataille — éléments de liste additionnels
+## Mode Bataille - éléments de liste additionnels
 
 - **Pactes** (1 seul par Ost), chacun avec conditions de composition + avantage : Alliance (Goûns/Tembos), Ost des plaines (Dogons), Ost des Affranchis, Ordre de l'Acier, Maison Claire, Ost impérial, Guilde en mission, Ost de la Horde, Ost d'Euthéria.
 - **PIONs** : achat de 1 à 3, coût incrémental 5 / 10 / 15 Ko ; possible uniquement si l'Ost est en infériorité numérique **et** de niveau ; jamais plus que le nombre d'activations adverses.

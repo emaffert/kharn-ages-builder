@@ -1,4 +1,4 @@
-# Schéma de données — Khârn-Âges list builder
+# Schéma de données - Khârn-Âges list builder
 
 Modèle de données de l'application, présenté ici de façon **conceptuelle**.
 
@@ -15,14 +15,14 @@ Voir aussi : [`regles-creation-liste.md`](regles-creation-liste.md) pour les rè
 
 - **Local-first.** L'app fonctionne sans compte ni serveur : construction, sauvegarde locale, export, import, partage par fichier/lien. L'authentification + synchronisation cloud sera une couche **additive** ultérieure.
 - **Trois couches de données distinctes :**
-  1. **Catalogue** — données de référence (cartes, équipements, sorts…), en **lecture seule** et **versionnées**.
-  2. **Moteur de contraintes** — règles de recrutement déclaratives et extensibles.
-  3. **Données utilisateur** — les listes créées, dans un **format portable et versionné**.
+  1. **Catalogue** - données de référence (cartes, équipements, sorts…), en **lecture seule** et **versionnées**.
+  2. **Moteur de contraintes** - règles de recrutement déclaratives et extensibles.
+  3. **Données utilisateur** - les listes créées, dans un **format portable et versionné**.
 - **Cœur métier agnostique de l'UI.** Modèle + moteur + calcul de coût/validation = un module TypeScript pur, réutilisable en web puis en mobile.
 - **Identifiants stables.** Chaque entrée du catalogue a un `id` stable **généré par nous** (slug lisible, ex. `fangs-larbin-1`). On **ne réutilise pas** les codes imprimés sur les cartes (ex. `KAFALA1`) : ils ne sont pas uniques par profil (partagés entre plusieurs cartes, probablement une référence d'illustration/planche). Indispensable pour ré-hydrater une liste partagée.
 - **Wording verbatim = source de vérité.** Tout objet portant une règle a un champ `sourceText` contenant le texte officiel **non modifié**. Les champs structurés (pour le moteur) en sont une *interprétation* qui ne fait jamais foi.
 
-## Couche 1 — Catalogue
+## Couche 1 - Catalogue
 
 ### Métadonnées
 
@@ -288,7 +288,7 @@ interface SpecialCard {
 }
 ```
 
-## Couche 2 — Moteur de contraintes
+## Couche 2 - Moteur de contraintes
 
 Une contrainte est un objet déclaratif. Forme commune :
 
@@ -324,7 +324,7 @@ type ConstraintType =
 
 ### Exemples encodés
 
-**Larbin — « Éprouvé : ne peut être recruté avec une arme »**
+**Larbin - « Éprouvé : ne peut être recruté avec une arme »**
 
 ```ts
 {
@@ -338,7 +338,7 @@ type ConstraintType =
 }
 ```
 
-**Likan (Aliéné) — rattaché à une femelle Fang, somme des niveaux ≤ niveau du porteur**
+**Likan (Aliéné) - rattaché à une femelle Fang, somme des niveaux ≤ niveau du porteur**
 
 ```ts
 {
@@ -355,7 +355,7 @@ type ConstraintType =
 }
 ```
 
-**LIM P — un personnage occupe l'emplacement d'un niveau du modèle**
+**LIM P - un personnage occupe l'emplacement d'un niveau du modèle**
 
 ```ts
 {
@@ -369,7 +369,7 @@ type ConstraintType =
 }
 ```
 
-**Muskh — « ne peut pas être recruté sans Xayìn » (porté par la carte spéciale « Xayìn & Muskh »)**
+**Muskh - « ne peut pas être recruté sans Xayìn » (porté par la carte spéciale « Xayìn & Muskh »)**
 
 ```ts
 {
@@ -388,7 +388,7 @@ type ConstraintType =
 À distinguer des contraintes :
 
 - une **`Constraint`** *valide* la légalité (gate) ;
-- un **`Effect`** *modifie* dynamiquement le coût, débloque des options, ou octroie une compétence/trait — souvent **à d'autres figurines** de la liste, **conditionnellement** à l'état de celle-ci.
+- un **`Effect`** *modifie* dynamiquement le coût, débloque des options, ou octroie une compétence/trait - souvent **à d'autres figurines** de la liste, **conditionnellement** à l'état de celle-ci.
 
 Ces effets doivent être pris en compte par l'éditeur **au moment de la création de liste** (calcul du coût et validation).
 
@@ -419,7 +419,7 @@ type EffectOperation =
 
 // Appliqués par le moteur (src/core/engine) : cost-delta, cost-set, grant-trait, grant-skill,
 // et spell-pages (capacité de pages, via engine/magic.ts). PAS ENCORE appliqués : stat-modifier,
-// unlock-upgrade, cap — cf. le TODO en tête de engine/evaluate.ts.
+// unlock-upgrade, cap - cf. le TODO en tête de engine/evaluate.ts.
 
 interface Selector {
   self?: boolean;
@@ -434,11 +434,11 @@ interface Selector {
 
 Exemples (le `sourceText` porte le wording verbatim) :
 
-- **Ogodeï** — « Paye 10 [Ko] de moins les armes à deux mains » → `cost-delta -10`, `target.self`, filtre armes à 2 mains.
-- **Apathée / Fille de Nyx** — « recruter 1 Larbin sans en payer le coût (maximum 2 gratuits, sans dépasser la limitation totale de 5) » → `cost-set 0` **par Fille de Nyx présente** (1 chacune), `maxCount 2` comme plafond, cible `fangs-larbin-1`, en interaction avec sa LIM 5.
-- **Forgeronne / Borax** — « 5 [Ko]/arme … 10 [Ko]/armure … confèrent … aux guerriers équipés » → `unlock-upgrade`, débloqué si Forgeronne présente, ciblant les « guerriers ».
-- **Commandant** — « les guerriers khérops paient moins cher leurs armes » → `cost-delta`, cible `traits: ["guerrier-kherops"]` (wording à confirmer, carte non fournie).
-- **Mathys / Frères d'Armes** — « Dès lors qu'ils sont au moins 2 frères d'armes dans un Fer de Lance, ils gagnent tous le trait apatride » → `grant-trait "apatride"`, `condition.countAtLeast 2` sur `traits: ["frere-d-armes"]`.
+- **Ogodeï** - « Paye 10 [Ko] de moins les armes à deux mains » → `cost-delta -10`, `target.self`, filtre armes à 2 mains.
+- **Apathée / Fille de Nyx** - « recruter 1 Larbin sans en payer le coût (maximum 2 gratuits, sans dépasser la limitation totale de 5) » → `cost-set 0` **par Fille de Nyx présente** (1 chacune), `maxCount 2` comme plafond, cible `fangs-larbin-1`, en interaction avec sa LIM 5.
+- **Forgeronne / Borax** - « 5 [Ko]/arme … 10 [Ko]/armure … confèrent … aux guerriers équipés » → `unlock-upgrade`, débloqué si Forgeronne présente, ciblant les « guerriers ».
+- **Commandant** - « les guerriers khérops paient moins cher leurs armes » → `cost-delta`, cible `traits: ["guerrier-kherops"]` (wording à confirmer, carte non fournie).
+- **Mathys / Frères d'Armes** - « Dès lors qu'ils sont au moins 2 frères d'armes dans un Fer de Lance, ils gagnent tous le trait apatride » → `grant-trait "apatride"`, `condition.countAtLeast 2` sur `traits: ["frere-d-armes"]`.
 
 #### Ordre de résolution (moteur)
 
@@ -450,7 +450,7 @@ L'octroi d'un trait peut débloquer une autre règle (« apatride » change la v
 4. calcul des coûts (`cost-delta`, `cost-set` avec `maxCount`) dans un ordre défini ;
 5. validation des `Constraint` en tenant compte des capacités octroyées.
 
-## Couche 3 — Données utilisateur (liste portable)
+## Couche 3 - Données utilisateur (liste portable)
 
 ### Document de liste
 
@@ -511,7 +511,7 @@ interface ProfileInstance {
 
 Deux formats, **tous deux ré-importables** :
 
-- **Texte (humain)** : format lisible **mais à grammaire définie** (en-tête nom/format/coût, puis une ligne par figurine avec ses options) — à la fois agréable à lire et **parsable**. À l'import, résolution par **nom** contre le catalogue local en best-effort ; toute ligne non résolue (nom modifié, catalogue différent) est **signalée à l'utilisateur pour correction manuelle** plutôt que rejetée.
+- **Texte (humain)** : format lisible **mais à grammaire définie** (en-tête nom/format/coût, puis une ligne par figurine avec ses options) - à la fois agréable à lire et **parsable**. À l'import, résolution par **nom** contre le catalogue local en best-effort ; toute ligne non résolue (nom modifié, catalogue différent) est **signalée à l'utilisateur pour correction manuelle** plutôt que rejetée.
 - **Code/lien portable** : `ListDocument` sérialisé → compressé → encodé (base64url), partageable en fichier ou en lien (`#data=...`). Format de référence, sans ambiguïté (résolution par `id`).
 
 **Ré-hydratation** (quel que soit le format) : on résout par `id` (code portable) ou par nom (texte) + `catalogVersion`. Si la version diffère, on prévient l'utilisateur, on s'appuie sur le `snapshot`/best-effort pour l'affichage, et on **rejoue la validation** contre le catalogue local.
@@ -534,8 +534,8 @@ Implications :
 
 - Le modèle de catalogue doit être **éditable champ par champ**, avec **validation de schéma** à la saisie, et édition **séparée** du `sourceText` verbatim et de son interprétation structurée.
 - **Persistance, en deux temps** (cohérent avec l'archi local-first puis backend additif) :
-  1. **v1 — éditeur local** : modifications en mémoire/navigateur, **exportées en JSON** (commit par un mainteneur). Pas de serveur.
-  2. **plus tard — catalogue hébergé** : un backend stocke le catalogue et propage les évolutions à tous ; l'accès admin passe par l'**authentification** (rôle admin) prévue dans la couche additive.
+  1. **v1 - éditeur local** : modifications en mémoire/navigateur, **exportées en JSON** (commit par un mainteneur). Pas de serveur.
+  2. **plus tard - catalogue hébergé** : un backend stocke le catalogue et propage les évolutions à tous ; l'accès admin passe par l'**authentification** (rôle admin) prévue dans la couche additive.
 - C'est la feature qui justifiera le plus probablement le passage à un backend ; le modèle versionné y est déjà préparé.
 
 ## Points ouverts / TODO

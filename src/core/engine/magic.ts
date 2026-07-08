@@ -1,7 +1,7 @@
 /**
  * Dérivations magie/équipement d'une figurine (fonctions pures, sans UI).
  * Servent au calcul de capacité de pages, aux voies lançables, aux sorts disponibles
- * et à la validation de l'emplacement d'armure — cf. docs/regles-creation-liste.md.
+ * et à la validation de l'emplacement d'armure - cf. docs/regles-creation-liste.md.
  * La limitation de mains ne s'applique qu'en jeu : elle n'est pas validée au recrutement.
  */
 import type { Catalog, Profile, SpecialCard, Spell } from "../model";

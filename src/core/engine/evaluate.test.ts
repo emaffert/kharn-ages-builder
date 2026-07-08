@@ -192,7 +192,7 @@ describe("caractéristique dérivée d'un décompte (stat-count)", () => {
   it("Instinct grégaire : la Témérité d'un Dogon = nombre de Dogons", () => {
     const dogons = [inst("gouns-dogon-1"), inst("gouns-dogon-1"), inst("gouns-dogon-1")];
     const res = evaluateList(catalog, makeList(dogons, "gouns"));
-    for (const d of dogons) expect(res.statDeltas[d.instanceId]?.t).toBe(3); // T de base (—) → 3
+    for (const d of dogons) expect(res.statDeltas[d.instanceId]?.t).toBe(3); // T de base (-) → 3
   });
 
   it("Instinct grégaire avec minimum : T = max(nombre de Mongos, T de base)", () => {
@@ -373,7 +373,7 @@ describe("carte à portée Ost (Pacte du Secret)", () => {
   });
 });
 
-describe("carte intrinsèque à effet ciblant la source (Syrga — Dévotion Intrépide)", () => {
+describe("carte intrinsèque à effet ciblant la source (Syrga - Dévotion Intrépide)", () => {
   const skills = (res: ReturnType<typeof evaluateList>, id: string) =>
     (res.grantedSkills[id] ?? []).map((s) => s.skillId);
 
@@ -390,7 +390,7 @@ describe("carte intrinsèque à effet ciblant la source (Syrga — Dévotion Int
   });
 });
 
-describe("Khérops — concepts (Lieutenant / Commandant / Ogodeï)", () => {
+describe("Khérops - concepts (Lieutenant / Commandant / Ogodeï)", () => {
   const g1 = () => inst("kherops-guerrier-1-1");
 
   it("Lieutenant : +1 à la limite des Khérops « X » (4 Guerriers Lim 3 OK avec un Lieutenant)", () => {

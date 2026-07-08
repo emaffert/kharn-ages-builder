@@ -1,5 +1,5 @@
 /* ============================================================================
-   Système visuel de l'admin — bâti sur les tokens « Forge / Braise » (index.css),
+   Système visuel de l'admin - bâti sur les tokens « Forge / Braise » (index.css),
    donc thème clair/sombre géré. Remplace les anciens utilitaires Tailwind
    slate/amber codés en dur. Classes color-only/idiomes, composables avec les
    utilitaires de mise en page (flex, gap, w-*, etc.) conservés dans le JSX.

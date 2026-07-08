@@ -4,7 +4,7 @@ import { EffectScopeSchema, EquipmentCategorySchema, MasteryDomainSchema, Select
 /**
  * Effet = modificateur dynamique (coût, déblocage d'option, octroi de compétence/trait),
  * souvent appliqué à d'autres figurines, conditionnellement à l'état de la liste.
- * Voir docs/schema-donnees.md — couche 2.
+ * Voir docs/schema-donnees.md - couche 2.
  */
 /** Caractéristiques modifiables par un effet (mêmes clés que la fiche : V P A C T I + PA PV Stature). */
 export const StatKeySchema = z.enum(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"]);

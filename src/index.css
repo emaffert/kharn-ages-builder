@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   Système visuel « Forge / Braise » — socle de tokens (Phase 0).
+   Système visuel « Forge / Braise » - socle de tokens (Phase 0).
    :root = thème sombre (défaut) · [data-theme="light"] = thème clair.
    Réf. : maquettes dans mockups/forge.css.
    ============================================================================ */
@@ -42,7 +42,7 @@
   --forge:#dccb9f; --forge-2:#e7d9bb;           /* page / en-têtes */
   --soot:#f1e8d2; --soot-2:#faf3e1;             /* surfaces surélevées / cartes */
   --ash:#cdb890; --ash-2:#bda676;
-  --bone:#2c2015; --bone-dim:#6a5942; --bone-faint:#726039; /* textes (encre bark) — faint assombri (AA) */
+  --bone:#2c2015; --bone-dim:#6a5942; --bone-faint:#726039; /* textes (encre bark) - faint assombri (AA) */
   --km-tune:none;                               /* dé de maîtrise : encre noire brute sur parchemin (rendu d'origine) */
   --ember:#9c4410; --ember-bright:#e5852f; --ember-deep:#8f4110; /* braise-texte assombrie pour le contraste (AA) */
   --ember-glow:rgba(193,92,26,.35);
@@ -61,7 +61,7 @@ body {
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
-/* Shell d'application (barre de navigation) — sur tokens. */
+/* Shell d'application (barre de navigation) - sur tokens. */
 .kh-shell { background: var(--forge); color: var(--bone); }
 .kh-topbar { background: var(--forge-2); border-bottom: 1px solid var(--hair); }
 .kh-brand { font-family: "Cinzel", Georgia, serif; letter-spacing: .04em;
@@ -82,7 +82,7 @@ body {
 .kh-toggle button[data-on="true"] { color: var(--bone); background: var(--tint-3); }
 
 /* ============================================================================
-   Kit UI (primitives) — Phase 1. Sur tokens, backées Radix côté comportement.
+   Kit UI (primitives) - Phase 1. Sur tokens, backées Radix côté comportement.
    ============================================================================ */
 
 /* Boutons */
@@ -173,7 +173,7 @@ body {
 .ui-seg button:disabled:hover { color: var(--bone-dim); }
 
 /* ============================================================================
-   Écran 1 — Choix de faction (Phase 2a). Teinté par la faction sélectionnée.
+   Écran 1 - Choix de faction (Phase 2a). Teinté par la faction sélectionnée.
    ============================================================================ */
 .fs-scene { height: 100%; overflow-y: auto; transition: background .5s var(--ease);
   background:
@@ -287,7 +287,7 @@ body {
 }
 
 /* ============================================================================
-   Écran 2 — Constructeur (Phase 2b). Vue principale : bandeau, roster, liste.
+   Écran 2 - Constructeur (Phase 2b). Vue principale : bandeau, roster, liste.
    Teinté par la faction (--faction* posés sur .bld-root).
    ============================================================================ */
 .bld-root { display: flex; flex-direction: column; height: 100%; background: var(--forge); color: var(--bone); }
@@ -561,7 +561,7 @@ body {
 .bld-pill:disabled:hover { background: transparent; }
 
 /* Résumé d'achats (replié sous la ligne) */
-/* Détail d'achats d'une figurine — présenté comme une « feuille d'équipement »
+/* Détail d'achats d'une figurine - présenté comme une « feuille d'équipement »
    (groupes labellisés, objets en lignes nom ↔ prix), pas comme une liste de tags. */
 .bld-loadout { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hair); }
 .bld-loadout-issues { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; font-size: 12px;
@@ -612,7 +612,7 @@ body {
 @keyframes ui-toast-in { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .ui-toast[data-state="open"] { animation: ui-toast-in .18s var(--ease); }
 
-/* Contenu des modales token (Dialog du kit) — choix, fiches, import/export. */
+/* Contenu des modales token (Dialog du kit) - choix, fiches, import/export. */
 .mdl-note { font-size: 13px; color: var(--bone-dim); margin-bottom: 12px; }
 .mdl-price { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-weight: 700;
   font-size: 13px; color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, transparent);
@@ -644,7 +644,7 @@ body {
   background: color-mix(in srgb, var(--scorch) 14%, transparent); }
 
 /* ============================================================================
-   Éditeur de figurine & aperçu de carte (Phase 2e) — contenu des Dialog.
+   Éditeur de figurine & aperçu de carte (Phase 2e) - contenu des Dialog.
    ============================================================================ */
 .fe-root { display: flex; flex-direction: column; gap: 14px; }
 .fe-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--hair); margin-bottom: 2px; }
@@ -753,7 +753,7 @@ body {
 .fe-col { display: flex; flex-direction: column; gap: 5px; }
 .fe-item { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 8px; background: var(--tint-1);
   font-size: 13.5px; }
-/* Ligne entière cliquable (ouvre la description) — le bouton ajouter/retirer stoppe la propagation. */
+/* Ligne entière cliquable (ouvre la description) - le bouton ajouter/retirer stoppe la propagation. */
 .fe-item.is-clickable { cursor: pointer; transition: background .16s var(--ease); }
 .fe-item.is-clickable:hover { background: var(--tint-3); }
 .fe-item.is-blocked { opacity: .42; }

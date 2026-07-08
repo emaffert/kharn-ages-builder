@@ -59,7 +59,7 @@ export function ProfileStatCard({
   // Effets responsables d'une modification affichée (clé « stat:… » / « skill:… »).
   const sourceRefs = (key: string) => mods?.effectSources?.[key] ?? [];
   // Rend une caractéristique en tenant compte d'un éventuel modificateur d'effet.
-  const fmtArmor = (n: number | undefined) => (n == null ? "—" : n > 0 ? `+${n}` : String(n));
+  const fmtArmor = (n: number | undefined) => (n == null ? "-" : n > 0 ? `+${n}` : String(n));
   const statCell = (k: string, label: string, base: number | null | undefined) => {
     const d = mods?.statDeltas?.[k];
     const value = d != null ? (typeof base === "number" ? base : 0) + d : base;
@@ -69,7 +69,7 @@ export function ProfileStatCard({
         {d != null ? (
           <button
             className="v is-fx"
-            title="Modifiée par un effet — voir la source"
+            title="Modifiée par un effet - voir la source"
             onClick={() => {
               const src = sourceRefs(`stat:${k}`);
               onInfo({
@@ -80,10 +80,10 @@ export function ProfileStatCard({
               });
             }}
           >
-            {value ?? "—"}
+            {value ?? "-"}
           </button>
         ) : (
-          <span className="v">{value ?? "—"}</span>
+          <span className="v">{value ?? "-"}</span>
         )}
       </span>
     );
@@ -116,7 +116,7 @@ export function ProfileStatCard({
     }
   }
   const grantedTraits = mods?.grantedTraitIds ?? [];
-  // Sorts connus d'office (signature) — affichés même pour les non-mages, cliquables.
+  // Sorts connus d'office (signature) - affichés même pour les non-mages, cliquables.
   const innateSpells = (p.magic?.knownReservedSpellIds ?? [])
     .map((id) => cat.spells.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => Boolean(s));
@@ -176,7 +176,7 @@ export function ProfileStatCard({
           {limIsFx ? (
             <button
               className="fe-lim-fx"
-              title="Limitation modifiée par un effet — voir la source"
+              title="Limitation modifiée par un effet - voir la source"
               onClick={showLimitSource}
             >
               {limLabel}
@@ -207,11 +207,11 @@ export function ProfileStatCard({
         {p.armor && (
           <div
             className="fe-armor"
-            title="Armure — protection en cas d'échec / seuil / protection en cas de réussite"
+            title="Armure - protection en cas d'échec / seuil / protection en cas de réussite"
           >
             <span className="fe-armor-lab">🛡 Armure</span>
             <span className="fe-armor-vals">
-              {fmtArmor(p.armor.protectionEchec)} <i>/</i> {p.armor.seuil ?? "—"}{" "}
+              {fmtArmor(p.armor.protectionEchec)} <i>/</i> {p.armor.seuil ?? "-"}{" "}
               <i>/</i> {fmtArmor(p.armor.protectionReussite)}
             </span>
             {p.armor.durability != null && (
@@ -370,7 +370,7 @@ export function ProfileStatCard({
                   key={s.id}
                   className="fe-linked-item"
                   onClick={() => onInfo(spellInfo(s, cat))}
-                  title="Sort connu d'office — voir le détail"
+                  title="Sort connu d'office - voir le détail"
                 >
                   <span>{s.name}</span>
                   <span className="px">{s.cost ? `${s.cost} Ko` : "d'office"}</span>

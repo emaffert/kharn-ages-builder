@@ -1,4 +1,4 @@
-# Khârn-Âges — Constructeur de listes
+# Khârn-Âges - Constructeur de listes
 
 Application web (PWA, local-first) de création de listes pour le jeu de figurines
 **Khârn-Âges**. Aucune dépendance serveur : tout fonctionne dans le navigateur ;
@@ -11,9 +11,9 @@ Cible mobile : PWA installable. Voir [`docs/stack-technique.md`](docs/stack-tech
 
 ## Documentation
 
-- [`docs/regles-creation-liste.md`](docs/regles-creation-liste.md) — règles métier (source de vérité).
-- [`docs/schema-donnees.md`](docs/schema-donnees.md) — modèle de données et architecture.
-- [`docs/stack-technique.md`](docs/stack-technique.md) — choix techniques.
+- [`docs/regles-creation-liste.md`](docs/regles-creation-liste.md) - règles métier (source de vérité).
+- [`docs/schema-donnees.md`](docs/schema-donnees.md) - modèle de données et architecture.
+- [`docs/stack-technique.md`](docs/stack-technique.md) - choix techniques.
 
 ## Prérequis
 
@@ -49,7 +49,7 @@ src/
     admin/    # éditeur de catalogue (CRUD profils/équipements/sorts…), stylé sur les classes .adm-*
     io/       # persistance Dexie + sérialisation (code portable, texte) + ids
 docs/     # documentation de conception
-cards/    # images des cartes (gitignoré — copyright ; servi en dev uniquement)
+cards/    # images des cartes (gitignoré - copyright ; servi en dev uniquement)
 ```
 
 Règle d'or : `src/core` ne dépend de rien ; tout le reste dépend de `core`.
@@ -58,8 +58,8 @@ Règle d'or : `src/core` ne dépend de rien ; tout le reste dépend de `core`.
 
 Deux écrans, accessibles par les onglets du haut :
 
-- **Constructeur** (onglet par défaut au lancement) — la création de listes joueur ;
-- **Admin** — l'éditeur du catalogue de référence.
+- **Constructeur** (onglet par défaut au lancement) - la création de listes joueur ;
+- **Admin** - l'éditeur du catalogue de référence.
 
 ## Le constructeur de listes
 
@@ -78,7 +78,7 @@ liste sauvegardée) → **écran de construction**.
   total, budget, et signalement des erreurs (limitation, faction, meneur, magie…).
 - **Sauvegarde locale** (Dexie/IndexedDB) et **import/export** en deux formats : *code portable*
   (compact, fidèle) et *texte* (lisible, réimport best-effort). Voir
-  [`docs/schema-donnees.md`](docs/schema-donnees.md) — couche 3.
+  [`docs/schema-donnees.md`](docs/schema-donnees.md) - couche 3.
 
 ## Données du catalogue
 
@@ -95,8 +95,8 @@ Cycle de mise à jour des données :
 
 ## L'éditeur admin
 
-Accessible par l'onglet **Admin**. À gauche, la liste des entrées du catalogue — profils,
-équipements, compétences, cartes spéciales, sorts — avec recherche et indicateur ⚠ pour les
+Accessible par l'onglet **Admin**. À gauche, la liste des entrées du catalogue - profils,
+équipements, compétences, cartes spéciales, sorts - avec recherche et indicateur ⚠ pour les
 profils ayant des champs à vérifier. À droite, le détail de l'entrée sélectionnée.
 
 L'admin partage le **système visuel** de l'application (tokens « Forge / Braise », thème
@@ -107,7 +107,7 @@ Champs modifiables :
 - **identité** : nom, coût, niveau, faction, limitation (type + valeur), personnage, mage ;
 - **caractéristiques** : V, P, A, C, T, I, stature, PA, PV ;
 - **compétences** (depuis le dictionnaire), **traits**, **équipement de base** ;
-- **règles de carte** (texte verbatim — fait foi).
+- **règles de carte** (texte verbatim - fait foi).
 
 Les **contraintes et effets** sont affichés en **lecture seule**, traduits en français lisible
 à côté de leur wording officiel, avec des badges (sévérité, auto-vérifiée ou simple note,

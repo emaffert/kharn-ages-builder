@@ -27,7 +27,7 @@ pour le modèle de données et l'architecture en couches.
 - **Dexie** (IndexedDB) : sauvegarde locale des listes.
 - **Vitest** (jsdom) : tests ; **ESLint** : analyse statique.
 - **PWA** : `vite-plugin-pwa` génère le service worker et le manifeste (pas de dossier `public/`).
-- **Compression du code portable** : *décidée* — API native `CompressionStream` (`deflate-raw`)
+- **Compression du code portable** : *décidée* - API native `CompressionStream` (`deflate-raw`)
   puis encodage base64url, **sans dépendance** (cf. `src/app/io/listCode.ts`). Le JSON étant très
   répétitif, la compression raccourcit fortement le lien.
 
@@ -39,7 +39,7 @@ kharn-ages-builder/
   rules corpus/          # PDF des règles
   docs/                  # documentation de conception
   src/
-    core/                # CŒUR MÉTIER — TypeScript pur, aucune dépendance UI
+    core/                # CŒUR MÉTIER - TypeScript pur, aucune dépendance UI
       model/             #   types + schémas Zod (catalogue, liste portable)
       engine/            #   validation, résolution des effets, calcul de coût + magie
     data/                # catalogue JSON (factions, profils, équipements, sorts…) + chargement validé
@@ -47,7 +47,7 @@ kharn-ages-builder/
                          #   (labels.ts) + helpers de présentation (traduction lisible des règles)
     app/                 # écrans + état applicatif
       builder/           #   constructeur de listes (faction, roster, éditeur de figurine)
-      admin/             #   éditeur de catalogue (CRUD) — modules par entité, stylé sur .adm-*
+      admin/             #   éditeur de catalogue (CRUD) - modules par entité, stylé sur .adm-*
       io/                #   persistance Dexie + sérialisation (code/texte) + ids
     main.tsx
   index.html

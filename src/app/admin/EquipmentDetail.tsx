@@ -1,5 +1,5 @@
-import type { Catalog, Equipment } from "@core";
-import { Section } from "./primitives";
+import type { Catalog, Equipment, EquipmentUpgrade } from "@core";
+import { RemoveButton, Section } from "./primitives";
 import { EQUIPMENT_CATEGORIES, INPUT } from "./shared";
 import { GrantsCastingEditor, ReservedToEditor, SkillsEditor } from "./editors";
 
@@ -223,6 +223,61 @@ export function EquipmentDetail({
         />
       </Section>
 
+      {/* Améliorations intrinsèques à l'objet (ex. Caparaçon → Pointes acérées), distinctes des cartes Borax. */}
+      <Section title="Améliorations optionnelles (intrinsèques à l'objet)">
+        <div className="flex flex-col gap-2">
+          {(e.upgrades ?? []).map((u, i) => {
+            const upgrades = e.upgrades ?? [];
+            const patchUp = (patch: Partial<EquipmentUpgrade>) =>
+              onChange({ upgrades: upgrades.map((x, j) => (j === i ? { ...u, ...patch } : x)) });
+            const removeUp = () => {
+              const next = upgrades.filter((_, j) => j !== i);
+              onChange({ upgrades: next.length ? next : undefined });
+            };
+            return (
+              <div key={u.id} className="adm-card space-y-2 p-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={u.label}
+                    onChange={(ev) => patchUp({ label: ev.target.value })}
+                    placeholder="Nom (ex. Pointes acérées)"
+                    className={`${INPUT} w-56`}
+                  />
+                  <label className="flex items-center gap-1 text-xs adm-muted">
+                    +
+                    <input
+                      type="number"
+                      value={u.cost}
+                      onChange={(ev) => patchUp({ cost: Number(ev.target.value) || 0 })}
+                      className={`${INPUT} w-16`}
+                    />
+                    Ko
+                  </label>
+                  <RemoveButton onClick={removeUp} />
+                </div>
+                <input
+                  value={u.effectsText ?? ""}
+                  onChange={(ev) => patchUp({ effectsText: ev.target.value || undefined })}
+                  placeholder="Effet (verbatim, ex. Modifie le verrouillage.)"
+                  className={`${INPUT} w-full`}
+                />
+              </div>
+            );
+          })}
+          <button
+            type="button"
+            className="adm-add"
+            onClick={() =>
+              onChange({
+                upgrades: [...(e.upgrades ?? []), { id: `up-${Date.now()}`, label: "Nouvelle amélioration", cost: 0 }],
+              })
+            }
+          >
+            + amélioration
+          </button>
+        </div>
+      </Section>
+
       {/* Lancement de sorts conféré : armes de corps à corps et objets (focus/relique). */}
       {(isCac || isObjet) && (
         <Section title="Lancement de sorts conféré">
@@ -232,6 +287,54 @@ export function EquipmentDetail({
 
       <Section title="Réservé à (qui peut l'équiper)">
         <ReservedToEditor value={e.reservedTo} cat={cat} onChange={(v) => onChange({ reservedTo: v })} />
+      </Section>
+
+      <Section title="Lien monture (p.32)">
+        <div className="flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-xs adm-muted">
+            Équipement lié à la monture :
+            <select
+              value={e.mountEquipment ?? ""}
+              onChange={(ev) =>
+                onChange({ mountEquipment: (ev.target.value || undefined) as "mount" | "rider" | undefined })
+              }
+              className={INPUT}
+            >
+              <option value="">Non (équipement standard)</option>
+              <option value="mount">Porté par la MONTURE (ex. Caparaçon)</option>
+              <option value="rider">Porté par le CAVALIER monté (ex. Lance de cavalerie)</option>
+            </select>
+          </label>
+          <p className="adm-faint text-[11px] leading-tight">
+            Un équipement lié à la monture n'apparaît que sur une figurine montée (onglet « Monture » du cavalier
+            ou fiche de la monture), jamais dans le picker d'équipement standard. La réservation de faction
+            ci-dessus s'applique en plus (ex. Lance réservée aux Khârns).
+          </p>
+          {e.mountEquipment != null && (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs adm-faint">Coût par faction (déroge au coût de base, ex. Caparaçon 20/22)</span>
+              <div className="flex flex-wrap gap-2">
+                {cat.factions.map((f) => (
+                  <label key={f.id} className="flex items-center gap-1 text-xs adm-muted">
+                    {f.name}
+                    <input
+                      type="number"
+                      value={e.costByFaction?.[f.id] ?? ""}
+                      placeholder="—"
+                      onChange={(ev) => {
+                        const cur = { ...(e.costByFaction ?? {}) };
+                        if (ev.target.value === "") delete cur[f.id];
+                        else cur[f.id] = Number(ev.target.value);
+                        onChange({ costByFaction: Object.keys(cur).length ? cur : undefined });
+                      }}
+                      className={`${INPUT} w-16`}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </Section>
 
       <label className="flex items-center gap-2 text-xs adm-muted">

@@ -176,8 +176,33 @@ export const EquipmentSchema = z.object({
     .optional(),
   /** Si l'équipement a sa propre carte (sinon affiché inline sur le profil). */
   cardImage: z.string().optional(),
+  /**
+   * Équipement lié à la monture (p.32) : disponible uniquement en présence d'une monture.
+   * `mount` = porté par la MONTURE (Caparaçon, sur `inst.mount.addedEquipmentIds`) ;
+   * `rider` = par le CAVALIER monté (Lance de cavalerie, sur `inst.addedEquipmentIds`).
+   */
+  mountEquipment: z.enum(["mount", "rider"]).optional(),
+  /** Coût variable selon la faction du cavalier (ex. Caparaçon : khârn/GN 20, khérops 22). Prioritaire sur `cost`. */
+  costByFaction: z.record(z.string(), z.number()).optional(),
+  /**
+   * Améliorations optionnelles *intrinsèques* à cet objet (ex. Caparaçon → « Pointes acérées » +5 Ko),
+   * achetables une fois l'objet équipé. Stockées dans `equipmentUpgrades[equipmentId]` de l'instance.
+   * À distinguer des améliorations *octroyées* par une carte (effets `unlock-upgrade`, ex. Borax).
+   */
+  upgrades: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        cost: z.number(),
+        grantsSkills: z.array(SkillRefSchema).optional(),
+        effectsText: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 export type Equipment = z.infer<typeof EquipmentSchema>;
+export type EquipmentUpgrade = NonNullable<Equipment["upgrades"]>[number];
 
 export const GrimoireSchema = z.object({
   id: z.enum(["petit", "grand"]),
@@ -210,10 +235,13 @@ export type Spell = z.infer<typeof SpellSchema>;
  * Éligible = faction du cavalier ∈ `factionEligibility` ET profil ∉ `excludedProfileIds`
  * (la règle de niveau ±1 et l'interdiction Berseker sont gérées par le moteur).
  */
+export const MountKindSchema = z.enum(["quagga", "koelod", "mochere"]);
+export type MountKind = z.infer<typeof MountKindSchema>;
+
 export const MountTypeSchema = z.object({
   id: z.string(),
   name: z.string(),
-  kind: z.enum(["quagga", "koelod", "mochere"]),
+  kind: MountKindSchema,
   factionEligibility: z.array(z.string()),
   /** Profils qui ne peuvent pas prendre cette monture malgré leur faction (ex. Affranchis d'origine khéropse/fang). */
   excludedProfileIds: z.array(z.string()).optional(),
@@ -249,11 +277,37 @@ export const MountSchema = z.object({
 });
 export type Mount = z.infer<typeof MountSchema>;
 
+/**
+ * Option achetable pour un cavalier monté ou sa monture (règles de bataille p.32). Toutes les options
+ * du Lot B confèrent une compétence. Le panier détermine où elle s'achète et sur quelle fiche elle agit :
+ * - `mount` : sur la fiche de la MONTURE (ex. Peau dure, Sacrifice X) ;
+ * - `rider` : dans l'onglet « Monture » du CAVALIER (ex. Autorité, Exécuteur) ;
+ * - `both` : PARTAGÉE (ex. Brutalité X, Endurance, Stable) - achetée une seule fois (depuis l'un OU
+ *   l'autre), elle apparaît des deux côtés sans surcoût, la meilleure valeur étant conservée.
+ * Le Caparaçon et la Lance de cavalerie ne sont PAS des options mais des `equipment` (cf. `mountEquipment`).
+ */
 export const MountOptionSchema = z.object({
   id: z.string(),
   name: z.string(),
+  bucket: z.enum(["mount", "rider", "both"]),
+  /** Compétence conférée par l'option (avec valeur éventuelle). */
+  grantsSkill: SkillRefSchema.optional(),
+  /** Valeur X maximale achetable (paliers 1..maxValue), pour les compétences à valeur (Brutalité, Sacrifice). */
+  maxValue: z.number().optional(),
+  /** Réservation : factions du cavalier et/ou natures de monture autorisées (au sein d'une dimension, l'appartenance suffit). */
+  reservation: z
+    .object({
+      factions: z.array(z.string()).optional(),
+      mountKinds: z.array(MountKindSchema).optional(),
+    })
+    .optional(),
+  /** Coût fixe (ou coût du palier X1 si `costByValue` est fourni). */
   cost: z.number(),
-  effectsText: z.string(),
+  /** Coût par palier de valeur : index 0 = X1, index 1 = X2… (Brutalité, Sacrifice). */
+  costByValue: z.array(z.number()).optional(),
+  /** Coût variable selon la nature de la monture (clé = nature, ex. Repoussement : koelod 15 / quagga 25). */
+  costByMountKind: z.record(z.string(), z.number()).optional(),
+  effectsText: z.string().optional(),
 });
 export type MountOption = z.infer<typeof MountOptionSchema>;
 

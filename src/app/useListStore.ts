@@ -66,6 +66,12 @@ export interface ListStore {
   toggleBase: (instanceId: string, equipId: string) => void;
   /** Attribue (ou retire avec `null`) une monture à la figurine. Conserve les options éventuelles. */
   setMount: (instanceId: string, mountId: string | null) => void;
+  /** Achète/retire une option de monture (p.32) ; `value` = valeur X (1 par défaut), `null` = retirée. */
+  setMountOption: (instanceId: string, optionId: string, value: number | null) => void;
+  /** Ajoute/retire un équipement porté par la MONTURE (ex. Caparaçon) sur `mount.addedEquipmentIds`. */
+  toggleMountEquip: (instanceId: string, equipId: string) => void;
+  /** Coche/décoche une amélioration intrinsèque d'un équipement de monture (ex. Caparaçon → Pointes acérées). */
+  toggleMountEquipUpgrade: (instanceId: string, equipId: string, upgradeId: string) => void;
   setGrimoire: (instanceId: string, g: "none" | "petit" | "grand") => void;
   toggleSpell: (instanceId: string, spellId: string) => void;
   toggleUpgrade: (instanceId: string, cardId: string) => void;
@@ -190,10 +196,50 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     toggleBase: (instanceId, equipId) =>
       patchMember(instanceId, (m) => ({ ...m, removedBaseEquipmentIds: toggle(m.removedBaseEquipmentIds, equipId) })),
     setMount: (instanceId, mountId) =>
-      patchMember(instanceId, (m) => ({
-        ...m,
-        mount: mountId ? { ...m.mount, mountId } : undefined,
-      })),
+      patchMember(instanceId, (m) => {
+        if (mountId) return { ...m, mount: { ...m.mount, mountId } };
+        // Retrait de la monture : on nettoie ce qui en dépend - équipement du cavalier réservé aux
+        // montés (ex. Lance de cavalerie) et options de monture (devenues orphelines).
+        const addedEquipmentIds = m.addedEquipmentIds.filter(
+          (id) => catalog.equipment.find((e) => e.id === id)?.mountEquipment !== "rider",
+        );
+        return { ...m, mount: undefined, addedEquipmentIds, mountOptionIds: undefined };
+      }),
+    setMountOption: (instanceId, optionId, value) =>
+      patchMember(instanceId, (m) => {
+        const cur = { ...(m.mountOptionIds ?? {}) };
+        if (value == null) delete cur[optionId];
+        else cur[optionId] = value;
+        return { ...m, mountOptionIds: Object.keys(cur).length ? cur : undefined };
+      }),
+    toggleMountEquip: (instanceId, equipId) =>
+      patchMember(instanceId, (m) => {
+        if (!m.mount) return m;
+        const cur = m.mount.addedEquipmentIds ?? [];
+        const removing = cur.includes(equipId);
+        const next = removing ? cur.filter((x) => x !== equipId) : [...cur, equipId];
+        // À la dépose de l'objet, on retire ses améliorations intrinsèques éventuelles.
+        const ups = { ...(m.mount.equipmentUpgrades ?? {}) };
+        if (removing) delete ups[equipId];
+        return {
+          ...m,
+          mount: {
+            ...m.mount,
+            addedEquipmentIds: next.length ? next : undefined,
+            equipmentUpgrades: Object.keys(ups).length ? ups : undefined,
+          },
+        };
+      }),
+    toggleMountEquipUpgrade: (instanceId, equipId, upgradeId) =>
+      patchMember(instanceId, (m) => {
+        if (!m.mount) return m;
+        const ups = { ...(m.mount.equipmentUpgrades ?? {}) };
+        const cur = ups[equipId] ?? [];
+        const next = cur.includes(upgradeId) ? cur.filter((x) => x !== upgradeId) : [...cur, upgradeId];
+        if (next.length) ups[equipId] = next;
+        else delete ups[equipId];
+        return { ...m, mount: { ...m.mount, equipmentUpgrades: Object.keys(ups).length ? ups : undefined } };
+      }),
     setGrimoire: (instanceId, g) =>
       patchMember(instanceId, (m) => ({ ...m, grimoireId: g === "none" ? undefined : g })),
     toggleSpell: (instanceId, spellId) =>

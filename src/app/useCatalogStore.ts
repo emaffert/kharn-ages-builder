@@ -6,6 +6,7 @@ import {
   type MagicWay,
   type Model,
   type Mount,
+  type MountOption,
   type MountType,
   type Profile,
   type Skill,
@@ -232,6 +233,26 @@ export function useCatalogStore() {
 
   const removeMount = useCallback(
     (id: string) => apply((c) => ({ ...c, mounts: c.mounts.filter((m) => m.id !== id) })),
+    [apply],
+  );
+
+  const addMountOption = useCallback((): string => {
+    const id = `opt-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      mountOptions: [...c.mountOptions, { id, name: "Nouvelle option", bucket: "mount", cost: 0 }],
+    }));
+    return id;
+  }, [apply]);
+
+  const updateMountOption = useCallback(
+    (id: string, patch: Partial<MountOption>) =>
+      apply((c) => ({ ...c, mountOptions: c.mountOptions.map((o) => (o.id === id ? { ...o, ...patch } : o)) })),
+    [apply],
+  );
+
+  const removeMountOption = useCallback(
+    (id: string) => apply((c) => ({ ...c, mountOptions: c.mountOptions.filter((o) => o.id !== id) })),
     [apply],
   );
 
@@ -470,6 +491,9 @@ export function useCatalogStore() {
     addMount,
     updateMount,
     removeMount,
+    addMountOption,
+    updateMountOption,
+    removeMountOption,
     updateEquipment,
     addEquipment,
     removeEquipment,

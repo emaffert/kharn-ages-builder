@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
-import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills } from "./evaluate";
+import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills } from "./evaluate";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -553,6 +553,37 @@ describe("montures", () => {
     expect(r.issues.some((i) => i.severity === "error" && i.ruleId === "mount-koelod-2")).toBe(true);
   });
 
+  it("équipement réservé aux montés (Lance de cavalerie) sans monture → invalide", () => {
+    const withMount = inst("kharns-paladin-cavalier-2", {
+      mount: { mountId: "quagga-2" },
+      addedEquipmentIds: ["eq-lance-cavalerie"],
+    });
+    const ok = evaluateList(catalog, makeList([withMount], "kharns", "bataille"));
+    expect(ok.issues.some((i) => i.ruleId === "mount-equip-eq-lance-cavalerie")).toBe(false);
+
+    const noMount = inst("kharns-paladin-cavalier-2", { addedEquipmentIds: ["eq-lance-cavalerie"] });
+    const r = evaluateList(catalog, makeList([noMount], "kharns", "bataille"));
+    expect(
+      r.issues.some((i) => i.severity === "error" && i.ruleId === "mount-equip-eq-lance-cavalerie"),
+    ).toBe(true);
+  });
+
+  it("amélioration intrinsèque d'un équipement de monture (Caparaçon → Pointes acérées) comptée dans le coût", () => {
+    const withUp = inst("kharns-paladin-cavalier-2", {
+      mount: {
+        mountId: "quagga-2",
+        addedEquipmentIds: ["eq-caparacon"],
+        equipmentUpgrades: { "eq-caparacon": ["caparacon-pointes"] },
+      },
+    });
+    const withoutUp = inst("kharns-paladin-cavalier-2", {
+      mount: { mountId: "quagga-2", addedEquipmentIds: ["eq-caparacon"] },
+    });
+    const a = evaluateList(catalog, makeList([withUp], "kharns", "bataille"));
+    const b = evaluateList(catalog, makeList([withoutUp], "kharns", "bataille"));
+    expect(a.mountCost[withUp.instanceId] - b.mountCost[withoutUp.instanceId]).toBe(5); // +5 Ko Pointes acérées
+  });
+
   it("partage cavalier : stats + allonge seulement (PV/stature/compétences NON partagés)", () => {
     const g = inst("kharns-paladin-cavalier-2", { mount: { mountId: "quagga-2" } });
     const r = evaluateList(catalog, makeList([g], "kharns", "bataille"));
@@ -603,5 +634,40 @@ describe("montures", () => {
     const g = inst("kherops-guerrier-1-1", { mount: { mountId: "koelod-2" } });
     const r = evaluateList(catalog, makeList([g], "kherops", "bataille"));
     expect(r.skillValues[g.instanceId]?.["charge-brutale"]).toBe(2);
+  });
+
+  it("options (p.32) : coût au bon panier, réservations, transmission et partage", () => {
+    const solo = inst("kharns-paladin-cavalier-2");
+    const base = evaluateList(catalog, makeList([solo], "kharns", "bataille")).costByInstance[solo.instanceId];
+    const r = inst("kharns-paladin-cavalier-2", {
+      mount: { mountId: "quagga-2" },
+      mountOptionIds: { "opt-autorite": 1, "opt-endurance": 1, "opt-repoussement": 1 },
+    });
+    const e = evaluateList(catalog, makeList([r], "kharns", "bataille"));
+    // Autorité (10, cavalier) + Endurance (20, partagée) sur le cavalier ; Repoussement (quagga 25) sur la monture.
+    expect(e.costByInstance[r.instanceId]).toBe(base + 30);
+    expect(e.mountCost[r.instanceId]).toBe(45 + 25);
+    const granted = (e.grantedSkills[r.instanceId] ?? []).map((s) => s.skillId);
+    expect(granted).toContain("autorite");
+    expect(granted).toContain("endurance");
+    // Endurance achetée par le cavalier se transmet à la monture ; Repoussement acheté est sur sa fiche.
+    const rider = catalog.profiles.find((p) => p.id === "kharns-paladin-cavalier-2")!;
+    const mount = catalog.mounts.find((m) => m.id === "quagga-2")!;
+    const sheet = mountSheetSkills(mount, rider, {
+      mountBought: mountOptionSkills(catalog, r, ["mount", "both"]),
+      riderBought: mountOptionSkills(catalog, r, ["rider", "both"]),
+    }).map((s) => s.skillId);
+    expect(sheet).toContain("repoussement");
+    expect(sheet).toContain("endurance");
+  });
+
+  it("options (p.32) : réservation de faction non respectée → erreur", () => {
+    // Exécuteur est réservé aux Cavaliers khérops : un Khârn ne peut pas le prendre.
+    const r = inst("kharns-paladin-cavalier-2", {
+      mount: { mountId: "quagga-2" },
+      mountOptionIds: { "opt-executeur": 1 },
+    });
+    const e = evaluateList(catalog, makeList([r], "kharns", "bataille"));
+    expect(e.issues.some((i) => i.ruleId === "mount-option-opt-executeur")).toBe(true);
   });
 });

@@ -37,7 +37,7 @@ import { SortableUnit } from "./SortableUnit";
 import { TrashIcon, SearchIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
-import { MountPicker, MountPreview, MountStatCard } from "./MountDialog";
+import { MountPicker, MountPreview, MountSheet } from "./MountDialog";
 import { RosterGroup } from "./RosterGroup";
 import { OstPanel } from "./OstPanel";
 import { PurchaseSummary } from "./PurchaseSummary";
@@ -776,6 +776,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               mountAllonge: evaluation.mountAllonge[editItem.inst.instanceId],
               grimoireDiscount: evaluation.grimoireDiscount[editItem.inst.instanceId],
             }}
+            mountId={editItem.inst.mount?.mountId}
+            mountOptionIds={editItem.inst.mountOptionIds}
+            onSetMountOption={(oid, v) => store.setMountOption(editItem.inst.instanceId, oid, v)}
           />
         </Dialog>
       )}
@@ -820,7 +823,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               }
             >
               {mount ? (
-                <MountStatCard cat={cat} mount={mount} type={type} rider={mountItem.p} onInfo={setItemInfo} />
+                <MountSheet
+                  cat={cat}
+                  mount={mount}
+                  type={type}
+                  rider={mountItem.p}
+                  instance={mountItem.inst}
+                  onInfo={setItemInfo}
+                  onSetOption={(oid, v) => store.setMountOption(instId, oid, v)}
+                  onToggleEquip={(eid) => store.toggleMountEquip(instId, eid)}
+                  onToggleEquipUpgrade={(eid, uid) => store.toggleMountEquipUpgrade(instId, eid, uid)}
+                />
               ) : (
                 <p className="mdl-note">Monture introuvable.</p>
               )}

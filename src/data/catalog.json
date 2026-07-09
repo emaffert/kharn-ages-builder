@@ -7900,6 +7900,53 @@
           "kherops-tarsak-3"
         ]
       }
+    },
+    {
+      "id": "eq-caparacon",
+      "name": "Caparaçon",
+      "category": "armure",
+      "cost": 20,
+      "durability": 8,
+      "protectionEchec": -1,
+      "seuil": 6,
+      "protectionReussite": -2,
+      "effectsText": "Armure -1 / 6 / -2, DV 8. Non accessible aux Mochères.",
+      "reservedTo": {
+        "factionIds": [
+          "kharns",
+          "guilde-noire",
+          "kherops"
+        ]
+      },
+      "mountEquipment": "mount",
+      "costByFaction": {
+        "kharns": 20,
+        "guilde-noire": 20,
+        "kherops": 22
+      },
+      "upgrades": [
+        {
+          "id": "caparacon-pointes",
+          "label": "Pointes acérées",
+          "cost": 5,
+          "effectsText": "Modifie le verrouillage."
+        }
+      ]
+    },
+    {
+      "id": "eq-lance-cavalerie",
+      "name": "Lance de cavalerie",
+      "category": "arme-cac",
+      "cost": 20,
+      "hands": 1,
+      "allonge": 2,
+      "effectsText": "Allonge 2 (non modifiable), +4 dégâts et +2 au seuil d’attaque en charge, pas d’attaque avec A à 1 PA. Réservée aux Cavaliers khârns.",
+      "reservedTo": {
+        "factionIds": [
+          "kharns"
+        ]
+      },
+      "mountEquipment": "rider"
     }
   ],
   "grimoires": [
@@ -8356,7 +8403,165 @@
       ]
     }
   ],
-  "mountOptions": [],
+  "mountOptions": [
+    {
+      "id": "opt-autorite",
+      "name": "Autorité",
+      "bucket": "rider",
+      "grantsSkill": {
+        "skillId": "autorite"
+      },
+      "reservation": {
+        "factions": [
+          "kherops",
+          "kharns"
+        ]
+      },
+      "cost": 10
+    },
+    {
+      "id": "opt-executeur",
+      "name": "Exécuteur",
+      "bucket": "rider",
+      "grantsSkill": {
+        "skillId": "executeur"
+      },
+      "reservation": {
+        "factions": [
+          "kherops"
+        ]
+      },
+      "cost": 20
+    },
+    {
+      "id": "opt-brutalite",
+      "name": "Brutalité X",
+      "bucket": "both",
+      "grantsSkill": {
+        "skillId": "brutalite"
+      },
+      "maxValue": 2,
+      "cost": 10,
+      "costByValue": [
+        10,
+        20
+      ],
+      "effectsText": "Ajoute X dégâts lors d’une ruade ou d’un piétinement (non utilisable par le seul Cavalier)."
+    },
+    {
+      "id": "opt-endurance",
+      "name": "Endurance",
+      "bucket": "both",
+      "grantsSkill": {
+        "skillId": "endurance"
+      },
+      "reservation": {
+        "factions": [
+          "kharns",
+          "gouns"
+        ]
+      },
+      "cost": 20
+    },
+    {
+      "id": "opt-en-eveil",
+      "name": "En éveil",
+      "bucket": "both",
+      "grantsSkill": {
+        "skillId": "en-eveil"
+      },
+      "reservation": {
+        "factions": [
+          "gouns"
+        ]
+      },
+      "cost": 20
+    },
+    {
+      "id": "opt-harcelement",
+      "name": "Harcèlement",
+      "bucket": "mount",
+      "grantsSkill": {
+        "skillId": "harcelement"
+      },
+      "reservation": {
+        "mountKinds": [
+          "mochere"
+        ]
+      },
+      "cost": 20
+    },
+    {
+      "id": "opt-peau-dure",
+      "name": "Peau dure",
+      "bucket": "mount",
+      "grantsSkill": {
+        "skillId": "peau-dure"
+      },
+      "reservation": {
+        "mountKinds": [
+          "koelod"
+        ]
+      },
+      "cost": 5
+    },
+    {
+      "id": "opt-repoussement",
+      "name": "Repoussement",
+      "bucket": "mount",
+      "grantsSkill": {
+        "skillId": "repoussement"
+      },
+      "reservation": {
+        "mountKinds": [
+          "koelod",
+          "quagga"
+        ]
+      },
+      "cost": 15,
+      "costByMountKind": {
+        "koelod": 15,
+        "quagga": 25
+      }
+    },
+    {
+      "id": "opt-sacrifice",
+      "name": "Sacrifice X",
+      "bucket": "mount",
+      "grantsSkill": {
+        "skillId": "sacrifice"
+      },
+      "maxValue": 2,
+      "reservation": {
+        "mountKinds": [
+          "koelod"
+        ]
+      },
+      "cost": 15,
+      "costByValue": [
+        15,
+        25
+      ]
+    },
+    {
+      "id": "opt-stable",
+      "name": "Stable",
+      "bucket": "both",
+      "grantsSkill": {
+        "skillId": "stable"
+      },
+      "cost": 20
+    },
+    {
+      "id": "opt-empathie",
+      "name": "Empathie",
+      "bucket": "both",
+      "grantsSkill": {
+        "skillId": "empathie"
+      },
+      "cost": 20
+    }
+  ],
   "pacts": [],
   "orders": [],
   "specialCards": [

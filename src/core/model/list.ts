@@ -28,11 +28,13 @@ export const ProfileInstanceSchema = z.object({
       addedEquipmentIds: z.array(z.string()).optional(),
       removedBaseEquipmentIds: z.array(z.string()).optional(),
       equipmentUpgrades: z.record(z.string(), z.array(z.string())).optional(),
-      skillOptionIds: z.array(z.string()).optional(),
     })
     .optional(),
-  /** Options (compétences/équipements) réservées au CAVALIER, débloquées par la possession d'une monture. */
-  riderMountOptionIds: z.array(z.string()).optional(),
+  /**
+   * Options de monture achetées (cavalier, monture ou partagées) : id d'option → valeur X (1 si sans valeur).
+   * Champ unique : le `bucket` du catalogue décide de l'affichage. Une option partagée n'est comptée qu'une fois.
+   */
+  mountOptionIds: z.record(z.string(), z.number()).optional(),
   /** Instances rattachées (ex. Likans liés à cette Fang). */
   attachedInstanceIds: z.array(z.string()).optional(),
   /** Si cette instance occupe un emplacement gratuit « garde du corps » offert par une autre instance. */

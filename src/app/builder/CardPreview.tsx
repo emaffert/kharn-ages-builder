@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, SegmentedControl, Dialog } from "@ui";
 import type { Catalog, Profile } from "@core";
 import { ProfileStatCard } from "./ProfileStatCard";
-import { LEVEL, carrierLabel, isDependent, type ItemInfo } from "./shared";
+import { LEVEL, carrierLabel, isDependent, wornArmorsFrom, type ItemInfo } from "./shared";
 
 /**
  * Aperçu d'un modèle avant recrutement, rendu dans un Dialog du kit (comme l'éditeur) :
@@ -76,7 +76,13 @@ export function CardPreview({
           />
         </div>
       )}
-      <ProfileStatCard p={p} cat={cat} onInfo={onInfo} showEquipment />
+      <ProfileStatCard
+        p={p}
+        cat={cat}
+        onInfo={onInfo}
+        showEquipment
+        wornArmors={wornArmorsFrom(cat, p.baseEquipmentIds)}
+      />
     </Dialog>
   );
 }

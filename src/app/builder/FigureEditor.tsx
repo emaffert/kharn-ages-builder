@@ -10,6 +10,7 @@ import {
   type Spell,
 } from "@core";
 import { ProfileStatCard, type ProfileMods } from "./ProfileStatCard";
+import { MountOptionsEditor } from "./MountOptions";
 import { SectionTitle, SlotChip } from "./components";
 import {
   CAT_LABEL,
@@ -25,6 +26,7 @@ import {
   pageBonusSources,
   spellInfo,
   spellsFor,
+  wornArmorsFrom,
   type ItemInfo,
 } from "./shared";
 
@@ -97,7 +99,7 @@ function MagiePanel({
   );
 }
 
-/** Éditeur d'une figurine en **onglets** (Équipement / Améliorations / Magie), sans sous-modale. */
+/** Éditeur d'une figurine en **onglets** (Carte / Équipement / Magie / Monture), sans sous-modale. */
 export function FigureEditor({
   profile: p,
   cat,
@@ -120,6 +122,9 @@ export function FigureEditor({
   equipmentUpgrades,
   onToggleEquipmentUpgrade,
   mods,
+  mountId,
+  mountOptionIds,
+  onSetMountOption,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -142,18 +147,24 @@ export function FigureEditor({
   equipmentUpgrades: Record<string, string[]>;
   onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
   mods?: ProfileMods;
+  /** Monture de la figurine (si montée) : active l'onglet « Monture » (options réservées au cavalier). */
+  mountId?: string;
+  mountOptionIds?: Record<string, number>;
+  onSetMountOption?: (optionId: string, value: number | null) => void;
 }) {
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
   const ways = castWays(p, cat, upgrades, [...activeBase, ...added]);
   const castable = ways.length > 0;
 
   // Les améliorations se cochent désormais directement dans l'onglet « Carte » (plus d'onglet dédié).
+  type TabId = "carte" | "equip" | "magie" | "monture";
   const tabs = [
     { id: "carte" as const, label: "Carte" },
     canBuy(p, cat) && { id: "equip" as const, label: "Équipement" },
     (castable || spells.length > 0) && { id: "magie" as const, label: "Magie" },
-  ].filter(Boolean) as { id: "carte" | "equip" | "magie"; label: string }[];
-  const [tab, setTab] = useState<"carte" | "equip" | "magie">("carte");
+    mountId != null && { id: "monture" as const, label: "Monture" },
+  ].filter(Boolean) as { id: TabId; label: string }[];
+  const [tab, setTab] = useState<TabId>("carte");
   const active = tabs.some((t) => t.id === tab) ? tab : "carte";
 
   return (
@@ -178,6 +189,7 @@ export function FigureEditor({
           upgradeCounts={upgradeCounts}
           onSetUpgradeCount={onSetUpgradeCount}
           mods={mods}
+          wornArmors={wornArmorsFrom(cat, [...activeBase, ...added])}
         />
       )}
       {active === "equip" && (
@@ -196,6 +208,7 @@ export function FigureEditor({
           costRules={mods?.equipmentCostRules ?? []}
           equipmentUpgrades={equipmentUpgrades}
           onToggleEquipmentUpgrade={onToggleEquipmentUpgrade}
+          hasMount={mountId != null}
         />
       )}
       {active === "magie" && (
@@ -211,6 +224,22 @@ export function FigureEditor({
           onInfo={onInfo}
           grimoireDiscount={mods?.grimoireDiscount}
         />
+      )}
+      {active === "monture" && (
+        <div className="fe-root">
+          <p className="fe-opt-intro">
+            Compétences débloquées par la monture (réservées au cavalier ou partagées avec la monture). La
+            Lance de cavalerie, elle, s'achète dans l'onglet « Équipement ».
+          </p>
+          <MountOptionsEditor
+            cat={cat}
+            mountId={mountId}
+            factionId={p.factionId}
+            selected={mountOptionIds ?? {}}
+            buckets={["rider", "both"]}
+            onSetOption={(oid, v) => onSetMountOption?.(oid, v)}
+          />
+        </div>
       )}
     </div>
   );
@@ -232,6 +261,7 @@ function EquipPanel({
   costRules,
   equipmentUpgrades,
   onToggleEquipmentUpgrade,
+  hasMount,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -247,6 +277,8 @@ function EquipPanel({
   costRules: NonNullable<ProfileMods["equipmentCostRules"]>;
   equipmentUpgrades: Record<string, string[]>;
   onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
+  /** La figurine a-t-elle une monture ? Débloque l'équipement de cavalier monté (Lance de cavalerie). */
+  hasMount: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [openMun, setOpenMun] = useState<Record<string, boolean>>({}); // blocs de munitions dépliés, par arme
@@ -276,6 +308,9 @@ function EquipPanel({
 
   const avail = cat.equipment.filter(
     (e) =>
+      // Équipement du CAVALIER monté (Lance de cavalerie) : proposé ici seulement s'il a une monture.
+      // Équipement de la MONTURE (Caparaçon) : jamais ici (il s'achète sur la fiche de la monture).
+      (e.mountEquipment == null || (e.mountEquipment === "rider" && hasMount)) &&
       PURCHASE_CATS.includes(e.category) &&
       !forbidden.has(e.category) &&
       equipReservedOk(e, p) &&

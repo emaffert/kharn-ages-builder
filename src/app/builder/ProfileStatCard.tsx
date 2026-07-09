@@ -2,6 +2,7 @@ import { specialCardsForProfile } from "@ui/explain";
 import { Tag, STAT_FULL } from "@ui";
 import { iconFor, type Catalog, type EquipmentCostRule, type MasteryDomain, type Profile } from "@core";
 import { SectionTitle } from "./components";
+import { ArmorBlock, RulesBlock, SheetHeader, SkillChips, StatCell, type ArmorDisplay } from "./StatSheet";
 import { MasteryDie } from "./MasteryDie";
 import {
   LEVEL,
@@ -48,6 +49,7 @@ export function ProfileStatCard({
   upgradeCounts,
   onSetUpgradeCount,
   mods,
+  wornArmors,
 }: {
   p: Profile;
   cat: Catalog;
@@ -61,38 +63,25 @@ export function ProfileStatCard({
   onSetUpgradeCount?: (id: string, qty: number) => void;
   /** Modifications d'effets à refléter sur le profil affiché (stats/compétences/traits). */
   mods?: ProfileMods;
+  /** Armures portées (équipement de catégorie « armure », ex. Brigandine), affichées après l'armure innée. */
+  wornArmors?: ArmorDisplay[];
 }) {
   // Effets responsables d'une modification affichée (clé « stat:… » / « skill:… »).
   const sourceRefs = (key: string) => mods?.effectSources?.[key] ?? [];
-  // Rend une caractéristique en tenant compte d'un éventuel modificateur d'effet.
-  const fmtArmor = (n: number | undefined) => (n == null ? "-" : n > 0 ? `+${n}` : String(n));
+  // Rend une caractéristique en tenant compte d'un éventuel modificateur d'effet (cellule partagée).
   const statCell = (k: string, label: string, base: number | null | undefined) => {
     const d = mods?.statDeltas?.[k];
     const value = d != null ? (typeof base === "number" ? base : 0) + d : base;
-    return (
-      <span key={label} className="fe-stat">
-        <span className="k">{label}</span>
-        {d != null ? (
-          <button
-            className="v is-fx"
-            title="Modifiée par un effet - voir la source"
-            onClick={() => {
-              const src = sourceRefs(`stat:${k}`);
-              onInfo({
-                title: STAT_FULL[k] ?? label,
-                price: "",
-                lines: [],
-                sources: src.length ? src : [{ label: "Effet", text: "Caractéristique modifiée par un effet." }],
-              });
-            }}
-          >
-            {value ?? "-"}
-          </button>
-        ) : (
-          <span className="v">{value ?? "-"}</span>
-        )}
-      </span>
-    );
+    const showSource = () => {
+      const src = sourceRefs(`stat:${k}`);
+      onInfo({
+        title: STAT_FULL[k] ?? label,
+        price: "",
+        lines: [],
+        sources: src.length ? src : [{ label: "Effet", text: "Caractéristique modifiée par un effet." }],
+      });
+    };
+    return <StatCell key={label} label={label} value={value ?? "-"} fx={d != null} onClick={d != null ? showSource : undefined} />;
   };
   // Compétences affichées : natives + octroyées par effet, en fusionnant les valeurs d'une même
   // compétence « à valeur » (ex. « Héroïque objectif » + octroi « défense » → « Héroïque objectif et défense »).
@@ -174,16 +163,12 @@ export function ProfileStatCard({
   return (
     <div className="fe-statcard">
       <div className="fe-card">
-        <div className="fe-card-head">
-          <div className="fe-headmain">
-            {iconFor(cat, p) && <img className="fe-portrait" src={iconFor(cat, p)} alt="" />}
-            <h3 className="fe-card-name">
-              {p.name}
-              {p.level ? <span className="lvl">{LEVEL[p.level]}</span> : null}
-            </h3>
-          </div>
-          <span className="fe-cost-chip">{p.cost} Ko</span>
-        </div>
+        <SheetHeader
+          icon={iconFor(cat, p)}
+          name={p.name}
+          level={p.level ? LEVEL[p.level] : undefined}
+          cost={`${p.cost} Ko`}
+        />
         <div className="fe-taglist">
           {limIsFx ? (
             <button
@@ -227,62 +212,40 @@ export function ProfileStatCard({
             </div>
           )}
         </div>
-        {p.armor && (
-          <div
-            className="fe-armor"
-            title="Armure - protection en cas d'échec / seuil / protection en cas de réussite"
-          >
-            <span className="fe-armor-lab">🛡 Armure</span>
-            <span className="fe-armor-vals">
-              {fmtArmor(p.armor.protectionEchec)} <i>/</i> {p.armor.seuil ?? "-"}{" "}
-              <i>/</i> {fmtArmor(p.armor.protectionReussite)}
-            </span>
-            {p.armor.durability != null && (
-              <span className="fe-armor-dur">durabilité {p.armor.durability}</span>
-            )}
-          </div>
-        )}
-        <div className="fe-skills">
-          {skillOrder.map((id) => {
+        <ArmorBlock
+          armors={[
+            ...(p.armor
+              ? [
+                  {
+                    label: "🛡 Armure",
+                    protectionEchec: p.armor.protectionEchec,
+                    seuil: p.armor.seuil,
+                    protectionReussite: p.armor.protectionReussite,
+                    durability: p.armor.durability,
+                  },
+                ]
+              : []),
+            ...(wornArmors ?? []),
+          ]}
+        />
+        <SkillChips
+          skills={skillOrder.map((id) => {
             const a = skillAgg.get(id)!;
             const sk = cat.skills.find((x) => x.id === id);
             const fxVal = mods?.skillValues?.[id]; // valeur calculée (skill-count, ex. Seigneur de guerre)
             const vals = fxVal != null ? [fxVal] : [...a.nativeVals, ...a.grantedVals];
             const isFx = fxVal != null || grantedOnly.has(id) || a.grantedVals.length > 0;
             const label = `${sk?.keyword ?? id}${vals.length > 0 ? ` ${vals.join(" et ")}` : ""}`;
-            return (
-              <button
-                key={id}
-                className={`fe-skill${isFx ? " is-fx" : ""}`}
-                onClick={() => showSkill(id, label, isFx)}
-                title={isFx ? "Compétence ou valeur modifiée par un effet" : undefined}
-              >
-                {label}
-              </button>
-            );
+            return { key: id, label, fx: isFx, onClick: () => showSkill(id, label, isFx) };
           })}
-        </div>
-        {(p.rules.length > 0 || precisions.length > 0) && (
-          <div className="fe-rules">
-            {p.rules.map((r, i) => (
-              <div key={i}>
-                {r.label && <b>{r.label}{r.text ? " : " : ""}</b>}
-                {r.text}
-              </div>
-            ))}
-            {precisions.map((s, i) => {
-              const kw = cat.skills.find((x) => x.id === s.skillId)?.keyword ?? s.skillId;
-              return (
-                <div key={`prec-${i}`}>
-                  <button className="fe-rule-btn" onClick={() => showSkill(s.skillId, kw)}>
-                    {kw}
-                  </button>{" "}
-                  : {s.precision}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        />
+        <RulesBlock
+          rules={p.rules}
+          precisions={precisions.map((s) => {
+            const kw = cat.skills.find((x) => x.id === s.skillId)?.keyword ?? s.skillId;
+            return { label: kw, precision: s.precision, onClick: () => showSkill(s.skillId, kw) };
+          })}
+        />
         {/* Dés de maîtrise : tout en bas de la carte (comme sur la carte officielle). */}
         {(p.masteryDice.length > 0 || (mods?.grantedMasteryDice?.length ?? 0) > 0) && (
           <div className="fe-mastery">

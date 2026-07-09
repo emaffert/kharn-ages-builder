@@ -7,6 +7,8 @@ import type {
   ListDocument,
   MasteryDomain,
   Mount,
+  MountKind,
+  MountOption,
   Profile,
   ProfileInstance,
   Selector,
@@ -156,7 +158,6 @@ interface CatalogIndex {
   grimoireCost: Map<string, number>;
   spellCost: Map<string, number>;
   mountCost: Map<string, number>;
-  mountOptionCost: Map<string, number>;
   orderCost: Map<string, number>;
 }
 
@@ -190,7 +191,6 @@ function indexCatalog(cat: Catalog): CatalogIndex {
     grimoireCost: new Map(cat.grimoires.map((g) => [g.id, g.cost])),
     spellCost: new Map(cat.spells.map((s) => [s.id, s.cost ?? 0])),
     mountCost: new Map(cat.mounts.map((m) => [m.id, m.cost])),
-    mountOptionCost: new Map(cat.mountOptions.map((o) => [o.id, o.cost])),
     orderCost: new Map(cat.orders.map((o) => [o.id, o.cost])),
   };
 }
@@ -492,7 +492,9 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog)
   if (inst.grimoireId) cost += idx.grimoireCost.get(inst.grimoireId) ?? 0;
   for (const id of inst.spellIds) cost += idx.spellCost.get(id) ?? 0;
   cost += totalMunitionCost(cat, inst);
-  // Coût de la monture : traité à part (sous-ligne dédiée), pas ici. Voir `mountCostOf`.
+  // Coût de la monture (niveau, équipement monté, options « monture ») : traité à part. Voir `mountCostOf`.
+  // Ici on n'ajoute que les options « cavalier » et « partagées » (comptées une fois, côté cavalier).
+  if (inst.mount) cost += mountOptionsCost(cat, inst, ["rider", "both"]);
   for (const id of inst.orderIds ?? []) cost += idx.orderCost.get(id) ?? 0;
   for (const id of inst.specialCardIds ?? []) {
     const card = idx.specialCard.get(id);
@@ -505,12 +507,52 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog)
   return cost;
 }
 
-/** Coût propre de la monture d'une figurine (niveau + son équipement acheté). Affiché sur la sous-ligne. */
-function mountCostOf(inst: ProfileInstance, idx: CatalogIndex): number {
+/** Nature (quagga/koelod/mochère) de la monture d'un id de niveau donné. */
+export function mountKindOf(cat: Catalog, mountId?: string): MountKind | undefined {
+  if (!mountId) return undefined;
+  const m = cat.mounts.find((x) => x.id === mountId);
+  return m ? cat.mountTypes.find((t) => t.id === m.typeId)?.kind : undefined;
+}
+
+/** Coût d'une option (p.32) pour une valeur X et une nature de monture données. */
+export function mountOptionCostOf(opt: MountOption, value: number, kind?: MountKind): number {
+  if (opt.costByValue?.length) return opt.costByValue[Math.max(1, value) - 1] ?? opt.costByValue.at(-1) ?? opt.cost;
+  if (opt.costByMountKind && kind && opt.costByMountKind[kind] != null) return opt.costByMountKind[kind];
+  return opt.cost;
+}
+
+/** Coût d'un équipement, avec surcharge éventuelle selon la faction du porteur (ex. Caparaçon 20/22). */
+function equipmentCostFor(cat: Catalog, idx: CatalogIndex, id: string, factionId?: string): number {
+  const e = cat.equipment.find((x) => x.id === id);
+  if (e?.costByFaction && factionId != null && e.costByFaction[factionId] != null) return e.costByFaction[factionId];
+  return idx.equipmentCost.get(id) ?? 0;
+}
+
+/** Somme des coûts des options achetées dont le panier ∈ `buckets` (chaque option comptée une fois). */
+function mountOptionsCost(cat: Catalog, inst: ProfileInstance, buckets: MountOption["bucket"][]): number {
+  if (!inst.mount) return 0;
+  const kind = mountKindOf(cat, inst.mount.mountId);
+  let c = 0;
+  for (const [id, value] of Object.entries(inst.mountOptionIds ?? {})) {
+    const opt = cat.mountOptions.find((o) => o.id === id);
+    if (opt && buckets.includes(opt.bucket)) c += mountOptionCostOf(opt, value, kind);
+  }
+  return c;
+}
+
+/** Coût propre de la monture (niveau + équipement de monture + options « monture »). Affiché sur la sous-ligne. */
+function mountCostOf(inst: ProfileInstance, idx: CatalogIndex, cat: Catalog, factionId?: string): number {
   const m = inst.mount;
   if (!m) return 0;
   let c = idx.mountCost.get(m.mountId) ?? 0;
-  for (const id of m.addedEquipmentIds ?? []) c += idx.equipmentCost.get(id) ?? 0;
+  for (const id of m.addedEquipmentIds ?? []) {
+    c += equipmentCostFor(cat, idx, id, factionId);
+    // Améliorations intrinsèques achetées sur cet objet (ex. Caparaçon → Pointes acérées).
+    const e = cat.equipment.find((x) => x.id === id);
+    for (const upId of m.equipmentUpgrades?.[id] ?? [])
+      c += e?.upgrades?.find((u) => u.id === upId)?.cost ?? 0;
+  }
+  c += mountOptionsCost(cat, inst, ["mount"]);
   return c;
 }
 
@@ -656,6 +698,7 @@ function validate(
   }
 
   validateMounts(cat, resolved, issues);
+  validateMountOptions(cat, resolved, issues);
   validateForbiddenEquipment(cat, resolved, idx, issues);
   validateReservedEquipment(cat, resolved, issues);
   validateRequiresPresent(cat, resolved, issues);
@@ -968,6 +1011,50 @@ function validateMounts(cat: Catalog, resolved: ResolvedInstance[], issues: Issu
         message: `« ${ri.profile.name} » ne peut pas prendre la monture « ${mountLabel(cat, mountId)} ».`,
         sourceText: "Monture non éligible (faction, exclusion, Berseker ou écart de niveau).",
       });
+    }
+  }
+}
+
+/** Réservations des options de monture (p.32) + équipement monté (Caparaçon sur la monture, faction). */
+function validateMountOptions(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
+  for (const ri of resolved) {
+    const mountId = ri.instance.mount?.mountId;
+    const kind = mountKindOf(cat, mountId);
+    const faction = ri.profile.factionId;
+    const err = (ruleId: string, message: string) =>
+      issues.push({
+        severity: "error",
+        ferDeLanceId: ri.ferDeLanceId,
+        instanceId: ri.instance.instanceId,
+        ruleId,
+        message,
+        sourceText: "Réservation d'option/équipement de monture (p.32).",
+      });
+    for (const [id, value] of Object.entries(ri.instance.mountOptionIds ?? {})) {
+      const opt = cat.mountOptions.find((o) => o.id === id);
+      if (!opt) continue;
+      let why = "";
+      if (!mountId) why = "nécessite une monture";
+      else if (opt.reservation?.factions && !(faction && opt.reservation.factions.includes(faction)))
+        why = "faction non autorisée";
+      else if (opt.reservation?.mountKinds && !(kind && opt.reservation.mountKinds.includes(kind)))
+        why = "nature de monture non autorisée";
+      else if (opt.maxValue != null && (value < 1 || value > opt.maxValue))
+        why = `valeur hors limite (1 à ${opt.maxValue})`;
+      if (why) err(`mount-option-${id}`, `Option « ${opt.name} » : ${why}.`);
+    }
+    // Équipement porté par la MONTURE (ex. Caparaçon) : réservation de faction (goûn/Mochère exclus).
+    for (const id of ri.instance.mount?.addedEquipmentIds ?? []) {
+      const e = cat.equipment.find((x) => x.id === id);
+      const fac = e?.reservedTo?.factionIds;
+      if (e?.mountEquipment === "mount" && fac && !(faction && fac.includes(faction)))
+        err(`mount-equip-${id}`, `« ${e.name} » n'est pas accessible à cette monture.`);
+    }
+    // Équipement porté par le CAVALIER mais réservé aux montés (ex. Lance de cavalerie) : nécessite une monture.
+    for (const id of ri.instance.addedEquipmentIds) {
+      const e = cat.equipment.find((x) => x.id === id);
+      if (e?.mountEquipment === "rider" && !mountId)
+        err(`mount-equip-${id}`, `« ${e.name} » nécessite une monture.`);
     }
   }
 }
@@ -1393,8 +1480,9 @@ function applyMountBonuses(
   statDeltas: Map<string, Map<string, number>>,
   skillValues: Map<string, Map<string, number>>,
   sources: Map<string, Map<string, EffectSourceRef[]>>,
-): { allonge: Map<string, number> } {
+): { allonge: Map<string, number>; optionGrants: Map<string, GrantedSkill[]> } {
   const allonge = new Map<string, number>();
+  const optionGrants = new Map<string, GrantedSkill[]>();
   // Seules les caractéristiques (V P A C … + PA) et l'allonge s'ajoutent au cavalier. PV et stature
   // restent PROPRES à la monture (non partagés) ; les compétences de la monture restent sur SA fiche.
   const SHARED_STATS = ["pa", "v", "a", "c", "p"] as const;
@@ -1439,8 +1527,33 @@ function applyMountBonuses(
         addSource(`skill:${ms.skillId}`);
       }
     }
+
+    // Options « cavalier » et « partagées » achetées (p.32) : conférées à la fiche du CAVALIER. Règle
+    // « meilleure valeur » face à une compétence native (numérique) : on remplace la native ; sinon octroi.
+    const optRef: EffectSourceRef = { label: "Option de monture", text: "Compétence achetée (p.32)." };
+    for (const gs of mountOptionSkills(cat, ri.instance, ["rider", "both"])) {
+      const rs = ri.profile.skills.find((s) => s.skillId === gs.skillId);
+      const gv = Number(gs.value);
+      if (rs) {
+        const rv = Number(rs.value);
+        if (Number.isFinite(rv) && Number.isFinite(gv) && gv > rv) {
+          const sv = skillValues.get(id) ?? new Map<string, number>();
+          sv.set(gs.skillId, gv);
+          skillValues.set(id, sv);
+        } else continue; // native déjà présente et pas améliorée → rien à afficher en plus
+      } else {
+        const arr = optionGrants.get(id) ?? [];
+        arr.push(gs);
+        optionGrants.set(id, arr);
+      }
+      const m = sources.get(id) ?? new Map<string, EffectSourceRef[]>();
+      const refs = m.get(`skill:${gs.skillId}`) ?? [];
+      if (!refs.some((r) => r.label === optRef.label)) refs.push(optRef);
+      m.set(`skill:${gs.skillId}`, refs);
+      sources.set(id, m);
+    }
   }
-  return { allonge };
+  return { allonge, optionGrants };
 }
 
 /** Compétence « Berseker » (transmises exclues) - voir `MOUNT_TRANSMITTED_SKILLS`. */
@@ -1451,7 +1564,12 @@ const MOUNT_TRANSMITTED_SKILLS = ["endurance", "harcelement", "instinct-de-survi
  * natives, plus les 3 seules compétences que le cavalier lui transmet (endurance, harcèlement, instinct
  * de survie) si le cavalier les possède. Règle « meilleure valeur » pour une compétence commune.
  */
-export function mountSheetSkills(mount: Mount, rider: Profile): GrantedSkill[] {
+export function mountSheetSkills(
+  mount: Mount,
+  rider: Profile,
+  /** Options achetées : celles de la MONTURE (+ partagées) et celles du CAVALIER (+ partagées, pour la transmission). */
+  extra?: { mountBought?: GrantedSkill[]; riderBought?: GrantedSkill[] },
+): GrantedSkill[] {
   const out = new Map<string, string | number | undefined>();
   const put = (skillId: string, value: string | number | undefined) => {
     if (!out.has(skillId)) out.set(skillId, value);
@@ -1462,8 +1580,26 @@ export function mountSheetSkills(mount: Mount, rider: Profile): GrantedSkill[] {
     }
   };
   for (const s of mount.grantedSkills ?? []) put(s.skillId, s.value);
-  for (const s of rider.skills) if (MOUNT_TRANSMITTED_SKILLS.includes(s.skillId)) put(s.skillId, s.value);
+  for (const s of extra?.mountBought ?? []) put(s.skillId, s.value); // options « monture » + partagées
+  // Transmission : les 3 compétences natives OU achetées (p.21-23) que le cavalier transmet à la monture.
+  const riderSkills = [...rider.skills, ...(extra?.riderBought ?? [])];
+  for (const s of riderSkills) if (MOUNT_TRANSMITTED_SKILLS.includes(s.skillId)) put(s.skillId, s.value);
   return [...out].map(([skillId, value]) => ({ skillId, value }));
+}
+
+/** Compétences conférées par les options achetées d'une figurine, filtrées par panier. */
+export function mountOptionSkills(
+  cat: Catalog,
+  inst: ProfileInstance,
+  buckets: MountOption["bucket"][],
+): GrantedSkill[] {
+  const out: GrantedSkill[] = [];
+  for (const [id, value] of Object.entries(inst.mountOptionIds ?? {})) {
+    const opt = cat.mountOptions.find((o) => o.id === id);
+    if (!opt?.grantsSkill || !buckets.includes(opt.bucket)) continue;
+    out.push({ skillId: opt.grantsSkill.skillId, value: opt.maxValue != null ? value : opt.grantsSkill.value });
+  }
+  return out;
 }
 
 // ── Point d'entrée ───────────────────────────────────────────────────────────
@@ -1523,7 +1659,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     const id = ri.instance.instanceId;
     const c = cost.get(id) ?? 0;
     costByInstance[id] = c;
-    const mc = mountCostOf(ri.instance, idx);
+    const mc = mountCostOf(ri.instance, idx, cat, ri.profile.factionId);
     if (mc > 0) mountCostByInstance[id] = mc;
     costByFerDeLance[ri.ferDeLanceId] = (costByFerDeLance[ri.ferDeLanceId] ?? 0) + c + mc;
     const gu = grantedUp.get(id);
@@ -1535,10 +1671,11 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
       const traits = [...dri.traits].filter((t) => !base.has(t));
       if (traits.length > 0) grantedTraits[id] = traits;
       const extraSkills = upgradeSkillsByInstance.get(id) ?? [];
-      if (dri.grantedSkills.size > 0 || extraSkills.length > 0) {
+      const optSkills = mount.optionGrants.get(id) ?? [];
+      if (dri.grantedSkills.size > 0 || extraSkills.length > 0 || optSkills.length > 0) {
         const merged: GrantedSkill[] = [...dri.grantedSkills].map(([skillId, value]) => ({ skillId, value }));
-        // Fusionne les compétences des améliorations d'équipement (Borax…), sans doublon skillId+valeur.
-        for (const gs of extraSkills) {
+        // Fusionne les compétences des améliorations d'équipement (Borax…) et des options de monture (p.32).
+        for (const gs of [...extraSkills, ...optSkills]) {
           if (!merged.some((s) => s.skillId === gs.skillId && s.value === gs.value)) merged.push(gs);
         }
         grantedSkills[id] = merged;

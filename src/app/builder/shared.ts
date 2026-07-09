@@ -5,6 +5,7 @@ import {
   castableSpells as coreCastableSpells,
 } from "@core";
 import type { Catalog, Profile, ProfileInstance, Selector, Spell } from "@core";
+import type { ArmorDisplay } from "./StatSheet";
 // Libellés de présentation partagés avec l'admin (source unique dans @ui) - alias pour garder les noms locaux.
 import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
 
@@ -14,6 +15,31 @@ import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
  */
 
 export { STATS, LEVEL };
+
+/**
+ * Armures portées, dérivées d'une liste d'équipements (catégorie « armure ») : Brigandine, Caparaçon…
+ * `upgradesByEquip` (optionnel) suffixe le libellé avec les améliorations actives (ex. « Pointes acérées »).
+ */
+export function wornArmorsFrom(
+  cat: Catalog,
+  equipmentIds: string[],
+  upgradesByEquip?: Record<string, string[]>,
+): ArmorDisplay[] {
+  return equipmentIds
+    .map((id) => cat.equipment.find((e) => e.id === id))
+    .filter((e): e is NonNullable<typeof e> => e?.category === "armure")
+    .map((e) => {
+      const upIds = upgradesByEquip?.[e.id] ?? [];
+      const upNames = (e.upgrades ?? []).filter((u) => upIds.includes(u.id)).map((u) => u.label);
+      return {
+        label: `🛡 ${e.name}${upNames.length ? ` (${upNames.join(", ")})` : ""}`,
+        protectionEchec: e.protectionEchec,
+        seuil: e.seuil,
+        protectionReussite: e.protectionReussite,
+        durability: e.durability,
+      };
+    });
+}
 
 // Groupes de stats comme sur les cartes officielles : combat (V P A C) puis (T I).
 export const STATS_COMBAT: [keyof Profile["stats"], string][] = STATS.slice(0, 4);

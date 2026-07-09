@@ -9,6 +9,7 @@ import { SpecialCardDetail } from "./admin/SpecialCardDetail";
 import { SpellDetail } from "./admin/SpellDetail";
 import { MagicWaysDetail } from "./admin/MagicWaysDetail";
 import { MountsDetail } from "./admin/MountsDetail";
+import { MountOptionDetail } from "./admin/MountOptionDetail";
 import { AdminDocs } from "./admin/AdminDocs";
 import "./admin/admin.css";
 
@@ -26,7 +27,7 @@ export function AdminCatalog() {
   const store = useCatalogStore();
   const { catalog } = store;
   const [view, setView] = useState<
-    "profiles" | "equipment" | "skills" | "special-cards" | "spells" | "magic-ways" | "mounts"
+    "profiles" | "equipment" | "skills" | "special-cards" | "spells" | "magic-ways" | "mounts" | "mount-options"
   >("profiles");
   const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
   const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
@@ -34,6 +35,7 @@ export function AdminCatalog() {
   const [selectedCardId, setSelectedCardId] = useState(catalog.specialCards[0]?.id ?? "");
   const [selectedSpellId, setSelectedSpellId] = useState(catalog.spells[0]?.id ?? "");
   const [selectedMountId, setSelectedMountId] = useState(catalog.mounts[0]?.id ?? "");
+  const [selectedMountOptionId, setSelectedMountOptionId] = useState(catalog.mountOptions[0]?.id ?? "");
   const [query, setQuery] = useState("");
   // Suppression d'entité en attente de confirmation (modale au skin de l'app, action irréversible).
   const [pendingDelete, setPendingDelete] = useState<{ what: string; run: () => void } | null>(null);
@@ -100,6 +102,7 @@ export function AdminCatalog() {
   const selectedSkill = catalog.skills.find((s) => s.id === selectedSkillId);
   const selectedCard = catalog.specialCards.find((s) => s.id === selectedCardId);
   const selectedSpell = catalog.spells.find((s) => s.id === selectedSpellId);
+  const selectedMountOption = catalog.mountOptions.find((o) => o.id === selectedMountOptionId);
   const selectedMount = catalog.mounts.find((m) => m.id === selectedMountId);
   const selectedMountType = selectedMount
     ? catalog.mountTypes.find((t) => t.id === selectedMount.typeId)
@@ -152,6 +155,9 @@ export function AdminCatalog() {
             </button>
             <button onClick={() => setView("mounts")} className={tabClass(view === "mounts")}>
               Montures
+            </button>
+            <button onClick={() => setView("mount-options")} className={tabClass(view === "mount-options")}>
+              Options de monture
             </button>
           </div>
           <div className="relative">
@@ -213,6 +219,7 @@ export function AdminCatalog() {
             {view === "spells" && `${filteredSpells.length} sort(s)`}
             {view === "magic-ways" && `${catalog.magicWays.length} voie(s) de magie`}
             {view === "mounts" && `${catalog.mountTypes.length} type(s) · ${catalog.mounts.length} niveau(x)`}
+            {view === "mount-options" && `${catalog.mountOptions.length} option(s)`}
             {store.dirty && <span className="adm-accent"> · modifié</span>}
           </p>
         </div>
@@ -364,6 +371,26 @@ export function AdminCatalog() {
               </li>
             </>
           )}
+          {view === "mount-options" && (
+            <>
+              {catalog.mountOptions.map((o) => (
+                <li key={o.id}>
+                  <button
+                    onClick={() => setSelectedMountOptionId(o.id)}
+                    className={itemClass(o.id === selectedMountOptionId)}
+                  >
+                    <span>{o.name}</span>
+                    <span className="text-xs adm-faint">{o.bucket}</span>
+                  </button>
+                </li>
+              ))}
+              <li className="mt-2">
+                <button onClick={() => setSelectedMountOptionId(store.addMountOption())} className="adm-add w-full py-1.5">
+                  + option de monture
+                </button>
+              </li>
+            </>
+          )}
         </ul>
       </aside>
 
@@ -501,6 +528,21 @@ export function AdminCatalog() {
               setIcon={store.setIcon}
             />
           )}
+          {view === "mount-options" &&
+            (selectedMountOption ? (
+              <MountOptionDetail
+                option={selectedMountOption}
+                cat={catalog}
+                onChange={(patch) => store.updateMountOption(selectedMountOption.id, patch)}
+                onRemove={() => {
+                  const id = selectedMountOption.id;
+                  store.removeMountOption(id);
+                  setSelectedMountOptionId(catalog.mountOptions.find((o) => o.id !== id)?.id ?? "");
+                }}
+              />
+            ) : (
+              <p className="adm-faint">Sélectionnez une option de monture.</p>
+            ))}
         </div>
 
         {import.meta.env.DEV && previewImage && (

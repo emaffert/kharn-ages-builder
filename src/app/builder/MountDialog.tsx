@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { SegmentedControl } from "@ui";
-import { eligibleMountsFor, mountSheetSkills, type Catalog, type GrantedSkill, type Mount, type MountType, type Profile } from "@core";
-import { type ItemInfo } from "./shared";
+import { eligibleMountsFor, mountOptionSkills, mountSheetSkills, type Catalog, type GrantedSkill, type Mount, type MountType, type Profile, type ProfileInstance } from "@core";
+import { wornArmorsFrom, type ItemInfo } from "./shared";
+import { MountEquipEditor, MountOptionsEditor } from "./MountOptions";
+import { ArmorBlock, RulesBlock, SheetHeader, SkillChips, StatCell } from "./StatSheet";
 
 /**
  * Deux surfaces distinctes pour les montures :
@@ -111,12 +113,85 @@ export function MountPreview({
   );
 }
 
+/**
+ * Fiche éditable de la monture d'une figurine : onglets « Carte » (stats + compétences, achats compris),
+ * « Équipement » (Caparaçon + ses améliorations) et « Options » (options de monture + partagées), comme un profil.
+ */
+export function MountSheet({
+  cat,
+  mount,
+  type,
+  rider,
+  instance,
+  onInfo,
+  onSetOption,
+  onToggleEquip,
+  onToggleEquipUpgrade,
+}: {
+  cat: Catalog;
+  mount: Mount;
+  type?: MountType;
+  rider: Profile;
+  instance: ProfileInstance;
+  onInfo: (info: ItemInfo) => void;
+  onSetOption: (optionId: string, value: number | null) => void;
+  onToggleEquip: (equipId: string) => void;
+  onToggleEquipUpgrade: (equipId: string, upgradeId: string) => void;
+}) {
+  const [tab, setTab] = useState<"carte" | "equip" | "options">("carte");
+  const TABS: [typeof tab, string][] = [
+    ["carte", "Carte"],
+    ["equip", "Équipement"],
+    ["options", "Options"],
+  ];
+  return (
+    <div className="fe-root">
+      <div className="fe-tabs">
+        {TABS.map(([id, label]) => (
+          <button
+            key={id}
+            className="ui-tab"
+            data-state={tab === id ? "active" : "inactive"}
+            onClick={() => setTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === "carte" && (
+        <MountStatCard cat={cat} mount={mount} type={type} rider={rider} instance={instance} onInfo={onInfo} />
+      )}
+      {tab === "equip" && (
+        <MountEquipEditor
+          cat={cat}
+          factionId={rider.factionId}
+          equipped={instance.mount?.addedEquipmentIds ?? []}
+          upgrades={instance.mount?.equipmentUpgrades ?? {}}
+          onToggleEquip={onToggleEquip}
+          onToggleUpgrade={onToggleEquipUpgrade}
+        />
+      )}
+      {tab === "options" && (
+        <MountOptionsEditor
+          cat={cat}
+          mountId={mount.id}
+          factionId={rider.factionId}
+          selected={instance.mountOptionIds ?? {}}
+          buckets={["mount", "both"]}
+          onSetOption={onSetOption}
+        />
+      )}
+    </div>
+  );
+}
+
 /** Fiche de la monture (façon fiche de profil) : stats apportées / propres, compétences cliquables, règles. */
 export function MountStatCard({
   cat,
   mount,
   type,
   rider,
+  instance,
   onInfo,
 }: {
   cat: Catalog;
@@ -124,30 +199,39 @@ export function MountStatCard({
   type?: MountType;
   /** Cavalier (si connu) : applique la transmission des 3 compétences + règle « meilleure valeur ». */
   rider?: Profile;
+  /** Instance du cavalier (si connue) : intègre les options achetées (monture + partagées + transmises). */
+  instance?: ProfileInstance;
   onInfo: (info: ItemInfo) => void;
 }) {
   const b = mount.bonuses ?? {};
   const shared = SHARED_STATS.filter(([k]) => b[k] != null && b[k] !== 0);
-  const skills: GrantedSkill[] = rider ? mountSheetSkills(mount, rider) : (mount.grantedSkills ?? []);
+  const skills: GrantedSkill[] = rider
+    ? mountSheetSkills(mount, rider, {
+        mountBought: instance ? mountOptionSkills(cat, instance, ["mount", "both"]) : [],
+        riderBought: instance ? mountOptionSkills(cat, instance, ["rider", "both"]) : [],
+      })
+    : (mount.grantedSkills ?? []);
+  // Compétences issues d'une option achetée (tous paniers) → affichées en braise (fx) sur la fiche.
+  // Une compétence de panier « cavalier » non transmise n'est pas affichée ici : la marquer est sans effet.
+  const boughtSkillIds = new Set(
+    instance ? mountOptionSkills(cat, instance, ["mount", "both", "rider"]).map((s) => s.skillId) : [],
+  );
   const icon = mountIcon(cat, mount, type);
   const skillName = (id: string) => cat.skills.find((s) => s.id === id)?.keyword ?? id;
   const showSkill = (skillId: string, label: string) => {
     const sk = cat.skills.find((x) => x.id === skillId);
     onInfo({ title: label, price: "compétence", lines: [sk?.sourceText ?? "Description indisponible."] });
   };
+  const fmtDelta = (n: number) => `${n > 0 ? "+" : ""}${n}`;
   return (
     <div className="fe-statcard fe-statcard--mount">
       <div className="fe-card">
-        <div className="fe-card-head">
-          <div className="fe-headmain">
-            {icon && <img className="fe-portrait" src={icon} alt="" />}
-            <h3 className="fe-card-name">
-              {type?.name ?? mount.typeId}
-              <span className="lvl">{ROMAN[mount.level] ?? mount.level}</span>
-            </h3>
-          </div>
-          <span className="fe-cost-chip">{mount.cost} Ko</span>
-        </div>
+        <SheetHeader
+          icon={icon}
+          name={type?.name ?? mount.typeId}
+          level={ROMAN[mount.level] ?? mount.level}
+          cost={`${mount.cost} Ko`}
+        />
 
         <div className="fe-mstats">
           {shared.length > 0 && (
@@ -155,22 +239,10 @@ export function MountStatCard({
               <div className="fe-substat-cap">Apporte au cavalier</div>
               <div className="fe-statrow">
                 {shared.map(([k, lab]) => (
-                  <span key={k} className="fe-stat">
-                    <span className="k">{lab}</span>
-                    <span className="v is-fx">
-                      {b[k]! > 0 ? "+" : ""}
-                      {b[k]}
-                    </span>
-                  </span>
+                  <StatCell key={k} label={lab} value={fmtDelta(b[k]!)} fx />
                 ))}
                 {b.allonge != null && b.allonge !== 0 && (
-                  <span className="fe-stat">
-                    <span className="k">Allonge</span>
-                    <span className="v is-fx">
-                      {b.allonge > 0 ? "+" : ""}
-                      {b.allonge}
-                    </span>
-                  </span>
+                  <StatCell label="Allonge" value={fmtDelta(b.allonge)} fx />
                 )}
               </div>
             </div>
@@ -179,51 +251,29 @@ export function MountStatCard({
             <div className="fe-mstat-grp">
               <div className="fe-substat-cap">Propre à la monture</div>
               <div className="fe-statrow">
-                {b.pv != null && (
-                  <span className="fe-stat">
-                    <span className="k">PV</span>
-                    <span className="v">{b.pv}</span>
-                  </span>
-                )}
-                {b.stature != null && (
-                  <span className="fe-stat">
-                    <span className="k">Stature</span>
-                    <span className="v">{b.stature}</span>
-                  </span>
-                )}
+                {b.pv != null && <StatCell label="PV" value={b.pv} />}
+                {b.stature != null && <StatCell label="Stature" value={b.stature} />}
               </div>
             </div>
           )}
         </div>
 
-        {skills.length > 0 && (
-          <div className="fe-skills">
-            {skills.map((s, i) => {
-              const label = `${skillName(s.skillId)}${s.value != null ? ` ${s.value}` : ""}`;
-              return (
-                <button key={i} className="fe-skill" onClick={() => showSkill(s.skillId, label)}>
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <ArmorBlock
+          armors={wornArmorsFrom(
+            cat,
+            instance?.mount?.addedEquipmentIds ?? [],
+            instance?.mount?.equipmentUpgrades ?? {},
+          )}
+        />
 
-        {(mount.rules ?? []).length > 0 && (
-          <div className="fe-rules">
-            {(mount.rules ?? []).map((r, i) => (
-              <div key={i}>
-                {r.label && (
-                  <b>
-                    {r.label}
-                    {r.text ? " : " : ""}
-                  </b>
-                )}
-                {r.text}
-              </div>
-            ))}
-          </div>
-        )}
+        <SkillChips
+          skills={skills.map((s, i) => {
+            const label = `${skillName(s.skillId)}${s.value != null ? ` ${s.value}` : ""}`;
+            return { key: String(i), label, fx: boughtSkillIds.has(s.skillId), onClick: () => showSkill(s.skillId, label) };
+          })}
+        />
+
+        <RulesBlock rules={mount.rules ?? []} />
       </div>
     </div>
   );

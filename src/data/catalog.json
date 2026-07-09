@@ -7965,6 +7965,20 @@
         ]
       },
       "cardImage": "cards/Kharns/kharns-prince-fr.jpg"
+    },
+    {
+      "id": "equite",
+      "name": "Équité",
+      "category": "arme-cac",
+      "cost": 30,
+      "hands": "1-2",
+      "reservedTo": {
+        "profileIds": [
+          "kharns-engueran"
+        ]
+      },
+      "effectsText": "Épée bâtarde. +3 ATT, +3 DEF. Le nombre de PA en défense est annoncé avant qu'Engueran décide de sa façon d'attaquer (le choix des caractéristiques se fait normalement).",
+      "cardImage": "cards/Kharns/kharns-enguerran.jpg"
     }
   ],
   "grimoires": [
@@ -9025,34 +9039,6 @@
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Kharns/kharn-guerrier-1-fr.jpg"
-    },
-    {
-      "id": "equite",
-      "name": "Équité",
-      "cost": 30,
-      "scope": {
-        "profileIds": [
-          "kharns-engueran"
-        ]
-      },
-      "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Épée bâtarde (1/2 main)."
-        },
-        {
-          "text": "+3 ATT."
-        },
-        {
-          "text": "+3 DEF."
-        },
-        {
-          "text": "Le nombre de PA en défense est annoncé avant qu'Engueran décide de sa façon d'attaquer (le choix des caractéristiques se fait normalement)."
-        }
-      ],
-      "constraints": [],
-      "effects": [],
-      "cardImage": "cards/Kharns/kharns-enguerran.jpg"
     },
     {
       "id": "devotion-intrepide",

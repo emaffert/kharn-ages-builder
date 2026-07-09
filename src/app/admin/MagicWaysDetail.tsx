@@ -30,6 +30,13 @@ export function MagicWaysDetail({
       </header>
       <Section title="Voies">
         <div className="flex flex-col gap-2">
+          {cat.magicWays.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="adm-field-label w-44">Nom</span>
+              <span className="adm-field-label w-40">Faction</span>
+              <span className="adm-field-label w-56">Compétence de maîtrise</span>
+            </div>
+          )}
           {cat.magicWays.map((w) => (
             <div key={w.id} className="flex flex-wrap items-center gap-2">
               <input
@@ -41,8 +48,7 @@ export function MagicWaysDetail({
               <select
                 value={w.factionId}
                 onChange={(e) => onChange(w.id, { factionId: e.target.value })}
-                className={INPUT}
-                title="Faction"
+                className={`${INPUT} w-40`}
               >
                 <option value="">(faction ?)</option>
                 {cat.factions.map((f) => (

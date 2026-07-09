@@ -1,7 +1,7 @@
 import type { Catalog, SpecialCard } from "@core";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
-import { Section } from "./primitives";
-import { INPUT } from "./shared";
+import { CheckField, ChipMultiSelect, DetailPage, Field, Section } from "./primitives";
+import { INPUT, SECTION } from "./shared";
 import { GrantsCastingEditor, ProfileMultiSelect, TextLinesEditor } from "./editors";
 
 export function SpecialCardDetail({
@@ -24,7 +24,8 @@ export function SpecialCardDetail({
     onChange({ activationCondition: Object.keys(clean).length ? clean : undefined });
   };
   return (
-    <div className="space-y-5">
+    <DetailPage
+      header={
       <header className="flex items-center gap-3">
         <input
           value={card.name}
@@ -44,146 +45,144 @@ export function SpecialCardDetail({
           ✕
         </button>
       </header>
-      <label className="flex items-center gap-2 text-sm adm-muted">
-        <input
-          type="checkbox"
+      }
+      body={
+      <>
+        <CheckField
+          label={
+            <>
+              Amélioration choisie par le joueur
+              <span className="adm-field-hint">(sinon carte automatique appliquée d'office, ex. Fille de Nyx)</span>
+            </>
+          }
           checked={card.amelioration ?? false}
-          onChange={(e) => onChange({ amelioration: e.target.checked || undefined })}
+          onChange={(v) => onChange({ amelioration: v || undefined })}
         />
-        Amélioration choisie par le joueur
-        <span className="text-xs adm-faint">
-          (sinon carte automatique appliquée d'office, ex. Fille de Nyx)
-        </span>
-      </label>
-      {card.amelioration && (
-        <>
-          <label className="flex items-center gap-2 text-xs adm-faint">
-            groupe de choix exclusif
-            <input
-              value={card.choiceGroup ?? ""}
-              onChange={(e) => onChange({ choiceGroup: e.target.value || undefined })}
-              className={`${INPUT} w-48`}
-              placeholder="ex. artisane-racines"
-            />
-            <span>une seule amélioration du même groupe sélectionnable</span>
-          </label>
-          <label className="flex items-center gap-2 text-sm adm-muted">
-            <input
-              type="checkbox"
-              checked={card.shared ?? false}
-              onChange={(e) => onChange({ shared: e.target.checked || undefined })}
-            />
-            Partagée (payée une fois par Fer de Lance)
-            <span className="text-xs adm-faint">
-              (activée depuis n'importe quel modèle éligible, ex. Lien de la Terre)
-            </span>
-          </label>
-        </>
-      )}
-      <GrantsCastingEditor value={card.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
-
-      <label className="flex items-center gap-2 text-sm adm-muted">
-        <input
-          type="checkbox"
-          checked={card.ostScope ?? false}
-          onChange={(e) => onChange({ ostScope: e.target.checked || undefined })}
-        />
-        Carte à portée Ost (sélectionnée au niveau de la liste)
-        <span className="text-xs adm-faint">
-          (la « Portée » ci-dessous sert alors de disponibilité - ex. Myriam présente)
-        </span>
-      </label>
-
-      {card.ostScope && (
-        <Section title="Condition d'activation (composition de l'Ost) - erreur si non remplie">
-          <div className="space-y-2">
-            <ProfileMultiSelect
-              label="parmi les profils"
-              ids={cond?.profileIds ?? []}
-              cat={cat}
-              onChange={(v) => setCond({ ...cond, profileIds: v.length ? v : undefined })}
-            />
-            <label className="flex items-center gap-2 text-xs adm-faint">
-              au moins
+        {card.amelioration && (
+          <>
+            <Field
+              label="Groupe de choix exclusif"
+              hint="une seule amélioration du même groupe sélectionnable"
+              className="w-64"
+            >
               <input
-                type="number"
-                value={cond?.countAtLeast ?? ""}
-                onChange={(e) =>
-                  setCond({ ...cond, countAtLeast: e.target.value === "" ? undefined : Number(e.target.value) })
-                }
-                className={`${INPUT} w-16`}
+                value={card.choiceGroup ?? ""}
+                onChange={(e) => onChange({ choiceGroup: e.target.value || undefined })}
+                className={INPUT}
+                placeholder="ex. artisane-racines"
               />
-              figurine(s) présente(s)
-            </label>
+            </Field>
+            <CheckField
+              label={
+                <>
+                  Partagée (payée une fois par Fer de Lance)
+                  <span className="adm-field-hint">(activée depuis n'importe quel modèle éligible, ex. Lien de la Terre)</span>
+                </>
+              }
+              checked={card.shared ?? false}
+              onChange={(v) => onChange({ shared: v || undefined })}
+            />
+          </>
+        )}
+        <GrantsCastingEditor value={card.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
+        <CheckField
+          label={
+            <>
+              Carte à portée Ost (sélectionnée au niveau de la liste)
+              <span className="adm-field-hint">(la « Portée » ci-dessous sert alors de disponibilité - ex. Myriam présente)</span>
+            </>
+          }
+          checked={card.ostScope ?? false}
+          onChange={(v) => onChange({ ostScope: v || undefined })}
+        />
+      </>
+      }
+      verbatim={
+        <Section title={SECTION.verbatim}>
+          <TextLinesEditor items={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
+        </Section>
+      }
+      applicability={
+      <>
+        {card.ostScope && (
+          <Section title="Condition d'activation (composition de l'Ost)">
+            <div className="space-y-2">
+              <ProfileMultiSelect
+                label="Parmi les profils"
+                ids={cond?.profileIds ?? []}
+                cat={cat}
+                onChange={(v) => setCond({ ...cond, profileIds: v.length ? v : undefined })}
+              />
+              <Field label="Figurines présentes (au moins)" className="w-32">
+                <input
+                  type="number"
+                  value={cond?.countAtLeast ?? ""}
+                  onChange={(e) =>
+                    setCond({ ...cond, countAtLeast: e.target.value === "" ? undefined : Number(e.target.value) })
+                  }
+                  className={INPUT}
+                />
+              </Field>
+            </div>
+          </Section>
+        )}
+        <Section title="Portée (à qui s'applique la carte)">
+          <div className="space-y-3">
+            <Field label="Trait" className="w-56">
+              <input
+                value={scope.trait ?? ""}
+                onChange={(e) => onChange({ scope: { ...scope, trait: e.target.value || undefined } })}
+                className={INPUT}
+                placeholder="ex. fille-de-nyx"
+              />
+            </Field>
+            <ProfileMultiSelect
+              label="Profils"
+              ids={scope.profileIds ?? []}
+              cat={cat}
+              onChange={(v) => onChange({ scope: { ...scope, profileIds: v.length ? v : undefined } })}
+            />
+            <div className="space-y-1">
+              <span className="adm-field-label">Factions</span>
+              <ChipMultiSelect
+                options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+                selected={scope.factionIds ?? []}
+                onToggle={(id) => {
+                  const cur = scope.factionIds ?? [];
+                  const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+                  onChange({ scope: { ...scope, factionIds: next.length ? next : undefined } });
+                }}
+              />
+            </div>
           </div>
         </Section>
-      )}
-
-      <Section title="Portée (à qui s'applique la carte)">
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-xs adm-faint">
-            trait
-            <input
-              value={scope.trait ?? ""}
-              onChange={(e) => onChange({ scope: { ...scope, trait: e.target.value || undefined } })}
-              className={`${INPUT} w-40`}
-              placeholder="ex. fille-de-nyx"
-            />
-          </label>
-          <ProfileMultiSelect
-            label="profils"
-            ids={scope.profileIds ?? []}
+      </>
+      }
+      constraints={
+        <Section title={SECTION.constraints}>
+          <ConstraintListEditor constraints={card.constraints} cat={cat} onChange={(c) => onChange({ constraints: c })} />
+        </Section>
+      }
+      effects={
+        <Section title={SECTION.effects}>
+          <EffectListEditor
+            effects={card.effects}
+            newSource={{ kind: "special-card", id: card.id }}
             cat={cat}
-            onChange={(v) => onChange({ scope: { ...scope, profileIds: v.length ? v : undefined } })}
+            onChange={(e) => onChange({ effects: e })}
           />
-          <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
-            factions
-            {cat.factions.map((f) => {
-              const on = scope.factionIds?.includes(f.id) ?? false;
-              return (
-                <label key={f.id} className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={on}
-                    onChange={() => {
-                      const cur = scope.factionIds ?? [];
-                      const next = on ? cur.filter((x) => x !== f.id) : [...cur, f.id];
-                      onChange({ scope: { ...scope, factionIds: next.length ? next : undefined } });
-                    }}
-                  />
-                  {f.name}
-                </label>
-              );
-            })}
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Texte de la carte (verbatim - fait foi)">
-        <TextLinesEditor items={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
-      </Section>
-
-      <Section title="Contraintes">
-        <ConstraintListEditor constraints={card.constraints} cat={cat} onChange={(c) => onChange({ constraints: c })} />
-      </Section>
-
-      <Section title="Effets / octrois">
-        <EffectListEditor
-          effects={card.effects}
-          newSource={{ kind: "special-card", id: card.id }}
-          cat={cat}
-          onChange={(e) => onChange({ effects: e })}
-        />
-      </Section>
-
-      <Section title="Image (optionnel)">
-        <input
-          value={card.cardImage}
-          placeholder="cards/..."
-          onChange={(e) => onChange({ cardImage: e.target.value })}
-          className={`${INPUT} w-full max-w-md`}
-        />
-      </Section>
-    </div>
+        </Section>
+      }
+      media={
+        <Field label="Image (optionnel)">
+          <input
+            value={card.cardImage}
+            placeholder="cards/..."
+            onChange={(e) => onChange({ cardImage: e.target.value })}
+            className={`${INPUT} max-w-md`}
+          />
+        </Field>
+      }
+    />
   );
 }

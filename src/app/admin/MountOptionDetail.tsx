@@ -1,6 +1,6 @@
 import type { Catalog, MountOption } from "@core";
-import { INPUT } from "./shared";
-import { Combobox, EditableNumber, RemoveButton, Section } from "./primitives";
+import { INPUT, SECTION } from "./shared";
+import { ChipMultiSelect, Combobox, DetailPage, EditableNumber, Field, RemoveButton, Section } from "./primitives";
 
 /** Éditeur d'une option de monture (règles de bataille p.32) : panier, compétence, réservations, coûts. */
 const BUCKETS: [MountOption["bucket"], string][] = [
@@ -32,85 +32,48 @@ export function MountOptionDetail({
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header className="flex flex-wrap items-center gap-2">
+    <div className="mx-auto max-w-3xl">
+    <DetailPage
+      header={
+      <header className="flex items-center gap-3">
         <input
           value={o.name}
           onChange={(e) => onChange({ name: e.target.value })}
-          className={`${INPUT} w-64`}
+          className="adm-title flex-1"
           placeholder="Nom de l'option"
         />
-        <select
-          value={o.bucket}
-          onChange={(e) => onChange({ bucket: e.target.value as MountOption["bucket"] })}
-          className={INPUT}
-          title="Panier : où l'option s'achète et sur quelle fiche elle agit"
-        >
-          {BUCKETS.map(([v, lab]) => (
-            <option key={v} value={v}>
-              {lab}
-            </option>
-          ))}
-        </select>
         <RemoveButton onClick={onRemove} />
       </header>
-
-      <Section title="Compétence conférée">
-        <Combobox
-          value={o.grantsSkill?.skillId ?? ""}
-          className="w-72"
-          placeholder="Choisir une compétence…"
-          options={[...cat.skills]
-            .sort((a, b) => a.keyword.localeCompare(b.keyword, "fr"))
-            .map((s) => ({ value: s.id, label: s.keyword }))}
-          onChange={(v) => onChange({ grantsSkill: v ? { skillId: v } : undefined })}
-        />
-      </Section>
-
-      <Section title="Réservations (au sein d'une dimension, l'appartenance suffit)">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
-            Factions du cavalier
-            {cat.factions.map((f) => (
-              <label key={f.id} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={res.factions?.includes(f.id) ?? false}
-                  onChange={(e) =>
-                    patchRes({
-                      factions: e.target.checked
-                        ? [...(res.factions ?? []), f.id]
-                        : (res.factions ?? []).filter((x) => x !== f.id),
-                    })
-                  }
-                />
-                {f.name}
-              </label>
+      }
+      body={
+      <>
+        <Field label="Panier" hint="où l'option s'achète et sur quelle fiche elle agit" className="w-64">
+          <select
+            value={o.bucket}
+            onChange={(e) => onChange({ bucket: e.target.value as MountOption["bucket"] })}
+            className={INPUT}
+          >
+            {BUCKETS.map(([v, lab]) => (
+              <option key={v} value={v}>
+                {lab}
+              </option>
             ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
-            Natures de monture
-            {KINDS.map((k) => (
-              <label key={k} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={res.mountKinds?.includes(k) ?? false}
-                  onChange={(e) =>
-                    patchRes({
-                      mountKinds: e.target.checked
-                        ? [...(res.mountKinds ?? []), k]
-                        : (res.mountKinds ?? []).filter((x) => x !== k),
-                    })
-                  }
-                />
-                {k}
-              </label>
-            ))}
-          </div>
-        </div>
-      </Section>
+          </select>
+        </Field>
 
-      <Section title="Coût">
+        <Section title="Compétence conférée">
+          <Combobox
+            value={o.grantsSkill?.skillId ?? ""}
+            className="w-72"
+            placeholder="Choisir une compétence…"
+            options={[...cat.skills]
+              .sort((a, b) => a.keyword.localeCompare(b.keyword, "fr"))
+              .map((s) => ({ value: s.id, label: s.keyword }))}
+            onChange={(v) => onChange({ grantsSkill: v ? { skillId: v } : undefined })}
+          />
+        </Section>
+
+        <Section title="Coût">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-end gap-3">
             <EditableNumber
@@ -128,12 +91,11 @@ export function MountOptionDetail({
           </div>
 
           {o.maxValue != null && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs adm-faint">Coût par palier X (X1, X2, …) - déroge au coût de base</span>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-1">
+              <span className="adm-field-label">Coût par palier X <span className="adm-field-hint">(X1, X2, … - déroge au coût de base)</span></span>
+              <div className="flex flex-wrap gap-3">
                 {Array.from({ length: o.maxValue }, (_, i) => (
-                  <label key={i} className="flex items-center gap-1 text-xs adm-muted">
-                    X{i + 1}
+                  <Field key={i} label={`X${i + 1}`} className="w-20">
                     <input
                       type="number"
                       value={o.costByValue?.[i] ?? ""}
@@ -143,20 +105,19 @@ export function MountOptionDetail({
                         arr[i] = Number(e.target.value) || 0;
                         onChange({ costByValue: arr.some((x) => x) ? arr : undefined });
                       }}
-                      className={`${INPUT} w-16`}
+                      className={INPUT}
                     />
-                  </label>
+                  </Field>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="flex flex-col gap-1">
-            <span className="text-xs adm-faint">Coût par nature de monture (déroge au coût de base, ex. Repoussement)</span>
-            <div className="flex flex-wrap gap-2">
+          <div className="space-y-1">
+            <span className="adm-field-label">Coût par nature de monture <span className="adm-field-hint">(déroge au coût de base, ex. Repoussement)</span></span>
+            <div className="flex flex-wrap gap-3">
               {KINDS.map((k) => (
-                <label key={k} className="flex items-center gap-1 text-xs adm-muted">
-                  {k}
+                <Field key={k} label={k} className="w-24">
                   <input
                     type="number"
                     value={o.costByMountKind?.[k] ?? ""}
@@ -167,23 +128,61 @@ export function MountOptionDetail({
                       else cur[k] = Number(e.target.value);
                       onChange({ costByMountKind: Object.keys(cur).length ? cur : undefined });
                     }}
-                    className={`${INPUT} w-16`}
+                    className={INPUT}
                   />
-                </label>
+                </Field>
               ))}
             </div>
           </div>
         </div>
       </Section>
-
-      <Section title="Effets (verbatim)">
-        <textarea
-          value={o.effectsText ?? ""}
-          rows={2}
-          onChange={(e) => onChange({ effectsText: e.target.value || undefined })}
-          className={`${INPUT} w-full`}
-        />
-      </Section>
+      </>
+      }
+      verbatim={
+        <Section title={SECTION.verbatim}>
+          <textarea
+            value={o.effectsText ?? ""}
+            rows={2}
+            onChange={(e) => onChange({ effectsText: e.target.value || undefined })}
+            className={`${INPUT} w-full`}
+          />
+        </Section>
+      }
+      applicability={
+        <Section title="Réservations (au sein d'une dimension, l'appartenance suffit)">
+          <div className="flex flex-col gap-3">
+            <div className="space-y-1">
+              <span className="adm-field-label">Factions du cavalier</span>
+              <ChipMultiSelect
+                options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+                selected={res.factions ?? []}
+                onToggle={(id) =>
+                  patchRes({
+                    factions: (res.factions ?? []).includes(id)
+                      ? (res.factions ?? []).filter((x) => x !== id)
+                      : [...(res.factions ?? []), id],
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <span className="adm-field-label">Natures de monture</span>
+              <ChipMultiSelect
+                options={KINDS.map((k) => ({ value: k, label: k }))}
+                selected={res.mountKinds ?? []}
+                onToggle={(k) =>
+                  patchRes({
+                    mountKinds: (res.mountKinds ?? []).includes(k)
+                      ? (res.mountKinds ?? []).filter((x) => x !== k)
+                      : [...(res.mountKinds ?? []), k],
+                  })
+                }
+              />
+            </div>
+          </div>
+        </Section>
+      }
+    />
     </div>
   );
 }

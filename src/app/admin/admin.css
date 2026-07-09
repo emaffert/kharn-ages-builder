@@ -66,6 +66,29 @@
 .adm-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
   color: color-mix(in srgb, var(--ember-bright) 72%, var(--bone-faint)); }
 
+/* Champ étiqueté générique (label lisible au-dessus du contrôle) - remplace les « text-xs adm-faint » minuscules. */
+.adm-field { display: flex; flex-direction: column; gap: 4px; }
+.adm-field-label { font-size: 12.5px; font-weight: 600; color: var(--bone-dim); line-height: 1.3; }
+.adm-field-hint { margin-left: 6px; font-weight: 400; color: var(--bone-faint); }
+.adm-field > .adm-input, .adm-field > textarea.adm-input { width: 100%; }
+/* Case à cocher étiquetée (interrupteur inline lisible). */
+.adm-checkfield { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--bone-dim); cursor: pointer; }
+.adm-checkfield input { accent-color: var(--ember); }
+
+/* Multi-sélection en puces (remplace les longues listes de checkbox : traits, domaines, catégories…). */
+.adm-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.adm-mchip { display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--bone-dim); cursor: pointer; padding: 4px 10px; border-radius: 999px; background: var(--tint-2);
+  border: 1px solid var(--hair-strong); transition: color .14s var(--ease), border-color .14s var(--ease), background .14s var(--ease); }
+.adm-mchip:hover { color: var(--bone); border-color: var(--bone-faint); }
+.adm-mchip[aria-pressed="true"] { color: var(--ember-bright); border-color: var(--ember);
+  background: color-mix(in srgb, var(--ember) 14%, transparent); }
+
+/* Squelette d'une page de détail : en-tête + sections à ordre imposé, espacement homogène. */
+.adm-detail { display: flex; flex-direction: column; gap: 22px; }
+.adm-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.adm-detail-id { font-size: 11px; color: var(--bone-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
 /* Cartes / boîtes d'édition (RuleCard, EditorCard, SelectorEditor) */
 .adm-card { border-radius: var(--radius-sm); border: 1px solid var(--hair-strong); background: var(--tint-1); }
 .adm-summary:hover { background: var(--tint-2); }

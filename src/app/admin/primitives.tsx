@@ -45,6 +45,117 @@ export function Section({ title, children }: { title: string; children: ReactNod
   );
 }
 
+/**
+ * Squelette d'une page de détail : rend les sections dans un **ordre imposé** (identité → corps
+ * spécifique → verbatim → notes → applicabilité → contraintes → effets → média). Chaque page ne
+ * fournit que les emplacements pertinents ; l'ordre, lui, ne peut plus diverger d'une page à l'autre.
+ */
+export function DetailPage({
+  header,
+  body,
+  verbatim,
+  notes,
+  applicability,
+  constraints,
+  effects,
+  media,
+}: {
+  header: ReactNode;
+  /** Corps spécifique à l'entité (caractéristiques, mécaniques propres). */
+  body?: ReactNode;
+  verbatim?: ReactNode;
+  notes?: ReactNode;
+  /** À qui / quand ça s'applique : réservations, portée, condition d'activation. */
+  applicability?: ReactNode;
+  constraints?: ReactNode;
+  effects?: ReactNode;
+  media?: ReactNode;
+}) {
+  return (
+    <div className="adm-detail">
+      {header}
+      {body}
+      {verbatim}
+      {notes}
+      {applicability}
+      {constraints}
+      {effects}
+      {media}
+    </div>
+  );
+}
+
+/** Champ étiqueté : label lisible au-dessus du contrôle (remplace les « text-xs adm-faint » minuscules). */
+export function Field({
+  label,
+  hint,
+  children,
+  className = "",
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <label className={`adm-field ${className}`}>
+      <span className="adm-field-label">
+        {label}
+        {hint && <span className="adm-field-hint">{hint}</span>}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+/** Case à cocher étiquetée, lisible et cliquable sur tout le libellé. */
+export function CheckField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: ReactNode;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="adm-checkfield">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
+  );
+}
+
+/** Multi-sélection en puces : remplace les longues listes de checkbox (traits, domaines, catégories…). */
+export function ChipMultiSelect<T extends string>({
+  options,
+  selected,
+  onToggle,
+  renderIcon,
+}: {
+  options: { value: T; label: string }[];
+  selected: readonly T[];
+  onToggle: (v: T) => void;
+  renderIcon?: (v: T) => ReactNode;
+}) {
+  return (
+    <div className="adm-chips">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          className="adm-mchip"
+          aria-pressed={selected.includes(o.value)}
+          onClick={() => onToggle(o.value)}
+        >
+          {renderIcon?.(o.value)}
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function AddButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" onClick={onClick} className="adm-add">

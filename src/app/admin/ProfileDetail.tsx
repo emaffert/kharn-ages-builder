@@ -5,8 +5,8 @@ import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForP
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
-import { AddButton, Badge, DomainIcon, EditableNumber, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
-import { INPUT, MASTERY_DOMAINS, STAT_LABELS, removeAt, replaceAt } from "./shared";
+import { AddButton, Badge, CheckField, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
+import { INPUT, MASTERY_DOMAINS, SECTION, STAT_LABELS, removeAt, replaceAt } from "./shared";
 import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
 
 // ── Détail d'un profil ───────────────────────────────────────────────────────
@@ -123,8 +123,9 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
   );
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
+    <DetailPage
+      header={
+      <header className="space-y-3">
         <div className="flex items-center gap-3">
           <input
             value={profile.name}
@@ -176,9 +177,8 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
             onClose={() => setEditingIcon(null)}
           />
         )}
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <label className="flex items-center gap-1">
-            <span className="text-xs adm-faint">Niveau</span>
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+          <Field label="Niveau" className="w-20">
             <select
               value={profile.level ?? ""}
               onChange={(e) =>
@@ -191,23 +191,19 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
               <option value="2">II</option>
               <option value="3">III</option>
             </select>
-          </label>
-          <label className="flex items-center gap-1">
-            <span className="text-xs adm-faint">Faction</span>
+          </Field>
+          <Field label="Faction" className="w-32">
             <input
               value={profile.factionId ?? ""}
               onChange={(e) => patch({ factionId: e.target.value || undefined })}
-              className={`${INPUT} w-28`}
+              className={INPUT}
             />
-          </label>
-          <label className="flex items-center gap-1 text-xs adm-muted">
-            <input
-              type="checkbox"
-              checked={profile.isNamed ?? false}
-              onChange={(e) => patch({ isNamed: e.target.checked || undefined })}
-            />
-            Personnage
-          </label>
+          </Field>
+          <CheckField
+            label="Personnage"
+            checked={profile.isNamed ?? false}
+            onChange={(v) => patch({ isNamed: v || undefined })}
+          />
           {casterWays.length > 0 && (
             <span
               className="flex items-center gap-1 text-xs adm-accent"
@@ -217,32 +213,35 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-xs adm-faint">Groupe (modèle)</span>
-          <select
-            value={profile.modelId ?? ""}
-            onChange={(e) => onGroupChange(e.target.value)}
-            className={INPUT}
-            title="Rattache cette figurine à un groupe (regroupe les variantes, ex. les Guerriers)"
-          >
-            {profile.modelId == null && <option value="">- aucun -</option>}
-            {groupOptions.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
-              </option>
-            ))}
-            <option value={NEW_GROUP}>＋ Nouveau groupe…</option>
-          </select>
+        <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+          <Field label="Groupe (modèle)" className="w-56">
+            <select
+              value={profile.modelId ?? ""}
+              onChange={(e) => onGroupChange(e.target.value)}
+              className={INPUT}
+              title="Rattache cette figurine à un groupe (regroupe les variantes, ex. les Guerriers)"
+            >
+              {profile.modelId == null && <option value="">- aucun -</option>}
+              {groupOptions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
+                </option>
+              ))}
+              <option value={NEW_GROUP}>＋ Nouveau groupe…</option>
+            </select>
+          </Field>
           {model && (
-            <input
-              value={model.name}
-              onChange={(e) => updateModel(model.id, { name: e.target.value })}
-              className={`${INPUT} w-48`}
-              title="Renomme le groupe (nom partagé par toutes ses figurines)"
-            />
+            <Field label="Nom du groupe" className="w-48">
+              <input
+                value={model.name}
+                onChange={(e) => updateModel(model.id, { name: e.target.value })}
+                className={INPUT}
+                title="Renomme le groupe (nom partagé par toutes ses figurines)"
+              />
+            </Field>
           )}
           {model && siblings.length > 1 && (
-            <span className="text-xs adm-faint">
+            <span className="pb-1 text-xs adm-faint">
               regroupe{" "}
               {siblings
                 .map((s) => `${s.name}${s.level != null ? ` (${ROMAN[s.level] ?? s.level})` : ""}`)
@@ -250,15 +249,17 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-xs adm-faint">Limitation</span>
+        <Field label="Limitation">
           <LimitationEditor
             limitation={profile.limitation}
             models={cat.models}
             onChange={(l) => patch({ limitation: l })}
           />
-        </div>
+        </Field>
       </header>
+      }
+      body={
+        <>
 
       <Section title="Caractéristiques (modifiables)">
         <div className="flex items-center gap-2">
@@ -410,12 +411,15 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           onChange={(ids) => patch({ baseEquipmentIds: ids })}
         />
       </Section>
-
-      <Section title="Règles de la carte (verbatim - fait foi)">
-        <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
-      </Section>
-
-      <Section title="Notes (hors carte - non verbatim)">
+        </>
+      }
+      verbatim={
+        <Section title={SECTION.verbatim}>
+          <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
+        </Section>
+      }
+      notes={
+        <Section title={SECTION.notes}>
         <div className="space-y-2">
           {(profile.notes ?? []).map((n, i) => (
             <div key={i} className="flex items-start gap-2">
@@ -435,9 +439,11 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           ))}
           <AddButton onClick={() => patch({ notes: [...(profile.notes ?? []), ""] })}>+ note</AddButton>
         </div>
-      </Section>
-
-      <Section title="Contraintes du profil (modifiables)">
+        </Section>
+      }
+      constraints={
+        <>
+      <Section title={SECTION.constraints}>
         <ConstraintListEditor
           constraints={profile.recruitment}
           cat={cat}
@@ -447,7 +453,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
       </Section>
 
       {inheritedConstraints.length > 0 && (
-        <Section title="Contraintes héritées des cartes spéciales (lecture seule)">
+        <Section title={`${SECTION.constraints} héritées des cartes (lecture seule)`}>
           <div className="space-y-2">
             {inheritedConstraints.map(({ c, via }, idx) => (
               <RuleCard
@@ -466,8 +472,11 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           </div>
         </Section>
       )}
-
-      <Section title="Effets / octrois du profil (modifiables)">
+        </>
+      }
+      effects={
+        <>
+      <Section title={SECTION.effects}>
         <EffectListEditor
           effects={profile.effects ?? []}
           newSource={{ kind: "profile", id: profile.id }}
@@ -477,7 +486,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
       </Section>
 
       {inheritedEffects.length > 0 && (
-        <Section title="Effets hérités des cartes spéciales (lecture seule)">
+        <Section title={`${SECTION.effects} hérités des cartes (lecture seule)`}>
           <div className="space-y-2">
             {inheritedEffects.map(({ e, via }, idx) => (
               <RuleCard
@@ -498,8 +507,9 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           </div>
         </Section>
       )}
-
-    </div>
+        </>
+      }
+    />
   );
 }
 

@@ -1,6 +1,6 @@
 import type { Catalog, Equipment, EquipmentUpgrade } from "@core";
-import { RemoveButton, Section } from "./primitives";
-import { EQUIPMENT_CATEGORIES, INPUT } from "./shared";
+import { DetailPage, Field, RemoveButton, Section } from "./primitives";
+import { EQUIPMENT_CATEGORIES, INPUT, SECTION } from "./shared";
 import { GrantsCastingEditor, ReservedToEditor, SkillsEditor } from "./editors";
 
 export function EquipmentDetail({
@@ -20,20 +20,18 @@ export function EquipmentDetail({
   const isBouclier = e.category === "bouclier";
   const isArmure = e.category === "armure";
   const isObjet = e.category === "objet";
-  const num = (label: string, value: number | undefined, key: keyof Equipment, w = "w-16") => (
-    <label className="flex items-center gap-1">
-      {label}
+  const num = (label: string, value: number | undefined, key: keyof Equipment, w = "w-24") => (
+    <Field label={label} className={w}>
       <input
         type="number"
         value={value ?? ""}
         onChange={(ev) => onChange({ [key]: numOrUndef(ev.target.value) } as Partial<Equipment>)}
-        className={`${INPUT} ${w}`}
+        className={INPUT}
       />
-    </label>
+    </Field>
   );
   const perceArmureField = (
-    <label className="flex items-center gap-1">
-      perce-armure
+    <Field label="perce-armure" className="w-28">
       <input
         value={e.perceArmure == null ? "" : String(e.perceArmure)}
         placeholder='nb ou "1D5"'
@@ -41,13 +39,14 @@ export function EquipmentDetail({
           const v = ev.target.value.trim();
           onChange({ perceArmure: v === "" ? undefined : v === "1D5" ? "1D5" : Number(v) });
         }}
-        className={`${INPUT} w-24`}
+        className={INPUT}
       />
-    </label>
+    </Field>
   );
 
   return (
-    <div className="space-y-5">
+    <DetailPage
+      header={
       <header className="flex items-center gap-3">
         <input value={e.name} onChange={(ev) => onChange({ name: ev.target.value })} className="adm-title flex-1" />
         <label className="flex items-center gap-1 adm-accent">
@@ -63,11 +62,12 @@ export function EquipmentDetail({
           ✕
         </button>
       </header>
-
+      }
+      body={
+      <>
       {/* Type + champs propres à ce type (on n'affiche que le nécessaire). */}
-      <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
-        <label className="flex items-center gap-1">
-          catégorie
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label="Catégorie" className="w-40">
           <select
             value={e.category}
             onChange={(ev) => onChange({ category: ev.target.value as Equipment["category"] })}
@@ -79,17 +79,15 @@ export function EquipmentDetail({
               </option>
             ))}
           </select>
-        </label>
-
-        {isBouclier && <span className="adm-faint">Occupe 1 main.</span>}
+        </Field>
+        {isBouclier && <span className="pb-1 text-xs adm-faint">Occupe 1 main.</span>}
       </div>
 
       {/* Armes de corps à corps : mains, allonge, perce-armure. */}
       {isCac && (
         <Section title="Corps à corps (mains, allonge, perce-armure)">
-          <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
-            <label className="flex items-center gap-1">
-              mains
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="mains" className="w-32">
               <select
                 value={e.hands ?? ""}
                 onChange={(ev) => {
@@ -103,7 +101,7 @@ export function EquipmentDetail({
                 <option value="2">2 mains</option>
                 <option value="1-2">1 ou 2 mains</option>
               </select>
-            </label>
+            </Field>
             {num("allonge", e.allonge, "allonge")}
             {perceArmureField}
           </div>
@@ -113,63 +111,65 @@ export function EquipmentDetail({
       {/* Armes de tir : portée, recharge, munitions. */}
       {isTir && (
         <Section title="Tir (portée, recharge, munitions)">
-          <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
-            <span>Portée</span>
-            <input
-              type="number"
-              placeholder="courte"
-              value={e.range?.short ?? ""}
-              onChange={(ev) =>
-                onChange({ range: { short: Number(ev.target.value || 0), long: e.range?.long ?? 0, max: e.range?.max } })
-              }
-              className={`${INPUT} w-20`}
-            />
-            <input
-              type="number"
-              placeholder="longue"
-              value={e.range?.long ?? ""}
-              onChange={(ev) =>
-                onChange({ range: { short: e.range?.short ?? 0, long: Number(ev.target.value || 0), max: e.range?.max } })
-              }
-              className={`${INPUT} w-20`}
-            />
-            <input
-              type="number"
-              placeholder="max"
-              value={e.range?.max ?? ""}
-              onChange={(ev) =>
-                onChange({ range: { short: e.range?.short ?? 0, long: e.range?.long ?? 0, max: numOrUndef(ev.target.value) } })
-              }
-              className={`${INPUT} w-20`}
-            />
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="portée courte" className="w-24">
+              <input
+                type="number"
+                value={e.range?.short ?? ""}
+                onChange={(ev) =>
+                  onChange({ range: { short: Number(ev.target.value || 0), long: e.range?.long ?? 0, max: e.range?.max } })
+                }
+                className={INPUT}
+              />
+            </Field>
+            <Field label="portée longue" className="w-24">
+              <input
+                type="number"
+                value={e.range?.long ?? ""}
+                onChange={(ev) =>
+                  onChange({ range: { short: e.range?.short ?? 0, long: Number(ev.target.value || 0), max: e.range?.max } })
+                }
+                className={INPUT}
+              />
+            </Field>
+            <Field label="portée max" className="w-24">
+              <input
+                type="number"
+                value={e.range?.max ?? ""}
+                onChange={(ev) =>
+                  onChange({ range: { short: e.range?.short ?? 0, long: e.range?.long ?? 0, max: numOrUndef(ev.target.value) } })
+                }
+                className={INPUT}
+              />
+            </Field>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs adm-muted">
-            <span>Recharge</span>
-            <input
-              type="number"
-              placeholder="cadence"
-              value={e.reload?.cadence ?? ""}
-              onChange={(ev) =>
-                onChange({
-                  reload:
-                    ev.target.value === ""
-                      ? undefined
-                      : { cadence: Number(ev.target.value), paCost: e.reload?.paCost ?? 0 },
-                })
-              }
-              className={`${INPUT} w-24`}
-            />
-            <input
-              type="number"
-              placeholder="PA"
-              value={e.reload?.paCost ?? ""}
-              onChange={(ev) =>
-                onChange({ reload: { cadence: e.reload?.cadence ?? 0, paCost: Number(ev.target.value || 0) } })
-              }
-              className={`${INPUT} w-20`}
-            />
-            <label className="flex items-center gap-1">
-              munitions
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="recharge (cadence)" className="w-28">
+              <input
+                type="number"
+                value={e.reload?.cadence ?? ""}
+                onChange={(ev) =>
+                  onChange({
+                    reload:
+                      ev.target.value === ""
+                        ? undefined
+                        : { cadence: Number(ev.target.value), paCost: e.reload?.paCost ?? 0 },
+                  })
+                }
+                className={INPUT}
+              />
+            </Field>
+            <Field label="recharge (PA)" className="w-24">
+              <input
+                type="number"
+                value={e.reload?.paCost ?? ""}
+                onChange={(ev) =>
+                  onChange({ reload: { cadence: e.reload?.cadence ?? 0, paCost: Number(ev.target.value || 0) } })
+                }
+                className={INPUT}
+              />
+            </Field>
+            <Field label="munitions" className="w-40">
               <select
                 value={e.munitionKind ?? ""}
                 onChange={(ev) => onChange({ munitionKind: ev.target.value || undefined })}
@@ -182,8 +182,8 @@ export function EquipmentDetail({
                   </option>
                 ))}
               </select>
-            </label>
-            {num("munitions de base", e.baseMunitions, "baseMunitions", "w-16")}
+            </Field>
+            {num("munitions de base", e.baseMunitions, "baseMunitions")}
             {num("allonge", e.allonge, "allonge")}
             {perceArmureField}
           </div>
@@ -193,7 +193,7 @@ export function EquipmentDetail({
       {/* Bouclier / Armure : durée de vie (DV) et, pour l'armure, ses valeurs. */}
       {(isBouclier || isArmure) && (
         <Section title={isArmure ? "Armure (protection échec / seuil / réussite · DV)" : "Bouclier (durée de vie)"}>
-          <div className="flex flex-wrap items-center gap-3 text-xs adm-muted">
+          <div className="flex flex-wrap items-end gap-3">
             {isArmure && (
               <>
                 {num("prot. échec", e.protectionEchec, "protectionEchec")}
@@ -206,15 +206,6 @@ export function EquipmentDetail({
           </div>
         </Section>
       )}
-
-      <Section title="Effets (verbatim - fait foi)">
-        <textarea
-          value={e.effectsText}
-          rows={2}
-          onChange={(ev) => onChange({ effectsText: ev.target.value })}
-          className={`${INPUT} w-full`}
-        />
-      </Section>
 
       <Section title="Compétences conférées">
         <SkillsEditor
@@ -286,14 +277,9 @@ export function EquipmentDetail({
         </Section>
       )}
 
-      <Section title="Réservé à (qui peut l'équiper)">
-        <ReservedToEditor value={e.reservedTo} cat={cat} onChange={(v) => onChange({ reservedTo: v })} />
-      </Section>
-
       <Section title="Lien monture (p.32)">
-        <div className="flex flex-col gap-2">
-          <label className="flex items-center gap-2 text-xs adm-muted">
-            Équipement lié à la monture :
+        <div className="flex flex-col gap-3">
+          <Field label="Équipement lié à la monture" className="max-w-md">
             <select
               value={e.mountEquipment ?? ""}
               onChange={(ev) =>
@@ -305,19 +291,18 @@ export function EquipmentDetail({
               <option value="mount">Porté par la MONTURE (ex. Caparaçon)</option>
               <option value="rider">Porté par le CAVALIER monté (ex. Lance de cavalerie)</option>
             </select>
-          </label>
+          </Field>
           <p className="adm-faint text-[11px] leading-tight">
             Un équipement lié à la monture n'apparaît que sur une figurine montée (onglet « Monture » du cavalier
             ou fiche de la monture), jamais dans le picker d'équipement standard. La réservation de faction
             ci-dessus s'applique en plus (ex. Lance réservée aux Khârns).
           </p>
           {e.mountEquipment != null && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs adm-faint">Coût par faction (déroge au coût de base, ex. Caparaçon 20/22)</span>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-1">
+              <span className="adm-field-label">Coût par faction <span className="adm-field-hint">(déroge au coût de base, ex. Caparaçon 20/22)</span></span>
+              <div className="flex flex-wrap gap-3">
                 {cat.factions.map((f) => (
-                  <label key={f.id} className="flex items-center gap-1 text-xs adm-muted">
-                    {f.name}
+                  <Field key={f.id} label={f.name} className="w-24">
                     <input
                       type="number"
                       value={e.costByFaction?.[f.id] ?? ""}
@@ -328,25 +313,42 @@ export function EquipmentDetail({
                         else cur[f.id] = Number(ev.target.value);
                         onChange({ costByFaction: Object.keys(cur).length ? cur : undefined });
                       }}
-                      className={`${INPUT} w-16`}
+                      className={INPUT}
                     />
-                  </label>
+                  </Field>
                 ))}
               </div>
             </div>
           )}
         </div>
       </Section>
-
-      <label className="flex items-center gap-2 text-xs adm-muted">
-        Image :
-        <input
-          value={e.cardImage ?? ""}
-          placeholder="cards/..."
-          onChange={(ev) => onChange({ cardImage: ev.target.value || undefined })}
-          className={`${INPUT} w-full max-w-md`}
-        />
-      </label>
-    </div>
+      </>
+      }
+      verbatim={
+        <Section title={SECTION.verbatim}>
+          <textarea
+            value={e.effectsText}
+            rows={2}
+            onChange={(ev) => onChange({ effectsText: ev.target.value })}
+            className={`${INPUT} w-full`}
+          />
+        </Section>
+      }
+      applicability={
+        <Section title="Réservé à (qui peut l'équiper)">
+          <ReservedToEditor value={e.reservedTo} cat={cat} onChange={(v) => onChange({ reservedTo: v })} />
+        </Section>
+      }
+      media={
+        <Field label="Image">
+          <input
+            value={e.cardImage ?? ""}
+            placeholder="cards/..."
+            onChange={(ev) => onChange({ cardImage: ev.target.value || undefined })}
+            className={`${INPUT} max-w-md`}
+          />
+        </Field>
+      }
+    />
   );
 }

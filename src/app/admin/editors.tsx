@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Catalog, Equipment, Limitation, RuleText, SkillRef } from "@core";
-import { AddButton, Combobox, RemoveButton } from "./primitives";
+import { AddButton, ChipMultiSelect, Combobox, RemoveButton } from "./primitives";
 import { INPUT, LEVEL_LABEL, removeAt, replaceAt } from "./shared";
 
 // ── Liste réordonnable (drag & drop) ──────────────────────────────────────────
@@ -243,33 +243,29 @@ export function ReservedToEditor({
     update({ factionIds: fs.includes(id) ? fs.filter((f) => f !== id) : [...fs, id] });
   };
   return (
-    <div className="space-y-2 text-xs adm-muted">
-      <p className="adm-faint">Vide = équipement libre. Sinon, réservé aux figurines validant toutes les dimensions renseignées.</p>
-      <div className="flex flex-wrap items-center gap-3">
-        <span>niveaux :</span>
-        {RESERVED_LEVELS.map((lvl) => (
-          <label key={lvl} className="flex items-center gap-1">
-            <input type="checkbox" checked={r.levels?.includes(lvl) ?? false} onChange={() => toggleLevel(lvl)} />
-            {LEVEL_LABEL[lvl]}
-          </label>
-        ))}
+    <div className="space-y-3">
+      <p className="text-xs adm-faint">Vide = équipement libre. Sinon, réservé aux figurines validant toutes les dimensions renseignées.</p>
+      <div className="space-y-1">
+        <span className="adm-field-label">Niveaux</span>
+        <ChipMultiSelect
+          options={RESERVED_LEVELS.map((lvl) => ({ value: String(lvl), label: LEVEL_LABEL[lvl] }))}
+          selected={(r.levels ?? []).map(String)}
+          onToggle={(v) => toggleLevel(Number(v) as (typeof RESERVED_LEVELS)[number])}
+        />
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <span>factions :</span>
-        {cat.factions.map((f) => (
-          <label key={f.id} className="flex items-center gap-1">
-            <input type="checkbox" checked={r.factionIds?.includes(f.id) ?? false} onChange={() => toggleFaction(f.id)} />
-            {f.name}
-          </label>
-        ))}
+      <div className="space-y-1">
+        <span className="adm-field-label">Factions</span>
+        <ChipMultiSelect
+          options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+          selected={r.factionIds ?? []}
+          onToggle={toggleFaction}
+        />
       </div>
-      <div className="flex items-start gap-2">
-        <span className="mt-1">traits :</span>
-        <div className="flex-1">
-          <TraitsEditor traits={r.traits ?? []} onChange={(t) => update({ traits: t })} />
-        </div>
+      <div className="space-y-1">
+        <span className="adm-field-label">Traits</span>
+        <TraitsEditor traits={r.traits ?? []} onChange={(t) => update({ traits: t })} />
       </div>
-      <ProfileMultiSelect label="profils" ids={r.profileIds ?? []} cat={cat} onChange={(v) => update({ profileIds: v })} />
+      <ProfileMultiSelect label="Profils" ids={r.profileIds ?? []} cat={cat} onChange={(v) => update({ profileIds: v })} />
     </div>
   );
 }
@@ -409,14 +405,14 @@ export function ProfileMultiSelect({
   cat,
   onChange,
 }: {
-  label: string;
+  label?: string;
   ids: string[];
   cat: Catalog;
   onChange: (ids: string[]) => void;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-xs adm-faint">{label}</span>
+      {label && <span className="adm-field-label w-full">{label}</span>}
       {ids.map((id, i) => (
         <span key={i} className="flex items-center gap-0.5">
           <Combobox
@@ -452,15 +448,17 @@ export function GrantsCastingEditor({
     onChange(next.length ? { magicWayIds: next } : undefined);
   };
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
-      <span>Confère le lancement de sorts :</span>
-      {cat.magicWays.map((w) => (
-        <label key={w.id} className="flex items-center gap-1">
-          <input type="checkbox" checked={ids.includes(w.id)} onChange={() => toggle(w.id)} />
-          {w.name}
-        </label>
-      ))}
-      {cat.magicWays.length === 0 && <span className="adm-faint">(aucune voie définie)</span>}
+    <div className="space-y-1">
+      <span className="adm-field-label">Confère le lancement de sorts</span>
+      {cat.magicWays.length === 0 ? (
+        <span className="text-xs adm-faint">(aucune voie définie)</span>
+      ) : (
+        <ChipMultiSelect
+          options={cat.magicWays.map((w) => ({ value: w.id, label: w.name }))}
+          selected={ids}
+          onToggle={toggle}
+        />
+      )}
     </div>
   );
 }

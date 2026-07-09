@@ -27,7 +27,7 @@ describe("AdminCatalog (rendu)", () => {
   it("bascule sur l'onglet Équipement et permet d'éditer un équipement", () => {
     render(<AdminCatalog />);
     fireEvent.click(screen.getByRole("button", { name: "Équipement" }));
-    expect(screen.getByText(/Effets \(verbatim/i)).toBeTruthy();
+    expect(screen.getByText(/Texte verbatim/i)).toBeTruthy();
     expect(screen.getByText(/\+ équipement/i)).toBeTruthy();
   });
 

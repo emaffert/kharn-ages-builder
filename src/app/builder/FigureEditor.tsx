@@ -282,6 +282,8 @@ function EquipPanel({
 }) {
   const [query, setQuery] = useState("");
   const [openMun, setOpenMun] = useState<Record<string, boolean>>({}); // blocs de munitions dépliés, par arme
+  const [catFilter, setCatFilter] = useState<string | null>(null); // puce de catégorie active (mono-sélection)
+  const [facets, setFacets] = useState<Set<string>>(new Set()); // facettes d'armes actives (multi) : h1 / h2 / free
   const eq = (id: string) => cat.equipment.find((e) => e.id === id);
   const forbidden = forbiddenCats(p, cat);
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
@@ -306,7 +308,8 @@ function EquipPanel({
   const ownerCount = (id: string) => cat.profiles.filter((pr) => pr.baseEquipmentIds.includes(id)).length;
   const isUnique = (e: Catalog["equipment"][number]) => ownerCount(e.id) === 1;
 
-  const avail = cat.equipment.filter(
+  // Pool disponible avant filtres de catégorie/facettes (sert aussi à compter les puces, comptes stables).
+  const availAll = cat.equipment.filter(
     (e) =>
       // Équipement du CAVALIER monté (Lance de cavalerie) : proposé ici seulement s'il a une monture.
       // Équipement de la MONTURE (Caparaçon) : jamais ici (il s'achète sur la fiche de la monture).
@@ -319,6 +322,45 @@ function EquipPanel({
       !added.includes(e.id) &&
       matches(e),
   );
+
+  // Filtres : catégorie en mono-sélection (sur la vraie catégorie de l'objet, donc une arme réservée reste
+  // filtrable même si elle est affichée dans « Spécifique au personnage »), facettes d'armes en multi-sélection.
+  const isWeaponCat = (c: string) => c === "arme-cac" || c === "arme-tir";
+  const weaponCtx = catFilter == null || isWeaponCat(catFilter);
+  const hasWeapons = availAll.some((e) => isWeaponCat(e.category));
+  const handsFacets = [...facets].filter((f) => f === "h1" || f === "h2");
+  const passFilters = (e: Catalog["equipment"][number]) => {
+    if (catFilter && e.category !== catFilter) return false;
+    if (weaponCtx) {
+      // Le nombre de mains n'a de sens que sur une arme : activer 1/2 mains exclut les non-armes.
+      if (handsFacets.length) {
+        if (!isWeaponCat(e.category)) return false;
+        const ok = handsFacets.some((f) =>
+          f === "h1" ? e.hands === 1 || e.hands === "1-2" : e.hands === 2 || e.hands === "1-2",
+        );
+        if (!ok) return false;
+      }
+      if (facets.has("free") && e.cost !== 0) return false;
+    }
+    return true;
+  };
+  const avail = availAll.filter(passFilters);
+  const catCounts = PURCHASE_CATS.map((c) => [c, availAll.filter((e) => e.category === c).length] as const).filter(
+    ([, n]) => n > 0,
+  );
+  const hasFilter = q !== "" || catFilter !== null || facets.size > 0;
+
+  const selectCat = (c: string | null) => {
+    setCatFilter(c);
+    if (c != null && !isWeaponCat(c)) setFacets(new Set()); // hors contexte arme : facettes sans objet
+  };
+  const toggleFacet = (f: string) =>
+    setFacets((prev) => {
+      const next = new Set(prev);
+      if (next.has(f)) next.delete(f);
+      else next.add(f);
+      return next;
+    });
   const UNIQUE = "__unique";
   const BASE_REMOVED = "__base_removed";
   // Spécifique au personnage : réservé à ce profil/modèle (ex. Marteau Tonnerre d'Ogodeï) ou base unique.
@@ -538,6 +580,47 @@ function EquipPanel({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Rechercher un équipement…"
           />
+          {catCounts.length > 1 && (
+            <div className="fe-filters" role="group" aria-label="Filtrer par catégorie">
+              <button className="fe-chip" type="button" aria-pressed={catFilter === null} onClick={() => selectCat(null)}>
+                Toutes<span className="n">{availAll.length}</span>
+              </button>
+              {catCounts.map(([c, n]) => (
+                <button
+                  key={c}
+                  className="fe-chip"
+                  type="button"
+                  aria-pressed={catFilter === c}
+                  onClick={() => selectCat(catFilter === c ? null : c)}
+                >
+                  {CAT_LABEL[c] ?? c}
+                  <span className="n">{n}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {weaponCtx && hasWeapons && (
+            <div className="fe-facets" role="group" aria-label="Filtrer les armes">
+              <span className="lab">Armes</span>
+              {(
+                [
+                  ["h1", "1 main"],
+                  ["h2", "2 mains"],
+                  ["free", "Gratuit"],
+                ] as const
+              ).map(([f, label]) => (
+                <button
+                  key={f}
+                  className="fe-facet"
+                  type="button"
+                  aria-pressed={facets.has(f)}
+                  onClick={() => toggleFacet(f)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="fe-scroll">
             {byCat.map(([c, list]) => (
               <div key={c}>
@@ -577,7 +660,9 @@ function EquipPanel({
                 </div>
               </div>
             ))}
-            {byCat.length === 0 && <p className="fe-mag-bonus">{q ? "Aucun résultat." : "Aucun équipement disponible."}</p>}
+            {byCat.length === 0 && (
+              <p className="fe-mag-bonus">{hasFilter ? "Aucun résultat." : "Aucun équipement disponible."}</p>
+            )}
           </div>
         </div>
       </div>

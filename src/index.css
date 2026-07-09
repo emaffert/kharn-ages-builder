@@ -748,6 +748,26 @@ body {
 .fe-input { width: 100%; margin-bottom: 8px; padding: 8px 10px; border-radius: 9px; font-size: 13.5px; color: var(--bone);
   background: var(--forge); border: 1px solid var(--hair-strong); outline: none; }
 .fe-input:focus { box-shadow: 0 0 0 1px var(--ember); }
+/* Barre de filtres du volet « disponible » : puces de catégorie (mono-sélection) + facettes d'armes (multi). */
+.fe-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.fe-chip { font: inherit; font-size: 12.5px; font-weight: 600; color: var(--bone-dim); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  background: var(--tint-1); border: 1px solid var(--hair-strong); transition: .15s var(--ease); }
+.fe-chip:hover { color: var(--bone); border-color: var(--bone-faint); }
+.fe-chip .n { font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--bone-dim);
+  opacity: .85; }
+.fe-chip[aria-pressed="true"] { color: var(--ink-accent); border-color: transparent;
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember)); box-shadow: 0 0 14px -4px var(--ember-glow); }
+.fe-chip[aria-pressed="true"] .n { opacity: 1; color: var(--ink-accent); }
+.fe-facets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px;
+  padding-top: 6px; border-top: 1px solid var(--hair); }
+.fe-facets .lab { font-family: "Cinzel", serif; font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--bone-faint); margin-right: 2px; }
+.fe-facet { font: inherit; font-size: 12px; color: var(--bone-dim); cursor: pointer; padding: 3px 10px; border-radius: 7px;
+  background: transparent; border: 1px solid var(--hair-strong); transition: .14s var(--ease); }
+.fe-facet:hover { color: var(--bone); }
+.fe-facet[aria-pressed="true"] { color: var(--ember-bright); border-color: var(--ember);
+  background: color-mix(in srgb, var(--ember) 12%, transparent); }
 .fe-scroll { max-height: 44vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; }
 .fe-group-label { font-family: "Cinzel", serif; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
   color: var(--bone-faint); margin-bottom: 4px; }

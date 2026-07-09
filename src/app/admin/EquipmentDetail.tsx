@@ -199,6 +199,7 @@ export function EquipmentDetail({
                 {num("prot. échec", e.protectionEchec, "protectionEchec")}
                 {num("seuil", e.seuil, "seuil")}
                 {num("prot. réussite", e.protectionReussite, "protectionReussite")}
+                {num("seuil si déjà protégé", e.heavySeuil, "heavySeuil", "w-20")}
               </>
             )}
             {num("durée de vie (DV)", e.durability, "durability")}

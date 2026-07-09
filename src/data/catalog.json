@@ -6074,7 +6074,7 @@
         "seuil": 7,
         "protectionEchec": -1,
         "protectionReussite": -3,
-        "durability": 9
+        "durability": 8
       },
       "skills": [
         {
@@ -7947,6 +7947,24 @@
         ]
       },
       "mountEquipment": "rider"
+    },
+    {
+      "id": "eq-armure-combat-kharne",
+      "name": "Armure de Combat Khârne",
+      "category": "armure",
+      "cost": 10,
+      "durability": 8,
+      "protectionEchec": -1,
+      "seuil": 7,
+      "protectionReussite": -3,
+      "heavySeuil": 5,
+      "effectsText": "Protection -1/7/-3, DV 8. Ignore les EC. Si l'armure d'origine possède déjà ces caractéristiques, le seuil de réussite baisse à 5.",
+      "reservedTo": {
+        "factionIds": [
+          "kharns"
+        ]
+      },
+      "cardImage": "cards/Kharns/kharns-prince-fr.jpg"
     }
   ],
   "grimoires": [
@@ -8986,48 +9004,6 @@
       "cardImage": "cards/Gouns/artisane-dogon.jpg"
     },
     {
-      "id": "peintures-de-guerre",
-      "name": "Peintures de guerre",
-      "cost": 5,
-      "scope": {
-        "profileIds": [
-          "gouns-champion-tribal-javelots-2",
-          "gouns-champion-tribal-javelots-3",
-          "gouns-champion-tribal-ngao-2",
-          "gouns-champion-tribal-ngao-3"
-        ]
-      },
-      "amelioration": true,
-      "rulesText": [
-        {
-          "text": "+1 en attaque et aux dégâts."
-        }
-      ],
-      "constraints": [],
-      "effects": [],
-      "cardImage": "cards/Gouns/champion-tribal-1.jpg"
-    },
-    {
-      "id": "tatouages-tribaux",
-      "name": "Tatouages tribaux",
-      "cost": 10,
-      "scope": {
-        "profileIds": [
-          "gouns-champion-tribal-javelots-3",
-          "gouns-champion-tribal-ngao-3"
-        ]
-      },
-      "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Immunisent à la terreur."
-        }
-      ],
-      "constraints": [],
-      "effects": [],
-      "cardImage": "cards/Gouns/champion-tribal-2.jpg"
-    },
-    {
       "id": "ordre-de-mission-royale",
       "name": "Ordre de Mission Royale",
       "cost": 5,
@@ -9049,31 +9025,6 @@
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Kharns/kharn-guerrier-1-fr.jpg"
-    },
-    {
-      "id": "armure-de-combat-kharne",
-      "name": "Armure de Combat Khârne",
-      "cost": 10,
-      "scope": {
-        "factionIds": [
-          "kharns"
-        ]
-      },
-      "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Protection -1 / 7 / -3  durabilité 8"
-        },
-        {
-          "text": "Ignore les EC."
-        },
-        {
-          "text": "Si l'armure portée à l'origine possède déjà ces caractéristiques, alors le seuil de réussite baisse à 5."
-        }
-      ],
-      "constraints": [],
-      "effects": [],
-      "cardImage": "cards/Kharns/kharns-prince-fr.jpg"
     },
     {
       "id": "equite",

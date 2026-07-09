@@ -24,6 +24,21 @@ export const EquipmentCategorySchema = z.enum([
 ]);
 export type EquipmentCategory = z.infer<typeof EquipmentCategorySchema>;
 
+/** Valeurs d'une armure (protection échec / seuil / réussite + durabilité). Partagé profil / équipement / effets. */
+export const ArmorSchema = z.object({
+  sourceText: z.string().optional(),
+  /** Seuil de l'armure : valeur à atteindre pour un jet de protection réussi (chiffre central). */
+  seuil: z.number().optional(),
+  /** Protection en cas d'échec du jet (chiffre de gauche). */
+  protectionEchec: z.number().optional(),
+  /** Protection en cas de réussite du jet (chiffre de droite). */
+  protectionReussite: z.number().optional(),
+  /** Durabilité de l'armure = nombre de cercles blancs affichés à côté. */
+  durability: z.number().optional(),
+  natural: z.boolean().optional(),
+});
+export type Armor = z.infer<typeof ArmorSchema>;
+
 /** Portée d'application d'une contrainte. */
 export const ConstraintScopeSchema = z.enum(["profil", "fer-de-lance", "ost"]);
 export type ConstraintScope = z.infer<typeof ConstraintScopeSchema>;

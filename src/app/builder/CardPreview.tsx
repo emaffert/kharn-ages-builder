@@ -81,7 +81,7 @@ export function CardPreview({
         cat={cat}
         onInfo={onInfo}
         showEquipment
-        wornArmors={wornArmorsFrom(cat, p.baseEquipmentIds)}
+        wornArmors={wornArmorsFrom(cat, p.baseEquipmentIds, undefined, p.armor)}
       />
     </Dialog>
   );

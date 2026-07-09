@@ -46,23 +46,36 @@ export function mountOptionLines(
 
 /**
  * Armures portées, dérivées d'une liste d'équipements (catégorie « armure ») : Brigandine, Caparaçon…
+ * Une armure achetée remplace l'innée (une seule armure) : cet appel produit l'armure *effective* affichée.
  * `upgradesByEquip` (optionnel) suffixe le libellé avec les améliorations actives (ex. « Pointes acérées »).
+ * `innateArmor` (optionnel) : armure innée du porteur, pour le `heavySeuil` conditionnel (ex. Armure de
+ * Combat Khârne : seuil abaissé si le porteur est déjà au moins aussi protégé).
  */
 export function wornArmorsFrom(
   cat: Catalog,
   equipmentIds: string[],
   upgradesByEquip?: Record<string, string[]>,
+  innateArmor?: { protectionEchec?: number; protectionReussite?: number },
 ): ArmorDisplay[] {
+  const alreadyProtected = (e: Catalog["equipment"][number]) =>
+    innateArmor?.protectionEchec != null &&
+    innateArmor.protectionReussite != null &&
+    e.protectionEchec != null &&
+    e.protectionReussite != null &&
+    innateArmor.protectionEchec <= e.protectionEchec &&
+    innateArmor.protectionReussite <= e.protectionReussite;
   return equipmentIds
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => e?.category === "armure")
     .map((e) => {
       const upIds = upgradesByEquip?.[e.id] ?? [];
       const upNames = (e.upgrades ?? []).filter((u) => upIds.includes(u.id)).map((u) => u.label);
+      // « Possède déjà ces caractéristiques » → seuil de réussite amélioré (heavySeuil).
+      const seuil = e.heavySeuil != null && alreadyProtected(e) ? e.heavySeuil : e.seuil;
       return {
         label: `🛡 ${e.name}${upNames.length ? ` (${upNames.join(", ")})` : ""}`,
         protectionEchec: e.protectionEchec,
-        seuil: e.seuil,
+        seuil,
         protectionReussite: e.protectionReussite,
         durability: e.durability,
       };

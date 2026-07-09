@@ -1,6 +1,6 @@
 import { specialCardsForProfile } from "@ui/explain";
 import { Tag, STAT_FULL } from "@ui";
-import { iconFor, type Catalog, type EquipmentCostRule, type MasteryDomain, type Profile } from "@core";
+import { iconFor, type Armor, type Catalog, type EquipmentCostRule, type MasteryDomain, type Profile } from "@core";
 import { SectionTitle } from "./components";
 import { ArmorBlock, RulesBlock, SheetHeader, SkillChips, StatCell, type ArmorDisplay } from "./StatSheet";
 import { MasteryDie } from "./MasteryDie";
@@ -37,6 +37,17 @@ export type ProfileMods = {
   /** Réduction de prix de grimoire par palier (ex. Mochère : { petit } / { grand }). Affichée dans « Magie ». */
   grimoireDiscount?: Record<string, number>;
 };
+
+/** Une armure -> bloc d'affichage (libellé « 🛡 Armure »). */
+function armorDisplay(a: Armor): ArmorDisplay {
+  return {
+    label: "🛡 Armure",
+    protectionEchec: a.protectionEchec,
+    seuil: a.seuil,
+    protectionReussite: a.protectionReussite,
+    durability: a.durability,
+  };
+}
 
 /** Carte de statistiques d'un profil (tags, stats, compétences cliquables, règles) + cartes liées. */
 export function ProfileStatCard({
@@ -212,21 +223,9 @@ export function ProfileStatCard({
             </div>
           )}
         </div>
+        {/* Une seule armure : achetée/portée (remplace l'innée) sinon innée. */}
         <ArmorBlock
-          armors={[
-            ...(p.armor
-              ? [
-                  {
-                    label: "🛡 Armure",
-                    protectionEchec: p.armor.protectionEchec,
-                    seuil: p.armor.seuil,
-                    protectionReussite: p.armor.protectionReussite,
-                    durability: p.armor.durability,
-                  },
-                ]
-              : []),
-            ...(wornArmors ?? []),
-          ]}
+          armors={wornArmors && wornArmors.length > 0 ? wornArmors : p.armor ? [armorDisplay(p.armor)] : []}
         />
         <SkillChips
           skills={skillOrder.map((id) => {

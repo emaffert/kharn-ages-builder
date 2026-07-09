@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  ArmorSchema,
   LevelSchema,
   MasteryDomainSchema,
   EquipmentCategorySchema,
@@ -66,19 +67,6 @@ export const StatsSchema = z.object({
 });
 export type Stats = z.infer<typeof StatsSchema>;
 
-export const ArmorSchema = z.object({
-  sourceText: z.string().optional(),
-  /** Seuil de l'armure : valeur à atteindre pour un jet de protection réussi (chiffre central). */
-  seuil: z.number().optional(),
-  /** Protection en cas d'échec du jet (chiffre de gauche). */
-  protectionEchec: z.number().optional(),
-  /** Protection en cas de réussite du jet (chiffre de droite). */
-  protectionReussite: z.number().optional(),
-  /** Durabilité de l'armure = nombre de cercles blancs affichés à côté. */
-  durability: z.number().optional(),
-  natural: z.boolean().optional(),
-});
-export type Armor = z.infer<typeof ArmorSchema>;
 
 export const LimitationSchema = z.object({
   /** "special" : limitation régie par une contrainte (ex. Likan « • »). */
@@ -156,6 +144,11 @@ export const EquipmentSchema = z.object({
   protectionEchec: z.number().optional(),
   seuil: z.number().optional(),
   protectionReussite: z.number().optional(),
+  /**
+   * Seuil amélioré appliqué si le porteur possède **déjà** une armure innée au moins aussi protectrice
+   * (échec ≤ et réussite ≤ celles de cette armure). Ex. Armure de Combat Khârne : seuil 7, `heavySeuil` 5.
+   */
+  heavySeuil: z.number().optional(),
   perceArmure: z.union([z.number(), z.literal("1D5")]).optional(),
   effectsText: z.string(),
   /** Compétences conférées (ex. la Faucille d'Os confère « Riposte »). */

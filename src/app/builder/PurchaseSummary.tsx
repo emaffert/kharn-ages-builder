@@ -9,7 +9,7 @@ import {
   type Profile,
   type Spell,
 } from "@core";
-import { equipInfo, type ItemInfo } from "./shared";
+import { equipInfo, mountOptionLines, type ItemInfo } from "./shared";
 
 type SummaryChip = { name: string; info: ItemInfo };
 
@@ -28,12 +28,18 @@ export function PurchaseSummary({
   grantedUpgrades,
   costRules,
   grimoireDiscount,
+  mountId,
+  mountOptionIds,
   onPick,
 }: {
   p: Profile;
   cat: Catalog;
   added: string[];
   removed: string[];
+  /** Monture équipée (id de niveau) : active la colonne « Monture » (options payées par le cavalier). */
+  mountId?: string;
+  /** Options de monture achetées (`inst.mountOptionIds`) : id → valeur X. */
+  mountOptionIds?: Record<string, number>;
   /** Règles de remise par objet applicables à cette figurine (Ogodeï, Commandant…). */
   costRules: EquipmentCostRule[];
   /** Réduction de prix de grimoire par palier (ex. Mochère), appliquée à la ligne « Magie ». */
@@ -49,51 +55,66 @@ export function PurchaseSummary({
   grantedUpgrades: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
   onPick: (info: ItemInfo) => void;
 }) {
-  const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier", "armure"];
+  const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier"];
   const equip = [...p.baseEquipmentIds.filter((id) => !removed.includes(id)), ...added]
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
-  // Arme : coût affiché = arme + ses munitions (règles p.46) + ses améliorations (ex. Empoisonner) ;
-  // le détail est listé dans la fiche de l'objet.
-  const armes = equip
-    .filter((e) => WEAPON_CATS.includes(e.category))
-    .map((e) => {
-      const munLines = resolveMunitionLines(munitionKindForEquip(cat, e.id), munitions[e.id]);
-      const munCost = munLines.reduce((n, l) => n + l.price, 0);
-      const upsForE = (equipmentUpgrades[e.id] ?? [])
-        .map((uid) => grantedUpgrades.find((g) => g.upgradeId === uid))
-        .filter((g): g is (typeof grantedUpgrades)[number] => Boolean(g) && g!.equipmentCategories.includes(e.category));
-      const upCost = upsForE.reduce((n, g) => n + g.cost, 0);
-      // Remise (Ogodeï, Commandant…) : seulement sur les armes ACHETÉES (pas l'équipement de base).
-      const disc = p.baseEquipmentIds.includes(e.id) ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
-      const discSources = [
-        ...new Set(
-          costRules
-            .filter(
-              (r) =>
-                equipmentMatchesEquipFilter(cat, e.id, r) &&
-                (!r.requiresBaseSwap || removed.some((id) => equipmentMatchesEquipFilter(cat, id, r))),
-            )
-            .map((r) => r.label),
-        ),
-      ];
-      const base = equipInfo(e);
-      if (munCost === 0 && upCost === 0 && disc === 0) return chip(e.name, base);
-      return chip(e.name, {
-        ...base,
-        price: `${e.cost + munCost + upCost + disc} Ko`,
-        lines: [
-          ...base.lines,
-          ...(munCost > 0
-            ? [`Munitions (+${munCost} Ko) : ${munLines.map((l) => `${l.qty} ${l.label}`).join(", ")}`]
-            : []),
-          ...upsForE.map((g) => `${g.label} (+${g.cost} Ko)`),
-          ...(disc < 0 ? [`Remise ${disc} Ko (${discSources.join(", ")})`] : []),
-        ],
-      });
+  // Coût affiché d'un équipement = objet + ses munitions (p.46) + ses améliorations (ex. Empoisonner, Borax)
+  // + une éventuelle remise (Ogodeï, Commandant…) ; le détail est listé dans la fiche de l'objet.
+  const equipChip = (e: NonNullable<(typeof equip)[number]>): SummaryChip => {
+    const munLines = resolveMunitionLines(munitionKindForEquip(cat, e.id), munitions[e.id]);
+    const munCost = munLines.reduce((n, l) => n + l.price, 0);
+    const upsForE = (equipmentUpgrades[e.id] ?? [])
+      .map((uid) => grantedUpgrades.find((g) => g.upgradeId === uid))
+      .filter((g): g is (typeof grantedUpgrades)[number] => Boolean(g) && g!.equipmentCategories.includes(e.category));
+    const upCost = upsForE.reduce((n, g) => n + g.cost, 0);
+    // Remise : seulement sur l'équipement ACHETÉ (pas l'équipement de base).
+    const disc = p.baseEquipmentIds.includes(e.id) ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
+    const discSources = [
+      ...new Set(
+        costRules
+          .filter(
+            (r) =>
+              equipmentMatchesEquipFilter(cat, e.id, r) &&
+              (!r.requiresBaseSwap || removed.some((id) => equipmentMatchesEquipFilter(cat, id, r))),
+          )
+          .map((r) => r.label),
+      ),
+    ];
+    const base = equipInfo(e);
+    if (munCost === 0 && upCost === 0 && disc === 0) return chip(e.name, base);
+    return chip(e.name, {
+      ...base,
+      price: `${e.cost + munCost + upCost + disc} Ko`,
+      lines: [
+        ...base.lines,
+        ...(munCost > 0
+          ? [`Munitions (+${munCost} Ko) : ${munLines.map((l) => `${l.qty} ${l.label}`).join(", ")}`]
+          : []),
+        ...upsForE.map((g) => `${g.label} (+${g.cost} Ko)`),
+        ...(disc < 0 ? [`Remise ${disc} Ko (${discSources.join(", ")})`] : []),
+      ],
     });
-  const objets = equip.filter((e) => !WEAPON_CATS.includes(e.category)).map((e) => chip(e.name, equipInfo(e)));
+  };
+  const armes = equip.filter((e) => WEAPON_CATS.includes(e.category)).map(equipChip);
+  const armures = equip.filter((e) => e.category === "armure").map(equipChip);
+  const objets = equip.filter((e) => !WEAPON_CATS.includes(e.category) && e.category !== "armure").map(equipChip);
+  // Monture : options payées par le cavalier (paniers « cavalier » + « partagée »), groupées en « Compétences ».
+  const monture: SummaryChip[] = [];
+  if (mountId != null) {
+    const lines = mountOptionLines(cat, mountOptionIds, ["rider", "both"], mountId);
+    if (lines.length > 0) {
+      const total = lines.reduce((n, l) => n + l.cost, 0);
+      monture.push(
+        chip("Compétences", {
+          title: "Compétences de monture (cavalier)",
+          price: `+${total} Ko`,
+          lines: lines.map((l) => `${l.label} (+${l.cost} Ko)`),
+        }),
+      );
+    }
+  }
   // N'affiche que les cartes automatiques (appliquées d'office) et les améliorations réellement sélectionnées.
   const cartes = specialCardsForProfile(p, cat)
     .filter((c) => !c.amelioration || upgrades.includes(c.id))
@@ -140,9 +161,11 @@ export function PurchaseSummary({
   }
   const rows: [string, SummaryChip[]][] = [
     ["Armes", armes],
+    ["Armure", armures],
     ["Équipement", objets],
     ["Cartes", cartes],
     ["Magie", magie],
+    ["Monture", monture],
   ];
   const shown = rows.filter(([, v]) => v.length > 0);
   // Rien à acheter → pas de panneau (les erreurs sont affichées sur la ligne de la figurine).

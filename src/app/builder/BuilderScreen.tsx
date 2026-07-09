@@ -41,6 +41,7 @@ import { MountPicker, MountPreview, MountSheet } from "./MountDialog";
 import { RosterGroup } from "./RosterGroup";
 import { OstPanel } from "./OstPanel";
 import { PurchaseSummary } from "./PurchaseSummary";
+import { MountPurchaseSummary } from "./MountPurchaseSummary";
 import { encodeList } from "../io/listCode";
 import { exportText } from "../io/listText";
 
@@ -500,6 +501,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             grantedUpgrades={evaluation.grantedUpgrades[x.inst.instanceId] ?? []}
             costRules={evaluation.equipmentCostRules[x.inst.instanceId] ?? []}
             grimoireDiscount={evaluation.grimoireDiscount[x.inst.instanceId] ?? {}}
+            mountId={x.inst.mount?.mountId}
+            mountOptionIds={x.inst.mountOptionIds}
             onPick={setItemInfo}
           />
         )}
@@ -544,6 +547,13 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             </button>
           </div>
         </div>
+        <MountPurchaseSummary
+          cat={cat}
+          factionId={x.p.factionId}
+          mount={x.inst.mount!}
+          mountOptionIds={x.inst.mountOptionIds}
+          onPick={setItemInfo}
+        />
       </div>
     );
   };

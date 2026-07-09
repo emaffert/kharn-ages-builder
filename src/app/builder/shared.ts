@@ -3,8 +3,10 @@ import {
   pageBonusSources as corePageBonusSources,
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
+  mountKindOf,
+  mountOptionCostOf,
 } from "@core";
-import type { Catalog, Profile, ProfileInstance, Selector, Spell } from "@core";
+import type { Catalog, MountOption, Profile, ProfileInstance, Selector, Spell } from "@core";
 import type { ArmorDisplay } from "./StatSheet";
 // Libellés de présentation partagés avec l'admin (source unique dans @ui) - alias pour garder les noms locaux.
 import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
@@ -15,6 +17,32 @@ import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
  */
 
 export { STATS, LEVEL };
+
+/**
+ * Lignes d'achat d'options de monture (p.32) pour un ensemble de paniers, avec leur coût unitaire.
+ * Sert à grouper l'achat de compétences en une seule entrée « Compétences +X Ko » dans les résumés.
+ * Le libellé est le mot-clé de la compétence conférée (+ valeur X si l'option en a une), sinon le nom de l'option.
+ */
+export function mountOptionLines(
+  cat: Catalog,
+  mountOptionIds: Record<string, number> | undefined,
+  buckets: MountOption["bucket"][],
+  mountId?: string,
+): { label: string; cost: number }[] {
+  const kind = mountKindOf(cat, mountId);
+  return Object.entries(mountOptionIds ?? {})
+    .map(([oid, val]) => {
+      const opt = cat.mountOptions.find((o) => o.id === oid);
+      return opt ? { opt, val } : null;
+    })
+    .filter((x): x is { opt: MountOption; val: number } => x != null && buckets.includes(x.opt.bucket))
+    .map(({ opt, val }) => {
+      const kw = opt.grantsSkill
+        ? (cat.skills.find((s) => s.id === opt.grantsSkill!.skillId)?.keyword ?? opt.name)
+        : opt.name;
+      return { label: `${kw}${opt.maxValue != null ? ` ${val}` : ""}`, cost: mountOptionCostOf(opt, val, kind) };
+    });
+}
 
 /**
  * Armures portées, dérivées d'une liste d'équipements (catégorie « armure ») : Brigandine, Caparaçon…

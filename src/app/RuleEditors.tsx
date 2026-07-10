@@ -983,21 +983,46 @@ export function EffectListEditor({
           </details>
           <details>
             <summary className="cursor-pointer text-xs adm-faint">
-              désignation « garde du corps » (optionnel)
+              liaison à une autre figurine (optionnel)
             </summary>
             <div className="mt-1 space-y-1">
               <p className="text-xs adm-faint">
-                Si renseigné, la cible (le garde) ne bénéficie de l'effet que si elle est désignée pour
-                protéger l'une de ces figurines.
+                Si renseigné, la cible (ex. le garde) ne bénéficie de l'effet que si elle est désignée
+                pour être liée à l'une de ces figurines.
               </p>
+              <Field label="Nom de la liaison" hint="affiché dans le constructeur (défaut « garde du corps »)">
+                <input
+                  value={e.designation?.label ?? ""}
+                  placeholder="garde du corps"
+                  disabled={!e.designation}
+                  onChange={(ev) =>
+                    e.designation &&
+                    update(i, {
+                      ...e,
+                      designation: { ...e.designation, label: ev.target.value || undefined },
+                    })
+                  }
+                  className={`${INPUT} block w-full`}
+                />
+              </Field>
               <SelectorEditor
                 selector={e.designation?.of ?? {}}
                 cat={cat}
                 allowSelf={false}
-                onChange={(s) => update(i, { ...e, designation: Object.keys(s).length ? { of: s } : undefined })}
+                onChange={(s) =>
+                  update(i, {
+                    ...e,
+                    designation: Object.keys(s).length ? { ...e.designation, of: s } : undefined,
+                  })
+                }
               />
             </div>
           </details>
+          <CheckField
+            label="au choix du joueur (opt-in)"
+            checked={e.optIn ?? false}
+            onChange={(b) => update(i, { ...e, optIn: b || undefined })}
+          />
           <Field label="Texte verbatim" hint="fait foi">
             <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} block w-full`} rows={2} />
           </Field>

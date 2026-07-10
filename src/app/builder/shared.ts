@@ -212,8 +212,11 @@ function selectorMatchesProfile(sel: Selector, p: Profile): boolean {
   return any;
 }
 
-/** Un effet de désignation : `guardMatch` = qui est le garde, `of` = les figurines protégeables. */
-type GuardDesignation = { guardMatch: (p: Profile) => boolean; of: Selector };
+/** Nom par défaut de la liaison quand l'effet ne précise pas de `designation.label`. */
+export const DEFAULT_LINK_LABEL = "garde du corps";
+
+/** Un effet de désignation : `guardMatch` = qui est le garde, `of` = les figurines liables, `label` = nom de la liaison. */
+type GuardDesignation = { guardMatch: (p: Profile) => boolean; of: Selector; label: string };
 
 function guardDesignations(cat: Catalog): GuardDesignation[] {
   const out: GuardDesignation[] = [];
@@ -224,13 +227,17 @@ function guardDesignations(cat: Catalog): GuardDesignation[] {
       const guardMatch = e.target.self
         ? (q: Profile) => q.id === p.id
         : (q: Profile) => selectorMatchesProfile(e.target, q);
-      out.push({ guardMatch, of: e.designation.of });
+      out.push({ guardMatch, of: e.designation.of, label: e.designation.label ?? DEFAULT_LINK_LABEL });
     }
   }
   for (const s of cat.specialCards) {
     for (const e of s.effects ?? []) {
       if (!e.designation || e.target.self) continue; // `self` sur une carte n'a pas de source unique
-      out.push({ guardMatch: (q: Profile) => selectorMatchesProfile(e.target, q), of: e.designation.of });
+      out.push({
+        guardMatch: (q: Profile) => selectorMatchesProfile(e.target, q),
+        of: e.designation.of,
+        label: e.designation.label ?? DEFAULT_LINK_LABEL,
+      });
     }
   }
   return out;
@@ -241,6 +248,11 @@ export function protecteeSelectorsFor(guard: Profile, cat: Catalog): Selector[] 
   return guardDesignations(cat)
     .filter((d) => d.guardMatch(guard))
     .map((d) => d.of);
+}
+
+/** Nom de la liaison qu'un garde donné propose (première désignation correspondante ; défaut « garde du corps »). */
+export function designationLabelFor(guard: Profile, cat: Catalog): string {
+  return guardDesignations(cat).find((d) => d.guardMatch(guard))?.label ?? DEFAULT_LINK_LABEL;
 }
 
 /** Un profil (protégé candidat) correspond-il à l'un de ces sélecteurs ? */

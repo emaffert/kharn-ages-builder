@@ -5,6 +5,7 @@ import {
   FACTIONS,
   LEVEL,
   canBuy,
+  designationLabelFor,
   isAttachmentDependent,
   isDependent,
   isRecruitableIn,
@@ -361,6 +362,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     const isLeader = id === fdl.leaderInstanceId;
     const guarded = x.inst.bodyguardOfInstanceId != null;
     const guardOf = guarded ? memberOf(x.inst.bodyguardOfInstanceId!)?.p.name : null;
+    const linkLabel = designationLabelFor(x.p, cat); // nom de la liaison (« garde du corps » par défaut)
+    const linkLabelCap = linkLabel.charAt(0).toUpperCase() + linkLabel.slice(1);
     const eligible = guardEligible(id, x.p) || guarded; // reste dispo pour se dé-désigner
     const free = costOf(id) === 0 && guarded;
     const open = !collapsed.has(id);
@@ -475,9 +478,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               <button
                 className={`bld-pill${guarded ? " on" : ""}`}
                 onClick={() => onGuardClick(id)}
-                title={guarded ? "Retirer la désignation" : "Désigner comme garde du corps"}
+                title={guarded ? "Retirer la désignation" : `Désigner comme ${linkLabel}`}
               >
-                {guarded ? `✓ Garde du corps de ${guardOf}` : "Garde du corps"}
+                {guarded ? `✓ ${linkLabelCap} de ${guardOf}` : linkLabelCap}
               </button>
             )}
             {canAddMount && (
@@ -865,9 +868,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         (() => {
           const guard = memberOf(modal.instanceId);
           const options = guard ? availableProtectees(modal.instanceId, guard.p) : [];
+          const linkLabel = guard ? designationLabelFor(guard.p, cat) : "garde du corps";
+          const linkLabelCap = linkLabel.charAt(0).toUpperCase() + linkLabel.slice(1);
           return (
-            <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Garde du corps" size="sm">
-              <p className="mdl-note">{guard?.p.name} sera désigné garde du corps de :</p>
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title={linkLabelCap} size="sm">
+              <p className="mdl-note">{guard?.p.name} sera désigné {linkLabel} de :</p>
               <div className="mdl-list">
                 {options.map((x) => (
                   <button

@@ -109,11 +109,12 @@ export const EffectSchema = z.object({
   /** Cible de l'effet (peut être `self`). */
   target: SelectorSchema,
   /**
-   * Désignation « garde du corps » : la cible (le garde) ne bénéficie de l'opération que si elle est
-   * assignée à protéger l'une des figurines décrites par `of`. Pilote l'UI de désignation du
-   * constructeur ET conditionne la remise dans le moteur (ex. Larbin → Fille de Nyx ; Djouked → Broutcha).
+   * Liaison à une autre figurine : la source (ex. le garde) ne bénéficie de l'effet que si elle est
+   * assignée à l'une des figurines décrites par `of`. Pilote l'UI de désignation du constructeur ET
+   * conditionne l'effet dans le moteur (ex. Larbin → Fille de Nyx ; Djouked → Broutcha).
+   * `label` = nom de la liaison affiché dans le constructeur (défaut « garde du corps »).
    */
-  designation: z.object({ of: SelectorSchema }).optional(),
+  designation: z.object({ of: SelectorSchema, label: z.string().optional() }).optional(),
   operation: EffectOperationSchema,
   /** true => effet optionnel (choix du joueur) : NON appliqué automatiquement par le moteur. */
   optIn: z.boolean().optional(),

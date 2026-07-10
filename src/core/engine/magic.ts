@@ -55,7 +55,7 @@ export function pageBonusSources(
     .filter((c) => cardApplies(c, profile, traits, selected))
     .flatMap((c) =>
       c.effects
-        .filter((e) => e.appliesToListBuilding && e.operation.kind === "spell-pages")
+        .filter((e) => e.operation.kind === "spell-pages")
         .map((e) => ({ name: c.name, amount: (e.operation as { amount?: number }).amount ?? 0 })),
     )
     .filter((s) => s.amount > 0);

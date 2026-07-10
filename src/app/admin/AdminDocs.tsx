@@ -140,7 +140,6 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <li><strong>opération</strong> - ce que fait l'effet (référence ci-dessous) ;</li>
             <li><strong>cible</strong> - à qui il s'applique (un sélecteur) ;</li>
             <li><strong>condition</strong> - état requis pour qu'il s'active (optionnel) ; on peut cumuler plusieurs clauses, <strong>toutes</strong> devant être vraies (ET), ex. « ≥3 Dogons ET ≥1 Père de famille » ;</li>
-            <li><strong>appliqué à la construction</strong> - si décoché, l'effet est « en jeu » seulement (affiché, jamais calculé au coût) ;</li>
             <li><strong>au choix du joueur</strong> - l'effet n'est pas appliqué d'office (ex. réduction « garde rapprochée »).</li>
           </ul>
 

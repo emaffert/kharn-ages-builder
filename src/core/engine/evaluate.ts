@@ -275,17 +275,13 @@ function collectEffectOccurrences(
   resolved: ResolvedInstance[],
   cat: Catalog,
   idx: CatalogIndex,
-  /** true => inclut aussi les effets « en jeu » (appliesToListBuilding false) - pour l'affichage. */
-  includeInGame = false,
 ): EffectOccurrence[] {
   const occurrences: EffectOccurrence[] = [];
 
   // Effets portés par les profils présents. Un effet « optIn » (choix du joueur) n'est appliqué
   // que si l'instance a explicitement opté - désignée garde du corps (ex. Djouked → −35 pour Broutcha).
-  // Les effets `appliesToListBuilding: false` sont « en jeu seulement » : jamais calculés ici.
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
-      if (!includeInGame && !effect.appliesToListBuilding) continue;
       if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
       occurrences.push({
         effect,
@@ -303,7 +299,6 @@ function collectEffectOccurrences(
     if (!mountId) continue;
     const mount = cat.mounts.find((m) => m.id === mountId);
     for (const effect of mount?.effects ?? []) {
-      if (!includeInGame && !effect.appliesToListBuilding) continue;
       if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
       occurrences.push({
         effect,
@@ -328,7 +323,7 @@ function collectEffectOccurrences(
       const sources = inFdl.filter((ri) => specialCardScopeMatches(card, ri));
       if (sources.length === 0) continue;
       for (const effect of card.effects) {
-        if ((!includeInGame && !effect.appliesToListBuilding) || effect.optIn) continue;
+        if (effect.optIn) continue;
         if (effect.target.self) {
           // Effet ciblant la source elle-même (ex. Syrga → « Embuscade ») : il faut l'identité de
           // chaque porteuse, donc une occurrence par figurine-source.
@@ -354,7 +349,6 @@ function collectEffectOccurrences(
       const card = idx.specialCard.get(cardId);
       if (!card) continue;
       for (const effect of card.effects) {
-        if (!includeInGame && !effect.appliesToListBuilding) continue;
         occurrences.push({
           effect,
           ferDeLanceId: ri.ferDeLanceId,
@@ -394,7 +388,6 @@ function ostCardOccurrences(
   list: ListDocument,
   cat: Catalog,
   resolved: ResolvedInstance[],
-  includeInGame: boolean,
 ): EffectOccurrence[] {
   const out: EffectOccurrence[] = [];
   const anyFdl = resolved[0]?.ferDeLanceId ?? list.fersDeLance[0]?.id ?? "";
@@ -402,7 +395,6 @@ function ostCardOccurrences(
     const card = cat.specialCards.find((c) => c.id === id);
     if (!card?.ostScope || !ostCardActive(card, resolved)) continue;
     for (const effect of card.effects) {
-      if (!includeInGame && !effect.appliesToListBuilding) continue;
       out.push({ effect, ferDeLanceId: anyFdl, sourceCount: 1 });
     }
   }
@@ -1600,7 +1592,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const resolved = buildResolved(list, idx);
   const occurrences = [
     ...collectEffectOccurrences(resolved, cat, idx),
-    ...ostCardOccurrences(list, cat, resolved, false),
+    ...ostCardOccurrences(list, cat, resolved),
   ];
 
   applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe (construction)
@@ -1615,11 +1607,12 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const equipmentCostRules = collectEquipmentCostRules(resolved, occurrences, cat); // remises par objet
   const issues = validate(cat, list, resolved, idx, limitBonuses); // 5 : contraintes
 
-  // Affichage : tous les effets d'octroi / de statistique, y compris « en jeu », sur des clones.
+  // Affichage : mêmes effets, mais appliqués sur des CLONES pour ne pas polluer le calcul des coûts
+  // (les deltas de stat / valeurs de compétence ne doivent pas rétroagir sur la construction).
   const display = cloneForDisplay(resolved);
   const displayOcc = [
-    ...collectEffectOccurrences(display, cat, idx, true),
-    ...ostCardOccurrences(list, cat, display, true),
+    ...collectEffectOccurrences(display, cat, idx),
+    ...ostCardOccurrences(list, cat, display),
   ];
   applyGrants(display, displayOcc);
   const statDeltasByInstance = computeStatDeltas(display, displayOcc);

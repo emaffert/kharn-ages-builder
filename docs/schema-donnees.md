@@ -400,7 +400,6 @@ interface Effect {
   condition?: Selector;       // état requis (présence, comptage…). Absent = actif dès la source recrutée.
   target: Selector;           // cible (peut être self)
   operation: EffectOperation;
-  appliesToListBuilding: boolean; // false = effet en jeu seulement (affiché verbatim, non calculé)
   optIn?: boolean;            // true = effet optionnel (choix du joueur), non appliqué d'office
                              //        (ex. réduction « garde du corps » : Djouked pour Broutcha)
   sourceText: string;         // verbatim, fait foi

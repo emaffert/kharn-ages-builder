@@ -1518,7 +1518,6 @@
             "kind": "cost-delta",
             "amount": -10
           },
-          "appliesToListBuilding": true,
           "sourceText": "Arme de prédilection : paye 10 de moins l'Arbalète de poing.",
           "autoEnforced": true
         }
@@ -1618,7 +1617,6 @@
             "kind": "cost-delta",
             "amount": -10
           },
-          "appliesToListBuilding": true,
           "sourceText": "Arme de prédilection : paye 10 de moins l'Arbalète de poing.",
           "autoEnforced": true
         }
@@ -2514,7 +2512,6 @@
             "kind": "cost-delta",
             "amount": -35
           },
-          "appliesToListBuilding": true,
           "optIn": true,
           "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha.",
           "autoEnforced": true
@@ -2597,7 +2594,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Dogons est égale au nombre de Dogons en jeu.",
           "autoEnforced": false
         }
@@ -2674,7 +2670,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu.",
           "autoEnforced": false
         }
@@ -2759,7 +2754,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3).",
           "autoEnforced": false
         }
@@ -2853,7 +2847,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4).",
           "autoEnforced": false
         }
@@ -2951,7 +2944,6 @@
             "kind": "grant-spell",
             "spellId": "onde-revigorante"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Connaît le sort « Onde revigorante » d'office.",
           "autoEnforced": true
         }
@@ -3038,7 +3030,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu.",
           "autoEnforced": false
         }
@@ -3135,7 +3126,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3).",
           "autoEnforced": false
         }
@@ -3237,7 +3227,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4).",
           "autoEnforced": false
         }
@@ -3437,7 +3426,6 @@
             },
             "per": 3
           },
-          "appliesToListBuilding": true,
           "sourceText": "Seigneur de Guerre - +1 par groupe de 3 Niv I.",
           "autoEnforced": false
         }
@@ -3514,7 +3502,6 @@
             "kind": "grant-spell",
             "spellId": "lien-mental"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Connaît le sort « Lien Mental » d'office.",
           "autoEnforced": true
         }
@@ -3737,7 +3724,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "La témérité des Artisanes dogons est égale au nombre de Goûns Niveau I en jeu.",
           "autoEnforced": false
         }
@@ -4881,7 +4867,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         },
@@ -4904,7 +4889,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         }
@@ -4995,7 +4979,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         },
@@ -5018,7 +5001,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         }
@@ -5379,7 +5361,6 @@
             "kind": "cost-delta",
             "amount": -15
           },
-          "appliesToListBuilding": true,
           "sourceText": "Les Paladins de son Fer de Lance coûtent 15 Kouronnes de moins s’il est leader.",
           "autoEnforced": true
         }
@@ -5569,7 +5550,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         },
@@ -5592,7 +5572,6 @@
               ]
             }
           },
-          "appliesToListBuilding": true,
           "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         }
@@ -5777,7 +5756,6 @@
               "arme-cac"
             ]
           },
-          "appliesToListBuilding": true,
           "sourceText": "Peut empoisonner son arme pour 10 Ko mais elle devient incessible.",
           "autoEnforced": true
         }
@@ -7009,7 +6987,6 @@
             "amount": -5,
             "requiresBaseSwap": true
           },
-          "appliesToListBuilding": true,
           "sourceText": "Permet aux Guerriers khérops de s'équiper pour 5 Ko de moins s'ils changent leur arme de base.",
           "autoEnforced": true
         }
@@ -7088,7 +7065,6 @@
             "kind": "limit-modifier",
             "amount": 1
           },
-          "appliesToListBuilding": true,
           "sourceText": "Chef : Les limitations des Khérops non uniques, non personnages augmentent de 1 dans son Ost ou dans son Fer de Lance.",
           "autoEnforced": true
         }
@@ -7241,7 +7217,6 @@
             "kind": "cost-delta",
             "amount": -10
           },
-          "appliesToListBuilding": true,
           "sourceText": "Paye 10 Ko de moins les armes à deux mains.",
           "autoEnforced": true
         }
@@ -8359,7 +8334,6 @@
             "tier": "petit",
             "amount": 20
           },
-          "appliesToListBuilding": true,
           "sourceText": "Petit grimoire gratuit pour les shamans cavaliers.",
           "autoEnforced": false
         }
@@ -8413,7 +8387,6 @@
             "tier": "grand",
             "amount": 40
           },
-          "appliesToListBuilding": true,
           "sourceText": "Grand grimoire gratuit pour les shamans cavaliers.",
           "autoEnforced": false
         }
@@ -8637,7 +8610,6 @@
             "amount": 0,
             "maxCount": 2
           },
-          "appliesToListBuilding": true,
           "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
           "autoEnforced": true
         },
@@ -8655,7 +8627,6 @@
             "kind": "spell-pages",
             "amount": 3
           },
-          "appliesToListBuilding": true,
           "sourceText": "Elles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit.",
           "autoEnforced": false
         }
@@ -8699,7 +8670,6 @@
             "kind": "grant-skill",
             "skillId": "osteomancie"
           },
-          "appliesToListBuilding": true,
           "sourceText": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie.",
           "autoEnforced": true
         },
@@ -8718,7 +8688,6 @@
             "stat": "i",
             "amount": "level"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Elle ajoute son niveau à sa valeur de I pour la partie.",
           "autoEnforced": false
         }
@@ -8816,7 +8785,6 @@
             "kind": "spell-pages",
             "amount": 3
           },
-          "appliesToListBuilding": true,
           "sourceText": "Peut contenir 3 pages de sorts.",
           "autoEnforced": false
         }
@@ -8892,7 +8860,6 @@
             "skillId": "heroique",
             "value": "défense"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",
           "autoEnforced": false
         },
@@ -8926,7 +8893,6 @@
             "kind": "grant-skill",
             "skillId": "instinct-de-survie"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",
           "autoEnforced": false
         }
@@ -9076,7 +9042,6 @@
             "kind": "grant-skill",
             "skillId": "embuscade"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Si le Prince ou Engueran est dans son Fer de Lance, elle gagne « Embuscade ».",
           "autoEnforced": true
         },
@@ -9102,7 +9067,6 @@
             "skillId": "heroique",
             "value": "objectif"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Si le Prince ou Engueran est dans son Fer de Lance, elle gagne « Héroïque objectif ».",
           "autoEnforced": true
         }
@@ -9202,7 +9166,6 @@
             "kind": "grant-skill",
             "skillId": "rusee"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé ».",
           "autoEnforced": true
         }
@@ -9249,7 +9212,6 @@
             "kind": "grant-skill",
             "skillId": "hors-norme"
           },
-          "appliesToListBuilding": true,
           "sourceText": "Le Porte-Bannière est considéré comme possédant « Hors Normes » tant qu'il porte sa bannière.",
           "autoEnforced": true
         },
@@ -9273,7 +9235,6 @@
             "kind": "cost-delta",
             "amount": -14
           },
-          "appliesToListBuilding": true,
           "sourceText": "Si le Tambour est dans le Fer de Lance, la bannière khéropse est gratuite.",
           "autoEnforced": true
         },
@@ -9296,7 +9257,6 @@
               "tir"
             ]
           },
-          "appliesToListBuilding": true,
           "sourceText": "Apporte 1 dé de maîtrise supplémentaire.",
           "autoEnforced": true
         }
@@ -9376,7 +9336,6 @@
               }
             ]
           },
-          "appliesToListBuilding": true,
           "sourceText": "Les armes forgées au Borax confèrent « spécialiste attaque » et « spécialiste défense » aux guerriers équipés (5 Ko/arme).",
           "autoEnforced": false
         },
@@ -9406,7 +9365,6 @@
               }
             ]
           },
-          "appliesToListBuilding": true,
           "sourceText": "Les armures forgées au Borax confèrent « instinct de survie » aux guerriers équipés (10 Ko/armure).",
           "autoEnforced": false
         }

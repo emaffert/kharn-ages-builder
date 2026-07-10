@@ -983,7 +983,6 @@ export function EffectListEditor({
               scope: "fer-de-lance",
               target: { self: true },
               operation: { kind: "cost-delta", amount: 0 },
-              appliesToListBuilding: true,
               sourceText: "",
               autoEnforced: true,
             },

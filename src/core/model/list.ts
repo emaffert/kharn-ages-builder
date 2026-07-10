@@ -39,7 +39,6 @@ export const ProfileInstanceSchema = z.object({
   attachedInstanceIds: z.array(z.string()).optional(),
   /** Si cette instance occupe un emplacement gratuit « garde du corps » offert par une autre instance. */
   bodyguardOfInstanceId: z.string().optional(),
-  orderIds: z.array(z.string()).optional(),
   /** Cartes spéciales payantes sélectionnées (opt-in), ex. « Apprentie de Nyx ». */
   specialCardIds: z.array(z.string()).optional(),
   /**
@@ -86,7 +85,6 @@ export const ListDocumentSchema = z.object({
   fersDeLance: z.array(FerDeLanceSchema),
   ost: z
     .object({
-      pactId: z.string().optional(),
       /** Cartes à portée Ost sélectionnées (opt-in au niveau de la liste, ex. « Pacte du Secret »). */
       cardIds: z.array(z.string()).optional(),
     })

@@ -158,7 +158,6 @@ interface CatalogIndex {
   grimoireCost: Map<string, number>;
   spellCost: Map<string, number>;
   mountCost: Map<string, number>;
-  orderCost: Map<string, number>;
 }
 
 interface ResolvedInstance {
@@ -191,7 +190,6 @@ function indexCatalog(cat: Catalog): CatalogIndex {
     grimoireCost: new Map(cat.grimoires.map((g) => [g.id, g.cost])),
     spellCost: new Map(cat.spells.map((s) => [s.id, s.cost ?? 0])),
     mountCost: new Map(cat.mounts.map((m) => [m.id, m.cost])),
-    orderCost: new Map(cat.orders.map((o) => [o.id, o.cost])),
   };
 }
 
@@ -478,7 +476,6 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog)
   // Coût de la monture (niveau, équipement monté, options « monture ») : traité à part. Voir `mountCostOf`.
   // Ici on n'ajoute que les options « cavalier » et « partagées » (comptées une fois, côté cavalier).
   if (inst.mount) cost += mountOptionsCost(cat, inst, ["rider", "both"]);
-  for (const id of inst.orderIds ?? []) cost += idx.orderCost.get(id) ?? 0;
   for (const id of inst.specialCardIds ?? []) {
     const card = idx.specialCard.get(id);
     // Les améliorations partagées sont facturées une fois par Fer de Lance (cf. computeCosts), pas par instance.

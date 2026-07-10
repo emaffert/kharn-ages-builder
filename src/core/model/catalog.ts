@@ -299,24 +299,6 @@ export const MountOptionSchema = z.object({
 });
 export type MountOption = z.infer<typeof MountOptionSchema>;
 
-export const PactSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  compositionText: z.string(),
-  composition: z.array(ConstraintSchema),
-  advantageText: z.string(),
-});
-export type Pact = z.infer<typeof PactSchema>;
-
-export const OrderSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  cost: z.number(),
-  effectText: z.string(),
-  assignableTo: z.array(z.enum(["vassal", "seigneur-de-guerre"])),
-});
-export type Order = z.infer<typeof OrderSchema>;
-
 /** Carte spéciale / de règle / de trait (affichable), liée à des profils ou à un groupe. */
 export const SpecialCardSchema = z.object({
   id: z.string(),
@@ -404,8 +386,6 @@ export const CatalogSchema = z.object({
   mountTypes: z.array(MountTypeSchema),
   mounts: z.array(MountSchema),
   mountOptions: z.array(MountOptionSchema),
-  pacts: z.array(PactSchema),
-  orders: z.array(OrderSchema),
   specialCards: z.array(SpecialCardSchema),
   /** Sortes de munitions achetables (flèches, carreaux…) ; référencées par `equipment.munitionKind`. */
   munitionKinds: z.array(MunitionKindSchema).optional(),

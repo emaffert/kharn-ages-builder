@@ -23,12 +23,30 @@ const EQUIP_CAT_LABEL: Record<string, string> = {
   objet: "Objets",
 };
 
+type AdminView =
+  | "profiles"
+  | "equipment"
+  | "skills"
+  | "special-cards"
+  | "spells"
+  | "magic-ways"
+  | "mounts"
+  | "mount-options";
+
+// Navigation groupée par domaine (ordonnée), plutôt qu'une rangée d'onglets en vrac.
+const NAV_GROUPS: { label: string; items: [AdminView, string][] }[] = [
+  { label: "Figurines", items: [["profiles", "Profils"], ["special-cards", "Cartes spé."]] },
+  { label: "Objets", items: [["equipment", "Équipement"], ["skills", "Compétences"]] },
+  { label: "Magie", items: [["spells", "Sorts"], ["magic-ways", "Voies"]] },
+  { label: "Montures", items: [["mounts", "Montures"], ["mount-options", "Options"]] },
+];
+
 export function AdminCatalog() {
   const store = useCatalogStore();
   const { catalog } = store;
-  const [view, setView] = useState<
-    "profiles" | "equipment" | "skills" | "special-cards" | "spells" | "magic-ways" | "mounts" | "mount-options"
-  >("profiles");
+  const [view, setView] = useState<AdminView>("profiles");
+  // Grande partie sélectionnée dans la nav (révèle ses sous-parties en dessous).
+  const [navGroup, setNavGroup] = useState(NAV_GROUPS[0].label);
   const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
   const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
   const [selectedSkillId, setSelectedSkillId] = useState(catalog.skills[0]?.id ?? "");
@@ -134,32 +152,22 @@ export function AdminCatalog() {
               Aide
             </button>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => setView("profiles")} className={tabClass(view === "profiles")}>
-              Profils
-            </button>
-            <button onClick={() => setView("equipment")} className={tabClass(view === "equipment")}>
-              Équipement
-            </button>
-            <button onClick={() => setView("skills")} className={tabClass(view === "skills")}>
-              Compétences
-            </button>
-            <button onClick={() => setView("special-cards")} className={tabClass(view === "special-cards")}>
-              Cartes spé.
-            </button>
-            <button onClick={() => setView("spells")} className={tabClass(view === "spells")}>
-              Sorts
-            </button>
-            <button onClick={() => setView("magic-ways")} className={tabClass(view === "magic-ways")}>
-              Voies
-            </button>
-            <button onClick={() => setView("mounts")} className={tabClass(view === "mounts")}>
-              Montures
-            </button>
-            <button onClick={() => setView("mount-options")} className={tabClass(view === "mount-options")}>
-              Options de monture
-            </button>
-          </div>
+          <nav className="space-y-1.5">
+            <div className="flex flex-wrap gap-1.5">
+              {NAV_GROUPS.map((g) => (
+                <button key={g.label} onClick={() => setNavGroup(g.label)} className={tabClass(navGroup === g.label)}>
+                  {g.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5 border-t pt-1.5 adm-bd-soft">
+              {(NAV_GROUPS.find((g) => g.label === navGroup)?.items ?? []).map(([id, label]) => (
+                <button key={id} onClick={() => setView(id)} className={tabClass(view === id)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </nav>
           <div className="relative">
             <input
               value={query}
@@ -187,29 +195,6 @@ export function AdminCatalog() {
               ))}
             </select>
           )}
-          <div className="flex flex-wrap gap-1.5">
-            {import.meta.env.DEV && (
-              <Button variant="primary" size="sm" className="flex-1" onClick={onSave}>
-                Enregistrer
-              </Button>
-            )}
-            <Button variant="primary" size="sm" onClick={store.exportJson}>
-              Exporter
-            </Button>
-            <Button size="sm" onClick={() => fileRef.current?.click()}>
-              Importer
-            </Button>
-            <Button size="sm" onClick={store.reset} disabled={!store.dirty}>
-              Réinit.
-            </Button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json,.json"
-              onChange={onImport}
-              className="hidden"
-            />
-          </div>
           <p className="adm-faint text-xs">
             {view === "profiles" &&
               `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`}
@@ -392,6 +377,30 @@ export function AdminCatalog() {
             </>
           )}
         </ul>
+
+        <div className="adm-sidebar-foot flex flex-wrap gap-1.5 p-3">
+          {import.meta.env.DEV && (
+            <Button variant="primary" size="sm" className="flex-1" onClick={onSave}>
+              Enregistrer
+            </Button>
+          )}
+          <Button variant="primary" size="sm" onClick={store.exportJson}>
+            Exporter
+          </Button>
+          <Button size="sm" onClick={() => fileRef.current?.click()}>
+            Importer
+          </Button>
+          <Button size="sm" onClick={store.reset} disabled={!store.dirty}>
+            Réinit.
+          </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={onImport}
+            className="hidden"
+          />
+        </div>
       </aside>
 
       <main className="flex flex-1 overflow-hidden">

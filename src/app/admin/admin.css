@@ -9,6 +9,8 @@
 .adm-shell { background: var(--forge); color: var(--bone); }
 .adm-sidebar { border-right: 1px solid var(--hair); background: var(--tint-1); }
 .adm-sidebar-head { border-bottom: 1px solid var(--hair); }
+/* Pied de la barre latérale : actions (enregistrer/exporter…), séparées de la navigation. */
+.adm-sidebar-foot { border-top: 1px solid var(--hair); background: var(--tint-1); }
 .adm-preview { border-left: 1px solid var(--hair); }
 
 /* Textes */

@@ -26,6 +26,8 @@ describe("AdminCatalog (rendu)", () => {
 
   it("bascule sur l'onglet Équipement et permet d'éditer un équipement", () => {
     render(<AdminCatalog />);
+    // Nav à deux niveaux : sélectionner la grande partie avant sa sous-partie.
+    fireEvent.click(screen.getByRole("button", { name: "Objets" }));
     fireEvent.click(screen.getByRole("button", { name: "Équipement" }));
     expect(screen.getByText(/Texte verbatim/i)).toBeTruthy();
     expect(screen.getByText(/\+ équipement/i)).toBeTruthy();
@@ -35,6 +37,7 @@ describe("AdminCatalog (rendu)", () => {
     render(<AdminCatalog />);
     fireEvent.click(screen.getByRole("button", { name: "Cartes spé." }));
     expect(screen.getByText(/\+ carte spéciale/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Magie" }));
     fireEvent.click(screen.getByRole("button", { name: "Sorts" }));
     expect(screen.getByText(/Difficultés/i)).toBeTruthy();
     expect(screen.getByText(/\+ sort/i)).toBeTruthy();

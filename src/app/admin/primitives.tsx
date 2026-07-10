@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Tag } from "@ui";
 import type { FieldValue } from "../useCatalogStore";
 import { INPUT } from "./shared";
@@ -133,7 +133,9 @@ export function SectionNav({ targetRef }: { targetRef: RefObject<HTMLDivElement 
   const [active, setActive] = useState<string>("");
   const sigRef = useRef<string>("");
 
-  useEffect(() => {
+  // useLayoutEffect (et non useEffect) : le sommaire est construit depuis le DOM des sections AVANT
+  // le paint, sinon la colonne de détail se décale quand il apparaît après coup.
+  useLayoutEffect(() => {
     const root = targetRef.current;
     if (!root) return;
     const scroll = root.closest<HTMLElement>(".adm-scroll");
@@ -165,22 +167,27 @@ export function SectionNav({ targetRef }: { targetRef: RefObject<HTMLDivElement 
     };
   }, [targetRef]);
 
-  if (items.length < 2) return null;
   const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // On rend toujours le conteneur (largeur réservée) : le contenu n'apparaît qu'à partir de 2 sections,
+  // mais la gouttière garde sa place → pas de décalage horizontal du détail.
   return (
     <nav className="adm-toc" aria-label="Sommaire">
-      <div className="adm-toc-title">Sommaire</div>
-      {items.map((it) => (
-        <button
-          key={it.id}
-          type="button"
-          onClick={() => go(it.id)}
-          className={`adm-toc-link ${active === it.id ? "adm-toc-link--on" : ""}`}
-        >
-          <Glyph name={it.icon} className="adm-toc-glyph" />
-          <span>{it.title}</span>
-        </button>
-      ))}
+      {items.length >= 2 && (
+        <>
+          <div className="adm-toc-title">Sommaire</div>
+          {items.map((it) => (
+            <button
+              key={it.id}
+              type="button"
+              onClick={() => go(it.id)}
+              className={`adm-toc-link ${active === it.id ? "adm-toc-link--on" : ""}`}
+            >
+              <Glyph name={it.icon} className="adm-toc-glyph" />
+              <span>{it.title}</span>
+            </button>
+          ))}
+        </>
+      )}
     </nav>
   );
 }
@@ -210,9 +217,10 @@ export function DetailPage({
   media?: ReactNode;
 }) {
   const detailRef = useRef<HTMLDivElement | null>(null);
+  // Le détail est placé AVANT le sommaire dans le DOM pour que son ref soit attaché avant que
+  // l'effet de mise en page de SectionNav ne s'exécute ; `.adm-toc { order: -1 }` le replace à gauche.
   return (
     <div className="adm-workspace-inner">
-      <SectionNav targetRef={detailRef} />
       <div className="adm-detail" ref={detailRef}>
         {header}
         {body}
@@ -223,6 +231,7 @@ export function DetailPage({
         {effects}
         {media}
       </div>
+      <SectionNav targetRef={detailRef} />
     </div>
   );
 }

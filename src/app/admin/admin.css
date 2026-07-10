@@ -210,8 +210,9 @@
 .adm-entity-sub .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--bone-faint); }
 .adm-entity-sub .adm-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
-/* SIGNATURE - sommaire ancré (colle au défilement de .adm-scroll, surligné par scroll-spy). */
-.adm-toc { position: sticky; top: 0; flex: none; width: 182px; padding-top: 62px; align-self: flex-start; }
+/* SIGNATURE - sommaire ancré (colle au défilement de .adm-scroll, surligné par scroll-spy).
+   Rendu après le détail dans le DOM (ref attaché à temps), replacé à gauche via order. */
+.adm-toc { order: -1; position: sticky; top: 0; flex: none; width: 182px; padding-top: 62px; align-self: flex-start; }
 .adm-toc-title { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-faint);
   padding: 0 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--hair); }
 .adm-toc-link { display: flex; width: 100%; align-items: center; gap: 9px; padding: 6px 10px; border-radius: var(--radius-sm);

@@ -76,15 +76,29 @@ export function AdminCatalog() {
   };
 
   const q = query.trim().toLowerCase();
-  const filteredProfiles = useMemo(
-    () =>
-      catalog.profiles.filter(
+  // Regroupés par faction (ordre du catalogue), puis par nom de groupe (modèle), puis par niveau
+  // croissant : toutes les figurines d'un même groupe se suivent, du niveau I au III.
+  const filteredProfiles = useMemo(() => {
+    const factionRank = (id?: string) => {
+      const i = catalog.factions.findIndex((f) => f.id === id);
+      return i < 0 ? catalog.factions.length : i;
+    };
+    const groupName = (p: (typeof catalog.profiles)[number]) =>
+      (p.modelId != null ? catalog.models.find((m) => m.id === p.modelId)?.name : undefined) ?? p.name;
+    return catalog.profiles
+      .filter(
         (p) =>
           (!q || p.name.toLowerCase().includes(q)) &&
           (factionFilter === "all" || p.factionId === factionFilter),
-      ),
-    [catalog, q, factionFilter],
-  );
+      )
+      .sort(
+        (a, b) =>
+          factionRank(a.factionId) - factionRank(b.factionId) ||
+          groupName(a).localeCompare(groupName(b), "fr") ||
+          (a.level ?? 0) - (b.level ?? 0) ||
+          a.name.localeCompare(b.name, "fr"),
+      );
+  }, [catalog, q, factionFilter]);
   const filteredEquipment = useMemo(() => {
     const rank = (c: string) => {
       const i = EQUIP_CAT_ORDER.indexOf(c);
@@ -211,20 +225,32 @@ export function AdminCatalog() {
 
         <ul className="flex-1 overflow-y-auto p-2">
           {view === "profiles" &&
-            filteredProfiles.map((p) => (
-              <li key={p.id}>
-                <button onClick={() => setSelectedProfileId(p.id)} className={itemClass(p.id === selectedProfileId)}>
-                  <span>
-                    {p.name}
-                    {p.level && <span className="ml-1 adm-faint">{LEVEL_LABEL[p.level]}</span>}
-                  </span>
-                  <span className="flex items-center gap-1 text-xs adm-faint">
-                    {(p.unverifiedFields?.length ?? 0) > 0 && <span className="adm-accent">⚠</span>}
-                    {p.cost}
-                  </span>
-                </button>
-              </li>
-            ))}
+            filteredProfiles.map((p, i) => {
+              const showHeader = i === 0 || filteredProfiles[i - 1].factionId !== p.factionId;
+              const factionName =
+                catalog.factions.find((f) => f.id === p.factionId)?.name ?? "Sans logo";
+              return (
+                <Fragment key={p.id}>
+                  {showHeader && (
+                    <li className="mt-3 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider adm-faint">
+                      {factionName}
+                    </li>
+                  )}
+                  <li>
+                    <button onClick={() => setSelectedProfileId(p.id)} className={itemClass(p.id === selectedProfileId)}>
+                      <span>
+                        {p.name}
+                        {p.level && <span className="ml-1 adm-faint">{LEVEL_LABEL[p.level]}</span>}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs adm-faint">
+                        {(p.unverifiedFields?.length ?? 0) > 0 && <span className="adm-accent">⚠</span>}
+                        {p.cost}
+                      </span>
+                    </button>
+                  </li>
+                </Fragment>
+              );
+            })}
           {view === "equipment" && (
             <>
               {filteredEquipment.map((e, i) => {
@@ -414,6 +440,7 @@ export function AdminCatalog() {
                   updateField={store.updateField}
                   updateProfile={store.updateProfile}
                   updateModel={store.updateModel}
+                  renameModel={store.renameModel}
                   addModel={store.addModel}
                   assignProfileToModel={store.assignProfileToModel}
                   setIcon={store.setIcon}

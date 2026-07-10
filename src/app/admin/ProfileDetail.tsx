@@ -5,8 +5,8 @@ import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForP
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
-import { AddButton, Badge, CheckField, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
-import { INPUT, MASTERY_DOMAINS, SECTION, STAT_LABELS, removeAt, replaceAt } from "./shared";
+import { AddButton, Badge, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
+import { INPUT, MASTERY_DOMAINS, SECTION, STATS_COMBAT, STATS_SECONDARY, STAT_LABELS, removeAt, replaceAt } from "./shared";
 import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
 
 // ── Détail d'un profil ───────────────────────────────────────────────────────
@@ -17,6 +17,7 @@ interface DetailProps {
   updateField: (id: string, path: string, value: FieldValue) => void;
   updateProfile: (id: string, patch: Partial<Profile>) => void;
   updateModel: (id: string, patch: Partial<Model>) => void;
+  renameModel: (id: string, name: string) => string;
   addModel: (factionId?: string) => string;
   assignProfileToModel: (profileId: string, targetModelId: string) => void;
   setIcon: (cardImage: string, dataUrl: string | null) => void;
@@ -71,7 +72,7 @@ export function IconSlot({
   );
 }
 
-export function ProfileDetail({ profile, cat, updateField, updateProfile, updateModel, addModel, assignProfileToModel, setIcon, toggleUnverified }: DetailProps) {
+export function ProfileDetail({ profile, cat, updateField, updateProfile, updateModel, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
   const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
@@ -177,6 +178,49 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
             onClose={() => setEditingIcon(null)}
           />
         )}
+        <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+          <Field
+            label="Groupe de figurines"
+            hint="regroupe les niveaux et variantes d'une même figurine"
+            className="w-56"
+          >
+            <select
+              value={profile.modelId ?? ""}
+              onChange={(e) => onGroupChange(e.target.value)}
+              className={INPUT}
+            >
+              {profile.modelId == null && <option value="">- aucun -</option>}
+              {groupOptions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
+                </option>
+              ))}
+              <option value={NEW_GROUP}>＋ Nouveau groupe…</option>
+            </select>
+          </Field>
+          {model && (
+            <Field
+              label="Nom du groupe"
+              hint="partagé par toutes ses figurines ; nom déjà pris = fusion"
+              className="w-48"
+            >
+              <input
+                value={model.name}
+                onChange={(e) => updateModel(model.id, { name: e.target.value })}
+                onBlur={(e) => renameModel(model.id, e.target.value)}
+                className={INPUT}
+              />
+            </Field>
+          )}
+          {model && siblings.length > 1 && (
+            <span className="pb-1 text-xs adm-faint">
+              regroupe{" "}
+              {siblings
+                .map((s) => `${s.name}${s.level != null ? ` (${ROMAN[s.level] ?? s.level})` : ""}`)
+                .join(", ")}
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
           <Field label="Niveau" className="w-20">
             <select
@@ -192,60 +236,25 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
               <option value="3">III</option>
             </select>
           </Field>
-          <Field label="Faction" className="w-32">
-            <input
+          <Field label="Faction" className="w-40">
+            <select
               value={profile.factionId ?? ""}
               onChange={(e) => patch({ factionId: e.target.value || undefined })}
               className={INPUT}
-            />
+            >
+              {cat.factions.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
           </Field>
-          <CheckField
-            label="Personnage"
-            checked={profile.isNamed ?? false}
-            onChange={(v) => patch({ isNamed: v || undefined })}
-          />
           {casterWays.length > 0 && (
             <span
               className="flex items-center gap-1 text-xs adm-accent"
               title="Lanceur dérivé de ses compétences de voie (onglet « Voies de magie »)"
             >
               Mage : {casterWays.map((w) => w.name).join(", ")}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-          <Field label="Groupe (modèle)" className="w-56">
-            <select
-              value={profile.modelId ?? ""}
-              onChange={(e) => onGroupChange(e.target.value)}
-              className={INPUT}
-              title="Rattache cette figurine à un groupe (regroupe les variantes, ex. les Guerriers)"
-            >
-              {profile.modelId == null && <option value="">- aucun -</option>}
-              {groupOptions.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
-                </option>
-              ))}
-              <option value={NEW_GROUP}>＋ Nouveau groupe…</option>
-            </select>
-          </Field>
-          {model && (
-            <Field label="Nom du groupe" className="w-48">
-              <input
-                value={model.name}
-                onChange={(e) => updateModel(model.id, { name: e.target.value })}
-                className={INPUT}
-                title="Renomme le groupe (nom partagé par toutes ses figurines)"
-              />
-            </Field>
-          )}
-          {model && siblings.length > 1 && (
-            <span className="pb-1 text-xs adm-faint">
-              regroupe{" "}
-              {siblings
-                .map((s) => `${s.name}${s.level != null ? ` (${ROMAN[s.level] ?? s.level})` : ""}`)
-                .join(", ")}
             </span>
           )}
         </div>
@@ -261,83 +270,71 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
       body={
         <>
 
-      <Section title="Caractéristiques (modifiables)">
+      <Section title="Caractéristiques">
         <div className="flex items-center gap-2">
           <FlagButton active={anyStatUnverified} onClick={toggleAllStats} />
           <span className="text-xs adm-faint">
             à vérifier - un seul indicateur pour toutes les caractéristiques
           </span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {STAT_LABELS.map(([k, label]) => (
+        {/* Groupées comme sur la carte : combat (V P A C) · mentales (T I) · dérivées (PA PV Stature). */}
+        <div className="flex flex-wrap items-stretch gap-x-4 gap-y-2">
+          <div className="flex flex-wrap gap-2">
+            {STATS_COMBAT.map(([k, label]) => (
+              <EditableNumber
+                key={label}
+                label={label}
+                value={profile.stats[k]}
+                unverified={anyStatUnverified}
+                onChange={(v) => upd(`stats.${k}`, v)}
+              />
+            ))}
+          </div>
+          <span className="w-px border-l adm-bd-soft" aria-hidden />
+          <div className="flex flex-wrap gap-2">
+            {STATS_SECONDARY.map(([k, label]) => (
+              <EditableNumber
+                key={label}
+                label={label}
+                value={profile.stats[k]}
+                unverified={anyStatUnverified}
+                onChange={(v) => upd(`stats.${k}`, v)}
+              />
+            ))}
+          </div>
+          <span className="w-px border-l adm-bd-soft" aria-hidden />
+          <div className="flex flex-wrap gap-2">
             <EditableNumber
-              key={label}
-              label={label}
-              value={profile.stats[k]}
+              label="PA"
+              value={profile.pa}
               unverified={anyStatUnverified}
-              onChange={(v) => upd(`stats.${k}`, v)}
+              onChange={(v) => upd("pa", v ?? 0)}
             />
-          ))}
-          <EditableNumber
-            label="Stature"
-            value={profile.stature}
-            unverified={anyStatUnverified}
-            onChange={(v) => upd("stature", v ?? 0)}
-          />
-          <EditableNumber
-            label="PA"
-            value={profile.pa}
-            unverified={anyStatUnverified}
-            onChange={(v) => upd("pa", v ?? 0)}
-          />
-          <EditableNumber
-            label="PV"
-            value={profile.pv}
-            unverified={anyStatUnverified}
-            onChange={(v) => upd("pv", v ?? 0)}
-          />
+            <EditableNumber
+              label="PV"
+              value={profile.pv}
+              unverified={anyStatUnverified}
+              onChange={(v) => upd("pv", v ?? 0)}
+            />
+            <EditableNumber
+              label="Stature"
+              value={profile.stature}
+              unverified={anyStatUnverified}
+              onChange={(v) => upd("stature", v ?? 0)}
+            />
+          </div>
         </div>
       </Section>
 
-      <Section title="Armure (protection en cas d'échec / seuil / protection en cas de réussite)">
-        {profile.armor ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <EditableNumber
-              label="Prot. échec"
-              value={profile.armor.protectionEchec ?? null}
-              unverified={uv("armor.protectionEchec")}
-              onChange={(v) => setArmor({ protectionEchec: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.protectionEchec")}
-            />
-            <EditableNumber
-              label="Seuil"
-              value={profile.armor.seuil ?? null}
-              unverified={uv("armor.seuil")}
-              onChange={(v) => setArmor({ seuil: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.seuil")}
-            />
-            <EditableNumber
-              label="Prot. réussite"
-              value={profile.armor.protectionReussite ?? null}
-              unverified={uv("armor.protectionReussite")}
-              onChange={(v) => setArmor({ protectionReussite: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.protectionReussite")}
-            />
-            <EditableNumber
-              label="Durabilité"
-              value={profile.armor.durability ?? null}
-              unverified={uv("armor.durability")}
-              onChange={(v) => setArmor({ durability: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.durability")}
-            />
-            <RemoveButton onClick={() => patch({ armor: undefined })} />
-          </div>
-        ) : (
-          <AddButton onClick={() => patch({ armor: {} })}>Ajouter une armure</AddButton>
-        )}
+      <Section title="Compétences">
+        <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
       </Section>
 
-      <Section title="Dés de maîtrise (chaque dé porte 1 à 5 domaines)">
+      <Section title={SECTION.verbatim}>
+        <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
+      </Section>
+
+      <Section title="Dés de maîtrise">
         <div className="group space-y-2">
           {profile.masteryDice.map((die, i) => (
             <div key={i} className="flex flex-wrap items-center gap-1.5">
@@ -377,8 +374,50 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
         </div>
       </Section>
 
-      <Section title="Compétences">
-        <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
+      <Section title="Armure innée">
+        {profile.armor ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <EditableNumber
+              label="Prot. échec"
+              value={profile.armor.protectionEchec ?? null}
+              unverified={uv("armor.protectionEchec")}
+              onChange={(v) => setArmor({ protectionEchec: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.protectionEchec")}
+            />
+            <EditableNumber
+              label="Seuil"
+              value={profile.armor.seuil ?? null}
+              unverified={uv("armor.seuil")}
+              onChange={(v) => setArmor({ seuil: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.seuil")}
+            />
+            <EditableNumber
+              label="Prot. réussite"
+              value={profile.armor.protectionReussite ?? null}
+              unverified={uv("armor.protectionReussite")}
+              onChange={(v) => setArmor({ protectionReussite: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.protectionReussite")}
+            />
+            <EditableNumber
+              label="Durabilité"
+              value={profile.armor.durability ?? null}
+              unverified={uv("armor.durability")}
+              onChange={(v) => setArmor({ durability: typeof v === "number" ? v : undefined })}
+              onToggle={() => flag("armor.durability")}
+            />
+            <RemoveButton onClick={() => patch({ armor: undefined })} />
+          </div>
+        ) : (
+          <AddButton onClick={() => patch({ armor: {} })}>Ajouter une armure</AddButton>
+        )}
+      </Section>
+
+      <Section title="Équipement de base">
+        <EquipmentEditor
+          ids={profile.baseEquipmentIds}
+          cat={cat}
+          onChange={(ids) => patch({ baseEquipmentIds: ids })}
+        />
       </Section>
 
       <Section title="Traits (tags internes - non imprimés sur les cartes)">
@@ -404,22 +443,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
         </div>
       </Section>
 
-      <Section title="Équipement de base">
-        <EquipmentEditor
-          ids={profile.baseEquipmentIds}
-          cat={cat}
-          onChange={(ids) => patch({ baseEquipmentIds: ids })}
-        />
-      </Section>
-        </>
-      }
-      verbatim={
-        <Section title={SECTION.verbatim}>
-          <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
-        </Section>
-      }
-      notes={
-        <Section title={SECTION.notes}>
+      <Section title={SECTION.notes}>
         <div className="space-y-2">
           {(profile.notes ?? []).map((n, i) => (
             <div key={i} className="flex items-start gap-2">
@@ -439,10 +463,37 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           ))}
           <AddButton onClick={() => patch({ notes: [...(profile.notes ?? []), ""] })}>+ note</AddButton>
         </div>
+      </Section>
+
+      <Section title={SECTION.effects}>
+        <EffectListEditor
+          effects={profile.effects ?? []}
+          newSource={{ kind: "profile", id: profile.id }}
+          cat={cat}
+          onChange={(e) => patch({ effects: e.length ? e : undefined })}
+        />
+      </Section>
+
+      {inheritedEffects.length > 0 && (
+        <Section title={`${SECTION.effects} hérités des cartes (lecture seule)`}>
+          <div className="space-y-2">
+            {inheritedEffects.map(({ e, via }, idx) => (
+              <RuleCard
+                key={`${e.id}-${idx}`}
+                human={describeEffect(e, cat)}
+                sourceText={e.sourceText}
+                badges={
+                  <>
+                    <Badge>{e.operation.kind}</Badge>
+                    <Badge tone="violet">via « {via} »</Badge>
+                  </>
+                }
+              />
+            ))}
+          </div>
         </Section>
-      }
-      constraints={
-        <>
+      )}
+
       <Section title={SECTION.constraints}>
         <ConstraintListEditor
           constraints={profile.recruitment}
@@ -472,38 +523,17 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           </div>
         </Section>
       )}
-        </>
-      }
-      effects={
-        <>
-      <Section title={SECTION.effects}>
-        <EffectListEditor
-          effects={profile.effects ?? []}
-          newSource={{ kind: "profile", id: profile.id }}
-          cat={cat}
-          onChange={(e) => patch({ effects: e.length ? e : undefined })}
-        />
-      </Section>
 
-      {inheritedEffects.length > 0 && (
-        <Section title={`${SECTION.effects} hérités des cartes (lecture seule)`}>
-          <div className="space-y-2">
-            {inheritedEffects.map(({ e, via }, idx) => (
-              <RuleCard
-                key={`${e.id}-${idx}`}
-                human={describeEffect(e, cat)}
-                sourceText={e.sourceText}
-                badges={
-                  <>
-                    <Badge>{e.operation.kind}</Badge>
-                    <Badge tone="violet">via « {via} »</Badge>
-                  </>
-                }
-              />
-            ))}
-          </div>
-        </Section>
-      )}
+      <Section title="Image de la carte">
+        <Field label="Emplacement du fichier" hint="chemin de la carte affichée dans la colonne de droite">
+          <input
+            value={profile.cardImage}
+            placeholder="cards/..."
+            onChange={(e) => upd("cardImage", e.target.value)}
+            className={`${INPUT} max-w-md`}
+          />
+        </Field>
+      </Section>
         </>
       }
     />

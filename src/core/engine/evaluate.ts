@@ -703,7 +703,7 @@ function validateLeader(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issu
     push("Aucun meneur éligible n'est désigné pour ce Fer de Lance.");
     return;
   }
-  const isChar = (p: Profile) => Boolean(p.isNamed) || p.limitation.kind === "U" || p.limitation.kind === "P";
+  const isChar = (p: Profile) => p.limitation.kind === "P";
   const topTwo = new Set(
     [...inFdl].sort((a, b) => b.profile.cost - a.profile.cost).slice(0, 2).map((ri) => ri.instance.instanceId),
   );
@@ -845,7 +845,7 @@ function validateLimitations(
  */
 export function slotCapacity(cat: Catalog, modelId: string, level: number): number {
   const target =
-    cat.profiles.find((p) => p.modelId === modelId && p.level === level && !p.isNamed) ??
+    cat.profiles.find((p) => p.modelId === modelId && p.level === level && p.limitation.kind === "X") ??
     cat.profiles.find((p) => p.modelId === modelId && p.level === level);
   if (!target) return Infinity;
   return target.limitation.kind === "X" ? (target.limitation.value ?? Infinity) : 1;
@@ -868,7 +868,7 @@ function validateConsumesSlot(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInst
   }
   for (const { modelId, level, consumers } of bySlot.values()) {
     const target =
-      cat.profiles.find((p) => p.modelId === modelId && p.level === level && !p.isNamed) ??
+      cat.profiles.find((p) => p.modelId === modelId && p.level === level && p.limitation.kind === "X") ??
       cat.profiles.find((p) => p.modelId === modelId && p.level === level);
     if (!target) continue;
     const allowed = slotCapacity(cat, modelId, level);

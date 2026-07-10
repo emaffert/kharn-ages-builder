@@ -2084,7 +2084,6 @@
       "level": 2,
       "factionId": "fangs",
       "cost": 120,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -2174,7 +2173,6 @@
       "level": 3,
       "factionId": "fangs",
       "cost": 140,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -2264,7 +2262,6 @@
       "level": 2,
       "factionId": "fangs",
       "cost": 105,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -2347,7 +2344,6 @@
       "level": 1,
       "factionId": "fangs",
       "cost": 145,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -2426,7 +2422,6 @@
       "level": 2,
       "factionId": "fangs",
       "cost": 90,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -3445,7 +3440,6 @@
       "level": 1,
       "factionId": "gouns",
       "cost": 50,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -5193,7 +5187,6 @@
       "level": 3,
       "factionId": "kharns",
       "cost": 150,
-      "isNamed": true,
       "limitation": {
         "kind": "U"
       },
@@ -5272,7 +5265,6 @@
       "level": 3,
       "factionId": "kharns",
       "cost": 165,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -5387,7 +5379,6 @@
       "level": 3,
       "factionId": "kharns",
       "cost": 170,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -5478,7 +5469,6 @@
       "level": 3,
       "factionId": "kharns",
       "cost": 110,
-      "isNamed": true,
       "limitation": {
         "kind": "U"
       },
@@ -5600,7 +5590,6 @@
       "level": 2,
       "factionId": "kharns",
       "cost": 112,
-      "isNamed": true,
       "limitation": {
         "kind": "U"
       },
@@ -5694,7 +5683,6 @@
       "level": 2,
       "factionId": "kharns",
       "cost": 100,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -5796,7 +5784,6 @@
       "level": 2,
       "factionId": "kharns",
       "cost": 100,
-      "isNamed": true,
       "limitation": {
         "kind": "P"
       },
@@ -5873,7 +5860,6 @@
       "level": 3,
       "factionId": "kharns",
       "cost": 155,
-      "isNamed": true,
       "limitation": {
         "kind": "P",
         "consumesSlotOf": {

@@ -104,7 +104,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const kindOf = (m: ModelEntry) => {
     const p0 = m.profiles[0];
     if (isDependent(p0, cat)) return "cond";
-    if (p0.isNamed || p0.limitation.kind === "U" || p0.limitation.kind === "P") return "perso";
+    if (p0.limitation.kind === "U" || p0.limitation.kind === "P") return "perso";
     return "troupe";
   };
   const byName = (a: ModelEntry, b: ModelEntry) => a.name.localeCompare(b.name);
@@ -175,7 +175,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const items = fdl.members
     .map((inst) => ({ inst, p: cat.profiles.find((x) => x.id === inst.profileId)! }))
     .filter((x) => x.p);
-  const isChar = (p: Profile) => Boolean(p.isNamed) || p.limitation.kind === "U" || p.limitation.kind === "P";
+  const isChar = (p: Profile) => p.limitation.kind === "P";
   const memberOf = (id: string) => items.find((x) => x.inst.instanceId === id);
 
   // Ordre d'affichage : chaque figurine de premier niveau porte ses unités rattachées (Likan/Muskh),

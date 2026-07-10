@@ -87,7 +87,6 @@ export const ProfileSchema = z.object({
   /** Absent => profil « sans logo ». */
   factionId: z.string().optional(),
   cost: z.number(),
-  isNamed: z.boolean().optional(),
   limitation: LimitationSchema,
   stats: StatsSchema,
   stature: z.number(),

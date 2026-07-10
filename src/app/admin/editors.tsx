@@ -114,7 +114,7 @@ export function SkillsEditor({
     <div className="space-y-1.5">
       <SortableList items={skills} onReorder={onChange}>
         {(s, i) => (
-          <div className="adm-card space-y-1 p-1.5 flex-1">
+          <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
             <Combobox
               value={s.skillId}

@@ -156,6 +156,49 @@ export function useCatalogStore() {
     [apply],
   );
 
+  /**
+   * Renomme un groupe (modèle). Si un autre groupe de la même faction porte déjà ce nom
+   * (à la casse/aux espaces près), les deux sont fusionnés : les figurines du modèle courant
+   * sont rattachées au groupe existant, puis le modèle vidé est supprimé. Renvoie l'id du
+   * modèle survivant (celui du jumeau en cas de fusion, sinon `id`).
+   */
+  const renameModel = useCallback(
+    (id: string, name: string): string => {
+      let survivor = id;
+      apply((c) => {
+        const models = c.models.map((m) => (m.id === id ? { ...m, name } : m));
+        const me = models.find((m) => m.id === id);
+        if (!me) return c;
+        const key = name.trim().toLowerCase();
+        const twin =
+          key === ""
+            ? undefined
+            : models.find(
+                (m) =>
+                  m.id !== id &&
+                  (m.factionId ?? null) === (me.factionId ?? null) &&
+                  m.name.trim().toLowerCase() === key,
+              );
+        if (!twin) return { ...c, models };
+        // Fusion : rattache les figurines du modèle courant au jumeau, supprime le modèle vidé.
+        survivor = twin.id;
+        const profiles = c.profiles.map((p) =>
+          p.modelId === id ? { ...p, modelId: twin.id } : p,
+        );
+        const merged = models
+          .map((m) =>
+            m.id === twin.id
+              ? { ...m, profileIds: [...new Set([...m.profileIds, ...me.profileIds])] }
+              : m,
+          )
+          .filter((m) => m.id !== id);
+        return { ...c, profiles, models: merged };
+      });
+      return survivor;
+    },
+    [apply],
+  );
+
   // ── Voies de magie (table éditable dans l'admin) ──
   const addMagicWay = useCallback((): string => {
     const id = `way-${Date.now()}`;
@@ -480,6 +523,7 @@ export function useCatalogStore() {
     updateField,
     updateProfile,
     updateModel,
+    renameModel,
     addModel,
     assignProfileToModel,
     addMagicWay,

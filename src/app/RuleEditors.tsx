@@ -24,6 +24,16 @@ const CONSTRAINT_TYPES: ConstraintType[] = [
   "custom",
 ];
 
+// Libellés français des types de contrainte proposés (fallback sur l'identifiant brut).
+const CONSTRAINT_LABELS: Partial<Record<ConstraintType, string>> = {
+  "forbids-equipment": "Interdit d'équiper",
+  "requires-present": "Nécessite une présence",
+  "faction-membership": "Appartenance de faction",
+  "equipment-reserved": "Équipement réservé",
+  attachment: "Rattachement (garde / porteur)",
+  custom: "Personnalisée (note libre)",
+};
+
 function AddButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -649,16 +659,36 @@ function OperationEditor({
   );
 }
 
-function Txt({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+// ── Params d'une contrainte (selon le type) ───────────────────────────────────
+
+const GRIMOIRE_OPTIONS: Option[] = [
+  { value: "petit", label: "petit" },
+  { value: "grand", label: "grand" },
+];
+
+/** Bloc de puces étiqueté (label au-dessus), pour un ensemble borné de valeurs. */
+function ChipsField({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  options: Option[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
   return (
-    <label className="flex items-center gap-1 text-xs adm-faint">
-      {label}
-      <input value={value} onChange={(e) => onChange(e.target.value)} className={`${INPUT} w-32`} />
-    </label>
+    <div className="space-y-1">
+      <div className="adm-field-label">{label}</div>
+      <ChipMultiSelect
+        options={options}
+        selected={selected}
+        onToggle={(v) => onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v])}
+      />
+    </div>
   );
 }
-
-// ── Params d'une contrainte (selon le type) ───────────────────────────────────
 
 function ParamsEditor({
   type,
@@ -681,61 +711,86 @@ function ParamsEditor({
   switch (type) {
     case "forbids-equipment":
       return (
-        <div className="space-y-1.5">
-          <StringList
-            label="catégories interdites"
-            values={arr("categories")}
+        <div className="space-y-2">
+          <ChipsField
+            label="Catégories interdites"
+            options={EQUIPMENT_CATEGORIES.map((c): Option => ({ value: c, label: c }))}
+            selected={arr("categories")}
             onChange={(v) => set({ categories: v })}
-            options={EQUIPMENT_CATEGORIES.map((c) => ({ value: c, label: c }))}
           />
           {/* Sur une carte spéciale : le profil visé. Sur une fiche de profil, le sujet est la figurine. */}
           {!onProfile && (
-            <Txt label="profil (sujet)" value={str("profileId")} onChange={(v) => set({ profileId: v || undefined })} />
+            <Field label="Profil visé" className="max-w-xs">
+              <Combobox
+                value={str("profileId")}
+                options={profileOptions(cat)}
+                placeholder="Rechercher un profil…"
+                onChange={(v) => set({ profileId: v || undefined })}
+              />
+            </Field>
           )}
         </div>
       );
     case "requires-present":
       return (
-        <div className="flex flex-wrap items-center gap-2">
-          <Select
-            label="sujet"
-            value={str("subjectProfileId")}
-            onChange={(v) => set({ subjectProfileId: v })}
-            options={profileOptions(cat)}
-          />
-          <Select
-            label="requiert"
-            value={str("requiredProfileId")}
-            onChange={(v) => set({ requiredProfileId: v })}
-            options={profileOptions(cat)}
-          />
+        <div className="flex flex-wrap gap-3">
+          <Field label="Sujet" className="w-56">
+            <Combobox
+              value={str("subjectProfileId")}
+              options={profileOptions(cat)}
+              placeholder="Rechercher un profil…"
+              onChange={(v) => set({ subjectProfileId: v })}
+            />
+          </Field>
+          <Field label="Requiert la présence de" className="w-56">
+            <Combobox
+              value={str("requiredProfileId")}
+              options={profileOptions(cat)}
+              placeholder="Rechercher un profil…"
+              onChange={(v) => set({ requiredProfileId: v })}
+            />
+          </Field>
         </div>
       );
     case "faction-membership":
       return (
-        <StringList
-          label="factions autorisées"
-          values={arr("allowedFactions")}
+        <ChipsField
+          label="Factions autorisées"
+          options={cat.factions.map((f): Option => ({ value: f.id, label: f.name }))}
+          selected={arr("allowedFactions")}
           onChange={(v) => set({ allowedFactions: v })}
-          options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
         />
       );
     case "equipment-reserved":
       return (
-        <StringList
-          label="grimoires interdits"
-          values={arr("forbidGrimoires")}
+        <ChipsField
+          label="Grimoires interdits"
+          options={GRIMOIRE_OPTIONS}
+          selected={arr("forbidGrimoires")}
           onChange={(v) => set({ forbidGrimoires: v })}
-          options={[
-            { value: "petit", label: "petit" },
-            { value: "grand", label: "grand" },
-          ]}
         />
       );
-    default:
+    case "attachment": {
+      const carrier = (params.carrier as { trait?: string } | undefined) ?? {};
       return (
-        <label className="block text-xs adm-faint">
-          params (JSON)
+        <div className="flex flex-wrap gap-3">
+          <TxtField
+            label="Trait du porteur"
+            value={carrier.trait ?? ""}
+            onChange={(v) => set({ carrier: v ? { trait: v } : undefined })}
+          />
+          <TxtField
+            label="Règle de capacité"
+            value={str("capacityRule")}
+            onChange={(v) => set({ capacityRule: v || undefined })}
+          />
+        </div>
+      );
+    }
+    default:
+      // Types sans éditeur dédié (custom…) : params libres en JSON.
+      return (
+        <Field label="Paramètres (JSON)">
           <textarea
             defaultValue={JSON.stringify(params, null, 2)}
             onBlur={(e) => {
@@ -745,31 +800,12 @@ function ParamsEditor({
                 /* JSON invalide : ignoré jusqu'à correction */
               }
             }}
-            className={`${INPUT} mt-1 block w-full font-mono`}
+            className={`${INPUT} block w-full font-mono`}
             rows={3}
           />
-        </label>
+        </Field>
       );
   }
-}
-
-function Select({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: Option[];
-}) {
-  return (
-    <label className="flex items-center gap-1 text-xs adm-faint">
-      {label}
-      <Combobox value={value} options={options} onChange={onChange} className="w-44" />
-    </label>
-  );
 }
 
 // ── Carte d'édition (commune) ─────────────────────────────────────────────────
@@ -817,42 +853,42 @@ export function ConstraintListEditor({
     <div className="space-y-2">
       {constraints.map((c, i) => (
         <EditorCard key={i} preview={describeConstraint(c, cat)} onRemove={() => onChange(removeAt(constraints, i))}>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="flex items-center gap-1 text-xs adm-faint">
-              type
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="Type" className="w-56">
               <select value={c.type} onChange={(e) => update(i, { ...c, type: e.target.value as ConstraintType, params: {} })} className={INPUT}>
                 {CONSTRAINT_TYPES.map((t) => (
                   <option key={t} value={t}>
-                    {t}
+                    {CONSTRAINT_LABELS[t] ?? t}
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="flex items-center gap-1 text-xs adm-faint">
-              portée
+            </Field>
+            <Field label="Portée" className="w-40">
               <select value={c.scope} onChange={(e) => update(i, { ...c, scope: e.target.value as Constraint["scope"] })} className={INPUT}>
                 <option value="profil">profil</option>
                 <option value="fer-de-lance">fer-de-lance</option>
                 <option value="ost">ost</option>
               </select>
-            </label>
-            <label className="flex items-center gap-1 text-xs adm-faint">
-              sévérité
+            </Field>
+            <Field label="Sévérité" className="w-32">
               <select value={c.severity} onChange={(e) => update(i, { ...c, severity: e.target.value as Constraint["severity"] })} className={INPUT}>
-                <option value="error">error</option>
-                <option value="warning">warning</option>
+                <option value="error">erreur</option>
+                <option value="warning">avertissement</option>
               </select>
-            </label>
-            <label className="flex items-center gap-1 text-xs adm-muted">
-              <input type="checkbox" checked={c.autoEnforced} onChange={(e) => update(i, { ...c, autoEnforced: e.target.checked })} />
-              auto-vérifiée
-            </label>
+            </Field>
+            <div className="self-center">
+              <CheckField
+                label="vérifiée automatiquement"
+                checked={c.autoEnforced}
+                onChange={(b) => update(i, { ...c, autoEnforced: b })}
+              />
+            </div>
           </div>
+          <div className="adm-field-label pt-1">Paramètres</div>
           <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} onProfile={onProfile} />
-          <label className="block text-xs adm-faint">
-            wording verbatim (fait foi)
-            <textarea value={c.sourceText} onChange={(e) => update(i, { ...c, sourceText: e.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />
-          </label>
+          <Field label="Texte verbatim" hint="fait foi">
+            <textarea value={c.sourceText} onChange={(e) => update(i, { ...c, sourceText: e.target.value })} className={`${INPUT} block w-full`} rows={2} />
+          </Field>
         </EditorCard>
       ))}
       <AddButton
@@ -967,10 +1003,9 @@ export function EffectListEditor({
               />
             </div>
           </details>
-          <label className="block text-xs adm-faint">
-            wording verbatim (fait foi)
-            <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} mt-1 block w-full`} rows={2} />
-          </label>
+          <Field label="Texte verbatim" hint="fait foi">
+            <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} block w-full`} rows={2} />
+          </Field>
         </EditorCard>
       ))}
       <AddButton

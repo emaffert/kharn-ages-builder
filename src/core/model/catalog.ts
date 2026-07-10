@@ -20,7 +20,6 @@ export const FactionSchema = z.object({
   id: z.string(),
   name: z.string(),
   logo: z.string(),
-  subFactions: z.array(z.string()).optional(),
   notes: z.string().optional(),
 });
 export type Faction = z.infer<typeof FactionSchema>;
@@ -29,7 +28,6 @@ export const SkillSchema = z.object({
   id: z.string(),
   keyword: z.string(),
   hasValue: z.boolean(),
-  obligatory: z.boolean().optional(),
   /** Description officielle verbatim (livret, ou carte si compétence rare). */
   sourceText: z.string(),
 });

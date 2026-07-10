@@ -10,11 +10,7 @@
     {
       "id": "gouns",
       "name": "Goüns",
-      "logo": "gouns",
-      "subFactions": [
-        "dogons",
-        "mongos"
-      ]
+      "logo": "gouns"
     },
     {
       "id": "kharns",
@@ -156,7 +152,6 @@
       "id": "en-eveil",
       "keyword": "En éveil",
       "hasValue": false,
-      "obligatory": true,
       "sourceText": "Un Safar doté de cette compétence ajoute toujours une fois son I à ses jets de défense contre la magie."
     },
     {
@@ -175,7 +170,6 @@
       "id": "fine-lame",
       "keyword": "Fine lame",
       "hasValue": false,
-      "obligatory": true,
       "sourceText": "Le défenseur ne peut pas dépenser plus de PA que le Safar doté de « fine lame » qui l'attaque."
     },
     {
@@ -188,7 +182,6 @@
       "id": "foi-inebranlable",
       "keyword": "Foi inébranlable",
       "hasValue": false,
-      "obligatory": true,
       "sourceText": "Le Safar considère tous ses tests d'effroi comme réussis."
     },
     {
@@ -207,7 +200,6 @@
       "id": "hermetisme",
       "keyword": "Hermétisme",
       "hasValue": true,
-      "obligatory": true,
       "sourceText": "Permet d'augmenter sa défense face à la magie de X. Si le sort cible un Safar hermétique allié, la difficulté du sort est augmentée de X. Les sorts bénéfiques sont donc plus difficiles à faire accepter aux cibles résistantes."
     },
     {
@@ -232,7 +224,6 @@
       "id": "immunite",
       "keyword": "Immunité",
       "hasValue": true,
-      "obligatory": true,
       "sourceText": "Empêche de subir ou de bénéficier des effets d'un sort de la voie de magie X."
     },
     {
@@ -251,7 +242,6 @@
       "id": "le-sang-m-attire",
       "keyword": "Le sang m'attire",
       "hasValue": true,
-      "obligatory": true,
       "sourceText": "+ X en attaque contre une cible affligée de saignement (effet non cumulable)."
     },
     {
@@ -300,7 +290,6 @@
       "id": "peau-dure",
       "keyword": "Peau dure",
       "hasValue": false,
-      "obligatory": true,
       "sourceText": "Chaque effet de saignement agit une et unique fois puis disparaît."
     },
     {
@@ -313,7 +302,6 @@
       "id": "receptif",
       "keyword": "Réceptif",
       "hasValue": true,
-      "obligatory": true,
       "sourceText": "Les sorts de la voie de magie X sont automatiquement réussis lorsqu'ils prennent ce guerrier pour cible."
     },
     {
@@ -368,7 +356,6 @@
       "id": "stable",
       "keyword": "Stable",
       "hasValue": false,
-      "obligatory": true,
       "sourceText": "Ne peut être physiquement repoussé que par un combattant ayant une stature strictement supérieure à la sienne. De plus, « repoussement » n'a pas d'effet."
     },
     {
@@ -936,8 +923,7 @@
           },
           "scope": "profil",
           "sourceText": "Éprouvé : ne peut être recruté avec une arme.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         }
       ],
       "rules": [
@@ -1014,8 +1000,7 @@
           },
           "scope": "fer-de-lance",
           "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         },
         {
           "id": "likan-no-equipment",
@@ -1033,8 +1018,7 @@
           },
           "scope": "profil",
           "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         }
       ],
       "rules": [
@@ -1110,8 +1094,7 @@
           },
           "scope": "fer-de-lance",
           "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         },
         {
           "id": "likan-no-equipment",
@@ -1129,8 +1112,7 @@
           },
           "scope": "profil",
           "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         }
       ],
       "rules": [
@@ -1213,8 +1195,7 @@
           },
           "scope": "fer-de-lance",
           "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         },
         {
           "id": "likan-no-equipment",
@@ -1232,8 +1213,7 @@
           },
           "scope": "profil",
           "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         }
       ],
       "rules": [
@@ -1518,8 +1498,7 @@
             "kind": "cost-delta",
             "amount": -10
           },
-          "sourceText": "Arme de prédilection : paye 10 de moins l'Arbalète de poing.",
-          "autoEnforced": true
+          "sourceText": "Arme de prédilection : paye 10 de moins l'Arbalète de poing."
         }
       ],
       "rules": [
@@ -1617,8 +1596,7 @@
             "kind": "cost-delta",
             "amount": -10
           },
-          "sourceText": "Arme de prédilection : paye 10 de moins l'Arbalète de poing.",
-          "autoEnforced": true
+          "sourceText": "Arme de prédilection : paye 10 de moins l'Arbalète de poing."
         }
       ],
       "rules": [
@@ -1695,8 +1673,7 @@
           },
           "scope": "profil",
           "sourceText": "Ne peut pas acquérir de « Grand Grimoire ».",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         }
       ],
       "rules": [
@@ -2508,8 +2485,7 @@
             "amount": -35
           },
           "optIn": true,
-          "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha.",
-          "autoEnforced": true
+          "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha."
         }
       ],
       "rules": [
@@ -2589,8 +2565,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Dogons est égale au nombre de Dogons en jeu.",
-          "autoEnforced": false
+          "sourceText": "La témérité des Dogons est égale au nombre de Dogons en jeu."
         }
       ],
       "rules": [
@@ -2665,8 +2640,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu.",
-          "autoEnforced": false
+          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu."
         }
       ],
       "rules": [
@@ -2749,8 +2723,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3).",
-          "autoEnforced": false
+          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3)."
         }
       ],
       "rules": [
@@ -2842,8 +2815,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4).",
-          "autoEnforced": false
+          "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4)."
         }
       ],
       "rules": [
@@ -2939,8 +2911,7 @@
             "kind": "grant-spell",
             "spellId": "onde-revigorante"
           },
-          "sourceText": "Connaît le sort « Onde revigorante » d'office.",
-          "autoEnforced": true
+          "sourceText": "Connaît le sort « Onde revigorante » d'office."
         }
       ],
       "rules": [
@@ -3025,8 +2996,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu.",
-          "autoEnforced": false
+          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu."
         }
       ],
       "rules": [
@@ -3121,8 +3091,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3).",
-          "autoEnforced": false
+          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3)."
         }
       ],
       "rules": [
@@ -3222,8 +3191,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4).",
-          "autoEnforced": false
+          "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4)."
         }
       ],
       "rules": [
@@ -3421,8 +3389,7 @@
             },
             "per": 3
           },
-          "sourceText": "Seigneur de Guerre - +1 par groupe de 3 Niv I.",
-          "autoEnforced": false
+          "sourceText": "Seigneur de Guerre - +1 par groupe de 3 Niv I."
         }
       ],
       "rules": [
@@ -3496,8 +3463,7 @@
             "kind": "grant-spell",
             "spellId": "lien-mental"
           },
-          "sourceText": "Connaît le sort « Lien Mental » d'office.",
-          "autoEnforced": true
+          "sourceText": "Connaît le sort « Lien Mental » d'office."
         }
       ],
       "rules": [
@@ -3718,8 +3684,7 @@
               ]
             }
           },
-          "sourceText": "La témérité des Artisanes dogons est égale au nombre de Goûns Niveau I en jeu.",
-          "autoEnforced": false
+          "sourceText": "La témérité des Artisanes dogons est égale au nombre de Goûns Niveau I en jeu."
         }
       ],
       "rules": [
@@ -4861,8 +4826,7 @@
               ]
             }
           },
-          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
-          "autoEnforced": true
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts)."
         },
         {
           "id": "e-1783425856265",
@@ -4883,8 +4847,7 @@
               ]
             }
           },
-          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
-          "autoEnforced": true
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts)."
         }
       ],
       "rules": [
@@ -4973,8 +4936,7 @@
               ]
             }
           },
-          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
-          "autoEnforced": true
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts)."
         },
         {
           "id": "e-1783426010257",
@@ -4995,8 +4957,7 @@
               ]
             }
           },
-          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
-          "autoEnforced": true
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts)."
         }
       ],
       "rules": [
@@ -5353,8 +5314,7 @@
             "kind": "cost-delta",
             "amount": -15
           },
-          "sourceText": "Les Paladins de son Fer de Lance coûtent 15 Kouronnes de moins s’il est leader.",
-          "autoEnforced": true
+          "sourceText": "Les Paladins de son Fer de Lance coûtent 15 Kouronnes de moins s’il est leader."
         }
       ],
       "rules": [
@@ -5540,8 +5500,7 @@
               ]
             }
           },
-          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
-          "autoEnforced": true
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts)."
         },
         {
           "id": "e-1783426808815",
@@ -5562,8 +5521,7 @@
               ]
             }
           },
-          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
-          "autoEnforced": true
+          "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts)."
         }
       ],
       "rules": [
@@ -5656,8 +5614,7 @@
           },
           "scope": "profil",
           "sourceText": "",
-          "severity": "error",
-          "autoEnforced": false
+          "severity": "error"
         }
       ],
       "rules": [
@@ -5744,8 +5701,7 @@
               "arme-cac"
             ]
           },
-          "sourceText": "Peut empoisonner son arme pour 10 Ko mais elle devient incessible.",
-          "autoEnforced": true
+          "sourceText": "Peut empoisonner son arme pour 10 Ko mais elle devient incessible."
         }
       ],
       "rules": [
@@ -6973,8 +6929,7 @@
             "amount": -5,
             "requiresBaseSwap": true
           },
-          "sourceText": "Permet aux Guerriers khérops de s'équiper pour 5 Ko de moins s'ils changent leur arme de base.",
-          "autoEnforced": true
+          "sourceText": "Permet aux Guerriers khérops de s'équiper pour 5 Ko de moins s'ils changent leur arme de base."
         }
       ],
       "rules": [],
@@ -7051,8 +7006,7 @@
             "kind": "limit-modifier",
             "amount": 1
           },
-          "sourceText": "Chef : Les limitations des Khérops non uniques, non personnages augmentent de 1 dans son Ost ou dans son Fer de Lance.",
-          "autoEnforced": true
+          "sourceText": "Chef : Les limitations des Khérops non uniques, non personnages augmentent de 1 dans son Ost ou dans son Fer de Lance."
         }
       ],
       "rules": [
@@ -7203,8 +7157,7 @@
             "kind": "cost-delta",
             "amount": -10
           },
-          "sourceText": "Paye 10 Ko de moins les armes à deux mains.",
-          "autoEnforced": true
+          "sourceText": "Paye 10 Ko de moins les armes à deux mains."
         }
       ],
       "rules": [
@@ -8320,8 +8273,7 @@
             "tier": "petit",
             "amount": 20
           },
-          "sourceText": "Petit grimoire gratuit pour les shamans cavaliers.",
-          "autoEnforced": false
+          "sourceText": "Petit grimoire gratuit pour les shamans cavaliers."
         }
       ],
       "rules": [
@@ -8373,8 +8325,7 @@
             "tier": "grand",
             "amount": 40
           },
-          "sourceText": "Grand grimoire gratuit pour les shamans cavaliers.",
-          "autoEnforced": false
+          "sourceText": "Grand grimoire gratuit pour les shamans cavaliers."
         }
       ],
       "rules": [
@@ -8596,8 +8547,7 @@
             "amount": 0,
             "maxCount": 2
           },
-          "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
-          "autoEnforced": true
+          "sourceText": "Garde rapprochée : recruter 1 larbin sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance)."
         },
         {
           "id": "fille-de-nyx-pages",
@@ -8613,8 +8563,7 @@
             "kind": "spell-pages",
             "amount": 3
           },
-          "sourceText": "Elles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit.",
-          "autoEnforced": false
+          "sourceText": "Elles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit."
         }
       ],
       "cardImage": "cards/Fangs/fangs-apathee.jpg"
@@ -8651,8 +8600,7 @@
             "kind": "grant-skill",
             "skillId": "osteomancie"
           },
-          "sourceText": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie.",
-          "autoEnforced": true
+          "sourceText": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie."
         },
         {
           "id": "apprentie-i-niveau",
@@ -8669,8 +8617,7 @@
             "stat": "i",
             "amount": "level"
           },
-          "sourceText": "Elle ajoute son niveau à sa valeur de I pour la partie.",
-          "autoEnforced": false
+          "sourceText": "Elle ajoute son niveau à sa valeur de I pour la partie."
         }
       ],
       "cardImage": "cards/Fangs/fangs-goulue-1-fr.jpg"
@@ -8706,8 +8653,7 @@
           },
           "scope": "fer-de-lance",
           "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         },
         {
           "id": "muskh-no-equipment",
@@ -8724,8 +8670,7 @@
           },
           "scope": "profil",
           "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
-          "severity": "error",
-          "autoEnforced": true
+          "severity": "error"
         }
       ],
       "effects": [],
@@ -8766,8 +8711,7 @@
             "kind": "spell-pages",
             "amount": 3
           },
-          "sourceText": "Peut contenir 3 pages de sorts.",
-          "autoEnforced": false
+          "sourceText": "Peut contenir 3 pages de sorts."
         }
       ],
       "cardImage": "cards/Fangs/fangs-meneuse-niv-3.jpg"
@@ -8841,8 +8785,7 @@
             "skillId": "heroique",
             "value": "défense"
           },
-          "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",
-          "autoEnforced": false
+          "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie »."
         },
         {
           "id": "lien-de-la-terre-instinct-survie",
@@ -8874,8 +8817,7 @@
             "kind": "grant-skill",
             "skillId": "instinct-de-survie"
           },
-          "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",
-          "autoEnforced": false
+          "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie »."
         }
       ],
       "cardImage": "cards/Gouns/alaric.jpg"
@@ -9023,8 +8965,7 @@
             "kind": "grant-skill",
             "skillId": "embuscade"
           },
-          "sourceText": "Si le Prince ou Engueran est dans son Fer de Lance, elle gagne « Embuscade ».",
-          "autoEnforced": true
+          "sourceText": "Si le Prince ou Engueran est dans son Fer de Lance, elle gagne « Embuscade »."
         },
         {
           "id": "syrga-heroique-objectif",
@@ -9048,8 +8989,7 @@
             "skillId": "heroique",
             "value": "objectif"
           },
-          "sourceText": "Si le Prince ou Engueran est dans son Fer de Lance, elle gagne « Héroïque objectif ».",
-          "autoEnforced": true
+          "sourceText": "Si le Prince ou Engueran est dans son Fer de Lance, elle gagne « Héroïque objectif »."
         }
       ],
       "cardImage": "cards/Kharns/kharns-syrga.jpg"
@@ -9147,8 +9087,7 @@
             "kind": "grant-skill",
             "skillId": "rusee"
           },
-          "sourceText": "Toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé ».",
-          "autoEnforced": true
+          "sourceText": "Toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé »."
         }
       ],
       "cardImage": "cards/Kharns/kharns-myriam.jpg"
@@ -9193,8 +9132,7 @@
             "kind": "grant-skill",
             "skillId": "hors-norme"
           },
-          "sourceText": "Le Porte-Bannière est considéré comme possédant « Hors Normes » tant qu'il porte sa bannière.",
-          "autoEnforced": true
+          "sourceText": "Le Porte-Bannière est considéré comme possédant « Hors Normes » tant qu'il porte sa bannière."
         },
         {
           "id": "banniere-gratuite-tambour",
@@ -9216,8 +9154,7 @@
             "kind": "cost-delta",
             "amount": -14
           },
-          "sourceText": "Si le Tambour est dans le Fer de Lance, la bannière khéropse est gratuite.",
-          "autoEnforced": true
+          "sourceText": "Si le Tambour est dans le Fer de Lance, la bannière khéropse est gratuite."
         },
         {
           "id": "banniere-de-maitrise",
@@ -9238,8 +9175,7 @@
               "tir"
             ]
           },
-          "sourceText": "Apporte 1 dé de maîtrise supplémentaire.",
-          "autoEnforced": true
+          "sourceText": "Apporte 1 dé de maîtrise supplémentaire."
         }
       ],
       "cardImage": "cards/Kherops/kherops-porte-banniere.jpg"
@@ -9317,8 +9253,7 @@
               }
             ]
           },
-          "sourceText": "Les armes forgées au Borax confèrent « spécialiste attaque » et « spécialiste défense » aux guerriers équipés (5 Ko/arme).",
-          "autoEnforced": false
+          "sourceText": "Les armes forgées au Borax confèrent « spécialiste attaque » et « spécialiste défense » aux guerriers équipés (5 Ko/arme)."
         },
         {
           "id": "borax-armure",
@@ -9346,8 +9281,7 @@
               }
             ]
           },
-          "sourceText": "Les armures forgées au Borax confèrent « instinct de survie » aux guerriers équipés (10 Ko/armure).",
-          "autoEnforced": false
+          "sourceText": "Les armures forgées au Borax confèrent « instinct de survie » aux guerriers équipés (10 Ko/armure)."
         }
       ],
       "cardImage": "cards/Kherops/kherops-forgeronne.jpg"

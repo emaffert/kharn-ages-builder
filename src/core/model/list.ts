@@ -87,7 +87,6 @@ export const ListDocumentSchema = z.object({
   ost: z
     .object({
       pactId: z.string().optional(),
-      pions: z.number().optional(),
       /** Cartes à portée Ost sélectionnées (opt-in au niveau de la liste, ex. « Pacte du Secret »). */
       cardIds: z.array(z.string()).optional(),
     })

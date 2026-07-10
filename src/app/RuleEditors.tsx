@@ -283,8 +283,6 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, skillId: "" };
     case "grant-spell":
       return { kind, spellId: "" };
-    case "cap":
-      return { kind, value: 0 };
     case "stat-modifier":
       return { kind, stat: "i", amount: "level" };
     case "stat-count":
@@ -317,7 +315,6 @@ const OP_LABELS: Record<EffectOperation["kind"], string> = {
   "skill-count": "Compétence = comptage de figurines",
   "spell-pages": "Pages de sorts",
   "limit-modifier": "Modifier la limitation (X)",
-  cap: "Plafond (non implémenté)",
 };
 
 // `cap` est volontairement absent du menu (non implémenté par le moteur).
@@ -882,13 +879,6 @@ export function ConstraintListEditor({
                 <option value="warning">avertissement</option>
               </select>
             </Field>
-            <div className="self-center">
-              <CheckField
-                label="vérifiée automatiquement"
-                checked={c.autoEnforced}
-                onChange={(b) => update(i, { ...c, autoEnforced: b })}
-              />
-            </div>
           </div>
           <div className="adm-field-label pt-1">Paramètres</div>
           <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} onProfile={onProfile} />
@@ -908,7 +898,6 @@ export function ConstraintListEditor({
               scope: "profil",
               sourceText: "",
               severity: "error",
-              autoEnforced: false,
             },
           ])
         }
@@ -1025,7 +1014,6 @@ export function EffectListEditor({
               target: { self: true },
               operation: { kind: "cost-delta", amount: 0 },
               sourceText: "",
-              autoEnforced: true,
             },
           ])
         }

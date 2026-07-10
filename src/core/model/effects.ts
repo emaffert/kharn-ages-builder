@@ -51,7 +51,6 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   // Octroie la connaissance d'un sort « de signature » (connu d'office, gratuit, hors budget de pages).
   // Ex. Alaric connaît « Lien Mental ». Affiché sur la fiche même pour un non-lanceur.
   z.object({ kind: z.literal("grant-spell"), spellId: z.string() }),
-  z.object({ kind: z.literal("cap"), value: z.number() }),
   z.object({
     kind: z.literal("stat-modifier"),
     stat: StatKeySchema,
@@ -119,6 +118,5 @@ export const EffectSchema = z.object({
   /** true => effet optionnel (choix du joueur) : NON appliqué automatiquement par le moteur. */
   optIn: z.boolean().optional(),
   sourceText: z.string(),
-  autoEnforced: z.boolean(),
 });
 export type Effect = z.infer<typeof EffectSchema>;

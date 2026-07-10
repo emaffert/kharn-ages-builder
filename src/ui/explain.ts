@@ -74,11 +74,6 @@ export function describeConstraint(c: Constraint, cat: Catalog): string {
       const f = (c.params as { allowedFactions?: string[] }).allowedFactions ?? [];
       return `Recrutable dans les factions : ${f.join(", ")}.`;
     }
-    case "count-relative":
-    case "mount-eligibility":
-    case "pact-composition":
-    case "mutual-exclusion":
-    case "limitation":
     case "custom":
     default:
       return c.sourceText;
@@ -117,9 +112,6 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Connaît d'office le sort « ${sp} » (${tgt})`;
       break;
     }
-    case "cap":
-      base = `Plafond ${op.value} pour ${tgt}`;
-      break;
     case "stat-modifier": {
       const amount = op.amount === "level" ? "son niveau" : `${op.amount >= 0 ? "+" : ""}${op.amount}`;
       base = `Ajoute ${amount} à ${op.stat.toUpperCase()} de ${tgt}`;

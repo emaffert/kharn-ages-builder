@@ -71,11 +71,6 @@ export function SkillCatalogDetail({
             {idError && <span className="text-xs text-[color:var(--scorch)]">id déjà pris / invalide</span>}
           </div>
           <CheckField label="A une valeur (X)" checked={s.hasValue} onChange={(v) => onChange({ hasValue: v })} />
-          <CheckField
-            label="Obligatoire"
-            checked={s.obligatory ?? false}
-            onChange={(v) => onChange({ obligatory: v || undefined })}
-          />
         </div>
         <Section title="Description">
           <textarea

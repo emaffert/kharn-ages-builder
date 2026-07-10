@@ -106,12 +106,12 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Débloque l'amélioration « ${op.label} » (+${op.cost} Ko/objet, sur ${op.equipmentCategories.join(", ")}) pour ${tgt}${skills ? ` ; confère « ${skills} » tant qu'équipée` : ""}`;
       break;
     }
-    case "grant-skill":
-      base = `Octroie la compétence « ${skillName(cat, op.skillId)}${op.value != null ? ` ${op.value}` : ""} » à ${tgt}`;
+    case "grant-skill": {
+      const val = op.value != null ? ` ${op.value}` : "";
+      const prec = op.precision ? ` (${op.precision})` : "";
+      base = `Octroie la compétence « ${skillName(cat, op.skillId)}${val}${prec} » à ${tgt}`;
       break;
-    case "grant-trait":
-      base = `Octroie le trait « ${op.trait} » à ${tgt}`;
-      break;
+    }
     case "grant-spell": {
       const sp = cat.spells.find((s) => s.id === op.spellId)?.name ?? op.spellId;
       base = `Connaît d'office le sort « ${sp} » (${tgt})`;
@@ -126,7 +126,7 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       break;
     }
     case "stat-count":
-      base = `${op.stat.toUpperCase()} de ${tgt} = nombre de ${describeSelector(op.of, cat)}${op.atLeastBase ? " (minimum : valeur de base)" : ""}`;
+      base = `${op.stat.toUpperCase()} de ${tgt} = nombre de ${describeSelector(op.of, cat)} (minimum : valeur de base du profil, si elle existe)`;
       break;
     case "stat-max":
       base = `${op.stat.toUpperCase()} de ${tgt} = la plus forte valeur de ${op.stat.toUpperCase()} parmi ${describeSelector(op.of, cat)}`;
@@ -152,7 +152,6 @@ export function describeEffect(e: Effect, cat: Catalog): string {
   }
   if (e.designation) base += ` - garde du corps de ${describeSelector(e.designation.of, cat)}`;
   if (e.optIn) base += " (au choix du joueur)";
-  if (!e.appliesToListBuilding) base += " (effet en jeu uniquement)";
   return base;
 }
 

@@ -2597,7 +2597,7 @@
               ]
             }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Dogons est égale au nombre de Dogons en jeu.",
           "autoEnforced": false
         }
@@ -2674,7 +2674,7 @@
               ]
             }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu.",
           "autoEnforced": false
         }
@@ -2757,10 +2757,9 @@
               "traits": [
                 "mongo"
               ]
-            },
-            "atLeastBase": true
+            }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 3).",
           "autoEnforced": false
         }
@@ -2852,10 +2851,9 @@
               "traits": [
                 "mongo"
               ]
-            },
-            "atLeastBase": true
+            }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Guerriers mongos est égale au nombre de Mongos en jeu (min 4).",
           "autoEnforced": false
         }
@@ -2953,7 +2951,7 @@
             "kind": "grant-spell",
             "spellId": "onde-revigorante"
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Connaît le sort « Onde revigorante » d'office.",
           "autoEnforced": true
         }
@@ -3040,7 +3038,7 @@
               ]
             }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu.",
           "autoEnforced": false
         }
@@ -3135,10 +3133,9 @@
               "traits": [
                 "mongo"
               ]
-            },
-            "atLeastBase": true
+            }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 3).",
           "autoEnforced": false
         }
@@ -3238,10 +3235,9 @@
               "traits": [
                 "mongo"
               ]
-            },
-            "atLeastBase": true
+            }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Éclaireurs mongos est égale au nombre de Mongos en jeu (min 4).",
           "autoEnforced": false
         }
@@ -3441,7 +3437,7 @@
             },
             "per": 3
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Seigneur de Guerre - +1 par groupe de 3 Niv I.",
           "autoEnforced": false
         }
@@ -3518,7 +3514,7 @@
             "kind": "grant-spell",
             "spellId": "lien-mental"
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Connaît le sort « Lien Mental » d'office.",
           "autoEnforced": true
         }
@@ -3741,7 +3737,7 @@
               ]
             }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "La témérité des Artisanes dogons est égale au nombre de Goûns Niveau I en jeu.",
           "autoEnforced": false
         }
@@ -4885,7 +4881,7 @@
               ]
             }
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Doctrine : Utilise les valeurs de T et I les plus fortes parmi les membres de l'Ordre présents dans le Fer de Lance (hors dégâts).",
           "autoEnforced": true
         },
@@ -8722,7 +8718,7 @@
             "stat": "i",
             "amount": "level"
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Elle ajoute son niveau à sa valeur de I pour la partie.",
           "autoEnforced": false
         }
@@ -8896,7 +8892,7 @@
             "skillId": "heroique",
             "value": "défense"
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",
           "autoEnforced": false
         },
@@ -8930,7 +8926,7 @@
             "kind": "grant-skill",
             "skillId": "instinct-de-survie"
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",
           "autoEnforced": false
         }
@@ -9206,7 +9202,7 @@
             "kind": "grant-skill",
             "skillId": "rusee"
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé ».",
           "autoEnforced": true
         }
@@ -9253,7 +9249,7 @@
             "kind": "grant-skill",
             "skillId": "hors-norme"
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Le Porte-Bannière est considéré comme possédant « Hors Normes » tant qu'il porte sa bannière.",
           "autoEnforced": true
         },
@@ -9300,7 +9296,7 @@
               "tir"
             ]
           },
-          "appliesToListBuilding": false,
+          "appliesToListBuilding": true,
           "sourceText": "Apporte 1 dé de maîtrise supplémentaire.",
           "autoEnforced": true
         }

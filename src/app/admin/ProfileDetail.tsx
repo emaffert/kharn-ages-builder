@@ -495,9 +495,6 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
                 sourceText={e.sourceText}
                 badges={
                   <>
-                    <Badge tone={e.appliesToListBuilding ? "green" : "slate"}>
-                      {e.appliesToListBuilding ? "calculé par l'éditeur" : "en jeu seulement"}
-                    </Badge>
                     <Badge>{e.operation.kind}</Badge>
                     <Badge tone="violet">via « {via} »</Badge>
                   </>

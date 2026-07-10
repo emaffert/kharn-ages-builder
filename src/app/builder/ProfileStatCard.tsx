@@ -20,7 +20,7 @@ export type ProfileMods = {
   /** Valeurs de compétences calculées par effet (skillId -> valeur), ex. Seigneur de guerre. */
   skillValues?: Record<string, number>;
   /** Compétences octroyées par effet, avec valeur éventuelle (ex. Héroïque « défense »). */
-  grantedSkills?: { skillId: string; value?: string | number }[];
+  grantedSkills?: { skillId: string; value?: string | number; precision?: string }[];
   grantedTraitIds?: string[];
   /** Améliorations d'équipement octroyées (opt-in par objet, ex. arme empoisonnée). */
   grantedUpgrades?: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
@@ -133,6 +133,8 @@ export function ProfileStatCard({
   const ameliorations = cards.filter((c) => c.amelioration); // achetables
   const canEditUpgrades = Boolean(onToggleUpgrade);
   const precisions = p.skills.filter((s) => s.precision);
+  // Précisions issues de compétences octroyées par effet (ex. « Spécialiste : hache »).
+  const grantedPrecisions = (mods?.grantedSkills ?? []).filter((g) => g.precision);
   const baseEq = p.baseEquipmentIds
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
@@ -240,7 +242,7 @@ export function ProfileStatCard({
         />
         <RulesBlock
           rules={p.rules}
-          precisions={precisions.map((s) => {
+          precisions={[...precisions, ...grantedPrecisions].map((s) => {
             const kw = cat.skills.find((x) => x.id === s.skillId)?.keyword ?? s.skillId;
             return { label: kw, precision: s.precision, onClick: () => showSkill(s.skillId, kw) };
           })}

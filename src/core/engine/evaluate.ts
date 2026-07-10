@@ -22,15 +22,15 @@ import { totalMunitionCost } from "./munitions";
  * des effets dynamiques (octrois, déblocages, modificateurs de coût).
  * Référence : docs/schema-donnees.md - couche 2 (ordre de résolution).
  *
- * Opérations d'effet prises en charge ici : `cost-delta`, `cost-set`, `grant-trait`,
- * `grant-skill` (`spell-pages` est traité par engine/magic.ts pour la capacité de pages).
+ * Opérations d'effet prises en charge ici : `cost-delta`, `cost-set`, `grant-skill`
+ * (`spell-pages` est traité par engine/magic.ts pour la capacité de pages).
  * TODO - opérations définies au schéma mais PAS encore appliquées à l'évaluation :
  *   `stat-modifier` (ex. Apprentie de Nyx : +niveau en I), `cap`.
  *   Tant qu'elles ne sont pas implémentées, ces effets sont sans incidence sur coût/stats.
  */
 
 /** Compétence octroyée par un effet (avec sa valeur éventuelle pour les compétences « à valeur »). */
-export type GrantedSkill = { skillId: string; value?: string | number };
+export type GrantedSkill = { skillId: string; value?: string | number; precision?: string };
 
 /**
  * Amélioration d'équipement octroyée par un effet `unlock-upgrade` : la figurine peut acheter
@@ -170,7 +170,7 @@ interface ResolvedInstance {
   /** Cette figurine est-elle le meneur de son Fer de Lance ? */
   isLeader: boolean;
   /** Compétences octroyées par effet : skillId → valeur éventuelle (compétence « à valeur »). */
-  grantedSkills: Map<string, string | number | undefined>;
+  grantedSkills: Map<string, { value?: string | number; precision?: string }>;
 }
 
 interface EffectOccurrence {
@@ -442,30 +442,21 @@ function validateOstCards(cat: Catalog, list: ListDocument, resolved: ResolvedIn
   }
 }
 
-/** Applique les octrois (grant-trait / grant-skill) jusqu'à atteindre un point fixe. */
+/** Applique les octrois de compétence (grant-skill) jusqu'à atteindre un point fixe. */
 function applyGrants(resolved: ResolvedInstance[], occurrences: EffectOccurrence[]): void {
   const MAX_ITERATIONS = 16; // garde anti-cycle
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     let changed = false;
     for (const occ of occurrences) {
       const { effect } = occ;
-      if (effect.operation.kind !== "grant-trait" && effect.operation.kind !== "grant-skill") {
-        continue;
-      }
+      if (effect.operation.kind !== "grant-skill") continue;
       if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
 
-      const targets = resolveTargets(occ, resolved);
-      for (const ri of targets) {
-        if (effect.operation.kind === "grant-trait") {
-          if (!ri.traits.has(effect.operation.trait)) {
-            ri.traits.add(effect.operation.trait);
-            changed = true;
-          }
-        } else {
-          if (!ri.grantedSkills.has(effect.operation.skillId)) {
-            ri.grantedSkills.set(effect.operation.skillId, effect.operation.value);
-            changed = true;
-          }
+      const { skillId, value, precision } = effect.operation;
+      for (const ri of resolveTargets(occ, resolved)) {
+        if (!ri.grantedSkills.has(skillId)) {
+          ri.grantedSkills.set(skillId, { value, precision });
+          changed = true;
         }
       }
     }
@@ -1171,7 +1162,7 @@ function cloneForDisplay(resolved: ResolvedInstance[]): ResolvedInstance[] {
   return resolved.map((ri) => ({
     ...ri,
     traits: new Set(ri.profile.traits),
-    grantedSkills: new Map<string, string | number | undefined>(),
+    grantedSkills: new Map<string, { value?: string | number; precision?: string }>(),
   }));
 }
 
@@ -1216,7 +1207,8 @@ function computeStatDeltas(
       const count = pool.filter((ri) => instanceMatchesIdentity(op.of, ri)).length;
       for (const ri of resolveTargets(occ, resolved)) {
         const base = baseStat(ri.profile, op.stat);
-        const value = op.atLeastBase ? Math.max(base, count) : count;
+        // Plancher = valeur de base imprimée (0 si le profil n'a pas de valeur sur cette carac.).
+        const value = Math.max(base, count);
         // SET (non cumulatif) : si plusieurs Dogons portent l'effet, chaque occurrence fixe la même
         // valeur → idempotent, exprimé en delta sur la base.
         const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
@@ -1298,7 +1290,6 @@ function collectEffectSources(
     let key: string | null = null;
     if (op.kind === "stat-modifier" || op.kind === "stat-count" || op.kind === "stat-max") key = `stat:${op.stat}`;
     else if (op.kind === "grant-skill" || op.kind === "skill-count") key = `skill:${op.skillId}`;
-    else if (op.kind === "grant-trait") key = `trait:${op.trait}`;
     else if (op.kind === "limit-modifier") key = "limit";
     if (!key) continue;
     if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
@@ -1673,7 +1664,11 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
       const extraSkills = upgradeSkillsByInstance.get(id) ?? [];
       const optSkills = mount.optionGrants.get(id) ?? [];
       if (dri.grantedSkills.size > 0 || extraSkills.length > 0 || optSkills.length > 0) {
-        const merged: GrantedSkill[] = [...dri.grantedSkills].map(([skillId, value]) => ({ skillId, value }));
+        const merged: GrantedSkill[] = [...dri.grantedSkills].map(([skillId, g]) => ({
+          skillId,
+          value: g.value,
+          precision: g.precision,
+        }));
         // Fusionne les compétences des améliorations d'équipement (Borax…) et des options de monture (p.32).
         for (const gs of [...extraSkills, ...optSkills]) {
           if (!merged.some((s) => s.skillId === gs.skillId && s.value === gs.value)) merged.push(gs);

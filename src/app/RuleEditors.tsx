@@ -8,7 +8,7 @@ import type {
 } from "@core";
 import { describeConstraint, describeEffect } from "@ui/explain";
 import { EQUIPMENT_CATEGORIES, MASTERY_DOMAINS, INPUT, removeAt, replaceAt } from "./admin/shared";
-import { Combobox, DomainIcon } from "./admin/primitives";
+import { Combobox, DomainIcon, Field, CheckField, ChipMultiSelect } from "./admin/primitives";
 
 /** Éditeurs structurés des contraintes et effets (propres à un profil). */
 
@@ -172,22 +172,22 @@ function SelectorEditor({
         onChange={(v) => set({ modelIds: v })}
         options={modelOptions(cat)}
       />
-      <div className="flex flex-wrap items-center gap-2 text-xs adm-faint">
-        niveaux
-        {[1, 2, 3].map((lv) => (
-          <label key={lv} className="flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={selector.levels?.includes(lv) ?? false}
-              onChange={(e) => {
-                const cur = selector.levels ?? [];
-                const next = e.target.checked ? [...cur, lv] : cur.filter((x) => x !== lv);
-                set({ levels: next.length ? next : undefined });
-              }}
-            />
-            {["I", "II", "III"][lv - 1]}
-          </label>
-        ))}
+      <div className="flex items-center gap-2">
+        <span className="adm-field-label">Niveaux</span>
+        <ChipMultiSelect
+          options={[
+            { value: "1", label: "I" },
+            { value: "2", label: "II" },
+            { value: "3", label: "III" },
+          ]}
+          selected={(selector.levels ?? []).map(String)}
+          onToggle={(v) => {
+            const lv = Number(v);
+            const cur = selector.levels ?? [];
+            const next = cur.includes(lv) ? cur.filter((x) => x !== lv) : [...cur, lv];
+            set({ levels: next.length ? next : undefined });
+          }}
+        />
       </div>
       <label className="flex items-center gap-2 text-xs adm-faint">
         meneur
@@ -222,22 +222,21 @@ function SelectorEditor({
         onChange={(v) => set({ equipmentIds: v })}
         options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
       />
-      <div className="flex items-center gap-2 text-xs adm-faint">
-        mains
-        {[1, 2].map((h) => (
-          <label key={h} className="flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={selector.equipmentHands?.includes(h) ?? false}
-              onChange={(e) => {
-                const cur = selector.equipmentHands ?? [];
-                const next = e.target.checked ? [...cur, h] : cur.filter((x) => x !== h);
-                set({ equipmentHands: next.length ? next : undefined });
-              }}
-            />
-            {h}
-          </label>
-        ))}
+      <div className="flex items-center gap-2">
+        <span className="adm-field-label">Mains</span>
+        <ChipMultiSelect
+          options={[
+            { value: "1", label: "1 main" },
+            { value: "2", label: "2 mains" },
+          ]}
+          selected={(selector.equipmentHands ?? []).map(String)}
+          onToggle={(v) => {
+            const h = Number(v);
+            const cur = selector.equipmentHands ?? [];
+            const next = cur.includes(h) ? cur.filter((x) => x !== h) : [...cur, h];
+            set({ equipmentHands: next.length ? next : undefined });
+          }}
+        />
       </div>
       <label className="flex items-center gap-1 text-xs adm-faint">
         au moins
@@ -266,8 +265,6 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, upgradeId: "", label: "", cost: 0, equipmentCategories: [] };
     case "grant-skill":
       return { kind, skillId: "" };
-    case "grant-trait":
-      return { kind, trait: "" };
     case "grant-spell":
       return { kind, spellId: "" };
     case "cap":
@@ -275,7 +272,7 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
     case "stat-modifier":
       return { kind, stat: "i", amount: "level" };
     case "stat-count":
-      return { kind, stat: "t", of: {}, atLeastBase: true };
+      return { kind, stat: "t", of: {} };
     case "stat-max":
       return { kind, stat: "t", of: {} };
     case "skill-count":
@@ -289,6 +286,116 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
   }
 }
 
+// Libellés français des actions, regroupées par famille (menu de choix de l'opération).
+const OP_LABELS: Record<EffectOperation["kind"], string> = {
+  "cost-delta": "Modifier le coût",
+  "cost-set": "Fixer le coût",
+  "grimoire-discount": "Réduire un grimoire",
+  "grant-skill": "Conférer une compétence",
+  "grant-spell": "Conférer un sort",
+  "grant-mastery-die": "Conférer un dé de maîtrise",
+  "unlock-upgrade": "Débloquer une amélioration",
+  "stat-modifier": "Modifier une caractéristique",
+  "stat-count": "Caractéristique = comptage de figurines",
+  "stat-max": "Caractéristique = plus forte du groupe",
+  "skill-count": "Compétence = comptage de figurines",
+  "spell-pages": "Pages de sorts",
+  "limit-modifier": "Modifier la limitation (X)",
+  cap: "Plafond (non implémenté)",
+};
+
+// `cap` est volontairement absent du menu (non implémenté par le moteur).
+const OP_GROUPS: { group: string; kinds: EffectOperation["kind"][] }[] = [
+  { group: "Coût", kinds: ["cost-delta", "cost-set", "grimoire-discount"] },
+  { group: "Octrois", kinds: ["grant-skill", "grant-spell", "grant-mastery-die", "unlock-upgrade"] },
+  { group: "Caractéristiques & compétences", kinds: ["stat-modifier", "stat-count", "stat-max", "skill-count"] },
+  { group: "Divers", kinds: ["spell-pages", "limit-modifier"] },
+];
+
+const STAT_KEYS = ["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"] as const;
+type StatKey = (typeof STAT_KEYS)[number];
+
+const skillOptions = (cat: Catalog): Option[] =>
+  [...cat.skills].sort((a, b) => a.keyword.localeCompare(b.keyword, "fr")).map((s) => ({ value: s.id, label: s.keyword }));
+const spellOptions = (cat: Catalog): Option[] =>
+  [...cat.spells].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((s) => ({ value: s.id, label: s.name }));
+
+// Note : `admin.css` force `width:100%` sur un `.adm-input` DANS un `.adm-field`. La largeur se règle
+// donc sur le `Field` lui-même (via sa `className`), pas sur l'input.
+
+/** Champ numérique étiqueté (label au-dessus), homogène avec le reste de l'admin. */
+function NumField({
+  label,
+  hint,
+  value,
+  onChange,
+  w = "w-24",
+}: {
+  label: string;
+  hint?: string;
+  value: number | null;
+  onChange: (v: number | null) => void;
+  w?: string;
+}) {
+  return (
+    <Field label={label} hint={hint} className={w}>
+      <input
+        type="number"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+        className={INPUT}
+      />
+    </Field>
+  );
+}
+
+/** Champ texte étiqueté (label au-dessus). */
+function TxtField({
+  label,
+  hint,
+  value,
+  placeholder,
+  onChange,
+  w = "w-40",
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  placeholder?: string;
+  onChange: (v: string) => void;
+  w?: string;
+}) {
+  return (
+    <Field label={label} hint={hint} className={w}>
+      <input value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={INPUT} />
+    </Field>
+  );
+}
+
+function StatSelect({ value, onChange }: { value: StatKey; onChange: (s: StatKey) => void }) {
+  return (
+    <Field label="Caractéristique" className="w-28">
+      <select value={value} onChange={(e) => onChange(e.target.value as StatKey)} className={INPUT}>
+        {STAT_KEYS.map((s) => (
+          <option key={s} value={s}>
+            {s.toUpperCase()}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+}
+
+/** Sous-sélecteur `of` (groupe de figurines à compter / comparer), sur toute la largeur. */
+function OfSelector({ label, of, cat, onChange }: { label: string; of: Selector; cat: Catalog; onChange: (s: Selector) => void }) {
+  return (
+    <div className="w-full space-y-1">
+      <div className="adm-field-label">{label}</div>
+      <SelectorEditor selector={of} cat={cat} allowSelf={false} onChange={onChange} />
+    </div>
+  );
+}
+
 function OperationEditor({
   op,
   cat,
@@ -299,139 +406,104 @@ function OperationEditor({
   onChange: (op: EffectOperation) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <select
-        value={op.kind}
-        onChange={(e) => onChange(defaultOperation(e.target.value as EffectOperation["kind"]))}
-        className={INPUT}
-      >
-        {/*
-          Seules les opérations réellement appliquées par le moteur sont proposées.
-          `stat-modifier` est gardé car utilisé « en jeu » (affiché, non calculé au coût).
-          `cap` reste retiré tant qu'il n'est pas implémenté.
-        */}
-        {(
-          [
-            "cost-delta",
-            "cost-set",
-            "grimoire-discount",
-            "unlock-upgrade",
-            "grant-skill",
-            "grant-trait",
-            "grant-spell",
-            "stat-modifier",
-            "stat-count",
-            "stat-max",
-            "skill-count",
-            "spell-pages",
-            "limit-modifier",
-            "grant-mastery-die",
-          ] as const
-        ).map((k) => (
-          <option key={k} value={k}>
-            {k}
-          </option>
-        ))}
-      </select>
+    <div className="space-y-3">
+      <Field label="Action" className="max-w-xs">
+        <select
+          value={op.kind}
+          onChange={(e) => onChange(defaultOperation(e.target.value as EffectOperation["kind"]))}
+          className={INPUT}
+        >
+          {OP_GROUPS.map((g) => (
+            <optgroup key={g.group} label={g.group}>
+              {g.kinds.map((k) => (
+                <option key={k} value={k}>
+                  {OP_LABELS[k]}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </Field>
+
+      <div className="flex flex-wrap items-end gap-3">
       {op.kind === "cost-delta" && (
         <>
-          <Num label="montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
-          <label className="flex items-center gap-1 text-xs adm-faint">
-            <input
-              type="checkbox"
+          <NumField label="Valeur (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <div className="self-center">
+            <CheckField
+              label="si arme de base changée"
               checked={op.requiresBaseSwap ?? false}
-              onChange={(e) => onChange({ ...op, requiresBaseSwap: e.target.checked || undefined })}
+              onChange={(b) => onChange({ ...op, requiresBaseSwap: b || undefined })}
             />
-            si arme de base changée
-          </label>
+          </div>
         </>
       )}
-      {op.kind === "limit-modifier" && (
-        <Num label="montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
-      )}
-      {op.kind === "grant-mastery-die" && (
-        <div className="flex w-full flex-wrap items-center gap-3 text-xs adm-faint">
-          domaines du dé
-          {MASTERY_DOMAINS.map((d) => {
-            const on = op.domains.includes(d);
-            return (
-              <label key={d} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={on}
-                  onChange={() =>
-                    onChange({ ...op, domains: on ? op.domains.filter((x) => x !== d) : [...op.domains, d] })
-                  }
-                />
-                <DomainIcon domain={d} />
-                {d}
-              </label>
-            );
-          })}
-        </div>
-      )}
+
       {op.kind === "cost-set" && (
         <>
-          <Num label="coût" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
-          <Num
-            label="max"
+          <NumField label="Coût (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <NumField
+            label="Plafond de cibles"
+            hint="défaut : 1 par source"
             value={op.maxCount ?? null}
             onChange={(v) => onChange({ ...op, maxCount: v ?? undefined })}
           />
         </>
       )}
+
       {op.kind === "grimoire-discount" && (
         <>
-          <Num label="réduction (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
-          <select
-            value={op.tier ?? ""}
-            onChange={(e) => onChange({ ...op, tier: (e.target.value || undefined) as "petit" | "grand" | undefined })}
-            className={INPUT}
-            title="Type de grimoire concerné"
-          >
-            <option value="">tous grimoires</option>
-            <option value="petit">petit</option>
-            <option value="grand">grand</option>
-          </select>
+          <NumField label="Réduction (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <Field label="Grimoire concerné">
+            <select
+              value={op.tier ?? ""}
+              onChange={(e) => onChange({ ...op, tier: (e.target.value || undefined) as "petit" | "grand" | undefined })}
+              className={INPUT}
+            >
+              <option value="">tous grimoires</option>
+              <option value="petit">petit</option>
+              <option value="grand">grand</option>
+            </select>
+          </Field>
         </>
       )}
+
       {op.kind === "unlock-upgrade" && (
         <>
-          <Txt label="upgradeId" value={op.upgradeId} onChange={(v) => onChange({ ...op, upgradeId: v })} />
-          <Txt label="libellé" value={op.label} onChange={(v) => onChange({ ...op, label: v })} />
-          <Num label="coût/objet" value={op.cost} onChange={(v) => onChange({ ...op, cost: v ?? 0 })} />
-          <div className="flex w-full flex-wrap items-center gap-2 text-xs adm-faint">
-            catégories
-            {EQUIPMENT_CATEGORIES.map((c) => (
-              <label key={c} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={op.equipmentCategories.includes(c)}
-                  onChange={(e) => {
-                    const cur = op.equipmentCategories;
-                    const next = e.target.checked ? [...cur, c] : cur.filter((x) => x !== c);
-                    onChange({ ...op, equipmentCategories: next });
-                  }}
-                />
-                {c}
-              </label>
-            ))}
+          <TxtField label="Identifiant" value={op.upgradeId} onChange={(v) => onChange({ ...op, upgradeId: v })} w="w-32" />
+          <TxtField label="Libellé" value={op.label} onChange={(v) => onChange({ ...op, label: v })} />
+          <NumField label="Coût / objet" value={op.cost} onChange={(v) => onChange({ ...op, cost: v ?? 0 })} />
+          <div className="w-full space-y-1">
+            <div className="adm-field-label">Catégories d'équipement</div>
+            <ChipMultiSelect
+              options={EQUIPMENT_CATEGORIES.map((c) => ({ value: c, label: c }))}
+              selected={op.equipmentCategories}
+              onToggle={(c) => {
+                const cur = op.equipmentCategories;
+                onChange({ ...op, equipmentCategories: cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c] });
+              }}
+            />
           </div>
-          <div className="flex w-full flex-col gap-1 text-xs adm-faint">
-            <span>compétences conférées (tant que l'objet amélioré est équipé)</span>
+          <div className="w-full space-y-1">
+            <div className="adm-field-label">
+              Compétences conférées
+              <span className="adm-field-hint">tant que l'objet amélioré est équipé</span>
+            </div>
             {(op.grantsSkills ?? []).map((gs, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Combobox
-                  value={gs.skillId}
-                  className="w-44"
-                  placeholder="Compétence…"
-                  options={[...cat.skills]
-                    .sort((a, b) => a.keyword.localeCompare(b.keyword, "fr"))
-                    .map((s) => ({ value: s.id, label: s.keyword }))}
-                  onChange={(v) => onChange({ ...op, grantsSkills: replaceAt(op.grantsSkills ?? [], i, { ...gs, skillId: v }) })}
-                />
-                <Txt
-                  label="valeur (option.)"
+              <div key={i} className="flex items-end gap-2">
+                <Field label="Compétence">
+                  <Combobox
+                    value={gs.skillId}
+                    className="w-44"
+                    placeholder="Rechercher…"
+                    options={skillOptions(cat)}
+                    onChange={(v) => onChange({ ...op, grantsSkills: replaceAt(op.grantsSkills ?? [], i, { ...gs, skillId: v }) })}
+                  />
+                </Field>
+                <TxtField
+                  label="Valeur"
+                  hint="option."
+                  w="w-28"
                   value={gs.value != null ? String(gs.value) : ""}
                   onChange={(v) => onChange({ ...op, grantsSkills: replaceAt(op.grantsSkills ?? [], i, { ...gs, value: v || undefined }) })}
                 />
@@ -449,149 +521,131 @@ function OperationEditor({
           </div>
         </>
       )}
+
       {op.kind === "grant-skill" && (
         <>
-          <Combobox
-            value={op.skillId}
-            className="w-48"
-            placeholder="Rechercher une compétence…"
-            options={[...cat.skills]
-              .sort((a, b) => a.keyword.localeCompare(b.keyword))
-              .map((s) => ({ value: s.id, label: s.keyword }))}
-            onChange={(v) => onChange({ ...op, skillId: v })}
-          />
-          <Txt
-            label="valeur (option.)"
+          <Field label="Compétence">
+            <Combobox
+              value={op.skillId}
+              className="w-56"
+              placeholder="Rechercher une compétence…"
+              options={skillOptions(cat)}
+              onChange={(v) => onChange({ ...op, skillId: v })}
+            />
+          </Field>
+          <TxtField
+            label="Valeur"
+            hint="option."
+            w="w-28"
             value={op.value != null ? String(op.value) : ""}
             onChange={(v) => onChange({ ...op, value: v || undefined })}
           />
+          <TxtField
+            label="Précision"
+            hint="option."
+            w="w-36"
+            value={op.precision ?? ""}
+            onChange={(v) => onChange({ ...op, precision: v || undefined })}
+          />
         </>
       )}
-      {op.kind === "grant-trait" && (
-        <Txt label="trait" value={op.trait} onChange={(v) => onChange({ ...op, trait: v })} />
-      )}
+
       {op.kind === "grant-spell" && (
-        <Combobox
-          value={op.spellId}
-          className="w-56"
-          placeholder="Rechercher un sort…"
-          options={[...cat.spells]
-            .sort((a, b) => a.name.localeCompare(b.name, "fr"))
-            .map((s) => ({ value: s.id, label: s.name }))}
-          onChange={(v) => onChange({ ...op, spellId: v })}
-        />
+        <Field label="Sort">
+          <Combobox
+            value={op.spellId}
+            className="w-64"
+            placeholder="Rechercher un sort…"
+            options={spellOptions(cat)}
+            onChange={(v) => onChange({ ...op, spellId: v })}
+          />
+        </Field>
       )}
-      {op.kind === "cap" && <Num label="valeur" value={op.value} onChange={(v) => onChange({ ...op, value: v })} />}
+
+      {op.kind === "grant-mastery-die" && (
+        <div className="w-full space-y-1">
+          <div className="adm-field-label">Domaines du dé</div>
+          <ChipMultiSelect
+            options={MASTERY_DOMAINS.map((d) => ({ value: d, label: d }))}
+            selected={op.domains}
+            onToggle={(d) =>
+              onChange({ ...op, domains: op.domains.includes(d) ? op.domains.filter((x) => x !== d) : [...op.domains, d] })
+            }
+            renderIcon={(d) => <DomainIcon domain={d} />}
+          />
+        </div>
+      )}
+
       {op.kind === "stat-modifier" && (
         <>
-          <select
-            value={op.stat}
-            onChange={(ev) => onChange({ ...op, stat: ev.target.value as typeof op.stat })}
-            className={INPUT}
-          >
-            {(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"] as const).map((s) => (
-              <option key={s} value={s}>
-                {s.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          <input
+          <StatSelect value={op.stat} onChange={(s) => onChange({ ...op, stat: s })} />
+          <TxtField
+            label="Valeur"
+            w="w-32"
+            placeholder="nb ou « level »"
             value={op.amount === "level" ? "level" : String(op.amount)}
-            placeholder='nombre ou "level"'
-            onChange={(ev) => {
-              const v = ev.target.value.trim();
-              onChange({ ...op, amount: v === "level" ? "level" : Number(v) });
+            onChange={(v) => {
+              const t = v.trim();
+              onChange({ ...op, amount: t === "level" ? "level" : Number(t) });
             }}
-            className={`${INPUT} w-28`}
           />
         </>
       )}
+
       {op.kind === "stat-count" && (
         <>
-          <select
-            value={op.stat}
-            onChange={(ev) => onChange({ ...op, stat: ev.target.value as typeof op.stat })}
-            className={INPUT}
-          >
-            {(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"] as const).map((s) => (
-              <option key={s} value={s}>
-                {s.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs adm-faint">= nombre de</span>
-          <label className="flex items-center gap-1 text-xs adm-muted">
-            <input
-              type="checkbox"
-              checked={op.atLeastBase ?? false}
-              onChange={(ev) => onChange({ ...op, atLeastBase: ev.target.checked || undefined })}
-            />
-            minimum = valeur de base
-          </label>
-          <div className="w-full">
-            <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée)</div>
-            <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
-          </div>
+          <StatSelect value={op.stat} onChange={(s) => onChange({ ...op, stat: s })} />
+          <OfSelector
+            label="= nombre de figurines correspondant à (plancher : valeur de base du profil)"
+            of={op.of}
+            cat={cat}
+            onChange={(s) => onChange({ ...op, of: s })}
+          />
         </>
       )}
+
       {op.kind === "stat-max" && (
         <>
-          <select
-            value={op.stat}
-            onChange={(ev) => onChange({ ...op, stat: ev.target.value as typeof op.stat })}
-            className={INPUT}
-          >
-            {(["v", "p", "a", "c", "t", "i", "stature", "pa", "pv"] as const).map((s) => (
-              <option key={s} value={s}>
-                {s.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs adm-faint">= valeur la plus forte parmi</span>
-          <div className="w-full">
-            <div className="mb-1 text-xs adm-faint">groupe de figurines (dans la portée)</div>
-            <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
-          </div>
+          <StatSelect value={op.stat} onChange={(s) => onChange({ ...op, stat: s })} />
+          <OfSelector
+            label="= valeur la plus forte parmi le groupe (dans la portée)"
+            of={op.of}
+            cat={cat}
+            onChange={(s) => onChange({ ...op, of: s })}
+          />
         </>
       )}
+
       {op.kind === "skill-count" && (
         <>
-          <span className="text-xs adm-faint">valeur de</span>
-          <Combobox
-            value={op.skillId}
-            className="w-48"
-            placeholder="Rechercher une compétence…"
-            options={[...cat.skills]
-              .sort((a, b) => a.keyword.localeCompare(b.keyword))
-              .map((s) => ({ value: s.id, label: s.keyword }))}
-            onChange={(v) => onChange({ ...op, skillId: v })}
+          <Field label="Compétence">
+            <Combobox
+              value={op.skillId}
+              className="w-56"
+              placeholder="Rechercher une compétence…"
+              options={skillOptions(cat)}
+              onChange={(v) => onChange({ ...op, skillId: v })}
+            />
+          </Field>
+          <NumField label="Par groupe de" value={op.per ?? 1} onChange={(v) => onChange({ ...op, per: v || 1 })} w="w-20" />
+          <OfSelector
+            label="figurines à compter (dans la portée) - arrondi à l'inférieur"
+            of={op.of}
+            cat={cat}
+            onChange={(s) => onChange({ ...op, of: s })}
           />
-          <span className="text-xs adm-faint">= nombre de figurines ÷</span>
-          <Num label="par groupe de" value={op.per ?? 1} onChange={(v) => onChange({ ...op, per: v || 1 })} />
-          <div className="w-full">
-            <div className="mb-1 text-xs adm-faint">figurines à compter (dans la portée) - arrondi à l'inférieur</div>
-            <SelectorEditor selector={op.of} cat={cat} allowSelf={false} onChange={(s) => onChange({ ...op, of: s })} />
-          </div>
         </>
       )}
-      {op.kind === "spell-pages" && (
-        <Num label="pages" value={op.amount} onChange={(v) => onChange({ ...op, amount: v })} />
-      )}
-    </div>
-  );
-}
 
-function Num({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number) => void }) {
-  return (
-    <label className="flex items-center gap-1 text-xs adm-faint">
-      {label}
-      <input
-        type="number"
-        value={value ?? ""}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className={`${INPUT} w-20`}
-      />
-    </label>
+      {op.kind === "spell-pages" && (
+        <NumField label="Pages" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+      )}
+
+      {op.kind === "limit-modifier" && (
+        <NumField label="Montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+      )}
+      </div>
+    </div>
   );
 }
 
@@ -839,22 +893,15 @@ export function EffectListEditor({
     <div className="space-y-2">
       {effects.map((e, i) => (
         <EditorCard key={i} preview={describeEffect(e, cat)} onRemove={() => onChange(removeAt(effects, i))}>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-1 text-xs adm-faint">
-              portée
-              <select value={e.scope} onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })} className={INPUT}>
-                <option value="fer-de-lance">fer-de-lance</option>
-                <option value="ost">ost</option>
-              </select>
-            </label>
-            <label className="flex items-center gap-1 text-xs adm-muted">
-              <input type="checkbox" checked={e.appliesToListBuilding} onChange={(ev) => update(i, { ...e, appliesToListBuilding: ev.target.checked })} />
-              calculé par l'éditeur
-            </label>
-          </div>
-          <div className="text-xs adm-faint">opération</div>
+          <Field label="Portée" className="max-w-[12rem]">
+            <select value={e.scope} onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })} className={INPUT}>
+              <option value="fer-de-lance">fer-de-lance</option>
+              <option value="ost">ost</option>
+            </select>
+          </Field>
+          <div className="adm-field-label pt-1">Opération</div>
           <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, { ...e, operation: op })} />
-          <div className="text-xs adm-faint">cible</div>
+          <div className="adm-field-label pt-1">Cible</div>
           <SelectorEditor selector={e.target} cat={cat} onChange={(s) => update(i, { ...e, target: s })} />
           <details>
             <summary className="cursor-pointer text-xs adm-faint">

@@ -41,8 +41,13 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     grantsSkills: z.array(SkillRefSchema).optional(),
   }),
   // `value` : pour une compétence « à valeur » (ex. octroie « Héroïque défense » → value "défense").
-  z.object({ kind: z.literal("grant-skill"), skillId: z.string(), value: z.union([z.string(), z.number()]).optional() }),
-  z.object({ kind: z.literal("grant-trait"), trait: z.string() }),
+  // `precision` : précision libre affichée à côté de la compétence (ex. « Spécialiste : hache »).
+  z.object({
+    kind: z.literal("grant-skill"),
+    skillId: z.string(),
+    value: z.union([z.string(), z.number()]).optional(),
+    precision: z.string().optional(),
+  }),
   // Octroie la connaissance d'un sort « de signature » (connu d'office, gratuit, hors budget de pages).
   // Ex. Alaric connaît « Lien Mental ». Affiché sur la fiche même pour un non-lanceur.
   z.object({ kind: z.literal("grant-spell"), spellId: z.string() }),
@@ -54,13 +59,9 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     amount: z.union([z.number(), z.literal("level")]),
   }),
   // Fixe une caractéristique au NOMBRE de figurines correspondant à `of` dans la portée
-  // (ex. Instinct grégaire : T des Dogons = nombre de Dogons). `atLeastBase` => plancher = valeur de base.
-  z.object({
-    kind: z.literal("stat-count"),
-    stat: StatKeySchema,
-    of: SelectorSchema,
-    atLeastBase: z.boolean().optional(),
-  }),
+  // (ex. Instinct grégaire : T des Dogons = nombre de Dogons). Plancher = valeur de base imprimée
+  // (pattern officiel : un profil sans valeur de base sur cette carac. n'a pas de plancher).
+  z.object({ kind: z.literal("stat-count"), stat: StatKeySchema, of: SelectorSchema }),
   // Fixe une caractéristique à la valeur MAXIMALE de cette carac. parmi les figurines correspondant
   // à `of` dans la portée (ex. « Doctrine » de l'Ordre : T et I = les plus fortes des membres de
   // l'Ordre présents dans le Fer de Lance). Lit les valeurs de BASE (imprimées) ; plancher = base.

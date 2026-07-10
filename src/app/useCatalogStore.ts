@@ -3,11 +3,14 @@ import {
   parseCatalog,
   type Catalog,
   type Equipment,
+  type Faction,
+  type Grimoire,
   type MagicWay,
   type Model,
   type Mount,
   type MountOption,
   type MountType,
+  type MunitionKind,
   type Profile,
   type Skill,
   type SpecialCard,
@@ -220,6 +223,51 @@ export function useCatalogStore() {
 
   const removeMagicWay = useCallback(
     (id: string) => apply((c) => ({ ...c, magicWays: c.magicWays.filter((w) => w.id !== id) })),
+    [apply],
+  );
+
+  // ── Réglages : factions, grimoires, munitions (données de référence) ──
+  const addFaction = useCallback((): string => {
+    const id = `faction-${Date.now()}`;
+    apply((c) => ({ ...c, factions: [...c.factions, { id, name: "Nouvelle faction", logo: "" }] }));
+    return id;
+  }, [apply]);
+  const updateFaction = useCallback(
+    (id: string, patch: Partial<Faction>) =>
+      apply((c) => ({ ...c, factions: c.factions.map((f) => (f.id === id ? { ...f, ...patch } : f)) })),
+    [apply],
+  );
+  const removeFaction = useCallback(
+    (id: string) => apply((c) => ({ ...c, factions: c.factions.filter((f) => f.id !== id) })),
+    [apply],
+  );
+
+  // Ensemble fixe (ids « petit » / « grand ») : édition seule, pas d'ajout/suppression.
+  const updateGrimoire = useCallback(
+    (id: string, patch: Partial<Grimoire>) =>
+      apply((c) => ({ ...c, grimoires: c.grimoires.map((g) => (g.id === id ? { ...g, ...patch } : g)) })),
+    [apply],
+  );
+
+  const addMunitionKind = useCallback((): string => {
+    const id = `mun-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      munitionKinds: [...(c.munitionKinds ?? []), { id, label: "Nouvelle sorte", tierPrices: [], types: [] }],
+    }));
+    return id;
+  }, [apply]);
+  const updateMunitionKind = useCallback(
+    (id: string, patch: Partial<MunitionKind>) =>
+      apply((c) => ({
+        ...c,
+        munitionKinds: (c.munitionKinds ?? []).map((k) => (k.id === id ? { ...k, ...patch } : k)),
+      })),
+    [apply],
+  );
+  const removeMunitionKind = useCallback(
+    (id: string) =>
+      apply((c) => ({ ...c, munitionKinds: (c.munitionKinds ?? []).filter((k) => k.id !== id) })),
     [apply],
   );
 
@@ -529,6 +577,13 @@ export function useCatalogStore() {
     addMagicWay,
     updateMagicWay,
     removeMagicWay,
+    addFaction,
+    updateFaction,
+    removeFaction,
+    updateGrimoire,
+    addMunitionKind,
+    updateMunitionKind,
+    removeMunitionKind,
     addMountType,
     updateMountType,
     removeMountType,

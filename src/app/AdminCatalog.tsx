@@ -10,6 +10,7 @@ import { SpellDetail } from "./admin/SpellDetail";
 import { MagicWaysDetail } from "./admin/MagicWaysDetail";
 import { MountsDetail } from "./admin/MountsDetail";
 import { MountOptionDetail } from "./admin/MountOptionDetail";
+import { SettingsDetail } from "./admin/SettingsDetail";
 import { AdminDocs } from "./admin/AdminDocs";
 import "./admin/admin.css";
 
@@ -31,7 +32,8 @@ type AdminView =
   | "spells"
   | "magic-ways"
   | "mounts"
-  | "mount-options";
+  | "mount-options"
+  | "settings";
 
 // Navigation groupée par domaine (ordonnée), plutôt qu'une rangée d'onglets en vrac.
 const NAV_GROUPS: { label: string; items: [AdminView, string][] }[] = [
@@ -39,6 +41,7 @@ const NAV_GROUPS: { label: string; items: [AdminView, string][] }[] = [
   { label: "Objets", items: [["equipment", "Équipement"], ["skills", "Compétences"]] },
   { label: "Magie", items: [["spells", "Sorts"], ["magic-ways", "Voies"]] },
   { label: "Montures", items: [["mounts", "Montures"], ["mount-options", "Options"]] },
+  { label: "Réglages", items: [["settings", "Réglages"]] },
 ];
 
 export function AdminCatalog() {
@@ -219,6 +222,8 @@ export function AdminCatalog() {
             {view === "magic-ways" && `${catalog.magicWays.length} voie(s) de magie`}
             {view === "mounts" && `${catalog.mountTypes.length} type(s) · ${catalog.mounts.length} niveau(x)`}
             {view === "mount-options" && `${catalog.mountOptions.length} option(s)`}
+            {view === "settings" &&
+              `${catalog.factions.length} faction(s) · ${catalog.grimoires.length} grimoire(s) · ${(catalog.munitionKinds ?? []).length} munition(s)`}
             {store.dirty && <span className="adm-accent"> · modifié</span>}
           </p>
         </div>
@@ -579,6 +584,18 @@ export function AdminCatalog() {
             ) : (
               <p className="adm-faint">Sélectionnez une option de monture.</p>
             ))}
+          {view === "settings" && (
+            <SettingsDetail
+              cat={catalog}
+              onAddFaction={store.addFaction}
+              onUpdateFaction={store.updateFaction}
+              onRemoveFaction={store.removeFaction}
+              onUpdateGrimoire={store.updateGrimoire}
+              onAddMunitionKind={store.addMunitionKind}
+              onUpdateMunitionKind={store.updateMunitionKind}
+              onRemoveMunitionKind={store.removeMunitionKind}
+            />
+          )}
         </div>
 
         {import.meta.env.DEV && previewImage && (

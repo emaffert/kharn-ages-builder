@@ -58,6 +58,7 @@ const GLYPH_PATHS: Record<string, ReactNode> = {
   cost: (<><circle cx="12" cy="12" r="8" /><path d="M12 8v8M9.5 10.5h3.5a1.5 1.5 0 0 1 0 3H10" /></>),
   magic: (<><path d="M5 19l9-9M13 4l2 2M17 8l2 2" /><path d="M15 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></>),
   mount: (<path d="M4 18c1-5 4-8 9-8h5l-2 4h-3c-3 0-5 2-6 4z" />),
+  alert: (<><path d="M12 3.5l9 15.5H3z" /><path d="M12 10v4" /><circle cx="12" cy="16.6" r="0.6" fill="currentColor" stroke="none" /></>),
   trash: (<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" />),
   default: (<circle cx="12" cy="12" r="7" />),
 };

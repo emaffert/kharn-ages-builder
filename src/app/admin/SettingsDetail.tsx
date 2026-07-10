@@ -1,10 +1,16 @@
+import { useState } from "react";
 import type { Catalog, Faction, Grimoire, MunitionKind } from "@core";
-import { AddButton, Field, PageHeader, RemoveButton, Section } from "./primitives";
+import { Button, Dialog } from "@ui";
+import { AddButton, Field, Glyph, PageHeader, RemoveButton, Section } from "./primitives";
 import { INPUT } from "./shared";
+
+/** Suppression en attente de confirmation (données de référence : action à répercussion large). */
+type PendingDelete = { what: string; run: () => void };
 
 /**
  * Page « Réglages » : données de référence du catalogue éditées en tables (peu d'entrées) -
  * factions, grimoires (ensemble fixe petit/grand), et sortes de munitions (paliers × types).
+ * Toute suppression passe par une confirmation (répercussion sur profils / équipements / listes).
  */
 export function SettingsDetail({
   cat,
@@ -25,8 +31,23 @@ export function SettingsDetail({
   onUpdateMunitionKind: (id: string, patch: Partial<MunitionKind>) => void;
   onRemoveMunitionKind: (id: string) => void;
 }) {
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const confirmDelete = (what: string, run: () => void) => setPendingDelete({ what, run });
+
   return (
     <div className="mx-auto max-w-3xl space-y-5">
+      <div className="adm-banner">
+        <span className="adm-banner-icon"><Glyph name="alert" /></span>
+        <div>
+          <p className="adm-banner-title">Données internes sensibles</p>
+          <p className="adm-banner-text">
+            Ces réglages structurent tout le catalogue. Modifier ou supprimer une <strong>faction</strong>, un{" "}
+            <strong>grimoire</strong> ou une <strong>sorte de munition</strong> se répercute sur les profils,
+            équipements, sorts et listes déjà enregistrés. À éditer avec précaution.
+          </p>
+        </div>
+      </div>
+
       <PageHeader title="Réglages" subtitle="Données de référence : factions, grimoires, munitions." />
 
       {/* ── Factions ─────────────────────────────────────────────── */}
@@ -60,7 +81,7 @@ export function SettingsDetail({
                 placeholder="notes (optionnel)"
               />
               <span className="adm-faint font-mono text-[10px]">{f.id}</span>
-              <RemoveButton onClick={() => onRemoveFaction(f.id)} />
+              <RemoveButton onClick={() => confirmDelete(`la faction « ${f.name} »`, () => onRemoveFaction(f.id))} />
             </div>
           ))}
           <AddButton onClick={onAddFaction}>+ faction</AddButton>
@@ -109,13 +130,43 @@ export function SettingsDetail({
             <MunitionKindEditor
               key={k.id}
               kind={k}
+              confirmDelete={confirmDelete}
               onChange={(patch) => onUpdateMunitionKind(k.id, patch)}
-              onRemove={() => onRemoveMunitionKind(k.id)}
+              onRemove={() => confirmDelete(`la sorte de munition « ${k.label} »`, () => onRemoveMunitionKind(k.id))}
             />
           ))}
           <AddButton onClick={onAddMunitionKind}>+ sorte de munition</AddButton>
         </div>
       </Section>
+
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(o) => {
+          if (!o) setPendingDelete(null);
+        }}
+        size="sm"
+        title="Confirmer la suppression"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
+              Annuler
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                pendingDelete?.run();
+                setPendingDelete(null);
+              }}
+            >
+              Supprimer
+            </Button>
+          </>
+        }
+      >
+        <p>
+          Supprimer {pendingDelete?.what} ? Cette action touche des données de référence et est <b>irréversible</b>.
+        </p>
+      </Dialog>
     </div>
   );
 }
@@ -123,10 +174,12 @@ export function SettingsDetail({
 /** Éditeur d'une sorte de munition : label, paliers de prix (colonnes), types (lignes) avec quantités. */
 function MunitionKindEditor({
   kind,
+  confirmDelete,
   onChange,
   onRemove,
 }: {
   kind: MunitionKind;
+  confirmDelete: (what: string, run: () => void) => void;
   onChange: (patch: Partial<MunitionKind>) => void;
   onRemove: () => void;
 }) {
@@ -187,7 +240,12 @@ function MunitionKindEditor({
                       className={`${INPUT} w-16 text-center`}
                       title="Prix du palier (Ko)"
                     />
-                    <button type="button" onClick={() => removeTier(i)} title="Supprimer le palier" className="adm-x text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => confirmDelete(`le palier « ${price} Ko » (colonne)`, () => removeTier(i))}
+                      title="Supprimer le palier"
+                      className="adm-x text-[10px]"
+                    >
                       ✕
                     </button>
                   </div>
@@ -223,7 +281,7 @@ function MunitionKindEditor({
                   </td>
                 ))}
                 <td>
-                  <RemoveButton onClick={() => removeType(ti)} />
+                  <RemoveButton onClick={() => confirmDelete(`le type « ${t.label} »`, () => removeType(ti))} />
                 </td>
               </tr>
             ))}

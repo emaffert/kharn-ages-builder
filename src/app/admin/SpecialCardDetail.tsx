@@ -1,8 +1,9 @@
 import type { Catalog, SpecialCard } from "@core";
+import { SegmentedControl } from "@ui";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { CheckField, ChipMultiSelect, DetailPage, Field, Section } from "./primitives";
 import { INPUT, SECTION } from "./shared";
-import { GrantsCastingEditor, ProfileMultiSelect, TextLinesEditor } from "./editors";
+import { ProfileMultiSelect, TextLinesEditor } from "./editors";
 
 export function SpecialCardDetail({
   card,
@@ -48,16 +49,23 @@ export function SpecialCardDetail({
       }
       body={
       <>
-        <CheckField
-          label={
-            <>
-              Amélioration choisie par le joueur
-              <span className="adm-field-hint">(sinon carte automatique appliquée d'office, ex. Fille de Nyx)</span>
-            </>
-          }
-          checked={card.amelioration ?? false}
-          onChange={(v) => onChange({ amelioration: v || undefined })}
-        />
+        <div className="space-y-1">
+          <span className="adm-field-label">Type de carte</span>
+          <SegmentedControl
+            ariaLabel="Type de carte"
+            value={card.amelioration ? "amelioration" : "auto"}
+            onChange={(v) => onChange({ amelioration: v === "amelioration" ? true : undefined })}
+            options={[
+              { value: "auto", label: "Automatique" },
+              { value: "amelioration", label: "Amélioration" },
+            ]}
+          />
+          <p className="adm-field-hint">
+            {card.amelioration
+              ? "Achetée au choix par le joueur sur une figurine éligible."
+              : "Appliquée d'office aux figurines concernées (ex. Fille de Nyx)."}
+          </p>
+        </div>
         {card.amelioration && (
           <>
             <Field
@@ -84,86 +92,82 @@ export function SpecialCardDetail({
             />
           </>
         )}
-        <GrantsCastingEditor value={card.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
-        <CheckField
-          label={
-            <>
-              Carte à portée Ost (sélectionnée au niveau de la liste)
-              <span className="adm-field-hint">(la « Portée » ci-dessous sert alors de disponibilité - ex. Myriam présente)</span>
-            </>
-          }
-          checked={card.ostScope ?? false}
-          onChange={(v) => onChange({ ostScope: v || undefined })}
-        />
-      </>
-      }
-      verbatim={
+
+        <Section title="Portée">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <span className="adm-field-label">Cible de la carte</span>
+              <SegmentedControl
+                ariaLabel="Cible de la carte"
+                value={card.ostScope ? "ost" : "profils"}
+                onChange={(v) => onChange({ ostScope: v === "ost" ? true : undefined })}
+                options={[
+                  { value: "profils", label: "Profils" },
+                  { value: "ost", label: "Ost" },
+                ]}
+              />
+              <p className="adm-field-hint">
+                {card.ostScope
+                  ? "Sélectionnée au niveau de la liste, selon la composition de l'Ost."
+                  : "Appliquée aux profils correspondant à la portée ci-dessous."}
+              </p>
+            </div>
+            {card.ostScope ? (
+              <div className="space-y-2">
+                <ProfileMultiSelect
+                  label="Parmi les profils"
+                  ids={cond?.profileIds ?? []}
+                  cat={cat}
+                  onChange={(v) => setCond({ ...cond, profileIds: v.length ? v : undefined })}
+                />
+                <Field label="Figurines présentes (au moins)" className="w-32">
+                  <input
+                    type="number"
+                    value={cond?.countAtLeast ?? ""}
+                    onChange={(e) =>
+                      setCond({ ...cond, countAtLeast: e.target.value === "" ? undefined : Number(e.target.value) })
+                    }
+                    className={INPUT}
+                  />
+                </Field>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Field label="Trait" className="w-56">
+                  <input
+                    value={scope.trait ?? ""}
+                    onChange={(e) => onChange({ scope: { ...scope, trait: e.target.value || undefined } })}
+                    className={INPUT}
+                    placeholder="ex. fille-de-nyx"
+                  />
+                </Field>
+                <ProfileMultiSelect
+                  label="Profils"
+                  ids={scope.profileIds ?? []}
+                  cat={cat}
+                  onChange={(v) => onChange({ scope: { ...scope, profileIds: v.length ? v : undefined } })}
+                />
+                <div className="space-y-1">
+                  <span className="adm-field-label">Factions</span>
+                  <ChipMultiSelect
+                    options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+                    selected={scope.factionIds ?? []}
+                    onToggle={(id) => {
+                      const cur = scope.factionIds ?? [];
+                      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+                      onChange({ scope: { ...scope, factionIds: next.length ? next : undefined } });
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </Section>
+
         <Section title={SECTION.verbatim}>
           <TextLinesEditor items={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
         </Section>
-      }
-      applicability={
-      <>
-        {card.ostScope && (
-          <Section title="Condition d'activation (composition de l'Ost)">
-            <div className="space-y-2">
-              <ProfileMultiSelect
-                label="Parmi les profils"
-                ids={cond?.profileIds ?? []}
-                cat={cat}
-                onChange={(v) => setCond({ ...cond, profileIds: v.length ? v : undefined })}
-              />
-              <Field label="Figurines présentes (au moins)" className="w-32">
-                <input
-                  type="number"
-                  value={cond?.countAtLeast ?? ""}
-                  onChange={(e) =>
-                    setCond({ ...cond, countAtLeast: e.target.value === "" ? undefined : Number(e.target.value) })
-                  }
-                  className={INPUT}
-                />
-              </Field>
-            </div>
-          </Section>
-        )}
-        <Section title="Portée (à qui s'applique la carte)">
-          <div className="space-y-3">
-            <Field label="Trait" className="w-56">
-              <input
-                value={scope.trait ?? ""}
-                onChange={(e) => onChange({ scope: { ...scope, trait: e.target.value || undefined } })}
-                className={INPUT}
-                placeholder="ex. fille-de-nyx"
-              />
-            </Field>
-            <ProfileMultiSelect
-              label="Profils"
-              ids={scope.profileIds ?? []}
-              cat={cat}
-              onChange={(v) => onChange({ scope: { ...scope, profileIds: v.length ? v : undefined } })}
-            />
-            <div className="space-y-1">
-              <span className="adm-field-label">Factions</span>
-              <ChipMultiSelect
-                options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
-                selected={scope.factionIds ?? []}
-                onToggle={(id) => {
-                  const cur = scope.factionIds ?? [];
-                  const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
-                  onChange({ scope: { ...scope, factionIds: next.length ? next : undefined } });
-                }}
-              />
-            </div>
-          </div>
-        </Section>
-      </>
-      }
-      constraints={
-        <Section title={SECTION.constraints}>
-          <ConstraintListEditor constraints={card.constraints} cat={cat} onChange={(c) => onChange({ constraints: c })} />
-        </Section>
-      }
-      effects={
+
         <Section title={SECTION.effects}>
           <EffectListEditor
             effects={card.effects}
@@ -172,16 +176,22 @@ export function SpecialCardDetail({
             onChange={(e) => onChange({ effects: e })}
           />
         </Section>
-      }
-      media={
-        <Field label="Image (optionnel)">
-          <input
-            value={card.cardImage}
-            placeholder="cards/..."
-            onChange={(e) => onChange({ cardImage: e.target.value })}
-            className={`${INPUT} max-w-md`}
-          />
-        </Field>
+
+        <Section title={SECTION.constraints}>
+          <ConstraintListEditor constraints={card.constraints} cat={cat} onChange={(c) => onChange({ constraints: c })} />
+        </Section>
+
+        <Section title="Image de la carte">
+          <Field label="Emplacement du fichier" hint="chemin de la carte affichée dans la colonne de droite">
+            <input
+              value={card.cardImage}
+              placeholder="cards/..."
+              onChange={(e) => onChange({ cardImage: e.target.value })}
+              className={`${INPUT} max-w-md`}
+            />
+          </Field>
+        </Section>
+      </>
       }
     />
   );

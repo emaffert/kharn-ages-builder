@@ -351,8 +351,14 @@ function synthInstance(p: Profile, selectedUpgrades: string[], wornEquipIds: str
 
 export const forbiddenGrimoires = (p: Profile) => coreForbiddenGrimoires(p);
 
-export function castWays(p: Profile, cat: Catalog, selectedUpgrades: string[], wornEquipIds: string[] = p.baseEquipmentIds): string[] {
-  return coreCastWays(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits));
+export function castWays(
+  p: Profile,
+  cat: Catalog,
+  selectedUpgrades: string[],
+  wornEquipIds: string[] = p.baseEquipmentIds,
+  grantedSkillIds: readonly string[] = [],
+): string[] {
+  return coreCastWays(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits), grantedSkillIds);
 }
 
 export function pageBonusSources(p: Profile, cat: Catalog, selectedUpgrades: string[]): { name: string; amount: number }[] {

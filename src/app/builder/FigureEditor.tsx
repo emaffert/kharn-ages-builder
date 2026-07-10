@@ -153,7 +153,7 @@ export function FigureEditor({
   onSetMountOption?: (optionId: string, value: number | null) => void;
 }) {
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
-  const ways = castWays(p, cat, upgrades, [...activeBase, ...added]);
+  const ways = castWays(p, cat, upgrades, [...activeBase, ...added], (mods?.grantedSkills ?? []).map((g) => g.skillId));
   const castable = ways.length > 0;
 
   // Les améliorations se cochent désormais directement dans l'onglet « Carte » (plus d'onglet dédié).

@@ -24,19 +24,24 @@ function cardApplies(card: SpecialCard, profile: Profile, traits: ReadonlySet<st
   return card.amelioration ? scope && selected.includes(card.id) : scope;
 }
 
-/** Voies de magie lançables : innées (compétence de voie possédée) + améliorations + objets portés. */
-export function castWays(cat: Catalog, profile: Profile, inst: ProfileInstance, traits: ReadonlySet<string>): string[] {
+/**
+ * Voies de magie lançables : innées (compétence de voie possédée, native OU octroyée par effet)
+ * + objets portés. Les cartes ne confèrent plus le lancement directement : elles octroient la
+ * compétence de voie via un effet `grant-skill` (ex. Apprentie de Nyx → ostéomancie), reprise ici
+ * par `grantedSkillIds`.
+ */
+export function castWays(
+  cat: Catalog,
+  profile: Profile,
+  inst: ProfileInstance,
+  _traits: ReadonlySet<string>,
+  grantedSkillIds: readonly string[] = [],
+): string[] {
   // Voie innée = la figurine possède la compétence qui maîtrise cette voie (MagicWay.skillId).
-  const skillIds = new Set(profile.skills.map((s) => s.skillId));
+  const skillIds = new Set<string>([...profile.skills.map((s) => s.skillId), ...grantedSkillIds]);
   const ways = new Set<string>(
     cat.magicWays.filter((w) => w.skillId != null && skillIds.has(w.skillId)).map((w) => w.id),
   );
-  const selected = inst.specialCardIds ?? [];
-  for (const c of cat.specialCards) {
-    if (c.grantsCasting && cardApplies(c, profile, traits, selected)) {
-      c.grantsCasting.magicWayIds.forEach((w) => ways.add(w));
-    }
-  }
   for (const id of wornEquipmentIds(profile, inst)) {
     cat.equipment.find((e) => e.id === id)?.grantsCasting?.magicWayIds.forEach((w) => ways.add(w));
   }

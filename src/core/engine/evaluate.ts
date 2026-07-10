@@ -731,7 +731,7 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
     }
 
     if (inst.spellIds.length > 0) {
-      if (castWays(cat, p, inst, traits).length === 0) {
+      if (castWays(cat, p, inst, traits, [...ri.grantedSkills.keys()]).length === 0) {
         push("spells-no-caster", `« ${p.name} » a des sorts alors qu'elle ne peut pas en lancer.`);
       } else {
         const cap = pageCapacity(cat, p, inst, traits);

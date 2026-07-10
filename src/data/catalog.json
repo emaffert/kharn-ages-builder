@@ -8627,11 +8627,6 @@
         "trait": "goulue"
       },
       "amelioration": true,
-      "grantsCasting": {
-        "magicWayIds": [
-          "osteomancie"
-        ]
-      },
       "rulesText": [
         {
           "text": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie."

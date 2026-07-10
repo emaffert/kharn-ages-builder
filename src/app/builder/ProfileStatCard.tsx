@@ -154,9 +154,13 @@ export function ProfileStatCard({
   const limBonus = p.limitation.kind === "X" ? (mods?.limitBonus ?? 0) : 0;
   const limIsFx = limBonus > 0 && p.limitation.value != null;
   const limValue = p.limitation.kind === "X" ? (p.limitation.value ?? 0) + limBonus : null;
-  // Lanceur = possède la compétence d'une voie de magie (source de vérité : MagicWay.skillId).
+  // Lanceur = possède la compétence d'une voie de magie (source de vérité : MagicWay.skillId),
+  // qu'elle soit native ou octroyée par effet (ex. Apprentie de Nyx → ostéomancie).
   const isCaster = cat.magicWays.some(
-    (w) => w.skillId != null && p.skills.some((s) => s.skillId === w.skillId),
+    (w) =>
+      w.skillId != null &&
+      (p.skills.some((s) => s.skillId === w.skillId) ||
+        (mods?.grantedSkills ?? []).some((g) => g.skillId === w.skillId)),
   );
   const limLabel =
     p.limitation.kind === "special"

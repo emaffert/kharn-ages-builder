@@ -348,8 +348,6 @@ export const SpecialCardSchema = z.object({
    * modèle éligible ; l'effet (portée `fer-de-lance`) profite à toute sa cible.
    */
   shared: z.boolean().optional(),
-  /** La carte confère la capacité de lancer des sorts dans ces voies (ex. Apprentie de Nyx → ostéomancie). */
-  grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   /**
    * `true` : amélioration *empilable* - achetable en plusieurs exemplaires sur une même figurine,
    * plafonnée à son **niveau** (ex. « Ordre de Mission Royale » : autant d'ordres que le Niveau).

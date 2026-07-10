@@ -73,6 +73,10 @@ export function SettingsDetail({
       {/* ── Grimoires (ensemble fixe) ────────────────────────────── */}
       <Section title="Grimoires">
         <div className="flex flex-col gap-2">
+          <p className="adm-faint text-xs">
+            Dans « Pages », saisir un nombre (budget de pages de sorts) ou « illimite » pour un grimoire
+            sans limite de pages.
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="adm-field-label w-28">Grimoire</span>
             <span className="adm-field-label w-24">Coût (Ko)</span>

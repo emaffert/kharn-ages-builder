@@ -7323,17 +7323,30 @@
       "cost": 15,
       "hands": 1,
       "effectsText": "Inflige « Saignement 2 », confère « Riposte ».",
-      "grantsSkills": [
-        {
-          "skillId": "riposte"
-        }
-      ],
       "reservedTo": {
         "profileIds": [
           "fangs-xayin-2"
         ]
       },
-      "cardImage": "cards/Fangs/fangs-xayin-muskh.jpg"
+      "cardImage": "cards/Fangs/fangs-xayin-muskh.jpg",
+      "effects": [
+        {
+          "id": "e-faucille-os-riposte",
+          "source": {
+            "kind": "equipment",
+            "id": "faucille-os"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "riposte"
+          },
+          "sourceText": "Confère « Riposte »."
+        }
+      ]
     },
     {
       "id": "croc-de-fiel",
@@ -7759,9 +7772,22 @@
       "cost": 10,
       "hands": 1,
       "effectsText": "Confère « Exécuteur » au porteur.",
-      "grantsSkills": [
+      "effects": [
         {
-          "skillId": "executeur"
+          "id": "e-hofi-executeur",
+          "source": {
+            "kind": "equipment",
+            "id": "hofi"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "executeur"
+          },
+          "sourceText": "Confère « Exécuteur »."
         }
       ]
     },

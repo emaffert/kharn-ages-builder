@@ -1,7 +1,8 @@
 import type { Catalog, Equipment, EquipmentUpgrade } from "@core";
 import { DetailPage, Field, RemoveButton, Section } from "./primitives";
 import { EQUIPMENT_CATEGORIES, INPUT, SECTION } from "./shared";
-import { ReservedToEditor, SkillsEditor } from "./editors";
+import { ReservedToEditor } from "./editors";
+import { EffectListEditor } from "../RuleEditors";
 
 export function EquipmentDetail({
   equipment: e,
@@ -206,11 +207,12 @@ export function EquipmentDetail({
         </Section>
       )}
 
-      <Section title="Compétences conférées">
-        <SkillsEditor
-          skills={e.grantsSkills ?? []}
+      <Section title={SECTION.effects}>
+        <EffectListEditor
+          effects={e.effects ?? []}
+          newSource={{ kind: "equipment", id: e.id }}
           cat={cat}
-          onChange={(s) => onChange({ grantsSkills: s.length ? s : undefined })}
+          onChange={(ef) => onChange({ effects: ef.length ? ef : undefined })}
         />
       </Section>
 

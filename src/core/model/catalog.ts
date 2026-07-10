@@ -146,8 +146,11 @@ export const EquipmentSchema = z.object({
   heavySeuil: z.number().optional(),
   perceArmure: z.union([z.number(), z.literal("1D5")]).optional(),
   effectsText: z.string(),
-  /** Compétences conférées (ex. la Faucille d'Os confère « Riposte »). */
-  grantsSkills: z.array(SkillRefSchema).optional(),
+  /**
+   * Effets appliqués tant que l'objet est porté (octroi de compétence/sort, coût…), comme
+   * `Profile.effects`. Cible `self` = le porteur. Ex. Faucille d'Os → octroie « Riposte ».
+   */
+  effects: z.array(EffectSchema).optional(),
   /**
    * Réservation : l'équipement n'est portable que par les profils correspondant à *toutes* les
    * dimensions fournies (au sein d'une dimension, l'appartenance suffit). Ex. Bâton relique →
@@ -183,7 +186,6 @@ export const EquipmentSchema = z.object({
         id: z.string(),
         label: z.string(),
         cost: z.number(),
-        grantsSkills: z.array(SkillRefSchema).optional(),
         effectsText: z.string().optional(),
       }),
     )

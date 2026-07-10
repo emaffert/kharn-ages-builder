@@ -307,6 +307,23 @@ function collectEffectOccurrences(
     }
   }
 
+  // Effets portés par l'ÉQUIPEMENT effectivement porté (base non retiré + acheté), source = le porteur.
+  // Ex. Faucille d'Os → octroie « Riposte » à son porteur (cible `self`).
+  for (const ri of resolved) {
+    for (const eqId of wornEquipmentIds(ri.profile, ri.instance)) {
+      const eq = cat.equipment.find((e) => e.id === eqId);
+      for (const effect of eq?.effects ?? []) {
+        if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
+        occurrences.push({
+          effect,
+          ferDeLanceId: ri.ferDeLanceId,
+          sourceInstanceId: ri.instance.instanceId,
+          sourceCount: 1,
+        });
+      }
+    }
+  }
+
   // Effets des cartes spéciales « intrinsèques » (coût 0). Le nombre de figurines
   // concernées (`sourceCount`) module les effets « par source »
   // (ex. 1 Larbin gratuit PAR Fille de Nyx, plafonné à 2).

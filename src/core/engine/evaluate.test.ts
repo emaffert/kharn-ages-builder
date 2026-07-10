@@ -39,6 +39,20 @@ function makeList(
 const evalFang = (members: ProfileInstance[], faction?: string) =>
   evaluateList(catalog, makeList(members, faction));
 
+describe("effet d'équipement (grant-skill)", () => {
+  it("la Faucille d'Os (équip. de base de Xayìn) octroie « Riposte » à son porteur", () => {
+    const x = inst("fangs-xayin-2");
+    const res = evalFang([x]);
+    expect(res.grantedSkills[x.instanceId]?.map((s) => s.skillId)).toContain("riposte");
+  });
+
+  it("retirer la Faucille d'Os retire l'octroi de « Riposte »", () => {
+    const x = inst("fangs-xayin-2", { removedBaseEquipmentIds: ["faucille-os"] });
+    const res = evalFang([x]);
+    expect(res.grantedSkills[x.instanceId]?.map((s) => s.skillId) ?? []).not.toContain("riposte");
+  });
+});
+
 describe("calcul de coût", () => {
   it("coût de base d'un profil", () => {
     const res = evalFang([inst("fangs-goulue-1")]);

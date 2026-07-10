@@ -433,33 +433,3 @@ export function ProfileMultiSelect({
   );
 }
 
-export function GrantsCastingEditor({
-  value,
-  cat,
-  onChange,
-}: {
-  value?: { magicWayIds: string[] };
-  cat: Catalog;
-  onChange: (v?: { magicWayIds: string[] }) => void;
-}) {
-  const ids = value?.magicWayIds ?? [];
-  const toggle = (id: string) => {
-    const next = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
-    onChange(next.length ? { magicWayIds: next } : undefined);
-  };
-  return (
-    <div className="space-y-1">
-      <span className="adm-field-label">Confère le lancement de sorts</span>
-      {cat.magicWays.length === 0 ? (
-        <span className="text-xs adm-faint">(aucune voie définie)</span>
-      ) : (
-        <ChipMultiSelect
-          options={cat.magicWays.map((w) => ({ value: w.id, label: w.name }))}
-          selected={ids}
-          onToggle={toggle}
-        />
-      )}
-    </div>
-  );
-}
-

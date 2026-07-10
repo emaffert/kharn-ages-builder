@@ -135,8 +135,6 @@ export const EquipmentSchema = z.object({
   munitionKind: z.string().optional(),
   /** Quantité de munitions de base incluse (armes de tir). */
   baseMunitions: z.number().optional(),
-  /** L'objet confère la capacité de lancer des sorts dans ces voies (ex. focus/relique). */
-  grantsCasting: z.object({ magicWayIds: z.array(z.string()) }).optional(),
   /** Durée de vie (DV) - boucliers et armures. */
   durability: z.number().optional(),
   /** Valeurs d'armure (équipement de catégorie « armure ») : cf. `Profile.armor`. */

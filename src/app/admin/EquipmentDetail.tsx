@@ -1,7 +1,7 @@
 import type { Catalog, Equipment, EquipmentUpgrade } from "@core";
 import { DetailPage, Field, RemoveButton, Section } from "./primitives";
 import { EQUIPMENT_CATEGORIES, INPUT, SECTION } from "./shared";
-import { GrantsCastingEditor, ReservedToEditor, SkillsEditor } from "./editors";
+import { ReservedToEditor, SkillsEditor } from "./editors";
 
 export function EquipmentDetail({
   equipment: e,
@@ -19,7 +19,6 @@ export function EquipmentDetail({
   const isTir = e.category === "arme-tir";
   const isBouclier = e.category === "bouclier";
   const isArmure = e.category === "armure";
-  const isObjet = e.category === "objet";
   const num = (label: string, value: number | undefined, key: keyof Equipment, w = "w-24") => (
     <Field label={label} className={w}>
       <input
@@ -269,13 +268,6 @@ export function EquipmentDetail({
           </button>
         </div>
       </Section>
-
-      {/* Lancement de sorts conféré : armes de corps à corps et objets (focus/relique). */}
-      {(isCac || isObjet) && (
-        <Section title="Lancement de sorts conféré">
-          <GrantsCastingEditor value={e.grantsCasting} cat={cat} onChange={(v) => onChange({ grantsCasting: v })} />
-        </Section>
-      )}
 
       <Section title="Lien monture (p.32)">
         <div className="flex flex-col gap-3">

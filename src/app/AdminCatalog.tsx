@@ -435,10 +435,10 @@ export function AdminCatalog() {
       </aside>
 
       <main className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="adm-scroll flex-1 overflow-y-auto p-8">
           {view === "profiles" &&
             (selectedProfile ? (
-              <div className="mx-auto max-w-2xl">
+              <div className="contents">
                 <ProfileDetail
                   profile={selectedProfile}
                   cat={catalog}
@@ -457,7 +457,7 @@ export function AdminCatalog() {
             ))}
           {view === "equipment" &&
             (selectedEquip ? (
-              <div className="mx-auto max-w-2xl">
+              <div className="contents">
                 <EquipmentDetail
                   equipment={selectedEquip}
                   cat={catalog}
@@ -478,7 +478,7 @@ export function AdminCatalog() {
             ))}
           {view === "skills" &&
             (selectedSkill ? (
-              <div className="mx-auto max-w-2xl">
+              <div className="contents">
                 <SkillCatalogDetail
                   key={selectedSkill.id}
                   skill={selectedSkill}
@@ -504,7 +504,7 @@ export function AdminCatalog() {
             ))}
           {view === "special-cards" &&
             (selectedCard ? (
-              <div className="mx-auto max-w-2xl">
+              <div className="contents">
                 <SpecialCardDetail
                   card={selectedCard}
                   cat={catalog}
@@ -525,7 +525,7 @@ export function AdminCatalog() {
             ))}
           {view === "spells" &&
             (selectedSpell ? (
-              <div className="mx-auto max-w-2xl">
+              <div className="contents">
                 <SpellDetail
                   spell={selectedSpell}
                   cat={catalog}

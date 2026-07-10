@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Khârn-Âges - Maquette admin (Scriptorium)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="forge.css" />
+<style>
+/* ============================================================================
+   Maquette « refonte admin » - Scriptorium de la Forge.
+   Ton : atelier sobre (tokens Forge/Braise apaisés). Densité : confort.
+   Namespacing a2- pour ne pas heurter forge.css (.btn/.tag/.icon/.nav…).
+   ============================================================================ */
+body{overflow:hidden}
+.app{height:100vh}
+/* Grain quasi coupé : l'admin doit rester plat et lisible. */
+body::before{opacity:.025}
+
+/* ---- Barre application (réutilise .topbar/.brand de forge.css) ---- */
+.topbar{padding:9px 18px}
+.a2-mock-tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-faint);
+  padding:3px 8px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--hair-strong)}
+.a2-viewswitch{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:var(--tint-2);
+  box-shadow:inset 0 0 0 1px var(--hair)}
+.a2-viewswitch button{padding:5px 13px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--bone-dim);transition:.16s var(--ease)}
+.a2-viewswitch button:hover{color:var(--bone)}
+.a2-viewswitch button.on{color:var(--ink-accent);background:linear-gradient(180deg,var(--ember-bright),var(--ember))}
+
+/* ---- Ossature : entités | espace de travail (sommaire + détail) ---- */
+.a2-body{display:flex;height:calc(100vh - 51px)}
+
+/* ---- Colonne des entités (liste de gauche) ---- */
+.a2-entities{width:264px;flex:none;display:flex;flex-direction:column;
+  border-right:1px solid var(--hair);background:var(--tint-1)}
+.a2-ent-head{padding:12px 12px 10px;border-bottom:1px solid var(--hair);display:flex;flex-direction:column;gap:9px}
+.a2-search{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:var(--radius-sm);
+  background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair)}
+.a2-search:focus-within{box-shadow:inset 0 0 0 1px var(--ember)}
+.a2-search svg{width:15px;height:15px;color:var(--bone-faint);flex:none}
+.a2-search input{flex:1;background:none;border:0;outline:none;color:var(--bone);font:inherit;font-size:13px}
+.a2-search input::placeholder{color:var(--bone-faint)}
+.a2-filter{width:100%;padding:7px 10px;border-radius:var(--radius-sm);background:var(--tint-2);color:var(--bone-dim);
+  border:0;box-shadow:inset 0 0 0 1px var(--hair);font:inherit;font-size:12.5px}
+.a2-ent-count{font-size:11.5px;color:var(--bone-faint);padding:0 2px}
+.a2-ent-count b{color:var(--ember-bright);font-weight:600}
+.a2-ent-list{flex:1;overflow-y:auto;padding:8px}
+.a2-ent-band{margin:12px 6px 5px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-faint)}
+.a2-ent-band:first-child{margin-top:2px}
+.a2-ent{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;
+  padding:7px 9px;border-radius:var(--radius-sm);text-align:left;font-size:13px;color:var(--bone-dim);transition:.14s var(--ease)}
+.a2-ent:hover{background:var(--tint-2);color:var(--bone)}
+.a2-ent.on{background:color-mix(in srgb,var(--ember) 15%,transparent);color:var(--ember-bright);font-weight:600}
+.a2-ent .lvl{color:var(--bone-faint);font-weight:400;margin-left:4px}
+.a2-ent .ko{font-size:11.5px;color:var(--bone-faint);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}
+.a2-ent .warn{color:var(--amber)}
+.a2-ent-add{width:100%;margin-top:8px;padding:8px;border-radius:var(--radius-sm);font-size:12.5px;color:var(--bone-faint);
+  border:1px dashed var(--hair-strong);transition:.16s var(--ease)}
+.a2-ent-add:hover{color:var(--ember-bright);border-color:var(--ember)}
+.a2-ent-foot{padding:10px 12px;border-top:1px solid var(--hair);display:flex;flex-wrap:wrap;gap:7px;background:var(--tint-1)}
+
+/* ---- Espace de travail (conteneur de défilement : le sommaire y colle) ---- */
+.a2-workspace{flex:1;overflow-y:auto;scroll-behavior:smooth}
+.a2-inner{display:flex;align-items:flex-start;gap:26px;max-width:1000px;margin:0 auto;padding:26px 30px 60vh}
+
+/* ---- SIGNATURE 1 : sommaire ancré (scroll-spy) ---- */
+.a2-toc{position:sticky;top:0;flex:none;width:186px;padding-top:64px}
+.a2-toc-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-faint);
+  padding:0 10px 8px;margin-bottom:4px;border-bottom:1px solid var(--hair)}
+.a2-toc a{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:var(--radius-sm);
+  font-size:12.5px;color:var(--bone-faint);text-decoration:none;position:relative;transition:.14s var(--ease)}
+.a2-toc a:hover{color:var(--bone-dim);background:var(--tint-1)}
+.a2-toc a .a2-glyph{width:14px;height:14px;flex:none;opacity:.7}
+.a2-toc a.on{color:var(--ember-bright);font-weight:600}
+.a2-toc a.on::before{content:"";position:absolute;left:-1px;top:5px;bottom:5px;width:2.5px;border-radius:2px;
+  background:linear-gradient(180deg,var(--ember-bright),var(--ember))}
+.a2-toc a.on .a2-glyph{opacity:1}
+
+/* ---- Colonne de détail ---- */
+.a2-detail{flex:1;min-width:0;max-width:640px}
+
+/* En-tête d'entité (identité forte, hors bloc) */
+.a2-entity-head{margin-bottom:22px}
+.a2-entity-topline{display:flex;align-items:center;gap:14px}
+.a2-name{flex:1;font-family:Cinzel,serif;font-weight:700;font-size:26px;color:var(--bone);
+  background:none;border:1px solid transparent;border-radius:var(--radius-sm);padding:3px 10px;outline:none;min-width:0;transition:.16s var(--ease)}
+.a2-name:hover{background:var(--tint-1)}
+.a2-name:focus{background:var(--tint-1);box-shadow:0 0 0 1px var(--ember)}
+.a2-cost{display:inline-flex;align-items:center;gap:7px;flex:none}
+.a2-cost .coin{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold),var(--gold-dim));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gold) 60%,transparent)}
+.a2-cost input{width:64px;text-align:right;font-family:Cinzel,serif;font-weight:600;font-size:21px;color:var(--gold);
+  background:none;border:1px solid transparent;border-radius:var(--radius-sm);padding:2px 6px;outline:none}
+.a2-cost input:hover{background:var(--tint-1)}
+.a2-cost input:focus{box-shadow:0 0 0 1px var(--gold)}
+.a2-cost .unit{font-size:13px;color:var(--gold-dim);font-weight:600}
+.a2-del{width:32px;height:32px;flex:none;border-radius:var(--radius-sm);display:grid;place-items:center;color:var(--bone-faint);transition:.16s var(--ease)}
+.a2-del:hover{color:var(--scorch);background:color-mix(in srgb,var(--scorch) 14%,transparent)}
+.a2-del svg{width:16px;height:16px}
+.a2-entity-sub{display:flex;align-items:center;gap:10px;margin-top:7px;padding:0 10px;font-size:11.5px;color:var(--bone-faint)}
+.a2-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ---- SIGNATURE 2 : la section en bloc fort ---- */
+.a2-sec{background:var(--tint-1);border:1px solid var(--hair);border-radius:var(--radius);margin-bottom:16px;scroll-margin-top:20px}
+.a2-sec-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--hair)}
+.a2-sec-marker{width:26px;height:26px;flex:none;border-radius:8px;display:grid;place-items:center;
+  color:var(--ember);background:color-mix(in srgb,var(--ember) 13%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ember) 30%,transparent)}
+.a2-sec-marker svg{width:15px;height:15px}
+.a2-sec-title{font-family:Cinzel,serif;font-weight:600;font-size:15px;color:var(--bone);letter-spacing:.01em}
+.a2-sec-meta{margin-left:auto;display:flex;align-items:center;gap:10px}
+.a2-sec-note{font-size:11px;color:var(--bone-faint)}
+.a2-sec-body{padding:16px 18px}
+
+/* ---- Champs (label > contrôle > hint : hiérarchie stable) ---- */
+.a2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+.a2-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.a2-field.wide{grid-column:1 / -1}
+.a2-label{font-size:13px;font-weight:600;color:var(--bone-dim);line-height:1.25}
+.a2-req{color:var(--ember)}
+.a2-input,.a2-select,.a2-textarea{width:100%;font:inherit;font-size:13.5px;color:var(--bone);
+  background:var(--tint-2);border:1px solid var(--hair-strong);border-radius:var(--radius-sm);padding:8px 11px;outline:none;transition:.16s var(--ease)}
+.a2-input:focus,.a2-select:focus,.a2-textarea:focus{border-color:transparent;box-shadow:0 0 0 1px var(--ember)}
+.a2-input::placeholder{color:var(--bone-faint)}
+.a2-textarea{resize:vertical;line-height:1.5}
+.a2-hint{font-size:12px;color:var(--bone-faint);line-height:1.4}
+
+/* Contrôle segmenté à taille juste (plus « énorme ») */
+.a2-seg{display:inline-flex;align-self:flex-start;padding:3px;gap:2px;border-radius:999px;
+  background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair)}
+.a2-seg button{padding:6px 15px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--bone-dim);transition:.16s var(--ease)}
+.a2-seg button:hover{color:var(--bone)}
+.a2-seg button.on{color:var(--ink-accent);background:linear-gradient(180deg,var(--ember-bright),var(--ember))}
+
+/* Case à cocher lisible : un libellé + un seul hint, en dessous (fini la double parenthèse flottante) */
+.a2-check{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:var(--radius-sm);
+  background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair)}
+.a2-check input{margin-top:2px;width:15px;height:15px;flex:none;accent-color:var(--ember)}
+.a2-check-label{font-size:13px;font-weight:600;color:var(--bone)}
+.a2-check-hint{font-size:12px;color:var(--bone-faint);line-height:1.45;margin-top:3px}
+
+/* Encart conditionnel : accent braise, contenu DANS le bloc (ne décale pas les autres blocs) */
+.a2-cond{margin-top:14px;padding:14px 15px;border-radius:var(--radius-sm);
+  border-left:3px solid var(--ember);background:color-mix(in srgb,var(--ember) 6%,transparent)}
+.a2-cond-eyebrow{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ember-bright);margin-bottom:12px}
+.a2-cond-eyebrow svg{width:13px;height:13px}
+
+/* Multi-sélection en puces */
+.a2-chips{display:flex;flex-wrap:wrap;gap:6px}
+.a2-chip{font-size:12.5px;font-weight:600;color:var(--bone-dim);padding:5px 11px;border-radius:999px;
+  background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair-strong);transition:.14s var(--ease)}
+.a2-chip:hover{color:var(--bone)}
+.a2-chip.on{color:var(--ember-bright);background:color-mix(in srgb,var(--ember) 13%,transparent);box-shadow:inset 0 0 0 1px var(--ember)}
+
+/* Caractéristiques : pastilles groupées (combat | mentales | dérivées) */
+.a2-stats{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.a2-stat{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 10px;border-radius:var(--radius-sm);
+  background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair);min-width:52px}
+.a2-stat .k{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ember)}
+.a2-stat input{width:38px;text-align:center;font:inherit;font-weight:600;font-size:15px;color:var(--bone);background:none;border:0;outline:none}
+.a2-stat-div{width:1px;align-self:stretch;background:var(--hair);margin:2px 4px}
+
+/* Dés de maîtrise */
+.a2-dierow{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.a2-dielab{width:44px;font-size:11.5px;font-weight:600;color:var(--bone-dim)}
+.a2-die{width:34px;height:34px;border-radius:var(--radius-sm);display:grid;place-items:center;font-family:Cinzel,serif;
+  font-weight:700;font-size:13px;color:var(--bone-faint);background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair);transition:.14s var(--ease)}
+.a2-die:hover{color:var(--bone-dim)}
+.a2-die.on{color:var(--ember-bright);background:color-mix(in srgb,var(--ember) 22%,transparent);box-shadow:inset 0 0 0 1px var(--ember)}
+
+/* Icônes de carte (identité) */
+.a2-iconslots{display:flex;gap:14px;margin-top:14px}
+.a2-slot{display:flex;gap:10px}
+.a2-slot-thumb{width:54px;height:54px;flex:none;border-radius:var(--radius-sm);background:var(--tint-2);
+  display:grid;place-items:center;color:var(--bone-faint);box-shadow:inset 0 0 0 1px var(--hair-strong)}
+.a2-slot-thumb svg{width:20px;height:20px}
+.a2-slot-info{display:flex;flex-direction:column;gap:2px;justify-content:center}
+.a2-slot-name{font-size:11.5px;font-weight:600;color:var(--bone-dim);display:flex;align-items:center;gap:6px}
+.a2-slot-badge{font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--on-moss);
+  background:color-mix(in srgb,var(--moss) 40%,transparent);padding:1px 5px;border-radius:4px}
+.a2-slot-hint{font-size:10.5px;color:var(--bone-faint);line-height:1.3;max-width:150px}
+.a2-slot-edit{align-self:flex-start;margin-top:3px;font-size:11px;color:var(--bone-dim);padding:3px 8px;border-radius:6px;background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair)}
+.a2-slot-edit:hover{color:var(--bone);background:var(--tint-3)}
+
+/* Verbatim / listes de texte */
+.a2-line{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+.a2-line .a2-textarea{flex:1}
+.a2-linex{width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;color:var(--bone-faint);align-self:flex-start;margin-top:3px}
+.a2-linex:hover{color:var(--scorch);background:color-mix(in srgb,var(--scorch) 12%,transparent)}
+.a2-add{font-size:12px;color:var(--bone-faint);padding:6px 11px;border-radius:var(--radius-sm);border:1px dashed var(--hair-strong);transition:.16s var(--ease)}
+.a2-add:hover{color:var(--ember-bright);border-color:var(--ember)}
+
+/* Règle héritée / carte lecture seule */
+.a2-rule{padding:11px 13px;border-radius:var(--radius-sm);background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair);margin-bottom:8px}
+.a2-rule-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px}
+.a2-rule p{margin:0;font-size:13px;color:var(--bone)}
+.a2-rule q{display:block;margin-top:5px;padding-left:9px;border-left:2px solid color-mix(in srgb,var(--ember) 45%,transparent);
+  font-size:12px;font-style:italic;color:var(--bone-faint)}
+
+/* petit bouton « à vérifier » */
+.a2-flag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--bone-faint)}
+.a2-flag .b{color:var(--amber)}
+
+/* Pastilles sémantiques locales (namespacées) */
+.a2-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600;
+  color:var(--bone-dim);background:var(--tint-3);box-shadow:inset 0 0 0 1px var(--hair)}
+.a2-badge.err{color:var(--on-scorch);background:color-mix(in srgb,var(--scorch) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--scorch) 40%,transparent)}
+.a2-badge.warn{color:var(--on-amber);background:color-mix(in srgb,var(--amber) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 40%,transparent)}
+.a2-badge.via{color:var(--ember-bright);background:color-mix(in srgb,var(--ember) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ember) 35%,transparent)}
+
+.a2-view{display:none}
+.a2-view.on{display:flex}
+
+@media (max-width:1080px){
+  .a2-toc{display:none}
+  .a2-inner{padding:22px}
+  .a2-detail{max-width:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Sprite d'icônes (glyphes de section, orientation) -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-identity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+  <symbol id="i-stats" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-skills" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.5L20 9.5l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-1z"/></symbol>
+  <symbol id="i-verbatim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h9M7 12h9M7 16h5"/><rect x="3" y="4" width="18" height="16" rx="2"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-armor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></symbol>
+  <symbol id="i-equip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l9-9M14 4l6 6-3 1-4-4z"/><path d="M11 13l-2 2 3 3 2-2"/></symbol>
+  <symbol id="i-traits" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8z"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-notes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-effects" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></symbol>
+  <symbol id="i-constraints" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></symbol>
+  <symbol id="i-type" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-scope" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- ---- Barre application ---- -->
+  <div class="topbar">
+    <div class="brand">Khârn-Âges <small>Admin catalogue</small></div>
+    <div class="a2-viewswitch">
+      <button class="on" data-view="profil" onclick="setView('profil')">Profil</button>
+      <button data-view="card" onclick="setView('card')">Carte spéciale</button>
+    </div>
+    <span class="a2-mock-tag">Maquette</span>
+    <div class="spacer"></div>
+    <div class="mode-toggle"><button>Sombre</button><button>Clair</button></div>
+  </div>
+
+  <!-- ============================ VUE PROFIL ============================ -->
+  <div class="a2-body a2-view on" id="view-profil">
+    <!-- Liste des entités -->
+    <aside class="a2-entities">
+      <div class="a2-ent-head">
+        <div class="a2-search"><svg><use href="#i-search"/></svg><input placeholder="Rechercher un profil…"/></div>
+        <select class="a2-filter"><option>Toutes les factions</option><option>Khârns</option><option>Khérops</option></select>
+        <div class="a2-ent-count"><b>34</b> profils · <b>7</b> champs à vérifier</div>
+      </div>
+      <div class="a2-ent-list">
+        <div class="a2-ent-band">Khârns</div>
+        <button class="a2-ent on"><span>Muskh <span class="lvl">II</span></span><span class="ko"><span class="warn">⚠</span>145</span></button>
+        <button class="a2-ent"><span>Muskh <span class="lvl">III</span></span><span class="ko">210</span></button>
+        <button class="a2-ent"><span>Xayìn <span class="lvl">I</span></span><span class="ko">95</span></button>
+        <button class="a2-ent"><span>Likan <span class="lvl">II</span></span><span class="ko">120</span></button>
+        <div class="a2-ent-band">Khérops</div>
+        <button class="a2-ent"><span>Nekhet <span class="lvl">I</span></span><span class="ko">80</span></button>
+        <button class="a2-ent"><span>Sethys <span class="lvl">II</span></span><span class="ko">160</span></button>
+        <button class="a2-ent-add">＋ nouveau profil</button>
+      </div>
+      <div class="a2-ent-foot">
+        <button class="btn primary" style="flex:1">Enregistrer</button>
+        <button class="btn">Exporter</button>
+      </div>
+    </aside>
+
+    <!-- Espace de travail : sommaire + détail -->
+    <div class="a2-workspace" id="ws-profil">
+      <div class="a2-inner">
+        <!-- Sommaire ancré -->
+        <nav class="a2-toc" id="toc-profil">
+          <div class="a2-toc-title">Sommaire</div>
+          <a href="#p-identity" class="on"><svg class="a2-glyph"><use href="#i-identity"/></svg>Identité</a>
+          <a href="#p-stats"><svg class="a2-glyph"><use href="#i-stats"/></svg>Caractéristiques</a>
+          <a href="#p-skills"><svg class="a2-glyph"><use href="#i-skills"/></svg>Compétences</a>
+          <a href="#p-verbatim"><svg class="a2-glyph"><use href="#i-verbatim"/></svg>Texte verbatim</a>
+          <a href="#p-dice"><svg class="a2-glyph"><use href="#i-dice"/></svg>Dés de maîtrise</a>
+          <a href="#p-armor"><svg class="a2-glyph"><use href="#i-armor"/></svg>Armure innée</a>
+          <a href="#p-equip"><svg class="a2-glyph"><use href="#i-equip"/></svg>Équipement</a>
+          <a href="#p-traits"><svg class="a2-glyph"><use href="#i-traits"/></svg>Traits</a>
+          <a href="#p-effects"><svg class="a2-glyph"><use href="#i-effects"/></svg>Effets / octrois</a>
+          <a href="#p-constraints"><svg class="a2-glyph"><use href="#i-constraints"/></svg>Contraintes</a>
+          <a href="#p-image"><svg class="a2-glyph"><use href="#i-image"/></svg>Image</a>
+        </nav>
+
+        <div class="a2-detail">
+          <!-- En-tête d'entité -->
+          <div class="a2-entity-head">
+            <div class="a2-entity-topline">
+              <input class="a2-name" value="Muskh"/>
+              <span class="a2-cost"><span class="coin"></span><input value="145"/><span class="unit">Ko</span></span>
+              <button class="a2-del" title="Supprimer ce profil"><svg><use href="#i-trash"/></svg></button>
+            </div>
+            <div class="a2-entity-sub"><span class="a2-id">prof_muskh_2</span><span class="dot"></span><span>Khârns · Niveau II</span><span class="dot"></span><span>Groupe « du Sacrifice »</span></div>
+          </div>
+
+          <!-- Identité -->
+          <section class="a2-sec" id="p-identity">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-identity"/></svg></span><h2 class="a2-sec-title">Identité</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-grid">
+                <div class="a2-field"><label class="a2-label">Groupe de figurines</label><select class="a2-select"><option>du Sacrifice (3)</option><option>＋ Nouveau groupe…</option></select><span class="a2-hint">Regroupe les niveaux et variantes d'une même figurine.</span></div>
+                <div class="a2-field"><label class="a2-label">Nom du groupe</label><input class="a2-input" value="du Sacrifice"/><span class="a2-hint">Partagé par ses figurines ; nom déjà pris = fusion.</span></div>
+                <div class="a2-field"><label class="a2-label">Niveau</label><select class="a2-select"><option>I</option><option selected>II</option><option>III</option></select></div>
+                <div class="a2-field"><label class="a2-label">Faction</label><select class="a2-select"><option selected>Khârns</option><option>Khérops</option></select></div>
+              </div>
+              <div class="a2-iconslots">
+                <div class="a2-slot">
+                  <div class="a2-slot-thumb"><svg><use href="#i-image"/></svg></div>
+                  <div class="a2-slot-info"><span class="a2-slot-name">Icône partagée <span class="a2-slot-badge">affichée</span></span><span class="a2-slot-hint">Commune à tous les niveaux du groupe.</span><button class="a2-slot-edit">Modifier…</button></div>
+                </div>
+                <div class="a2-slot">
+                  <div class="a2-slot-thumb"><svg><use href="#i-image"/></svg></div>
+                  <div class="a2-slot-info"><span class="a2-slot-name">Propre à ce niveau</span><span class="a2-slot-hint">Déroge au partage pour ce profil seul.</span><button class="a2-slot-edit">Déroger…</button></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Caractéristiques -->
+          <section class="a2-sec" id="p-stats">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-stats"/></svg></span><h2 class="a2-sec-title">Caractéristiques</h2>
+              <div class="a2-sec-meta"><span class="a2-flag"><span class="b">⚠</span> à vérifier</span></div>
+            </div>
+            <div class="a2-sec-body">
+              <div class="a2-stats">
+                <div class="a2-stat"><span class="k">V</span><input value="4"/></div>
+                <div class="a2-stat"><span class="k">P</span><input value="5"/></div>
+                <div class="a2-stat"><span class="k">A</span><input value="3"/></div>
+                <div class="a2-stat"><span class="k">C</span><input value="6"/></div>
+                <span class="a2-stat-div"></span>
+                <div class="a2-stat"><span class="k">T</span><input value="7"/></div>
+                <div class="a2-stat"><span class="k">I</span><input value="5"/></div>
+                <span class="a2-stat-div"></span>
+                <div class="a2-stat"><span class="k">PA</span><input value="2"/></div>
+                <div class="a2-stat"><span class="k">PV</span><input value="3"/></div>
+                <div class="a2-stat"><span class="k">Stat.</span><input value="1"/></div>
+              </div>
+              <p class="a2-hint" style="margin-top:10px">Groupées comme sur la carte : combat · mentales · dérivées. Un seul indicateur « à vérifier » pour l'ensemble.</p>
+            </div>
+          </section>
+
+          <!-- Compétences -->
+          <section class="a2-sec" id="p-skills">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-skills"/></svg></span><h2 class="a2-sec-title">Compétences</h2>
+              <div class="a2-sec-meta"><span class="a2-sec-note">4 compétences</span></div>
+            </div>
+            <div class="a2-sec-body">
+              <div class="a2-chips" style="margin-bottom:12px">
+                <span class="a2-badge">Coriace</span><span class="a2-badge">Charge brutale</span><span class="a2-badge">Terreur (2)</span><span class="a2-badge">Voie de la Cendre</span>
+              </div>
+              <button class="a2-add">＋ ajouter une compétence</button>
+            </div>
+          </section>
+
+          <!-- Texte verbatim -->
+          <section class="a2-sec" id="p-verbatim">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-verbatim"/></svg></span><h2 class="a2-sec-title">Texte verbatim</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-line"><textarea class="a2-textarea" rows="2">Une fois par bataille, Muskh peut relancer un test de Commandement raté.</textarea><button class="a2-linex"><svg><use href="#i-trash"/></svg></button></div>
+              <button class="a2-add">＋ ligne de règle</button>
+            </div>
+          </section>
+
+          <!-- Dés de maîtrise -->
+          <section class="a2-sec" id="p-dice">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-dice"/></svg></span><h2 class="a2-sec-title">Dés de maîtrise</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-dierow"><span class="a2-dielab">Dé 1</span><button class="a2-die on">Off</button><button class="a2-die">Déf</button><button class="a2-die on">Obj</button><button class="a2-die">Tir</button><button class="a2-die">Éso</button></div>
+              <div class="a2-dierow"><span class="a2-dielab">Dé 2</span><button class="a2-die">Off</button><button class="a2-die on">Déf</button><button class="a2-die">Obj</button><button class="a2-die">Tir</button><button class="a2-die on">Éso</button></div>
+              <button class="a2-add">＋ dé</button>
+            </div>
+          </section>
+
+          <!-- Armure innée -->
+          <section class="a2-sec" id="p-armor">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-armor"/></svg></span><h2 class="a2-sec-title">Armure innée</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-stats">
+                <div class="a2-stat"><span class="k">Prot. éch.</span><input value="1"/></div>
+                <div class="a2-stat"><span class="k">Seuil</span><input value="4"/></div>
+                <div class="a2-stat"><span class="k">Prot. réu.</span><input value="2"/></div>
+                <div class="a2-stat"><span class="k">Durab.</span><input value="—"/></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Équipement -->
+          <section class="a2-sec" id="p-equip">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-equip"/></svg></span><h2 class="a2-sec-title">Équipement de base</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-chips" style="margin-bottom:12px"><span class="a2-badge">Hache de sacrifice</span><span class="a2-badge">Armure de cuir clouté</span></div>
+              <button class="a2-add">＋ ajouter un équipement</button>
+            </div>
+          </section>
+
+          <!-- Traits -->
+          <section class="a2-sec" id="p-traits">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-traits"/></svg></span><h2 class="a2-sec-title">Traits</h2>
+              <div class="a2-sec-meta"><span class="a2-sec-note">tags internes, non imprimés</span></div>
+            </div>
+            <div class="a2-sec-body">
+              <div class="a2-chips"><span class="a2-badge">sacrifice</span><span class="a2-badge">khârn-noble</span></div>
+            </div>
+          </section>
+
+          <!-- Effets -->
+          <section class="a2-sec" id="p-effects">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-effects"/></svg></span><h2 class="a2-sec-title">Effets / octrois</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-rule">
+                <div class="a2-rule-badges"><span class="a2-badge via">via « Fille de Nyx »</span><span class="a2-badge">grant-skill</span><span class="a2-badge">lecture seule</span></div>
+                <p>Octroie la compétence « Régénération » aux figurines du Sacrifice.</p>
+                <q>Les élues de Nyx renaissent de leurs blessures.</q>
+              </div>
+              <button class="a2-add">＋ ajouter un effet</button>
+            </div>
+          </section>
+
+          <!-- Contraintes -->
+          <section class="a2-sec" id="p-constraints">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-constraints"/></svg></span><h2 class="a2-sec-title">Contraintes</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-rule">
+                <div class="a2-rule-badges"><span class="a2-badge err">error</span><span class="a2-badge">unique</span></div>
+                <p>Un seul Muskh de niveau III par Fer de Lance.</p>
+              </div>
+              <button class="a2-add">＋ ajouter une contrainte</button>
+            </div>
+          </section>
+
+          <!-- Image -->
+          <section class="a2-sec" id="p-image">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-image"/></svg></span><h2 class="a2-sec-title">Image de la carte</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-field wide"><label class="a2-label">Emplacement du fichier</label><input class="a2-input" value="cards/kharns/muskh-2.webp"/><span class="a2-hint">Chemin de la carte affichée dans l'aperçu.</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================= VUE CARTE SPÉCIALE ========================= -->
+  <div class="a2-body a2-view" id="view-card">
+    <aside class="a2-entities">
+      <div class="a2-ent-head">
+        <div class="a2-search"><svg><use href="#i-search"/></svg><input placeholder="Rechercher une carte…"/></div>
+        <div class="a2-ent-count"><b>12</b> cartes spéciales</div>
+      </div>
+      <div class="a2-ent-list">
+        <button class="a2-ent on"><span>Lien de la Terre</span><span class="ko">auto</span></button>
+        <button class="a2-ent"><span>Fille de Nyx</span><span class="ko">auto</span></button>
+        <button class="a2-ent"><span>Artisane des Racines</span><span class="ko">15</span></button>
+        <button class="a2-ent"><span>Garde du corps</span><span class="ko">10</span></button>
+        <button class="a2-ent-add">＋ nouvelle carte</button>
+      </div>
+      <div class="a2-ent-foot">
+        <button class="btn primary" style="flex:1">Enregistrer</button>
+        <button class="btn">Exporter</button>
+      </div>
+    </aside>
+
+    <div class="a2-workspace" id="ws-card">
+      <div class="a2-inner">
+        <nav class="a2-toc" id="toc-card">
+          <div class="a2-toc-title">Sommaire</div>
+          <a href="#c-identity" class="on"><svg class="a2-glyph"><use href="#i-identity"/></svg>Identité</a>
+          <a href="#c-type"><svg class="a2-glyph"><use href="#i-type"/></svg>Type &amp; activation</a>
+          <a href="#c-scope"><svg class="a2-glyph"><use href="#i-scope"/></svg>Portée</a>
+          <a href="#c-verbatim"><svg class="a2-glyph"><use href="#i-verbatim"/></svg>Texte verbatim</a>
+          <a href="#c-effects"><svg class="a2-glyph"><use href="#i-effects"/></svg>Effets / octrois</a>
+          <a href="#c-constraints"><svg class="a2-glyph"><use href="#i-constraints"/></svg>Contraintes</a>
+          <a href="#c-image"><svg class="a2-glyph"><use href="#i-image"/></svg>Image</a>
+        </nav>
+
+        <div class="a2-detail">
+          <div class="a2-entity-head">
+            <div class="a2-entity-topline">
+              <input class="a2-name" value="Lien de la Terre"/>
+              <span class="a2-cost"><span class="coin"></span><input value="0"/><span class="unit">Ko</span></span>
+              <button class="a2-del" title="Supprimer cette carte"><svg><use href="#i-trash"/></svg></button>
+            </div>
+            <div class="a2-entity-sub"><span class="a2-id">card_lien_terre</span><span class="dot"></span><span>Amélioration · partagée</span></div>
+          </div>
+
+          <!-- Identité -->
+          <section class="a2-sec" id="c-identity">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-identity"/></svg></span><h2 class="a2-sec-title">Identité</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-field wide"><label class="a2-label">Nom de la carte</label><input class="a2-input" value="Lien de la Terre"/></div>
+            </div>
+          </section>
+
+          <!-- Type & activation : LE point noir, corrigé -->
+          <section class="a2-sec" id="c-type">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-type"/></svg></span><h2 class="a2-sec-title">Type &amp; activation</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-field">
+                <label class="a2-label">Type de carte</label>
+                <div class="a2-seg"><button>Automatique</button><button class="on">Amélioration</button></div>
+                <span class="a2-hint">Amélioration : achetée au choix par le joueur sur une figurine éligible.</span>
+              </div>
+
+              <!-- Encart conditionnel : contenu DANS le bloc, ne décale pas les autres sections -->
+              <div class="a2-cond">
+                <div class="a2-cond-eyebrow"><svg><use href="#i-type"/></svg>Réglages de l'amélioration</div>
+                <div class="a2-grid">
+                  <div class="a2-field wide"><label class="a2-label">Groupe de choix exclusif</label><input class="a2-input" value="artisane-racines" placeholder="ex. artisane-racines"/><span class="a2-hint">Une seule amélioration du même groupe est sélectionnable.</span></div>
+                </div>
+                <div class="a2-check" style="margin-top:12px">
+                  <input type="checkbox" checked/>
+                  <div><div class="a2-check-label">Partagée</div><div class="a2-check-hint">Payée une fois par Fer de Lance, activable depuis n'importe quel modèle éligible (ex. Lien de la Terre).</div></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Portée -->
+          <section class="a2-sec" id="c-scope">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-scope"/></svg></span><h2 class="a2-sec-title">Portée</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-field">
+                <label class="a2-label">Cible de la carte</label>
+                <div class="a2-seg"><button class="on">Profils</button><button>Ost</button></div>
+                <span class="a2-hint">Profils : appliquée aux figurines correspondant à la portée ci-dessous.</span>
+              </div>
+              <div class="a2-cond">
+                <div class="a2-cond-eyebrow"><svg><use href="#i-scope"/></svg>Portée « profils »</div>
+                <div class="a2-grid">
+                  <div class="a2-field"><label class="a2-label">Trait</label><input class="a2-input" placeholder="ex. fille-de-nyx"/></div>
+                  <div class="a2-field"><label class="a2-label">Profils visés</label><select class="a2-select"><option>Aucun (par trait/faction)</option></select></div>
+                </div>
+                <div class="a2-field" style="margin-top:12px"><label class="a2-label">Factions</label><div class="a2-chips"><span class="a2-chip on">Khârns</span><span class="a2-chip">Khérops</span><span class="a2-chip">Tembos</span><span class="a2-chip">Guilde Noire</span></div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Verbatim -->
+          <section class="a2-sec" id="c-verbatim">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-verbatim"/></svg></span><h2 class="a2-sec-title">Texte verbatim</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-line"><textarea class="a2-textarea" rows="2">Les figurines liées à la Terre ne peuvent être déplacées de force.</textarea><button class="a2-linex"><svg><use href="#i-trash"/></svg></button></div>
+              <button class="a2-add">＋ ligne de règle</button>
+            </div>
+          </section>
+
+          <!-- Effets -->
+          <section class="a2-sec" id="c-effects">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-effects"/></svg></span><h2 class="a2-sec-title">Effets / octrois</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-rule">
+                <div class="a2-rule-badges"><span class="a2-badge">grant-skill</span></div>
+                <p>Octroie « Ancrage » aux figurines de la portée.</p>
+              </div>
+              <button class="a2-add">＋ ajouter un effet</button>
+            </div>
+          </section>
+
+          <!-- Contraintes -->
+          <section class="a2-sec" id="c-constraints">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-constraints"/></svg></span><h2 class="a2-sec-title">Contraintes</h2></div>
+            <div class="a2-sec-body">
+              <button class="a2-add">＋ ajouter une contrainte</button>
+            </div>
+          </section>
+
+          <!-- Image -->
+          <section class="a2-sec" id="c-image">
+            <div class="a2-sec-head"><span class="a2-sec-marker"><svg><use href="#i-image"/></svg></span><h2 class="a2-sec-title">Image de la carte</h2></div>
+            <div class="a2-sec-body">
+              <div class="a2-field wide"><label class="a2-label">Emplacement du fichier</label><input class="a2-input" value="cards/kharns/lien-terre.webp"/><span class="a2-hint">Chemin de la carte affichée dans l'aperçu.</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="mockups.js"></script>
+<script>
+// Bascule de vue Profil / Carte
+function setView(v){
+  document.querySelectorAll('.a2-view').forEach(el=>el.classList.toggle('on', el.id==='view-'+v));
+  document.querySelectorAll('.a2-viewswitch button').forEach(b=>b.classList.toggle('on', b.dataset.view===v));
+}
+// Scroll-spy : surligne la section courante dans le sommaire
+function wireSpy(wsId, tocId){
+  var ws=document.getElementById(wsId), toc=document.getElementById(tocId);
+  var links=[].slice.call(toc.querySelectorAll('a'));
+  var secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      var i=secs.indexOf(e.target);
+      if(i<0) return;
+      links.forEach(l=>l.classList.remove('on'));
+      links[i].classList.add('on');
+    });
+  },{root:ws, rootMargin:'-10% 0px -70% 0px', threshold:0});
+  secs.forEach(s=>s&&io.observe(s));
+}
+wireSpy('ws-profil','toc-profil');
+wireSpy('ws-card','toc-card');
+</script>
+</body>
+</html>

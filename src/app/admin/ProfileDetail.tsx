@@ -5,8 +5,8 @@ import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForP
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
-import { AddButton, Badge, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
-import { INPUT, MASTERY_DOMAINS, SECTION, STATS_COMBAT, STATS_SECONDARY, STAT_LABELS, removeAt, replaceAt } from "./shared";
+import { AddButton, Badge, CardImageSection, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
+import { INPUT, LEVEL_LABEL, MASTERY_DOMAINS, SECTION, STATS_COMBAT, STATS_SECONDARY, STAT_LABELS, removeAt, replaceAt } from "./shared";
 import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
 
 // ── Détail d'un profil ───────────────────────────────────────────────────────
@@ -108,6 +108,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
   const casterWays = cat.magicWays.filter(
     (w) => w.skillId != null && profile.skills.some((s) => s.skillId === w.skillId),
   );
+  const factionName = cat.factions.find((f) => f.id === profile.factionId)?.name ?? "Sans faction";
 
   // Une contrainte de carte ne concerne ce profil que si son sujet est ce profil
   // (ou si elle n'a pas de sujet précis). Évite que Xayìn hérite des contraintes de Muskh.
@@ -126,417 +127,396 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
   return (
     <DetailPage
       header={
-      <header className="space-y-3">
-        <div className="flex items-center gap-3">
-          <input
-            value={profile.name}
-            onChange={(e) => upd("name", e.target.value)}
-            className="adm-title flex-1"
-          />
-          <label className="flex items-center gap-1 adm-accent">
-            <input
-              type="number"
-              value={profile.cost}
-              onChange={(e) => upd("cost", Number(e.target.value))}
-              className="adm-cost"
-            />
-            <span className="text-sm">Ko</span>
-          </label>
-        </div>
-        <div className="flex flex-wrap gap-4">
-          {/* Icône partagée : commune à tous les niveaux qui partagent cette illustration de carte. */}
-          <IconSlot
-            title="Partagée (par carte)"
-            hint="Commune à tous les niveaux de ce modèle."
-            src={shared}
-            active={shared != null && own == null}
-            onEdit={() => setEditingIcon("shared")}
-            onRemove={() => setIcon(profile.cardImage, null)}
-          />
-          {/* Icône propre à ce niveau : déroge au partage (l'emporte sur la partagée). */}
-          <IconSlot
-            title="Propre à ce niveau"
-            hint="Déroge au partage : remplace la partagée pour ce profil seul."
-            src={own}
-            active={own != null}
-            createLabel="Déroger au partage…"
-            onEdit={() => setEditingIcon("own")}
-            onRemove={() => patch({ icon: undefined })}
-          />
-        </div>
-        {displayed == null && (
-          <p className="text-[10px] adm-faint">Aucune icône - l'app affichera le blason + niveau.</p>
-        )}
-        {editingIcon && (
-          <IconEditor
-            initialSrc={profile.cardImage ? `/${profile.cardImage}` : undefined}
-            onSave={(dataUrl) => {
-              if (editingIcon === "own") patch({ icon: dataUrl });
-              else setIcon(profile.cardImage, dataUrl);
-              setEditingIcon(null);
-            }}
-            onClose={() => setEditingIcon(null)}
-          />
-        )}
-        <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-          <Field
-            label="Groupe de figurines"
-            hint="regroupe les niveaux et variantes d'une même figurine"
-            className="w-56"
-          >
-            <select
-              value={profile.modelId ?? ""}
-              onChange={(e) => onGroupChange(e.target.value)}
-              className={INPUT}
-            >
-              {profile.modelId == null && <option value="">- aucun -</option>}
-              {groupOptions.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
-                </option>
-              ))}
-              <option value={NEW_GROUP}>＋ Nouveau groupe…</option>
-            </select>
-          </Field>
-          {model && (
-            <Field
-              label="Nom du groupe"
-              hint="partagé par toutes ses figurines ; nom déjà pris = fusion"
-              className="w-48"
-            >
-              <input
-                value={model.name}
-                onChange={(e) => updateModel(model.id, { name: e.target.value })}
-                onBlur={(e) => renameModel(model.id, e.target.value)}
-                className={INPUT}
-              />
-            </Field>
-          )}
-          {model && siblings.length > 1 && (
-            <span className="pb-1 text-xs adm-faint">
-              regroupe{" "}
-              {siblings
-                .map((s) => `${s.name}${s.level != null ? ` (${ROMAN[s.level] ?? s.level})` : ""}`)
-                .join(", ")}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-          <Field label="Niveau" className="w-20">
-            <select
-              value={profile.level ?? ""}
-              onChange={(e) =>
-                patch({ level: e.target.value === "" ? undefined : (Number(e.target.value) as Level) })
-              }
-              className={INPUT}
-            >
-              <option value="">-</option>
-              <option value="1">I</option>
-              <option value="2">II</option>
-              <option value="3">III</option>
-            </select>
-          </Field>
-          <Field label="Faction" className="w-40">
-            <select
-              value={profile.factionId ?? ""}
-              onChange={(e) => patch({ factionId: e.target.value || undefined })}
-              className={INPUT}
-            >
-              {cat.factions.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {casterWays.length > 0 && (
-            <span
-              className="flex items-center gap-1 text-xs adm-accent"
-              title="Lanceur dérivé de ses compétences de voie (onglet « Voies de magie »)"
-            >
-              Mage : {casterWays.map((w) => w.name).join(", ")}
-            </span>
-          )}
-        </div>
-        <Field label="Limitation">
-          <LimitationEditor
-            limitation={profile.limitation}
-            models={cat.models}
-            onChange={(l) => patch({ limitation: l })}
-          />
-        </Field>
-      </header>
+        <DetailHeader
+          name={profile.name}
+          onName={(v) => upd("name", v)}
+          cost={profile.cost}
+          onCost={(v) => upd("cost", v ?? 0)}
+          sub={
+            <>
+              <span className="adm-id">{profile.id}</span>
+              <span className="dot" />
+              <span>
+                {factionName}
+                {profile.level != null && ` · Niveau ${LEVEL_LABEL[profile.level]}`}
+              </span>
+              {model && (
+                <>
+                  <span className="dot" />
+                  <span>Groupe « {model.name} »</span>
+                </>
+              )}
+              {casterWays.length > 0 && (
+                <>
+                  <span className="dot" />
+                  <span className="adm-accent" title="Lanceur dérivé de ses compétences de voie">
+                    Mage : {casterWays.map((w) => w.name).join(", ")}
+                  </span>
+                </>
+              )}
+            </>
+          }
+        />
       }
       body={
         <>
-
-      <Section title="Caractéristiques">
-        <div className="flex items-center gap-2">
-          <FlagButton active={anyStatUnverified} onClick={toggleAllStats} />
-          <span className="text-xs adm-faint">
-            à vérifier - un seul indicateur pour toutes les caractéristiques
-          </span>
-        </div>
-        {/* Groupées comme sur la carte : combat (V P A C) · mentales (T I) · dérivées (PA PV Stature). */}
-        <div className="flex flex-wrap items-stretch gap-x-4 gap-y-2">
-          <div className="flex flex-wrap gap-2">
-            {STATS_COMBAT.map(([k, label]) => (
-              <EditableNumber
-                key={label}
-                label={label}
-                value={profile.stats[k]}
-                unverified={anyStatUnverified}
-                onChange={(v) => upd(`stats.${k}`, v)}
-              />
-            ))}
-          </div>
-          <span className="w-px border-l adm-bd-soft" aria-hidden />
-          <div className="flex flex-wrap gap-2">
-            {STATS_SECONDARY.map(([k, label]) => (
-              <EditableNumber
-                key={label}
-                label={label}
-                value={profile.stats[k]}
-                unverified={anyStatUnverified}
-                onChange={(v) => upd(`stats.${k}`, v)}
-              />
-            ))}
-          </div>
-          <span className="w-px border-l adm-bd-soft" aria-hidden />
-          <div className="flex flex-wrap gap-2">
-            <EditableNumber
-              label="PA"
-              value={profile.pa}
-              unverified={anyStatUnverified}
-              onChange={(v) => upd("pa", v ?? 0)}
-            />
-            <EditableNumber
-              label="PV"
-              value={profile.pv}
-              unverified={anyStatUnverified}
-              onChange={(v) => upd("pv", v ?? 0)}
-            />
-            <EditableNumber
-              label="Stature"
-              value={profile.stature}
-              unverified={anyStatUnverified}
-              onChange={(v) => upd("stature", v ?? 0)}
-            />
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Compétences">
-        <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
-      </Section>
-
-      <Section title={SECTION.verbatim}>
-        <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
-      </Section>
-
-      <Section title="Dés de maîtrise">
-        <div className="group space-y-2">
-          {profile.masteryDice.map((die, i) => (
-            <div key={i} className="flex flex-wrap items-center gap-1.5">
-              <span className="w-10 text-xs font-semibold adm-muted">Dé {i + 1}</span>
-              {MASTERY_DOMAINS.map((dom) => {
-                const on = die.includes(dom);
-                return (
-                  <button
-                    key={dom}
-                    type="button"
-                    title={dom}
-                    aria-label={dom}
-                    onClick={() =>
-                      patch({
-                        masteryDice: replaceAt(
-                          profile.masteryDice,
-                          i,
-                          on ? die.filter((x) => x !== dom) : [...die, dom],
-                        ),
-                      })
-                    }
-                    className={on ? "adm-dice adm-dice--on" : "adm-dice"}
-                  >
-                    <DomainIcon domain={dom} className="h-5 w-5" />
-                  </button>
-                );
-              })}
-              <RemoveButton onClick={() => patch({ masteryDice: removeAt(profile.masteryDice, i) })} />
-            </div>
-          ))}
-          <div className="flex items-center gap-2">
-            <AddButton onClick={() => patch({ masteryDice: [...profile.masteryDice, []] })}>
-              + dé
-            </AddButton>
-            <FlagButton active={uv("masteryDice")} onClick={() => flag("masteryDice")} />
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Armure innée">
-        {profile.armor ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <EditableNumber
-              label="Prot. échec"
-              value={profile.armor.protectionEchec ?? null}
-              unverified={uv("armor.protectionEchec")}
-              onChange={(v) => setArmor({ protectionEchec: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.protectionEchec")}
-            />
-            <EditableNumber
-              label="Seuil"
-              value={profile.armor.seuil ?? null}
-              unverified={uv("armor.seuil")}
-              onChange={(v) => setArmor({ seuil: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.seuil")}
-            />
-            <EditableNumber
-              label="Prot. réussite"
-              value={profile.armor.protectionReussite ?? null}
-              unverified={uv("armor.protectionReussite")}
-              onChange={(v) => setArmor({ protectionReussite: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.protectionReussite")}
-            />
-            <EditableNumber
-              label="Durabilité"
-              value={profile.armor.durability ?? null}
-              unverified={uv("armor.durability")}
-              onChange={(v) => setArmor({ durability: typeof v === "number" ? v : undefined })}
-              onToggle={() => flag("armor.durability")}
-            />
-            <RemoveButton onClick={() => patch({ armor: undefined })} />
-          </div>
-        ) : (
-          <AddButton onClick={() => patch({ armor: {} })}>Ajouter une armure</AddButton>
-        )}
-      </Section>
-
-      <Section title="Équipement de base">
-        <EquipmentEditor
-          ids={profile.baseEquipmentIds}
-          cat={cat}
-          onChange={(ids) => patch({ baseEquipmentIds: ids })}
-        />
-      </Section>
-
-      <Section title="Traits (tags internes - non imprimés sur les cartes)">
-        <TraitsEditor traits={profile.traits} onChange={(t) => patch({ traits: t })} />
-        <div className="space-y-1 text-xs">
-          {profile.traits.map((t) => {
-            const usages = explainTraitUsage(t, cat);
-            return (
-              <div key={t}>
-                <span className="font-semibold adm-muted">{t}</span>
-                {usages.length === 0 ? (
-                  <span className="adm-faint"> - tag interne, non référencé par une règle</span>
-                ) : (
-                  <ul className="ml-4 list-disc adm-faint">
-                    {usages.map((u, i) => (
-                      <li key={i}>{u}</li>
+          <Section title="Identité" icon="identity">
+            <div className="flex flex-col gap-4">
+              {/* Icônes : partagée (par carte) et propre au niveau (déroge au partage). */}
+              <div className="flex flex-wrap gap-4">
+                <IconSlot
+                  title="Partagée (par carte)"
+                  hint="Commune à tous les niveaux de ce modèle."
+                  src={shared}
+                  active={shared != null && own == null}
+                  onEdit={() => setEditingIcon("shared")}
+                  onRemove={() => setIcon(profile.cardImage, null)}
+                />
+                <IconSlot
+                  title="Propre à ce niveau"
+                  hint="Déroge au partage : remplace la partagée pour ce profil seul."
+                  src={own}
+                  active={own != null}
+                  createLabel="Déroger au partage…"
+                  onEdit={() => setEditingIcon("own")}
+                  onRemove={() => patch({ icon: undefined })}
+                />
+              </div>
+              {displayed == null && (
+                <p className="text-[10px] adm-faint">Aucune icône - l'app affichera le blason + niveau.</p>
+              )}
+              {editingIcon && (
+                <IconEditor
+                  initialSrc={profile.cardImage ? `/${profile.cardImage}` : undefined}
+                  onSave={(dataUrl) => {
+                    if (editingIcon === "own") patch({ icon: dataUrl });
+                    else setIcon(profile.cardImage, dataUrl);
+                    setEditingIcon(null);
+                  }}
+                  onClose={() => setEditingIcon(null)}
+                />
+              )}
+              <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+                <Field
+                  label="Groupe de figurines"
+                  hint="regroupe les niveaux et variantes d'une même figurine"
+                  className="w-56"
+                >
+                  <select value={profile.modelId ?? ""} onChange={(e) => onGroupChange(e.target.value)} className={INPUT}>
+                    {profile.modelId == null && <option value="">- aucun -</option>}
+                    {groupOptions.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({cat.profiles.filter((p) => p.modelId === m.id).length})
+                      </option>
                     ))}
-                  </ul>
+                    <option value={NEW_GROUP}>＋ Nouveau groupe…</option>
+                  </select>
+                </Field>
+                {model && (
+                  <Field
+                    label="Nom du groupe"
+                    hint="partagé par toutes ses figurines ; nom déjà pris = fusion"
+                    className="w-48"
+                  >
+                    <input
+                      value={model.name}
+                      onChange={(e) => updateModel(model.id, { name: e.target.value })}
+                      onBlur={(e) => renameModel(model.id, e.target.value)}
+                      className={INPUT}
+                    />
+                  </Field>
+                )}
+                {model && siblings.length > 1 && (
+                  <span className="pb-1 text-xs adm-faint">
+                    regroupe{" "}
+                    {siblings
+                      .map((s) => `${s.name}${s.level != null ? ` (${ROMAN[s.level] ?? s.level})` : ""}`)
+                      .join(", ")}
+                  </span>
                 )}
               </div>
-            );
-          })}
-        </div>
-      </Section>
-
-      <Section title={SECTION.notes}>
-        <div className="space-y-2">
-          {(profile.notes ?? []).map((n, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <textarea
-                value={n}
-                rows={2}
-                onChange={(e) => patch({ notes: replaceAt(profile.notes ?? [], i, e.target.value) })}
-                className={`${INPUT} flex-1`}
-              />
-              <RemoveButton
-                onClick={() => {
-                  const next = removeAt(profile.notes ?? [], i);
-                  patch({ notes: next.length ? next : undefined });
-                }}
-              />
+              <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+                <Field label="Niveau" className="w-20">
+                  <select
+                    value={profile.level ?? ""}
+                    onChange={(e) =>
+                      patch({ level: e.target.value === "" ? undefined : (Number(e.target.value) as Level) })
+                    }
+                    className={INPUT}
+                  >
+                    <option value="">-</option>
+                    <option value="1">I</option>
+                    <option value="2">II</option>
+                    <option value="3">III</option>
+                  </select>
+                </Field>
+                <Field label="Faction" className="w-40">
+                  <select
+                    value={profile.factionId ?? ""}
+                    onChange={(e) => patch({ factionId: e.target.value || undefined })}
+                    className={INPUT}
+                  >
+                    {cat.factions.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <Field label="Limitation">
+                <LimitationEditor
+                  limitation={profile.limitation}
+                  models={cat.models}
+                  onChange={(l) => patch({ limitation: l })}
+                />
+              </Field>
             </div>
-          ))}
-          <AddButton onClick={() => patch({ notes: [...(profile.notes ?? []), ""] })}>+ note</AddButton>
-        </div>
-      </Section>
+          </Section>
 
-      <Section title={SECTION.effects}>
-        <EffectListEditor
-          effects={profile.effects ?? []}
-          newSource={{ kind: "profile", id: profile.id }}
-          cat={cat}
-          onChange={(e) => patch({ effects: e.length ? e : undefined })}
-        />
-      </Section>
+          <Section
+            title="Caractéristiques"
+            icon="stats"
+            meta={
+              <span className="flex items-center gap-1.5">
+                <FlagButton active={anyStatUnverified} onClick={toggleAllStats} />
+                <span className="text-[11px] adm-faint">à vérifier (groupé)</span>
+              </span>
+            }
+          >
+            {/* Groupées comme sur la carte : combat (V P A C) · mentales (T I) · dérivées (PA PV Stature). */}
+            <div className="flex flex-wrap items-stretch gap-x-4 gap-y-2">
+              <div className="flex flex-wrap gap-2">
+                {STATS_COMBAT.map(([k, label]) => (
+                  <EditableNumber
+                    key={label}
+                    label={label}
+                    value={profile.stats[k]}
+                    unverified={anyStatUnverified}
+                    onChange={(v) => upd(`stats.${k}`, v)}
+                  />
+                ))}
+              </div>
+              <span className="w-px border-l adm-bd-soft" aria-hidden />
+              <div className="flex flex-wrap gap-2">
+                {STATS_SECONDARY.map(([k, label]) => (
+                  <EditableNumber
+                    key={label}
+                    label={label}
+                    value={profile.stats[k]}
+                    unverified={anyStatUnverified}
+                    onChange={(v) => upd(`stats.${k}`, v)}
+                  />
+                ))}
+              </div>
+              <span className="w-px border-l adm-bd-soft" aria-hidden />
+              <div className="flex flex-wrap gap-2">
+                <EditableNumber label="PA" value={profile.pa} unverified={anyStatUnverified} onChange={(v) => upd("pa", v ?? 0)} />
+                <EditableNumber label="PV" value={profile.pv} unverified={anyStatUnverified} onChange={(v) => upd("pv", v ?? 0)} />
+                <EditableNumber label="Stature" value={profile.stature} unverified={anyStatUnverified} onChange={(v) => upd("stature", v ?? 0)} />
+              </div>
+            </div>
+          </Section>
 
-      {inheritedEffects.length > 0 && (
-        <Section title={`${SECTION.effects} hérités des cartes (lecture seule)`}>
-          <div className="space-y-2">
-            {inheritedEffects.map(({ e, via }, idx) => (
-              <RuleCard
-                key={`${e.id}-${idx}`}
-                human={describeEffect(e, cat)}
-                sourceText={e.sourceText}
-                badges={
-                  <>
-                    <Badge>{e.operation.kind}</Badge>
-                    <Badge tone="violet">via « {via} »</Badge>
-                  </>
-                }
-              />
-            ))}
-          </div>
-        </Section>
-      )}
+          <Section title="Compétences" icon="skills">
+            <SkillsEditor skills={profile.skills} cat={cat} onChange={(s) => patch({ skills: s })} />
+          </Section>
 
-      <Section title={SECTION.constraints}>
-        <ConstraintListEditor
-          constraints={profile.recruitment}
-          cat={cat}
-          onChange={(c) => patch({ recruitment: c })}
-          onProfile
-        />
-      </Section>
+          <Section title={SECTION.verbatim} icon="verbatim">
+            <RulesEditor rules={profile.rules} onChange={(r) => patch({ rules: r })} />
+          </Section>
 
-      {inheritedConstraints.length > 0 && (
-        <Section title={`${SECTION.constraints} héritées des cartes (lecture seule)`}>
-          <div className="space-y-2">
-            {inheritedConstraints.map(({ c, via }, idx) => (
-              <RuleCard
-                key={`${c.id}-${idx}`}
-                human={describeConstraint(c, cat)}
-                sourceText={c.sourceText}
-                badges={
-                  <>
-                    <Badge tone={c.severity === "error" ? "red" : "amber"}>{c.severity}</Badge>
-                    <Badge>{c.type}</Badge>
-                    <Badge tone="violet">via « {via} »</Badge>
-                  </>
-                }
-              />
-            ))}
-          </div>
-        </Section>
-      )}
+          <Section title="Dés de maîtrise" icon="dice">
+            <div className="group space-y-2">
+              {profile.masteryDice.map((die, i) => (
+                <div key={i} className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-10 text-xs font-semibold adm-muted">Dé {i + 1}</span>
+                  {MASTERY_DOMAINS.map((dom) => {
+                    const on = die.includes(dom);
+                    return (
+                      <button
+                        key={dom}
+                        type="button"
+                        title={dom}
+                        aria-label={dom}
+                        onClick={() =>
+                          patch({
+                            masteryDice: replaceAt(
+                              profile.masteryDice,
+                              i,
+                              on ? die.filter((x) => x !== dom) : [...die, dom],
+                            ),
+                          })
+                        }
+                        className={on ? "adm-dice adm-dice--on" : "adm-dice"}
+                      >
+                        <DomainIcon domain={dom} className="h-5 w-5" />
+                      </button>
+                    );
+                  })}
+                  <RemoveButton onClick={() => patch({ masteryDice: removeAt(profile.masteryDice, i) })} />
+                </div>
+              ))}
+              <div className="flex items-center gap-2">
+                <AddButton onClick={() => patch({ masteryDice: [...profile.masteryDice, []] })}>+ dé</AddButton>
+                <FlagButton active={uv("masteryDice")} onClick={() => flag("masteryDice")} />
+              </div>
+            </div>
+          </Section>
 
-      <Section title="Image de la carte">
-        <Field label="Emplacement du fichier" hint="chemin de la carte affichée dans la colonne de droite">
-          <input
-            value={profile.cardImage}
-            placeholder="cards/..."
-            onChange={(e) => upd("cardImage", e.target.value)}
-            className={`${INPUT} max-w-md`}
-          />
-        </Field>
-      </Section>
+          <Section title="Armure innée" icon="armor">
+            {profile.armor ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <EditableNumber
+                  label="Prot. échec"
+                  value={profile.armor.protectionEchec ?? null}
+                  unverified={uv("armor.protectionEchec")}
+                  onChange={(v) => setArmor({ protectionEchec: typeof v === "number" ? v : undefined })}
+                  onToggle={() => flag("armor.protectionEchec")}
+                />
+                <EditableNumber
+                  label="Seuil"
+                  value={profile.armor.seuil ?? null}
+                  unverified={uv("armor.seuil")}
+                  onChange={(v) => setArmor({ seuil: typeof v === "number" ? v : undefined })}
+                  onToggle={() => flag("armor.seuil")}
+                />
+                <EditableNumber
+                  label="Prot. réussite"
+                  value={profile.armor.protectionReussite ?? null}
+                  unverified={uv("armor.protectionReussite")}
+                  onChange={(v) => setArmor({ protectionReussite: typeof v === "number" ? v : undefined })}
+                  onToggle={() => flag("armor.protectionReussite")}
+                />
+                <EditableNumber
+                  label="Durabilité"
+                  value={profile.armor.durability ?? null}
+                  unverified={uv("armor.durability")}
+                  onChange={(v) => setArmor({ durability: typeof v === "number" ? v : undefined })}
+                  onToggle={() => flag("armor.durability")}
+                />
+                <RemoveButton onClick={() => patch({ armor: undefined })} />
+              </div>
+            ) : (
+              <AddButton onClick={() => patch({ armor: {} })}>Ajouter une armure</AddButton>
+            )}
+          </Section>
+
+          <Section title="Équipement de base" icon="equipment">
+            <EquipmentEditor
+              ids={profile.baseEquipmentIds}
+              cat={cat}
+              onChange={(ids) => patch({ baseEquipmentIds: ids })}
+            />
+          </Section>
+
+          <Section title="Traits" icon="traits" note="tags internes, non imprimés sur les cartes">
+            <TraitsEditor traits={profile.traits} onChange={(t) => patch({ traits: t })} />
+            <div className="mt-2 space-y-1 text-xs">
+              {profile.traits.map((t) => {
+                const usages = explainTraitUsage(t, cat);
+                return (
+                  <div key={t}>
+                    <span className="font-semibold adm-muted">{t}</span>
+                    {usages.length === 0 ? (
+                      <span className="adm-faint"> - tag interne, non référencé par une règle</span>
+                    ) : (
+                      <ul className="ml-4 list-disc adm-faint">
+                        {usages.map((u, i) => (
+                          <li key={i}>{u}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Section>
+
+          <Section title={SECTION.notes} icon="notes">
+            <div className="space-y-2">
+              {(profile.notes ?? []).map((n, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <textarea
+                    value={n}
+                    rows={2}
+                    onChange={(e) => patch({ notes: replaceAt(profile.notes ?? [], i, e.target.value) })}
+                    className={`${INPUT} flex-1`}
+                  />
+                  <RemoveButton
+                    onClick={() => {
+                      const next = removeAt(profile.notes ?? [], i);
+                      patch({ notes: next.length ? next : undefined });
+                    }}
+                  />
+                </div>
+              ))}
+              <AddButton onClick={() => patch({ notes: [...(profile.notes ?? []), ""] })}>+ note</AddButton>
+            </div>
+          </Section>
+
+          <Section title={SECTION.effects} icon="effects" id="sec-effects">
+            <EffectListEditor
+              effects={profile.effects ?? []}
+              newSource={{ kind: "profile", id: profile.id }}
+              cat={cat}
+              onChange={(e) => patch({ effects: e.length ? e : undefined })}
+            />
+          </Section>
+
+          {inheritedEffects.length > 0 && (
+            <Section title="Effets hérités" icon="effects" id="sec-effects-inherited" note="octrois des cartes (lecture seule)">
+              <div className="space-y-2">
+                {inheritedEffects.map(({ e, via }, idx) => (
+                  <RuleCard
+                    key={`${e.id}-${idx}`}
+                    human={describeEffect(e, cat)}
+                    sourceText={e.sourceText}
+                    badges={
+                      <>
+                        <Badge>{e.operation.kind}</Badge>
+                        <Badge tone="violet">via « {via} »</Badge>
+                      </>
+                    }
+                  />
+                ))}
+              </div>
+            </Section>
+          )}
+
+          <Section title={SECTION.constraints} icon="constraints" id="sec-constraints">
+            <ConstraintListEditor
+              constraints={profile.recruitment}
+              cat={cat}
+              onChange={(c) => patch({ recruitment: c })}
+              onProfile
+            />
+          </Section>
+
+          {inheritedConstraints.length > 0 && (
+            <Section title="Contraintes héritées" icon="constraints" id="sec-constraints-inherited" note="des cartes (lecture seule)">
+              <div className="space-y-2">
+                {inheritedConstraints.map(({ c, via }, idx) => (
+                  <RuleCard
+                    key={`${c.id}-${idx}`}
+                    human={describeConstraint(c, cat)}
+                    sourceText={c.sourceText}
+                    badges={
+                      <>
+                        <Badge tone={c.severity === "error" ? "red" : "amber"}>{c.severity}</Badge>
+                        <Badge>{c.type}</Badge>
+                        <Badge tone="violet">via « {via} »</Badge>
+                      </>
+                    }
+                  />
+                ))}
+              </div>
+            </Section>
+          )}
+
+          <CardImageSection value={profile.cardImage} onChange={(v) => upd("cardImage", v)} />
         </>
       }
     />
   );
 }
-

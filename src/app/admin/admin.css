@@ -69,8 +69,8 @@
   color: color-mix(in srgb, var(--ember-bright) 72%, var(--bone-faint)); }
 
 /* Champ étiqueté générique (label lisible au-dessus du contrôle) - remplace les « text-xs adm-faint » minuscules. */
-.adm-field { display: flex; flex-direction: column; gap: 4px; }
-.adm-field-label { font-size: 12.5px; font-weight: 600; color: var(--bone-dim); line-height: 1.3; }
+.adm-field { display: flex; flex-direction: column; gap: 5px; }
+.adm-field-label { font-size: 13px; font-weight: 600; color: var(--bone-dim); line-height: 1.3; }
 .adm-field-hint { margin-left: 6px; font-weight: 400; color: var(--bone-faint); }
 .adm-field > .adm-input, .adm-field > textarea.adm-input { width: 100%; }
 /* Case à cocher étiquetée (interrupteur inline lisible). */
@@ -86,8 +86,8 @@
 .adm-mchip[aria-pressed="true"] { color: var(--ember-bright); border-color: var(--ember);
   background: color-mix(in srgb, var(--ember) 14%, transparent); }
 
-/* Squelette d'une page de détail : en-tête + sections à ordre imposé, espacement homogène. */
-.adm-detail { display: flex; flex-direction: column; gap: 22px; }
+/* Squelette d'une page de détail : en-tête + sections (blocs) à ordre imposé, espacement homogène. */
+.adm-detail { flex: 1; min-width: 0; max-width: 660px; display: flex; flex-direction: column; gap: 16px; }
 .adm-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .adm-detail-id { font-size: 11px; color: var(--bone-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
@@ -172,3 +172,92 @@
 .adm-modal { border-radius: var(--radius); border: 1px solid var(--hair-strong); background: var(--soot);
   color: var(--bone); box-shadow: var(--shadow-lift); }
 .adm-frame { background: var(--forge); box-shadow: inset 0 0 0 1px var(--hair-strong); }
+
+/* ============================================================================
+   Refonte « Scriptorium » - hiérarchie typo remise à l'endroit (titre de section
+   > label > valeur > hint), sections en blocs, sommaire ancré. Ton atelier
+   sobre, densité confort. Cf. maquette mockups/admin.html.
+   ============================================================================ */
+
+/* Espace de travail : sommaire ancré (gauche) + colonne de détail (droite). */
+.adm-workspace-inner { display: flex; align-items: flex-start; gap: 26px; max-width: 920px; margin: 0 auto; }
+
+/* En-tête d'entité : identité forte, hors bloc (nom Cinzel + coût + suppression). */
+.adm-entity-head { display: flex; flex-direction: column; gap: 7px; }
+.adm-entity-topline { display: flex; align-items: center; gap: 12px; }
+.adm-name { flex: 1; min-width: 0; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 25px;
+  color: var(--bone); background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 3px 10px; outline: none; transition: background .16s var(--ease), box-shadow .16s var(--ease); }
+.adm-name:hover { background: var(--tint-1); }
+.adm-name:focus { background: var(--tint-1); box-shadow: 0 0 0 1px var(--ember); }
+.adm-costfield { display: inline-flex; align-items: center; gap: 7px; flex: none; }
+.adm-costfield .coin { width: 13px; height: 13px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold), var(--gold-dim));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 60%, transparent); }
+.adm-costfield input { width: 66px; text-align: right; font-family: "Cinzel", Georgia, serif; font-weight: 600;
+  font-size: 20px; color: var(--gold); background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 2px 6px; outline: none; -moz-appearance: textfield; appearance: textfield; }
+.adm-costfield input::-webkit-outer-spin-button, .adm-costfield input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.adm-costfield input:hover { background: var(--tint-1); }
+.adm-costfield input:focus { box-shadow: 0 0 0 1px var(--gold); }
+.adm-costfield .unit { font-size: 13px; color: var(--gold-dim); font-weight: 600; }
+.adm-badge-lvl { font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 17px; color: var(--ember-bright); }
+.adm-del { width: 32px; height: 32px; flex: none; border-radius: var(--radius-sm); display: grid; place-items: center;
+  color: var(--bone-faint); background: transparent; border: 0; cursor: pointer; transition: .16s var(--ease); }
+.adm-del:hover { color: var(--scorch); background: color-mix(in srgb, var(--scorch) 14%, transparent); }
+.adm-del svg { width: 16px; height: 16px; }
+.adm-entity-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 0 10px; font-size: 11.5px; color: var(--bone-faint); }
+.adm-entity-sub .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--bone-faint); }
+.adm-entity-sub .adm-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* SIGNATURE - sommaire ancré (colle au défilement de .adm-scroll, surligné par scroll-spy). */
+.adm-toc { position: sticky; top: 0; flex: none; width: 182px; padding-top: 62px; align-self: flex-start; }
+.adm-toc-title { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-faint);
+  padding: 0 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--hair); }
+.adm-toc-link { display: flex; width: 100%; align-items: center; gap: 9px; padding: 6px 10px; border-radius: var(--radius-sm);
+  font: inherit; font-size: 12.5px; color: var(--bone-faint); background: transparent; border: 0; cursor: pointer;
+  text-align: left; position: relative; transition: color .14s var(--ease), background .14s var(--ease); }
+.adm-toc-link:hover { color: var(--bone-dim); background: var(--tint-1); }
+.adm-toc-glyph { width: 14px; height: 14px; flex: none; opacity: .7; }
+.adm-toc-link--on { color: var(--ember-bright); font-weight: 600; }
+.adm-toc-link--on::before { content: ""; position: absolute; left: -1px; top: 5px; bottom: 5px; width: 2.5px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember)); }
+.adm-toc-link--on .adm-toc-glyph { opacity: 1; }
+
+/* SIGNATURE - la section en bloc fort (fond, filet, en-tête à marqueur + glyphe). */
+.adm-sec { background: var(--tint-1); border: 1px solid var(--hair); border-radius: var(--radius); scroll-margin-top: 16px; }
+.adm-sec-head { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--hair); }
+.adm-sec-marker { width: 26px; height: 26px; flex: none; border-radius: 8px; display: grid; place-items: center;
+  color: var(--ember); background: color-mix(in srgb, var(--ember) 13%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ember) 30%, transparent); }
+.adm-sec-marker svg { width: 15px; height: 15px; }
+.adm-sec-heading { display: flex; flex-direction: column; gap: 1px; min-width: 0; padding-top: 2px; }
+.adm-sec-title { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 15px; color: var(--bone); letter-spacing: .01em; }
+.adm-sec-note { font-size: 11.5px; color: var(--bone-faint); line-height: 1.35; }
+.adm-sec-meta { margin-left: auto; display: flex; align-items: center; gap: 10px; padding-top: 3px; }
+.adm-sec-body { padding: 16px; }
+
+/* Groupe étiqueté : label (+ hint) au-dessus d'un contenu libre (puces, sous-champs…). */
+.adm-fieldgroup { display: flex; flex-direction: column; gap: 6px; }
+
+/* Case à cocher en bloc : un libellé + un seul hint en dessous (fini la double parenthèse flottante). */
+.adm-check { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: var(--radius-sm);
+  background: var(--tint-2); box-shadow: inset 0 0 0 1px var(--hair); cursor: pointer; }
+.adm-check > input { margin-top: 2px; width: 15px; height: 15px; flex: none; accent-color: var(--ember); }
+.adm-check-label { font-size: 13px; font-weight: 600; color: var(--bone); }
+.adm-check-hint { font-size: 12px; color: var(--bone-faint); line-height: 1.45; margin-top: 3px; }
+
+/* Encart conditionnel : contenu dépendant d'un choix ci-dessus, contenu DANS le bloc (accent braise). */
+.adm-cond { margin-top: 14px; padding: 14px 15px; border-radius: var(--radius-sm); border-left: 3px solid var(--ember);
+  background: color-mix(in srgb, var(--ember) 6%, transparent); }
+.adm-cond-eyebrow { display: flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ember-bright); margin-bottom: 12px; }
+.adm-cond-eyebrow svg { width: 13px; height: 13px; }
+
+/* En-tête des pages-tables (Voies de magie, Réglages) - pas de sommaire. */
+.adm-page-head { margin-bottom: 2px; }
+.adm-page-title { font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 22px; color: var(--bone); }
+.adm-page-sub { margin-top: 3px; font-size: 13px; color: var(--bone-faint); }
+
+/* Sous le seuil du sommaire : on masque l'index ancré, le détail prend toute la largeur. */
+@media (max-width: 1100px) { .adm-toc { display: none; } .adm-detail { max-width: none; } }

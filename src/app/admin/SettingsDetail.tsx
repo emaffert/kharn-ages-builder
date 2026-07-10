@@ -1,5 +1,5 @@
 import type { Catalog, Faction, Grimoire, MunitionKind } from "@core";
-import { AddButton, Field, RemoveButton, Section } from "./primitives";
+import { AddButton, Field, PageHeader, RemoveButton, Section } from "./primitives";
 import { INPUT } from "./shared";
 
 /**
@@ -26,14 +26,11 @@ export function SettingsDetail({
   onRemoveMunitionKind: (id: string) => void;
 }) {
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <header>
-        <h2 className="adm-title text-2xl">Réglages</h2>
-        <p className="adm-faint mt-1 text-sm">Données de référence : factions, grimoires, munitions.</p>
-      </header>
+    <div className="mx-auto max-w-3xl space-y-5">
+      <PageHeader title="Réglages" subtitle="Données de référence : factions, grimoires, munitions." />
 
       {/* ── Factions ─────────────────────────────────────────────── */}
-      <Section title="Factions">
+      <Section title="Factions" icon="identity">
         <div className="flex flex-col gap-2">
           {cat.factions.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +68,7 @@ export function SettingsDetail({
       </Section>
 
       {/* ── Grimoires (ensemble fixe) ────────────────────────────── */}
-      <Section title="Grimoires">
+      <Section title="Grimoires" icon="magic">
         <div className="flex flex-col gap-2">
           <p className="adm-faint text-xs">
             Dans « Pages », saisir un nombre (budget de pages de sorts) ou « illimite » pour un grimoire
@@ -106,7 +103,7 @@ export function SettingsDetail({
       </Section>
 
       {/* ── Munitions (sortes → paliers de prix × types) ─────────── */}
-      <Section title="Munitions">
+      <Section title="Munitions" icon="equipment">
         <div className="flex flex-col gap-5">
           {(cat.munitionKinds ?? []).map((k) => (
             <MunitionKindEditor

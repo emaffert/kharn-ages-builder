@@ -1,6 +1,6 @@
 import type { Catalog, MagicWay } from "@core";
 import { INPUT } from "./shared";
-import { AddButton, Combobox, RemoveButton, Section } from "./primitives";
+import { AddButton, Combobox, PageHeader, RemoveButton, Section } from "./primitives";
 
 /**
  * Table des voies de magie. Chaque voie est liée à une COMPÉTENCE (`skillId`) : une figurine
@@ -21,14 +21,12 @@ export function MagicWaysDetail({
     .sort((a, b) => a.keyword.localeCompare(b.keyword, "fr"))
     .map((s) => ({ value: s.id, label: s.keyword }));
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header>
-        <h2 className="adm-title text-2xl">Voies de magie</h2>
-        <p className="adm-faint mt-1 text-sm">
-          Une figurine est lanceuse d'une voie dès qu'elle possède la compétence associée.
-        </p>
-      </header>
-      <Section title="Voies">
+    <div className="mx-auto max-w-3xl space-y-5">
+      <PageHeader
+        title="Voies de magie"
+        subtitle="Une figurine est lanceuse d'une voie dès qu'elle possède la compétence associée."
+      />
+      <Section title="Voies" icon="magic">
         <div className="flex flex-col gap-2">
           {cat.magicWays.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">

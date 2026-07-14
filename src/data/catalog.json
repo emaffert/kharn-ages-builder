@@ -9282,7 +9282,7 @@
       "effectsText": "Peuvent chacun contenir 5 pages d'un unique arcane (« Adansonia » sans restriction ou « shamanisme »).",
       "effects": [
         {
-          "id": "e-brassards-pages",
+          "id": "e-brassards-adansonia",
           "source": {
             "kind": "equipment",
             "id": "brassards-eutheria"
@@ -9293,9 +9293,27 @@
           },
           "operation": {
             "kind": "spell-pages",
-            "amount": 5
+            "amount": 5,
+            "magicWayId": "way-1783500043343"
           },
-          "sourceText": "Peuvent chacun contenir 5 pages d'un unique arcane."
+          "sourceText": "Peuvent contenir 5 pages de la voie Adansonia."
+        },
+        {
+          "id": "e-brassards-shamanisme",
+          "source": {
+            "kind": "equipment",
+            "id": "brassards-eutheria"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "spell-pages",
+            "amount": 5,
+            "magicWayId": "shamanisme"
+          },
+          "sourceText": "Peuvent contenir 5 pages de la voie shamanisme."
         }
       ]
     }

@@ -658,7 +658,23 @@ function OperationEditor({
       )}
 
       {op.kind === "spell-pages" && (
-        <NumField label="Pages" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+        <>
+          <NumField label="Pages" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <Field label="Voie dédiée" hint="option. (pool)">
+            <select
+              value={op.magicWayId ?? ""}
+              onChange={(e) => onChange({ ...op, magicWayId: e.target.value || undefined })}
+              className={INPUT}
+            >
+              <option value="">— budget général</option>
+              {cat.magicWays.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </>
       )}
 
       {op.kind === "limit-modifier" && (

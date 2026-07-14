@@ -43,34 +43,34 @@ export function castWays(
     .map((w) => w.id);
 }
 
+/** Une source de pages : un effet `spell-pages` (carte/amélioration ou équipement). `magicWayId` = pool dédié à une voie. */
+export type PageSource = { name: string; amount: number; magicWayId?: string };
+
 /**
  * Sources de pages conférées à la figurine : cartes/améliorations applicables (Fille de Nyx +3, Crosse +3…)
- * ET équipement porté (ex. Brassards d'Euthéria +5 pages). Chaque source porte un effet `spell-pages`.
- * NB : la restriction de la source à un unique arcane (Brassards) n'est pas encore modélisée - les pages
- * alimentent le budget global (cf. `pageCapacity`).
+ * ET équipement porté (ex. Brassards d'Euthéria : 5 pages Adansonia + 5 pages shamanisme). Chaque source
+ * porte un effet `spell-pages` ; `magicWayId` renseigné = pool dédié à cette voie (cf. `pageAllocation`).
  */
 export function pageBonusSources(
   cat: Catalog,
   profile: Profile,
   inst: ProfileInstance,
   traits: ReadonlySet<string>,
-): { name: string; amount: number }[] {
+): PageSource[] {
   const selected = inst.specialCardIds ?? [];
+  const toSource = (name: string, op: { amount?: number; magicWayId?: string }): PageSource => ({
+    name,
+    amount: op.amount ?? 0,
+    magicWayId: op.magicWayId,
+  });
+  const asPages = (op: unknown) => op as { amount?: number; magicWayId?: string };
   const fromCards = cat.specialCards
     .filter((c) => cardApplies(c, profile, traits, selected))
-    .flatMap((c) =>
-      c.effects
-        .filter((e) => e.operation.kind === "spell-pages")
-        .map((e) => ({ name: c.name, amount: (e.operation as { amount?: number }).amount ?? 0 })),
-    );
+    .flatMap((c) => c.effects.filter((e) => e.operation.kind === "spell-pages").map((e) => toSource(c.name, asPages(e.operation))));
   const fromEquipment = wornEquipmentIds(profile, inst)
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e))
-    .flatMap((e) =>
-      (e.effects ?? [])
-        .filter((ef) => ef.operation.kind === "spell-pages")
-        .map((ef) => ({ name: e.name, amount: (ef.operation as { amount?: number }).amount ?? 0 })),
-    );
+    .flatMap((e) => (e.effects ?? []).filter((ef) => ef.operation.kind === "spell-pages").map((ef) => toSource(e.name, asPages(ef.operation))));
   return [...fromCards, ...fromEquipment].filter((s) => s.amount > 0);
 }
 
@@ -84,9 +84,80 @@ export function grimoirePages(cat: Catalog, grimoireId?: string): number {
   return pages === "illimite" ? Infinity : (pages ?? 0);
 }
 
-/** Capacité totale de pages : grimoire + bonus des cartes/améliorations. */
+/** Un pool de pages dédié à une voie de magie (ex. Brassards d'Euthéria → Adansonia). */
+export interface PagePool {
+  wayId: string;
+  wayName: string;
+  /** Nom(s) de la ou des sources qui fournissent ce pool (ex. « Brassards d'Euthéria »). */
+  label: string;
+  cap: number;
+  used: number;
+}
+
+/**
+ * Répartition des pages de sorts : un budget GÉNÉRAL (grimoire + bonus non dédiés) + des POOLS dédiés
+ * à une voie (Brassards). Attribution optimale : chaque sort de voie X remplit d'abord le pool dédié à X
+ * (s'il existe), le surplus déborde sur le budget général. `over` = débordement du général (liste invalide).
+ */
+export interface PageAllocation {
+  general: { cap: number; used: number };
+  pools: PagePool[];
+  /** Somme des pages de tous les sorts sélectionnés (dédiés + généraux). */
+  totalUsed: number;
+  /** true si le budget général est dépassé (les pools dédiés absorbent d'abord). */
+  over: boolean;
+}
+
+export function pageAllocation(
+  cat: Catalog,
+  profile: Profile,
+  inst: ProfileInstance,
+  traits: ReadonlySet<string>,
+): PageAllocation {
+  const sources = pageBonusSources(cat, profile, inst, traits);
+  let generalCap = grimoirePages(cat, inst.grimoireId);
+  const poolCaps = new Map<string, { labels: Set<string>; cap: number }>();
+  for (const s of sources) {
+    if (s.magicWayId) {
+      const e = poolCaps.get(s.magicWayId) ?? { labels: new Set<string>(), cap: 0 };
+      e.cap += s.amount;
+      e.labels.add(s.name);
+      poolCaps.set(s.magicWayId, e);
+    } else {
+      generalCap += s.amount;
+    }
+  }
+  // Pages utilisées par voie (sorts de grimoire ; les sorts sans pages/voie n'occupent pas de pool).
+  const byWay = new Map<string, number>();
+  let totalUsed = 0;
+  for (const id of inst.spellIds) {
+    const sp = cat.spells.find((x) => x.id === id);
+    const pages = sp?.pages ?? 0;
+    if (pages <= 0) continue;
+    totalUsed += pages;
+    if (sp?.magicWayId) byWay.set(sp.magicWayId, (byWay.get(sp.magicWayId) ?? 0) + pages);
+  }
+  const pools: PagePool[] = [...poolCaps.entries()].map(([wayId, e]) => ({
+    wayId,
+    wayName: cat.magicWays.find((w) => w.id === wayId)?.name ?? wayId,
+    label: [...e.labels].join(", "),
+    cap: e.cap,
+    used: Math.min(byWay.get(wayId) ?? 0, e.cap), // le pool absorbe au plus sa capacité
+  }));
+  const pooledUsed = pools.reduce((n, p) => n + p.used, 0);
+  const generalUsed = totalUsed - pooledUsed; // le surplus des voies + les voies sans pool
+  return {
+    general: { cap: generalCap, used: generalUsed },
+    pools,
+    totalUsed,
+    over: Number.isFinite(generalCap) && generalUsed > generalCap,
+  };
+}
+
+/** Capacité totale de pages (général + pools dédiés). Pour l'affichage/compat ; la validité passe par `pageAllocation.over`. */
 export function pageCapacity(cat: Catalog, profile: Profile, inst: ProfileInstance, traits: ReadonlySet<string>): number {
-  return grimoirePages(cat, inst.grimoireId) + pageBonus(cat, profile, inst, traits);
+  const a = pageAllocation(cat, profile, inst, traits);
+  return a.general.cap + a.pools.reduce((n, p) => n + p.cap, 0);
 }
 
 export function pagesUsed(cat: Catalog, inst: ProfileInstance): number {

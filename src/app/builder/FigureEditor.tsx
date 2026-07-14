@@ -7,6 +7,7 @@ import {
   resolveMunitionLines,
   temboEquipmentSurcharge,
   type Catalog,
+  type PageAllocation,
   type Profile,
   type Spell,
 } from "@core";
@@ -23,7 +24,7 @@ import {
   equipReservedOk,
   forbiddenCats,
   forbiddenGrimoires,
-  pageBonus,
+  pageAllocation,
   pageBonusSources,
   spellInfo,
   spellsFor,
@@ -65,20 +66,19 @@ function MagiePanel({
   grimoireDiscount?: Record<string, number>;
 }) {
   const forbiddenGrims = forbiddenGrimoires(p);
-  const pages = grimoire === "none" ? 0 : cat.grimoires.find((g) => g.id === grimoire)?.pages;
   // Prix net d'un palier de grimoire, réduction de monture (ex. Mochère) déduite.
   const netCost = (tier: "petit" | "grand") => {
     const base = cat.grimoires.find((x) => x.id === tier)?.cost ?? (tier === "petit" ? 20 : 40);
     return Math.max(0, base - Math.min(grimoireDiscount?.[tier] ?? 0, base));
   };
-  const pageCap = (pages === "illimite" ? Infinity : ((pages as number) ?? 0)) + pageBonus(p, cat, upgrades, wornEquipIds);
-  const sources = pageBonusSources(p, cat, upgrades, wornEquipIds);
-  const pagesUsed = spells.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
+  const alloc = pageAllocation(p, cat, upgrades, wornEquipIds, spells, grimoire);
+  // Bonus de pages « généraux » (non dédiés à une voie) : les pools dédiés ont leur propre compteur.
+  const generalSources = pageBonusSources(p, cat, upgrades, wornEquipIds).filter((s) => !s.magicWayId);
   const warning =
     ways.length === 0
       ? "La figurine ne peut pas lancer de sorts - retire les sorts ci-dessous."
-      : pagesUsed > pageCap
-        ? `Capacité de pages dépassée (${pagesUsed} / ${pageCap === Infinity ? "∞" : pageCap}) - retire un sort ou prends un grimoire plus grand.`
+      : alloc.over
+        ? `Capacité de pages dépassée (${alloc.general.used} / ${alloc.general.cap === Infinity ? "∞" : alloc.general.cap} au budget général) - retire un sort ou prends un grimoire plus grand.`
         : null;
   return (
     <div className="fe-root">
@@ -94,11 +94,11 @@ function MagiePanel({
             { value: "grand", label: `Grand +${netCost("grand")}`, disabled: forbiddenGrims.has("grand") },
           ]}
         />
-        {sources.length > 0 && (
-          <span className="fe-mag-bonus">Bonus pages : {sources.map((s) => `+${s.amount} ${s.name}`).join(", ")}</span>
+        {generalSources.length > 0 && (
+          <span className="fe-mag-bonus">Bonus pages : {generalSources.map((s) => `+${s.amount} ${s.name}`).join(", ")}</span>
         )}
       </div>
-      <SpellPanel profile={p} cat={cat} ways={ways} pageCap={pageCap} selected={spells} onToggle={onToggleSpell} onInfo={onInfo} />
+      <SpellPanel profile={p} cat={cat} ways={ways} alloc={alloc} selected={spells} onToggle={onToggleSpell} onInfo={onInfo} />
     </div>
   );
 }
@@ -688,7 +688,7 @@ function SpellPanel({
   profile: p,
   cat,
   ways,
-  pageCap,
+  alloc,
   selected,
   onToggle,
   onInfo,
@@ -696,7 +696,7 @@ function SpellPanel({
   profile: Profile;
   cat: Catalog;
   ways: string[];
-  pageCap: number;
+  alloc: PageAllocation;
   selected: string[];
   onToggle: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
@@ -704,7 +704,6 @@ function SpellPanel({
   const [query, setQuery] = useState("");
   const spellById = (id: string) => cat.spells.find((s) => s.id === id);
   const chosen = selected.map(spellById).filter((s): s is Spell => Boolean(s));
-  const pagesUsed = chosen.reduce((n, s) => n + (s.pages ?? 0), 0);
   const q = query.trim().toLowerCase();
 
   const GENERIC = "Génériques";
@@ -718,16 +717,30 @@ function SpellPanel({
   const groupNames = [...new Set(avail.map(groupOf))].sort((a, b) =>
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
   );
-  const blocked = (s: Spell) => pagesUsed + (s.pages ?? 0) > pageCap;
+  // Ajout possible ? Attribution optimale : le sort remplit d'abord le pool dédié à sa voie (Brassards),
+  // le surplus déborde sur le budget général - bloqué seulement si ce surplus dépasse le général.
+  const blocked = (s: Spell) => {
+    const pages = s.pages ?? 0;
+    if (pages <= 0) return false;
+    const pool = alloc.pools.find((pl) => pl.wayId === s.magicWayId);
+    const overflow = Math.max(0, pages - (pool ? pool.cap - pool.used : 0));
+    return Number.isFinite(alloc.general.cap) && alloc.general.used + overflow > alloc.general.cap;
+  };
   // Sélectionnés regroupés par voie - mêmes en-têtes que « disponible ».
   const chosenGroups = [...new Set(chosen.map(groupOf))].sort((a, b) =>
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
   );
+  const totalCap = Number.isFinite(alloc.general.cap)
+    ? alloc.general.cap + alloc.pools.reduce((n, pl) => n + pl.cap, 0)
+    : Infinity;
 
   return (
     <div className="fe-root">
       <div className="flex flex-wrap items-center gap-2">
-        <SlotChip label="Pages" used={pagesUsed} cap={pageCap} />
+        <SlotChip label="Pages" used={alloc.general.used} cap={alloc.general.cap} />
+        {alloc.pools.map((pl) => (
+          <SlotChip key={pl.wayId} label={`${pl.label} : Pages ${pl.wayName}`} used={pl.used} cap={pl.cap} />
+        ))}
       </div>
 
       <div className="fe-panes">
@@ -736,7 +749,7 @@ function SpellPanel({
           <div className="fe-section-head">
             <SectionTitle>Sélectionnés</SectionTitle>
             <span className="tot">
-              pages <b>{pagesUsed}/{pageCap === Infinity ? "∞" : pageCap}</b>
+              pages <b>{alloc.totalUsed}/{totalCap === Infinity ? "∞" : totalCap}</b>
             </span>
           </div>
           <div className="fe-scroll">

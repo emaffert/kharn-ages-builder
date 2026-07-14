@@ -78,8 +78,10 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
     per: z.number().optional(),
   }),
   // Budget de pages de sorts (ex. Fille de Nyx : +3 ; Crosse d'Ostéomancie : +3).
-  // Enforcement (capacité vs sorts choisis) prévu côté constructeur de liste.
-  z.object({ kind: z.literal("spell-pages"), amount: z.number() }),
+  // `magicWayId` (option.) : les pages sont un POOL dédié à cette voie (ex. Brassards d'Euthéria :
+  // 5 pages Adansonia + 5 pages shamanisme, chacun un pool séparé). Absent = pages du budget GLOBAL,
+  // utilisables par n'importe quelle voie accessible. Enforcement dans le moteur (`pageAllocation`).
+  z.object({ kind: z.literal("spell-pages"), amount: z.number(), magicWayId: z.string().optional() }),
   /**
    * Augmente (ou réduit) la limitation numérique (kind « X ») des groupes de profils ciblés, dans la
    * portée. Ex. Lieutenant khérops : +1 à la limite des Khérops non uniques / non personnages de son FdL.

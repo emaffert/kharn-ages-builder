@@ -14,7 +14,7 @@ import type {
   Selector,
   SpecialCard,
 } from "../model";
-import { armorsWorn, castWays, forbiddenGrimoires, pageCapacity, pagesUsed, wornEquipmentIds } from "./magic";
+import { armorsWorn, castWays, forbiddenGrimoires, pageAllocation, wornEquipmentIds } from "./magic";
 import { totalMunitionCost } from "./munitions";
 
 /**
@@ -775,10 +775,18 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
       if (castWays(cat, p, inst, traits, [...ri.grantedSkills.keys()]).length === 0) {
         push("spells-no-caster", `« ${p.name} » a des sorts alors qu'elle ne peut pas en lancer.`);
       } else {
-        const cap = pageCapacity(cat, p, inst, traits);
-        const used = pagesUsed(cat, inst);
-        if (used > cap) {
-          push("pages-over-capacity", `« ${p.name} » : ${used} pages de sorts pour ${cap === Infinity ? "∞" : cap} disponibles.`);
+        // Attribution optimale : les pools dédiés (Brassards) absorbent d'abord, le surplus va au général.
+        const alloc = pageAllocation(cat, p, inst, traits);
+        if (alloc.over) {
+          const g = alloc.general;
+          push(
+            "pages-over-capacity",
+            `« ${p.name} » : ${g.used} pages de sorts pour ${g.cap === Infinity ? "∞" : g.cap} au budget général` +
+              (alloc.pools.length > 0
+                ? ` (hors pools dédiés : ${alloc.pools.map((pl) => `${pl.wayName} ${pl.used}/${pl.cap}`).join(", ")})`
+                : "") +
+              ".",
+          );
         }
       }
     }

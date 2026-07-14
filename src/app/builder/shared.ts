@@ -1,12 +1,13 @@
 import {
   castWays as coreCastWays,
   pageBonusSources as corePageBonusSources,
+  pageAllocation as corePageAllocation,
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
   mountKindOf,
   mountOptionCostOf,
 } from "@core";
-import type { Catalog, MountOption, Profile, ProfileInstance, Selector, Spell } from "@core";
+import type { Catalog, MountOption, PageAllocation, PageSource, Profile, ProfileInstance, Selector, Spell } from "@core";
 import type { ArmorDisplay } from "./StatSheet";
 // Libellés de présentation partagés avec l'admin (source unique dans @ui) - alias pour garder les noms locaux.
 import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
@@ -378,12 +379,29 @@ export function pageBonusSources(
   cat: Catalog,
   selectedUpgrades: string[],
   wornEquipIds: string[] = p.baseEquipmentIds,
-): { name: string; amount: number }[] {
+): PageSource[] {
   return corePageBonusSources(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits));
 }
 
 export function pageBonus(p: Profile, cat: Catalog, selectedUpgrades: string[], wornEquipIds: string[] = p.baseEquipmentIds): number {
   return pageBonusSources(p, cat, selectedUpgrades, wornEquipIds).reduce((n, s) => n + s.amount, 0);
+}
+
+/** Répartition des pages de sorts (budget général + pools dédiés par voie, ex. Brassards) pour l'état courant. */
+export function pageAllocation(
+  p: Profile,
+  cat: Catalog,
+  selectedUpgrades: string[],
+  wornEquipIds: string[],
+  spellIds: string[],
+  grimoireId?: string,
+): PageAllocation {
+  const inst: ProfileInstance = {
+    ...synthInstance(p, selectedUpgrades, wornEquipIds),
+    spellIds,
+    grimoireId: grimoireId === "none" ? undefined : (grimoireId as ProfileInstance["grimoireId"]),
+  };
+  return corePageAllocation(cat, p, inst, new Set(p.traits));
 }
 
 export function spellsFor(p: Profile, cat: Catalog, ways: string[]): Spell[] {

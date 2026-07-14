@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
 import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills } from "./evaluate";
-import { affinityWays, castableSpells, pageBonus, pageCapacity } from "./magic";
+import { affinityWays, castableSpells, pageAllocation } from "./magic";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -780,7 +780,7 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
   });
 });
 
-describe("pages de sorts conférées par l'équipement (Brassards d'Euthéria)", () => {
+describe("pools de pages dédiés à une voie (Brassards d'Euthéria)", () => {
   const nephtys = catalog.profiles.find((p) => p.id === "tembos-nephtys-3")!;
   const traits = new Set(nephtys.traits);
   const mk = (over: Partial<ProfileInstance> = {}): ProfileInstance => ({
@@ -791,21 +791,54 @@ describe("pages de sorts conférées par l'équipement (Brassards d'Euthéria)",
     spellIds: [],
     ...over,
   });
+  const ADANSONIA = "way-1783500043343";
 
-  it("les Brassards (équip. de base) confèrent +5 pages (capacité sans grimoire = 5)", () => {
-    const i = mk();
-    expect(pageBonus(catalog, nephtys, i, traits)).toBe(5);
-    expect(pageCapacity(catalog, nephtys, i, traits)).toBe(5);
+  it("les Brassards créent deux pools dédiés (Adansonia 5 + shamanisme 5), budget général 0 sans grimoire", () => {
+    const a = pageAllocation(catalog, nephtys, mk(), traits);
+    expect(a.general.cap).toBe(0);
+    expect(a.pools.map((p) => [p.wayId, p.cap])).toEqual([
+      [ADANSONIA, 5],
+      ["shamanisme", 5],
+    ]);
+    expect(a.over).toBe(false);
   });
 
-  it("retirer les Brassards retire les +5 pages", () => {
-    const i = mk({ removedBaseEquipmentIds: ["brassards-eutheria"] });
-    expect(pageBonus(catalog, nephtys, i, traits)).toBe(0);
-    expect(pageCapacity(catalog, nephtys, i, traits)).toBe(0);
+  it("retirer les Brassards supprime les pools", () => {
+    const a = pageAllocation(catalog, nephtys, mk({ removedBaseEquipmentIds: ["brassards-eutheria"] }), traits);
+    expect(a.pools).toEqual([]);
+    expect(a.general.cap).toBe(0);
   });
 
-  it("Brassards + petit grimoire cumulent (5 + 5 = 10 pages)", () => {
-    const i = mk({ grimoireId: "petit" });
-    expect(pageCapacity(catalog, nephtys, i, traits)).toBe(10);
+  it("les sorts d'une voie remplissent d'abord leur pool dédié (4 pages Adansonia → pool, général 0)", () => {
+    const a = pageAllocation(catalog, nephtys, mk({ spellIds: ["drain-d-energie", "confiance-partagee"] }), traits);
+    expect(a.pools.find((p) => p.wayId === ADANSONIA)?.used).toBe(4);
+    expect(a.general.used).toBe(0);
+    expect(a.over).toBe(false);
+  });
+
+  it("le surplus au-delà du pool déborde sur le général → invalide sans grimoire (6 pages Adansonia)", () => {
+    const i = mk({ spellIds: ["drain-d-energie", "confiance-partagee", "guerison-vegetale", "test-adansonia"] });
+    const a = pageAllocation(catalog, nephtys, i, traits);
+    expect(a.pools.find((p) => p.wayId === ADANSONIA)?.used).toBe(5); // pool saturé
+    expect(a.general.used).toBe(1); // surplus
+    expect(a.over).toBe(true);
+  });
+
+  it("un petit grimoire (général 5) absorbe le surplus → redevient valide", () => {
+    const i = mk({
+      grimoireId: "petit",
+      spellIds: ["drain-d-energie", "confiance-partagee", "guerison-vegetale", "test-adansonia"],
+    });
+    const a = pageAllocation(catalog, nephtys, i, traits);
+    expect(a.general.cap).toBe(5);
+    expect(a.general.used).toBe(1);
+    expect(a.over).toBe(false);
+  });
+
+  it("les pools sont indépendants : un sort shamanisme ne consomme pas le pool Adansonia", () => {
+    const a = pageAllocation(catalog, nephtys, mk({ spellIds: ["test-shamanisme"] }), traits);
+    expect(a.pools.find((p) => p.wayId === "shamanisme")?.used).toBe(1);
+    expect(a.pools.find((p) => p.wayId === ADANSONIA)?.used).toBe(0);
+    expect(a.general.used).toBe(0);
   });
 });

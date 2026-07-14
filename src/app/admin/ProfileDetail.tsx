@@ -408,6 +408,9 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
               cat={cat}
               onChange={(ids) => patch({ baseEquipmentIds: ids })}
             />
+            <div className="mt-2">
+              <FlagButton active={uv("baseEquipmentIds")} onClick={() => flag("baseEquipmentIds")} />
+            </div>
           </Section>
 
           <Section title="Traits" icon="traits" note="tags internes, non imprimés sur les cartes">

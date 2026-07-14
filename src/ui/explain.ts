@@ -152,8 +152,18 @@ export function describeEffect(e: Effect, cat: Catalog): string {
  * Où un trait (tag interne) est-il référencé par les règles du catalogue ?
  * Permet, dans l'éditeur, de remonter d'un trait à la/les règle(s) qui l'utilisent.
  */
+/**
+ * Traits lus directement par le moteur (règles intégrées, non exprimées comme
+ * contrainte/effet dans le catalogue). À garder en phase avec le code moteur.
+ */
+const BUILTIN_TRAIT_USAGE: Record<string, string> = {
+  apatride: "moteur - recrutable dans le fer-de-lance de n’importe quelle faction (règle intégrée)",
+  tembo: "moteur - surcoût d’équipement Tembo appliqué aux objets ajoutés (règle intégrée)",
+};
+
 export function explainTraitUsage(trait: string, cat: Catalog): string[] {
   const out: string[] = [];
+  if (BUILTIN_TRAIT_USAGE[trait]) out.push(BUILTIN_TRAIT_USAGE[trait]);
   const selUses = (sel?: Selector | Selector[]): boolean => {
     if (!sel) return false;
     const clauses = Array.isArray(sel) ? sel : [sel];

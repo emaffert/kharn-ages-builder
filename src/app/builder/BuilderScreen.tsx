@@ -109,9 +109,14 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     return "troupe";
   };
   const byName = (a: ModelEntry, b: ModelEntry) => a.name.localeCompare(b.name);
-  const personnages = models.filter((m) => kindOf(m) === "perso").sort(byName);
-  const troupes = models.filter((m) => kindOf(m) === "troupe").sort(byName);
-  const conditionnels = models.filter((m) => kindOf(m) === "cond").sort(byName);
+  // « Hors Faction » = profil recrutable ici mais non natif à la faction courante (apatride comme
+  // Gaal, ou allié « Allié des X » comme le Bourgmestre khârn côté Guilde Noire). Regroupé à part
+  // plutôt que fondu dans Personnages/Troupes.
+  const isNative = (m: ModelEntry) => m.profiles[0].factionId === factionId;
+  const personnages = models.filter((m) => isNative(m) && kindOf(m) === "perso").sort(byName);
+  const troupes = models.filter((m) => isNative(m) && kindOf(m) === "troupe").sort(byName);
+  const conditionnels = models.filter((m) => isNative(m) && kindOf(m) === "cond").sort(byName);
+  const horsFaction = models.filter((m) => !isNative(m)).sort(byName);
   // Montures éligibles à la faction : consultables (fiche) depuis le roster, comme Likans/Muskh.
   const q = rosterQuery.trim().toLowerCase();
   const mountTypesForFaction = cat.mountTypes
@@ -323,6 +328,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               onOpen={(id) => setModal({ kind: "preview", modelId: id })}
               conditional
             />
+            <RosterGroup label="Hors Faction" items={horsFaction} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
             {mountTypesForFaction.length > 0 && (
               <div>
                 <div className="bld-grp-label">

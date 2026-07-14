@@ -429,6 +429,12 @@
       "keyword": "Apatride",
       "hasValue": false,
       "sourceText": "Une figurine apatride peut être recrutée dans le fer-de-lance de n’importe quelle faction."
+    },
+    {
+      "id": "allie",
+      "keyword": "Allié",
+      "hasValue": true,
+      "sourceText": "« Allié des X » : la figurine peut être recrutée dans le fer-de-lance de la faction X."
     }
   ],
   "magicWays": [
@@ -5672,6 +5678,14 @@
       "pv": 28,
       "skills": [
         {
+          "skillId": "allie",
+          "value": "Affranchis"
+        },
+        {
+          "skillId": "allie",
+          "value": "Guilde Noire"
+        },
+        {
           "skillId": "rusee"
         },
         {
@@ -5725,16 +5739,7 @@
           "severity": "error"
         }
       ],
-      "rules": [
-        {
-          "label": "Allié des Affranchis.",
-          "text": ""
-        },
-        {
-          "label": "Allié de la Guilde Noire.",
-          "text": ""
-        }
-      ],
+      "rules": [],
       "notes": [
         "Indépendant ajouté via les Règles de bataille."
       ],

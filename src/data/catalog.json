@@ -9514,6 +9514,66 @@
         }
       ],
       "cardImage": "cards/Tembos/tembos-hierophante.jpg"
+    },
+    {
+      "id": "test-osteomancie",
+      "name": "Test — Ostéomancie",
+      "kind": "grimoire",
+      "magicWayId": "osteomancie",
+      "pages": 1,
+      "cost": 0,
+      "target": "Le lanceur.",
+      "difficulties": [
+        {
+          "threshold": 10,
+          "effectText": "Sort de test (non réservé) : valide la sélection de sorts de grimoire et la compétence « Affinité ». À retirer avant publication."
+        }
+      ]
+    },
+    {
+      "id": "test-shamanisme",
+      "name": "Test — Shamanisme",
+      "kind": "grimoire",
+      "magicWayId": "shamanisme",
+      "pages": 1,
+      "cost": 0,
+      "target": "Le lanceur.",
+      "difficulties": [
+        {
+          "threshold": 10,
+          "effectText": "Sort de test (non réservé) : valide la sélection de sorts de grimoire et la compétence « Affinité ». À retirer avant publication."
+        }
+      ]
+    },
+    {
+      "id": "test-le-sacrifice",
+      "name": "Test — Le Sacrifice",
+      "kind": "grimoire",
+      "magicWayId": "le-sacrifice",
+      "pages": 1,
+      "cost": 0,
+      "target": "Le lanceur.",
+      "difficulties": [
+        {
+          "threshold": 10,
+          "effectText": "Sort de test (non réservé) : valide la sélection de sorts de grimoire et la compétence « Affinité ». À retirer avant publication."
+        }
+      ]
+    },
+    {
+      "id": "test-adansonia",
+      "name": "Test — Adansonia",
+      "kind": "grimoire",
+      "magicWayId": "way-1783500043343",
+      "pages": 1,
+      "cost": 0,
+      "target": "Le lanceur.",
+      "difficulties": [
+        {
+          "threshold": 10,
+          "effectText": "Sort de test (non réservé) : valide la sélection de sorts de grimoire et la compétence « Affinité ». À retirer avant publication."
+        }
+      ]
     }
   ],
   "mountTypes": [

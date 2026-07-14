@@ -772,6 +772,12 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
     expect(spells.map((s) => s.id)).toContain("guerison-vegetale"); // sa voie Adansonia (rés. khemiste) ✓
     expect(spells.map((s) => s.id)).not.toContain("onde-revigorante"); // shamanisme rés. synkherces ✗
   });
+
+  it("Néphtys voit le sort de test shamanisme via son Affinité (non réservé) + celui d'Adansonia (voie maîtrisée)", () => {
+    const spells = castableSpells(catalog, nephtys, new Set(nephtys.traits), ["way-1783500043343"]).map((s) => s.id);
+    expect(spells).toContain("test-shamanisme"); // école ouverte par l'Affinité
+    expect(spells).toContain("test-adansonia"); // sa voie maîtrisée
+  });
 });
 
 describe("pages de sorts conférées par l'équipement (Brassards d'Euthéria)", () => {

@@ -89,16 +89,50 @@ export function forbiddenGrimoires(profile: Profile): Set<string> {
   return out;
 }
 
-/** Sorts lançables : génériques (tout lanceur) + sorts des voies maîtrisées (réservations respectées). */
+const AFFINITY_SKILL_ID = "affinite";
+
+/** Normalise un libellé pour comparer une valeur d'« Affinité X » à une voie (casse/accents/ponctuation). */
+function normLabel(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // diacritiques combinants
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Voies accessibles via la compétence « Affinité X » : le mage peut mettre dans son grimoire les sorts
+ * normalement réservés à la voie/faction X, EN PLUS de la sienne (ex. Néphtys : Affinité « Shamanisme »).
+ * `X` (valeur de la compétence, ex. « Shamanisme ») est résolu contre l'id, le nom de la voie, ou le
+ * mot-clé de sa compétence de maîtrise. N'accorde PAS le lancement natif de la voie (pas de bonus
+ * d'incantation) : sert uniquement à élargir la sélection de sorts de grimoire (réservations profil/trait
+ * plus fines toujours appliquées, cf. `castableSpells`).
+ */
+export function affinityWays(cat: Catalog, profile: Profile): string[] {
+  const values = profile.skills
+    .filter((s) => s.skillId === AFFINITY_SKILL_ID && s.value != null)
+    .map((s) => normLabel(String(s.value)));
+  if (values.length === 0) return [];
+  const out = new Set<string>();
+  for (const w of cat.magicWays) {
+    const kw = w.skillId ? cat.skills.find((k) => k.id === w.skillId)?.keyword : undefined;
+    const labels = [w.id, w.name, kw].filter((x): x is string => Boolean(x)).map(normLabel);
+    if (values.some((v) => labels.includes(v))) out.add(w.id);
+  }
+  return [...out];
+}
+
+/** Sorts lançables : génériques (tout lanceur) + sorts des voies maîtrisées ou d'affinité (réservations respectées). */
 export function castableSpells(
   cat: Catalog,
   profile: Profile,
   traits: ReadonlySet<string>,
   ways: string[],
 ): Spell[] {
+  const allWays = new Set([...ways, ...affinityWays(cat, profile)]);
   return cat.spells.filter((s) => {
     if (s.kind === "generique") return true;
-    if (s.magicWayId && !ways.includes(s.magicWayId)) return false;
+    if (s.magicWayId && !allWays.has(s.magicWayId)) return false;
     if (s.reservedTo) {
       const okTrait = s.reservedTo.trait ? traits.has(s.reservedTo.trait) : false;
       const okProfile = s.reservedTo.profileIds?.includes(profile.id) ?? false;

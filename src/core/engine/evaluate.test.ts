@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
 import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills } from "./evaluate";
+import { affinityWays, castableSpells } from "./magic";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -736,5 +737,39 @@ describe("grant-skill « +N si déjà connue » (incrementIfPresent)", () => {
     const res = evalTembo([nephtys, guerriere, guerrier]);
     expect(res.skillValues[guerriere.instanceId]?.moringa).toBe(4);
     expect(res.grantedSkills[guerrier.instanceId]?.find((s) => s.skillId === "moringa")?.value).toBe(3);
+  });
+});
+
+describe("Affinité X (accès grimoire à une autre voie)", () => {
+  const nephtys = catalog.profiles.find((p) => p.id === "tembos-nephtys-3")!;
+
+  it("résout Affinité « Shamanisme » vers la voie shamanisme", () => {
+    expect(affinityWays(catalog, nephtys)).toEqual(["shamanisme"]);
+  });
+
+  it("un profil sans Affinité n'ouvre aucune voie supplémentaire", () => {
+    const g = catalog.profiles.find((p) => p.id === "tembos-guerriere-1")!;
+    expect(affinityWays(catalog, g)).toEqual([]);
+  });
+
+  it("l'affinité OUVRE la voie pour la sélection de sorts (voie non maîtrisée sinon)", () => {
+    // Profil synthétique : aucune voie maîtrisée (ways=[]), Affinité « Ostéomancie », trait fille-de-nyx
+    // (pour passer la réserve de trait du sort). Le sort ostéomancien devient sélectionnable via l'affinité.
+    const base = catalog.profiles.find((p) => p.id === "tembos-guerrier-2")!;
+    const withAffinity = { ...base, skills: [{ skillId: "affinite", value: "Ostéomancie" }], traits: ["fille-de-nyx"] };
+    const spells = castableSpells(catalog, withAffinity, new Set(["fille-de-nyx"]), []);
+    expect(spells.map((s) => s.id)).toContain("seduction-du-fiel");
+
+    // Contrôle : sans l'affinité, la voie reste fermée (le sort n'est pas listé).
+    const noAffinity = { ...base, skills: [], traits: ["fille-de-nyx"] };
+    expect(castableSpells(catalog, noAffinity, new Set(["fille-de-nyx"]), []).map((s) => s.id)).not.toContain(
+      "seduction-du-fiel",
+    );
+  });
+
+  it("l'affinité n'annule PAS les réserves profil/trait plus fines (sorts shamanisme de Néphtys restent bloqués)", () => {
+    const spells = castableSpells(catalog, nephtys, new Set(nephtys.traits), ["way-1783500043343"]);
+    expect(spells.map((s) => s.id)).toContain("guerison-vegetale"); // sa voie Adansonia (rés. khemiste) ✓
+    expect(spells.map((s) => s.id)).not.toContain("onde-revigorante"); // shamanisme rés. synkherces ✗
   });
 });

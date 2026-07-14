@@ -480,8 +480,11 @@ function applyGrants(resolved: ResolvedInstance[], occurrences: EffectOccurrence
       if (effect.operation.kind !== "grant-skill") continue;
       if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
 
-      const { skillId, value, precision } = effect.operation;
+      const { skillId, value, precision, incrementIfPresent } = effect.operation;
       for (const ri of resolveTargets(occ, resolved)) {
+        // « +N si déjà connue » : la compétence native est augmentée via `skillValues` (cf.
+        // computeSkillValues), pas ré-octroyée ici - sinon double affichage (« 2 et 4 »).
+        if (incrementIfPresent != null && ri.profile.skills.some((s) => s.skillId === skillId)) continue;
         if (!ri.grantedSkills.has(skillId)) {
           ri.grantedSkills.set(skillId, { value, precision });
           changed = true;
@@ -1389,15 +1392,27 @@ function computeSkillValues(
   const out = new Map<string, Map<string, number>>();
   for (const occ of occurrences) {
     const op = occ.effect.operation;
-    if (op.kind !== "skill-count") continue;
     if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
-    const pool = instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId);
-    const count = pool.filter((ri) => instanceMatchesIdentity(op.of, ri)).length;
-    const value = Math.floor(count / (op.per && op.per > 0 ? op.per : 1));
-    for (const ri of resolveTargets(occ, resolved)) {
-      const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
-      m.set(op.skillId, value); // SET non cumulatif (idempotent si plusieurs porteurs)
-      out.set(ri.instance.instanceId, m);
+
+    if (op.kind === "skill-count") {
+      const pool = instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId);
+      const count = pool.filter((ri) => instanceMatchesIdentity(op.of, ri)).length;
+      const value = Math.floor(count / (op.per && op.per > 0 ? op.per : 1));
+      for (const ri of resolveTargets(occ, resolved)) {
+        const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
+        m.set(op.skillId, value); // SET non cumulatif (idempotent si plusieurs porteurs)
+        out.set(ri.instance.instanceId, m);
+      }
+    } else if (op.kind === "grant-skill" && op.incrementIfPresent != null) {
+      // « +N si déjà connue » : augmente la valeur NATIVE de la cible (Symbiose Moringa, Khépesh Brutalité).
+      for (const ri of resolveTargets(occ, resolved)) {
+        const native = ri.profile.skills.find((s) => s.skillId === op.skillId);
+        if (!native) continue; // absente → octroi normal de `value` (cf. applyGrants), pas d'incrément
+        const base = typeof native.value === "number" ? native.value : 0;
+        const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
+        m.set(op.skillId, base + op.incrementIfPresent); // SET idempotent (valeur native + N)
+        out.set(ri.instance.instanceId, m);
+      }
     }
   }
   return out;

@@ -42,11 +42,15 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   }),
   // `value` : pour une compétence « à valeur » (ex. octroie « Héroïque défense » → value "défense").
   // `precision` : précision libre affichée à côté de la compétence (ex. « Spécialiste : hache »).
+  // `incrementIfPresent` : si la cible possède DÉJÀ la compétence (nativement), n'octroie pas `value`
+  //   mais AUGMENTE sa valeur native de ce nombre (ex. Symbiose « Moringa 3 ou +2 si déjà connue » → 2 ;
+  //   Khépesh « Brutalité 1 ou +1 si déjà connue » → 1). Sans effet sur une compétence non « à valeur ».
   z.object({
     kind: z.literal("grant-skill"),
     skillId: z.string(),
     value: z.union([z.string(), z.number()]).optional(),
     precision: z.string().optional(),
+    incrementIfPresent: z.number().optional(),
   }),
   // Octroie la connaissance d'un sort « de signature » (connu d'office, gratuit, hors budget de pages).
   // Ex. Alaric connaît « Lien Mental ». Affiché sur la fiche même pour un non-lanceur.

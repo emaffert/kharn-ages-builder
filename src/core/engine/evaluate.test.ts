@@ -709,3 +709,32 @@ describe("surcoût d'équipement Tembo (règles de bataille p.20)", () => {
     expect(evalTembo([k]).totalCost).toBe(50 + 12);
   });
 });
+
+describe("grant-skill « +N si déjà connue » (incrementIfPresent)", () => {
+  const evalTembo = (m: ProfileInstance[]) => evaluateList(catalog, makeList(m, "tembos"));
+
+  it("Khépesh : Brutalité native augmentée de 1 (Guerrier II Brutalité 1 → 2)", () => {
+    const g = inst("tembos-guerrier-2", { addedEquipmentIds: ["khepesh"] });
+    const res = evalTembo([g]);
+    // la valeur native (1) est remplacée par 2 via skillValues (pas de double octroi)
+    expect(res.skillValues[g.instanceId]?.brutalite).toBe(2);
+    expect(res.grantedSkills[g.instanceId]?.some((s) => s.skillId === "brutalite")).toBeFalsy();
+  });
+
+  it("Khépesh sur un porteur SANS Brutalité : octroi normal (Brutalité 1)", () => {
+    const h = inst("tembos-hierophante-2", { addedEquipmentIds: ["khepesh"] });
+    const res = evalTembo([h]);
+    expect(res.skillValues[h.instanceId]?.brutalite).toBeUndefined();
+    const g = res.grantedSkills[h.instanceId]?.find((s) => s.skillId === "brutalite");
+    expect(g?.value).toBe(1);
+  });
+
+  it("Symbiose : Moringa d'un allié augmentée de 2 (Guerrière Moringa 2 → 4), non-porteur octroyé à 3", () => {
+    const nephtys = inst("tembos-nephtys-3", { specialCardIds: ["symbiose-universelle"] });
+    const guerriere = inst("tembos-guerriere-1"); // Moringa 2 natif
+    const guerrier = inst("tembos-guerrier-2"); // pas de Moringa
+    const res = evalTembo([nephtys, guerriere, guerrier]);
+    expect(res.skillValues[guerriere.instanceId]?.moringa).toBe(4);
+    expect(res.grantedSkills[guerrier.instanceId]?.find((s) => s.skillId === "moringa")?.value).toBe(3);
+  });
+});

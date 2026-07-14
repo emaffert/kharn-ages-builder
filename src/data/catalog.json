@@ -9212,7 +9212,8 @@
           "operation": {
             "kind": "grant-skill",
             "skillId": "brutalite",
-            "value": 1
+            "value": 1,
+            "incrementIfPresent": 1
           },
           "sourceText": "Procure « Brutalité 1 » ou augmente cette compétence de 1."
         }
@@ -10808,7 +10809,8 @@
           "operation": {
             "kind": "grant-skill",
             "skillId": "moringa",
-            "value": 3
+            "value": 3,
+            "incrementIfPresent": 2
           },
           "sourceText": "Les alliés de son Fer de Lance acquièrent « Moringa 3 » ou augmentent sa valeur de 2 s'ils la possèdent déjà."
         }

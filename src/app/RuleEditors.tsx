@@ -560,6 +560,13 @@ function OperationEditor({
             value={op.precision ?? ""}
             onChange={(v) => onChange({ ...op, precision: v || undefined })}
           />
+          <NumField
+            label="+ si déjà connue"
+            hint="option."
+            w="w-32"
+            value={op.incrementIfPresent ?? null}
+            onChange={(v) => onChange({ ...op, incrementIfPresent: v ?? undefined })}
+          />
         </>
       )}
 

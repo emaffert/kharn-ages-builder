@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
 import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills } from "./evaluate";
-import { affinityWays, castableSpells } from "./magic";
+import { affinityWays, castableSpells, pageBonus, pageCapacity } from "./magic";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -771,5 +771,35 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
     const spells = castableSpells(catalog, nephtys, new Set(nephtys.traits), ["way-1783500043343"]);
     expect(spells.map((s) => s.id)).toContain("guerison-vegetale"); // sa voie Adansonia (rés. khemiste) ✓
     expect(spells.map((s) => s.id)).not.toContain("onde-revigorante"); // shamanisme rés. synkherces ✗
+  });
+});
+
+describe("pages de sorts conférées par l'équipement (Brassards d'Euthéria)", () => {
+  const nephtys = catalog.profiles.find((p) => p.id === "tembos-nephtys-3")!;
+  const traits = new Set(nephtys.traits);
+  const mk = (over: Partial<ProfileInstance> = {}): ProfileInstance => ({
+    instanceId: "n",
+    profileId: nephtys.id,
+    addedEquipmentIds: [],
+    removedBaseEquipmentIds: [],
+    spellIds: [],
+    ...over,
+  });
+
+  it("les Brassards (équip. de base) confèrent +5 pages (capacité sans grimoire = 5)", () => {
+    const i = mk();
+    expect(pageBonus(catalog, nephtys, i, traits)).toBe(5);
+    expect(pageCapacity(catalog, nephtys, i, traits)).toBe(5);
+  });
+
+  it("retirer les Brassards retire les +5 pages", () => {
+    const i = mk({ removedBaseEquipmentIds: ["brassards-eutheria"] });
+    expect(pageBonus(catalog, nephtys, i, traits)).toBe(0);
+    expect(pageCapacity(catalog, nephtys, i, traits)).toBe(0);
+  });
+
+  it("Brassards + petit grimoire cumulent (5 + 5 = 10 pages)", () => {
+    const i = mk({ grimoireId: "petit" });
+    expect(pageCapacity(catalog, nephtys, i, traits)).toBe(10);
   });
 });

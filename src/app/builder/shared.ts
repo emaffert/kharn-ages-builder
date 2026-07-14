@@ -373,12 +373,17 @@ export function castWays(
   return coreCastWays(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits), grantedSkillIds);
 }
 
-export function pageBonusSources(p: Profile, cat: Catalog, selectedUpgrades: string[]): { name: string; amount: number }[] {
-  return corePageBonusSources(cat, p, synthInstance(p, selectedUpgrades, []), new Set(p.traits));
+export function pageBonusSources(
+  p: Profile,
+  cat: Catalog,
+  selectedUpgrades: string[],
+  wornEquipIds: string[] = p.baseEquipmentIds,
+): { name: string; amount: number }[] {
+  return corePageBonusSources(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits));
 }
 
-export function pageBonus(p: Profile, cat: Catalog, selectedUpgrades: string[]): number {
-  return pageBonusSources(p, cat, selectedUpgrades).reduce((n, s) => n + s.amount, 0);
+export function pageBonus(p: Profile, cat: Catalog, selectedUpgrades: string[], wornEquipIds: string[] = p.baseEquipmentIds): number {
+  return pageBonusSources(p, cat, selectedUpgrades, wornEquipIds).reduce((n, s) => n + s.amount, 0);
 }
 
 export function spellsFor(p: Profile, cat: Catalog, ways: string[]): Spell[] {

@@ -43,7 +43,12 @@ export function castWays(
     .map((w) => w.id);
 }
 
-/** Sources de pages conférées par les cartes/améliorations applicables (Fille de Nyx +3, Crosse +3…). */
+/**
+ * Sources de pages conférées à la figurine : cartes/améliorations applicables (Fille de Nyx +3, Crosse +3…)
+ * ET équipement porté (ex. Brassards d'Euthéria +5 pages). Chaque source porte un effet `spell-pages`.
+ * NB : la restriction de la source à un unique arcane (Brassards) n'est pas encore modélisée - les pages
+ * alimentent le budget global (cf. `pageCapacity`).
+ */
 export function pageBonusSources(
   cat: Catalog,
   profile: Profile,
@@ -51,14 +56,22 @@ export function pageBonusSources(
   traits: ReadonlySet<string>,
 ): { name: string; amount: number }[] {
   const selected = inst.specialCardIds ?? [];
-  return cat.specialCards
+  const fromCards = cat.specialCards
     .filter((c) => cardApplies(c, profile, traits, selected))
     .flatMap((c) =>
       c.effects
         .filter((e) => e.operation.kind === "spell-pages")
         .map((e) => ({ name: c.name, amount: (e.operation as { amount?: number }).amount ?? 0 })),
-    )
-    .filter((s) => s.amount > 0);
+    );
+  const fromEquipment = wornEquipmentIds(profile, inst)
+    .map((id) => cat.equipment.find((e) => e.id === id))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e))
+    .flatMap((e) =>
+      (e.effects ?? [])
+        .filter((ef) => ef.operation.kind === "spell-pages")
+        .map((ef) => ({ name: e.name, amount: (ef.operation as { amount?: number }).amount ?? 0 })),
+    );
+  return [...fromCards, ...fromEquipment].filter((s) => s.amount > 0);
 }
 
 export function pageBonus(cat: Catalog, profile: Profile, inst: ProfileInstance, traits: ReadonlySet<string>): number {

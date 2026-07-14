@@ -45,6 +45,7 @@ function MagiePanel({
   grimoire,
   spells,
   ways,
+  wornEquipIds,
   onGrimoire,
   onToggleSpell,
   onInfo,
@@ -53,6 +54,8 @@ function MagiePanel({
   profile: Profile;
   cat: Catalog;
   upgrades: string[];
+  /** Équipement porté (base non retirée + acheté) : alimente les pages conférées par l'équipement (Brassards). */
+  wornEquipIds: string[];
   grimoire: "none" | "petit" | "grand";
   spells: string[];
   ways: string[];
@@ -68,8 +71,8 @@ function MagiePanel({
     const base = cat.grimoires.find((x) => x.id === tier)?.cost ?? (tier === "petit" ? 20 : 40);
     return Math.max(0, base - Math.min(grimoireDiscount?.[tier] ?? 0, base));
   };
-  const pageCap = (pages === "illimite" ? Infinity : ((pages as number) ?? 0)) + pageBonus(p, cat, upgrades);
-  const sources = pageBonusSources(p, cat, upgrades);
+  const pageCap = (pages === "illimite" ? Infinity : ((pages as number) ?? 0)) + pageBonus(p, cat, upgrades, wornEquipIds);
+  const sources = pageBonusSources(p, cat, upgrades, wornEquipIds);
   const pagesUsed = spells.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
   const warning =
     ways.length === 0
@@ -220,6 +223,7 @@ export function FigureEditor({
           grimoire={grimoire}
           spells={spells}
           ways={ways}
+          wornEquipIds={[...activeBase, ...added]}
           onGrimoire={onGrimoire}
           onToggleSpell={onToggleSpell}
           onInfo={onInfo}

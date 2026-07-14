@@ -108,6 +108,22 @@ export interface PageAllocation {
   over: boolean;
 }
 
+/**
+ * Pages qu'un pool de capacité `cap` peut absorber parmi des sorts de tailles `sizes` (en pages).
+ * Un sort est ATOMIQUE (il ne peut pas être scindé entre le pool et le grimoire général) → on cherche
+ * le sous-ensemble de somme maximale ≤ `cap` (knapsack 0/1, valeur = poids). Ex. tailles [2,2,2], cap 5
+ * → 4 (deux sorts ; le 3ᵉ, 2 pages, ne rentre pas dans la page restante et part au général).
+ */
+export function maxPagesInPool(sizes: readonly number[], cap: number): number {
+  if (!Number.isFinite(cap)) return sizes.reduce((n, s) => n + s, 0);
+  const dp = new Array<number>(cap + 1).fill(0);
+  for (const s of sizes) {
+    if (s <= 0 || s > cap) continue;
+    for (let c = cap; c >= s; c--) dp[c] = Math.max(dp[c], dp[c - s] + s);
+  }
+  return dp[cap];
+}
+
 export function pageAllocation(
   cat: Catalog,
   profile: Profile,
@@ -127,25 +143,31 @@ export function pageAllocation(
       generalCap += s.amount;
     }
   }
-  // Pages utilisées par voie (sorts de grimoire ; les sorts sans pages/voie n'occupent pas de pool).
-  const byWay = new Map<string, number>();
+  // Tailles (en pages) des sorts sélectionnés, par voie (sorts sans pages/voie n'occupent pas de pool).
+  const byWaySizes = new Map<string, number[]>();
   let totalUsed = 0;
   for (const id of inst.spellIds) {
     const sp = cat.spells.find((x) => x.id === id);
     const pages = sp?.pages ?? 0;
     if (pages <= 0) continue;
     totalUsed += pages;
-    if (sp?.magicWayId) byWay.set(sp.magicWayId, (byWay.get(sp.magicWayId) ?? 0) + pages);
+    if (sp?.magicWayId) {
+      const arr = byWaySizes.get(sp.magicWayId) ?? [];
+      arr.push(pages);
+      byWaySizes.set(sp.magicWayId, arr);
+    }
   }
+  // Attribution optimale : chaque pool absorbe le plus de pages possible (placement atomique des sorts),
+  // le reste (surplus + voies sans pool) va au budget général.
   const pools: PagePool[] = [...poolCaps.entries()].map(([wayId, e]) => ({
     wayId,
     wayName: cat.magicWays.find((w) => w.id === wayId)?.name ?? wayId,
     label: [...e.labels].join(", "),
     cap: e.cap,
-    used: Math.min(byWay.get(wayId) ?? 0, e.cap), // le pool absorbe au plus sa capacité
+    used: maxPagesInPool(byWaySizes.get(wayId) ?? [], e.cap),
   }));
   const pooledUsed = pools.reduce((n, p) => n + p.used, 0);
-  const generalUsed = totalUsed - pooledUsed; // le surplus des voies + les voies sans pool
+  const generalUsed = totalUsed - pooledUsed;
   return {
     general: { cap: generalCap, used: generalUsed },
     pools,

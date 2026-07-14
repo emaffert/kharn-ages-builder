@@ -98,7 +98,16 @@ function MagiePanel({
           <span className="fe-mag-bonus">Bonus pages : {generalSources.map((s) => `+${s.amount} ${s.name}`).join(", ")}</span>
         )}
       </div>
-      <SpellPanel profile={p} cat={cat} ways={ways} alloc={alloc} selected={spells} onToggle={onToggleSpell} onInfo={onInfo} />
+      <SpellPanel
+        profile={p}
+        cat={cat}
+        ways={ways}
+        alloc={alloc}
+        selected={spells}
+        onToggle={onToggleSpell}
+        onInfo={onInfo}
+        isBlocked={(id) => pageAllocation(p, cat, upgrades, wornEquipIds, [...spells, id], grimoire).over}
+      />
     </div>
   );
 }
@@ -692,6 +701,7 @@ function SpellPanel({
   selected,
   onToggle,
   onInfo,
+  isBlocked,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -700,6 +710,8 @@ function SpellPanel({
   selected: string[];
   onToggle: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
+  /** Ajouter ce sort dépasserait-il le budget général (attribution atomique optimale recalculée) ? */
+  isBlocked: (spellId: string) => boolean;
 }) {
   const [query, setQuery] = useState("");
   const spellById = (id: string) => cat.spells.find((s) => s.id === id);
@@ -717,15 +729,9 @@ function SpellPanel({
   const groupNames = [...new Set(avail.map(groupOf))].sort((a, b) =>
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),
   );
-  // Ajout possible ? Attribution optimale : le sort remplit d'abord le pool dédié à sa voie (Brassards),
-  // le surplus déborde sur le budget général - bloqué seulement si ce surplus dépasse le général.
-  const blocked = (s: Spell) => {
-    const pages = s.pages ?? 0;
-    if (pages <= 0) return false;
-    const pool = alloc.pools.find((pl) => pl.wayId === s.magicWayId);
-    const overflow = Math.max(0, pages - (pool ? pool.cap - pool.used : 0));
-    return Number.isFinite(alloc.general.cap) && alloc.general.used + overflow > alloc.general.cap;
-  };
+  // Ajout possible ? On recalcule l'attribution ATOMIQUE optimale avec le sort en plus (un sort ne peut
+  // pas être scindé entre son pool dédié et le grimoire général) : bloqué si le budget général déborde.
+  const blocked = (s: Spell) => isBlocked(s.id);
   // Sélectionnés regroupés par voie - mêmes en-têtes que « disponible ».
   const chosenGroups = [...new Set(chosen.map(groupOf))].sort((a, b) =>
     a === GENERIC ? -1 : b === GENERIC ? 1 : a.localeCompare(b),

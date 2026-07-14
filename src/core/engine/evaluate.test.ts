@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
 import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills } from "./evaluate";
-import { affinityWays, castableSpells, pageAllocation } from "./magic";
+import { affinityWays, castableSpells, maxPagesInPool, pageAllocation } from "./magic";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -840,5 +840,27 @@ describe("pools de pages dédiés à une voie (Brassards d'Euthéria)", () => {
     expect(a.pools.find((p) => p.wayId === "shamanisme")?.used).toBe(1);
     expect(a.pools.find((p) => p.wayId === ADANSONIA)?.used).toBe(0);
     expect(a.general.used).toBe(0);
+  });
+});
+
+describe("attribution atomique d'un sort dans un pool (maxPagesInPool)", () => {
+  it("un sort est indivisible : 3 sorts de 2 pages dans un pool de 5 → 4 pages (le 3ᵉ ne rentre pas)", () => {
+    expect(maxPagesInPool([2, 2, 2], 5)).toBe(4);
+  });
+
+  it("cherche le meilleur sous-ensemble, pas un remplissage dans l'ordre (1+2+3, cap 5 → 5 via 2+3)", () => {
+    expect(maxPagesInPool([1, 2, 3], 5)).toBe(5);
+  });
+
+  it("un gros sort qui dépasse l'espace restant est écarté du pool ([4,2] cap 5 → 4)", () => {
+    expect(maxPagesInPool([4, 2], 5)).toBe(4);
+  });
+
+  it("remplissage exact et cas triviaux", () => {
+    expect(maxPagesInPool([2, 3], 5)).toBe(5);
+    expect(maxPagesInPool([1, 1, 1], 5)).toBe(3);
+    expect(maxPagesInPool([], 5)).toBe(0);
+    expect(maxPagesInPool([6], 5)).toBe(0); // un sort plus gros que le pool ne rentre pas
+    expect(maxPagesInPool([2, 3], Infinity)).toBe(5); // pool illimité (théorique) absorbe tout
   });
 });

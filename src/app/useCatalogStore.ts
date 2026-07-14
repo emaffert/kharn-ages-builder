@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   parseCatalog,
   type Catalog,
+  type CatalogSettings,
   type Equipment,
   type Faction,
   type Grimoire,
@@ -268,6 +269,13 @@ export function useCatalogStore() {
   const removeMunitionKind = useCallback(
     (id: string) =>
       apply((c) => ({ ...c, munitionKinds: (c.munitionKinds ?? []).filter((k) => k.id !== id) })),
+    [apply],
+  );
+
+  // Réglages transverses (ex. surcoût d'équipement Tembo).
+  const updateSettings = useCallback(
+    (patch: Partial<CatalogSettings>) =>
+      apply((c) => ({ ...c, settings: { ...c.settings, ...patch } })),
     [apply],
   );
 
@@ -584,6 +592,7 @@ export function useCatalogStore() {
     addMunitionKind,
     updateMunitionKind,
     removeMunitionKind,
+    updateSettings,
     addMountType,
     updateMountType,
     removeMountType,

@@ -1,6 +1,12 @@
 {
   "version": "0.1.0-fangs",
   "rulesVersion": "FAQ 2026-01",
+  "settings": {
+    "temboEquipmentSurcharge": {
+      "per": 10,
+      "amount": 3
+    }
+  },
   "factions": [
     {
       "id": "fangs",
@@ -399,6 +405,12 @@
       "keyword": "Adansonia",
       "hasValue": false,
       "sourceText": "Un mage tembo ou une prêtresse khémiste aura un bonus de + 1 par combattant vivant de son camp sur le champ de bataille."
+    },
+    {
+      "id": "armure-naturelle-tembo",
+      "keyword": "Armure Naturelle Tembo",
+      "hasValue": false,
+      "sourceText": "À chaque fois qu'un Tembo devrait subir des dégâts, il lance ND10 ; pour chaque 10 obtenu, il ignore un nombre de dégâts égal à la valeur de son niveau. Les dégâts critiques sont par contre toujours subis."
     }
   ],
   "magicWays": [
@@ -862,6 +874,84 @@
       "factionId": "kherops",
       "profileIds": [
         "kherops-tarsak-3"
+      ]
+    },
+    {
+      "id": "tembos-guerrier",
+      "name": "Guerrier",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-guerrier-2",
+        "tembos-guerrier-3"
+      ]
+    },
+    {
+      "id": "tembos-guerriere",
+      "name": "Guerrière",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-guerriere-1",
+        "tembos-guerriere-2",
+        "tembos-guerriere-3"
+      ]
+    },
+    {
+      "id": "tembos-eclaireuse",
+      "name": "Éclaireuse",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-eclaireuse-1",
+        "tembos-eclaireuse-3"
+      ]
+    },
+    {
+      "id": "tembos-novice",
+      "name": "Novice",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-novice-1"
+      ]
+    },
+    {
+      "id": "tembos-pretresse",
+      "name": "Prêtresse",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-pretresse-1",
+        "tembos-pretresse-2",
+        "tembos-pretresse-3"
+      ]
+    },
+    {
+      "id": "tembos-vestale",
+      "name": "Vestale",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-vestale-2"
+      ]
+    },
+    {
+      "id": "tembos-hierophante",
+      "name": "Hiérophante",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-hierophante-2"
+      ]
+    },
+    {
+      "id": "tembos-nephtys",
+      "name": "Néphtys",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-nephtys-3"
+      ]
+    },
+    {
+      "id": "tembos-gaal",
+      "name": "Gaal",
+      "factionId": "tembos",
+      "profileIds": [
+        "tembos-gaal-3"
       ]
     }
   ],
@@ -7305,6 +7395,1138 @@
       ],
       "cardImage": "cards/Kherops/kherops-tarsak-fr.jpg",
       "unverifiedFields": []
+    },
+    {
+      "id": "tembos-guerrier-2",
+      "modelId": "tembos-guerrier",
+      "name": "Guerrier",
+      "level": 2,
+      "factionId": "tembos",
+      "cost": 160,
+      "limitation": {
+        "kind": "X",
+        "value": 3
+      },
+      "stats": {
+        "v": 2,
+        "p": 7,
+        "a": 2,
+        "c": 7,
+        "t": 4,
+        "i": 3
+      },
+      "stature": 5,
+      "pa": 8,
+      "pv": 36,
+      "skills": [
+        {
+          "skillId": "hors-norme"
+        },
+        {
+          "skillId": "brutalite",
+          "value": 1
+        },
+        {
+          "skillId": "executeur"
+        },
+        {
+          "skillId": "corpulent"
+        },
+        {
+          "skillId": "armure-naturelle-tembo"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "tembo",
+        "guerrier"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Corpulent et « Armure Naturelle Tembo » octroyés d'office par le trait Tembo (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-guerrier.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-guerrier-3",
+      "modelId": "tembos-guerrier",
+      "name": "Guerrier Vétéran",
+      "level": 3,
+      "factionId": "tembos",
+      "cost": 210,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 2,
+        "p": 7,
+        "a": 3,
+        "c": 8,
+        "t": 4,
+        "i": 3
+      },
+      "stature": 5,
+      "pa": 9,
+      "pv": 40,
+      "skills": [
+        {
+          "skillId": "hors-norme"
+        },
+        {
+          "skillId": "brutalite",
+          "value": 2
+        },
+        {
+          "skillId": "stable"
+        },
+        {
+          "skillId": "charge-brutale",
+          "value": 1
+        },
+        {
+          "skillId": "corpulent"
+        },
+        {
+          "skillId": "armure-naturelle-tembo"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "tembo",
+        "guerrier"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Corpulent et « Armure Naturelle Tembo » octroyés d'office par le trait Tembo (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-guerrier.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-guerriere-1",
+      "modelId": "tembos-guerriere",
+      "name": "Guerrière",
+      "level": 1,
+      "factionId": "tembos",
+      "cost": 50,
+      "limitation": {
+        "kind": "X",
+        "value": 3
+      },
+      "stats": {
+        "v": 4,
+        "p": 2,
+        "a": 4,
+        "c": 2,
+        "t": 3,
+        "i": 2
+      },
+      "stature": 3,
+      "pa": 7,
+      "pv": 18,
+      "skills": [
+        {
+          "skillId": "moringa",
+          "value": 2
+        },
+        {
+          "skillId": "instinct-de-survie"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-guerriere.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-guerriere-2",
+      "modelId": "tembos-guerriere",
+      "name": "Guerrière Accomplie",
+      "level": 2,
+      "factionId": "tembos",
+      "cost": 90,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 5,
+        "p": 2,
+        "a": 5,
+        "c": 2,
+        "t": 3,
+        "i": 4
+      },
+      "stature": 3,
+      "pa": 8,
+      "pv": 20,
+      "skills": [
+        {
+          "skillId": "moringa",
+          "value": 2
+        },
+        {
+          "skillId": "instinct-de-survie"
+        },
+        {
+          "skillId": "bretteur",
+          "value": 2
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-guerriere.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-guerriere-3",
+      "modelId": "tembos-guerriere",
+      "name": "Guerrière Émérite",
+      "level": 3,
+      "factionId": "tembos",
+      "cost": 120,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 6,
+        "p": 3,
+        "a": 6,
+        "c": 2,
+        "t": 3,
+        "i": 4
+      },
+      "stature": 3,
+      "pa": 9,
+      "pv": 22,
+      "skills": [
+        {
+          "skillId": "moringa",
+          "value": 2
+        },
+        {
+          "skillId": "instinct-de-survie"
+        },
+        {
+          "skillId": "fine-lame"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-guerriere.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-eclaireuse-1",
+      "modelId": "tembos-eclaireuse",
+      "name": "Éclaireuse",
+      "level": 1,
+      "factionId": "tembos",
+      "cost": 40,
+      "limitation": {
+        "kind": "X",
+        "value": 4
+      },
+      "stats": {
+        "v": 4,
+        "p": 2,
+        "a": 4,
+        "c": 2,
+        "t": 3,
+        "i": 5
+      },
+      "stature": 3,
+      "pa": 7,
+      "pv": 18,
+      "skills": [
+        {
+          "skillId": "eclaireur",
+          "value": 4
+        },
+        {
+          "skillId": "moringa",
+          "value": 2
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "tir",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "effects": [
+        {
+          "id": "e-eclaireuse-1-arc",
+          "source": {
+            "kind": "profile",
+            "id": "tembos-eclaireuse-1"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true,
+            "equipmentIds": [
+              "petit-arc-eutheria"
+            ]
+          },
+          "operation": {
+            "kind": "cost-delta",
+            "amount": -10
+          },
+          "sourceText": "Peut acquérir un « petit arc d'Euthéria » pour 10 Ko de moins."
+        }
+      ],
+      "rules": [
+        {
+          "text": "Peut acquérir un « petit arc d'Euthéria » pour 10 Ko de moins."
+        }
+      ],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-eclaireuse-1.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-eclaireuse-3",
+      "modelId": "tembos-eclaireuse",
+      "name": "Éclaireuse Furtive",
+      "level": 3,
+      "factionId": "tembos",
+      "cost": 140,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 5,
+        "p": 3,
+        "a": 6,
+        "c": 3,
+        "t": 4,
+        "i": 4
+      },
+      "stature": 3,
+      "pa": 9,
+      "pv": 24,
+      "skills": [
+        {
+          "skillId": "embuscade"
+        },
+        {
+          "skillId": "maitre-archer"
+        },
+        {
+          "skillId": "heroique",
+          "value": "tir"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [
+        "petit-arc-eutheria"
+      ],
+      "masteryDice": [
+        [
+          "tir",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "tir",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "tir",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Petit arc d'Euthéria",
+          "text": "+1 effet parmi les caractéristiques choisies (hors tirs éclairs)."
+        }
+      ],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-eclaireuse-1.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice"
+      ]
+    },
+    {
+      "id": "tembos-novice-1",
+      "modelId": "tembos-novice",
+      "name": "Novice",
+      "level": 1,
+      "factionId": "tembos",
+      "cost": 125,
+      "limitation": {
+        "kind": "X",
+        "value": 4
+      },
+      "stats": {
+        "v": 3,
+        "p": 6,
+        "a": 2,
+        "c": 7,
+        "t": 3,
+        "i": 3
+      },
+      "stature": 5,
+      "pa": 7,
+      "pv": 36,
+      "skills": [
+        {
+          "skillId": "endurance"
+        },
+        {
+          "skillId": "receptif",
+          "value": "Adansonia"
+        },
+        {
+          "skillId": "corpulent"
+        },
+        {
+          "skillId": "armure-naturelle-tembo"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "tembo"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Corpulent et « Armure Naturelle Tembo » octroyés d'office par le trait Tembo (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-novice.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-pretresse-1",
+      "modelId": "tembos-pretresse",
+      "name": "Prêtresse",
+      "level": 1,
+      "factionId": "tembos",
+      "cost": 30,
+      "limitation": {
+        "kind": "X",
+        "value": 3
+      },
+      "stats": {
+        "v": 4,
+        "p": 2,
+        "a": 3,
+        "c": 2,
+        "t": 3,
+        "i": 2
+      },
+      "stature": 3,
+      "pa": 6,
+      "pv": 16,
+      "skills": [
+        {
+          "skillId": "autorite"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Puja 2",
+          "text": "Lors de son activation, peut donner jusqu'à 2 PA à une Khémiste ou à un Tembo dans son aura."
+        }
+      ],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-pretresse.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-pretresse-2",
+      "modelId": "tembos-pretresse",
+      "name": "Prêtresse Accomplie",
+      "level": 2,
+      "factionId": "tembos",
+      "cost": 80,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 2,
+        "a": 4,
+        "c": 2,
+        "t": 3,
+        "i": 5
+      },
+      "stature": 3,
+      "pa": 8,
+      "pv": 20,
+      "skills": [
+        {
+          "skillId": "skill-1783418079004"
+        },
+        {
+          "skillId": "receptif",
+          "value": "Adansonia"
+        },
+        {
+          "skillId": "moringa",
+          "value": 2
+        },
+        {
+          "skillId": "en-eveil"
+        },
+        {
+          "skillId": "foi-inebranlable"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-pretresse.jpg",
+      "unverifiedFields": [
+        "stats",
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-pretresse-3",
+      "modelId": "tembos-pretresse",
+      "name": "Prêtresse Émérite",
+      "level": 3,
+      "factionId": "tembos",
+      "cost": 110,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 4,
+        "p": 2,
+        "a": 5,
+        "c": 2,
+        "t": 5,
+        "i": 6
+      },
+      "stature": 3,
+      "pa": 9,
+      "pv": 24,
+      "skills": [
+        {
+          "skillId": "skill-1783418079004"
+        },
+        {
+          "skillId": "receptif",
+          "value": "Adansonia"
+        },
+        {
+          "skillId": "en-eveil"
+        },
+        {
+          "skillId": "foi-inebranlable"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-pretresse.jpg",
+      "unverifiedFields": [
+        "stats",
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-vestale-2",
+      "modelId": "tembos-vestale",
+      "name": "Vestale",
+      "level": 2,
+      "factionId": "tembos",
+      "cost": 80,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 4,
+        "p": 2,
+        "a": 4,
+        "c": 2,
+        "t": 3,
+        "i": 5
+      },
+      "stature": 3,
+      "pa": 8,
+      "pv": 18,
+      "skills": [
+        {
+          "skillId": "skill-1783418079004"
+        },
+        {
+          "skillId": "autorite"
+        },
+        {
+          "skillId": "en-eveil"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Apaisement",
+          "text": "Les attaques ennemies dans son aura coûtent 1 PA de plus."
+        }
+      ],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-vestale.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-hierophante-2",
+      "modelId": "tembos-hierophante",
+      "name": "Hiérophante",
+      "level": 2,
+      "factionId": "tembos",
+      "cost": 220,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 3,
+        "p": 7,
+        "a": 2,
+        "c": 6,
+        "t": 6,
+        "i": 6
+      },
+      "stature": 5,
+      "pa": 9,
+      "pv": 42,
+      "skills": [
+        {
+          "skillId": "skill-1783418079004"
+        },
+        {
+          "skillId": "moringa",
+          "value": 3
+        },
+        {
+          "skillId": "hors-norme"
+        },
+        {
+          "skillId": "effroi",
+          "value": 11
+        },
+        {
+          "skillId": "stable"
+        },
+        {
+          "skillId": "foi-inebranlable"
+        },
+        {
+          "skillId": "sacrifice",
+          "value": 1
+        },
+        {
+          "skillId": "corpulent"
+        },
+        {
+          "skillId": "armure-naturelle-tembo"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "tembo"
+      ],
+      "recruitment": [],
+      "rules": [],
+      "notes": [
+        "Corpulent et « Armure Naturelle Tembo » octroyés d'office par le trait Tembo (Règles de bataille)."
+      ],
+      "cardImage": "cards/Tembos/tembos-hierophante.jpg",
+      "unverifiedFields": [
+        "stats",
+        "stature",
+        "masteryDice",
+        "baseEquipmentIds"
+      ]
+    },
+    {
+      "id": "tembos-nephtys-3",
+      "modelId": "tembos-nephtys",
+      "name": "Néphtys",
+      "level": 3,
+      "factionId": "tembos",
+      "cost": 255,
+      "limitation": {
+        "kind": "P"
+      },
+      "stats": {
+        "v": 6,
+        "p": 2,
+        "a": 6,
+        "c": 2,
+        "t": 6,
+        "i": 7
+      },
+      "stature": 3,
+      "pa": 10,
+      "pv": 24,
+      "skills": [
+        {
+          "skillId": "skill-1783418079004"
+        },
+        {
+          "skillId": "ambidextre"
+        },
+        {
+          "skillId": "en-eveil"
+        },
+        {
+          "skillId": "affinite",
+          "value": "Shamanisme"
+        },
+        {
+          "skillId": "maitre",
+          "value": "défense"
+        },
+        {
+          "skillId": "moringa",
+          "value": 5
+        },
+        {
+          "skillId": "bretteur",
+          "value": 4
+        },
+        {
+          "skillId": "endurance"
+        },
+        {
+          "skillId": "riposte"
+        },
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "vivacite"
+        },
+        {
+          "skillId": "fluet"
+        }
+      ],
+      "baseEquipmentIds": [
+        "brassards-eutheria"
+      ],
+      "masteryDice": [
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "esoterique",
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [
+        "khemiste"
+      ],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Brassards d'Euthéria",
+          "text": "Peuvent chacun contenir 5 pages d'un unique arcane (« Adansonia » sans restriction ou « shamanisme »)."
+        }
+      ],
+      "notes": [
+        "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille).",
+        "« Indépendant » ajouté via les Règles de bataille (personnage nommé)."
+      ],
+      "cardImage": "cards/Tembos/tembos-nephtys.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice"
+      ]
+    },
+    {
+      "id": "tembos-gaal-3",
+      "modelId": "tembos-gaal",
+      "name": "Gaal",
+      "level": 3,
+      "factionId": "tembos",
+      "cost": 215,
+      "limitation": {
+        "kind": "P"
+      },
+      "stats": {
+        "v": 2,
+        "p": 7,
+        "a": 2,
+        "c": 6,
+        "t": 7,
+        "i": 6
+      },
+      "stature": 5,
+      "pa": 10,
+      "pv": 42,
+      "skills": [
+        {
+          "skillId": "bretteur",
+          "value": 4
+        },
+        {
+          "skillId": "hors-norme"
+        },
+        {
+          "skillId": "heroique",
+          "value": "défense"
+        },
+        {
+          "skillId": "maitre",
+          "value": "objectif"
+        },
+        {
+          "skillId": "maitre",
+          "value": "défense"
+        },
+        {
+          "skillId": "merci"
+        },
+        {
+          "skillId": "corpulent"
+        },
+        {
+          "skillId": "armure-naturelle-tembo"
+        }
+      ],
+      "baseEquipmentIds": [
+        "godille-moringa"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "objectif",
+          "offensive"
+        ],
+        [
+          "defensive",
+          "objectif",
+          "offensive"
+        ],
+        [
+          "defensive",
+          "objectif",
+          "offensive"
+        ]
+      ],
+      "traits": [
+        "tembo",
+        "apatride"
+      ],
+      "recruitment": [],
+      "rules": [
+        {
+          "text": "Gaal ne peut utiliser que les effets de C et/ou V en attaque, il peut en revanche se défendre normalement."
+        }
+      ],
+      "notes": [
+        "Corpulent et « Armure Naturelle Tembo » octroyés d'office par le trait Tembo (Règles de bataille).",
+        "Trait « Tembo » ajouté : la carte n'affiche que « Apatride », mais Gaal est bien un Tembo."
+      ],
+      "cardImage": "cards/Tembos/gaal.jpg",
+      "unverifiedFields": [
+        "stature",
+        "masteryDice"
+      ]
     }
   ],
   "equipment": [
@@ -7915,6 +9137,166 @@
       },
       "effectsText": "Épée bâtarde. +3 ATT, +3 DEF. Le nombre de PA en défense est annoncé avant qu'Engueran décide de sa façon d'attaquer (le choix des caractéristiques se fait normalement).",
       "cardImage": "cards/Kharns/kharns-enguerran.jpg"
+    },
+    {
+      "id": "sabre-khemiste",
+      "name": "Sabre Khémiste",
+      "category": "arme-cac",
+      "cost": 10,
+      "hands": 1,
+      "reservedTo": {
+        "traits": [
+          "khemiste"
+        ]
+      },
+      "effectsText": "1 fois par activation, une attaque à 3 PA n'en coûte que 2."
+    },
+    {
+      "id": "tonfa",
+      "name": "Tonfa",
+      "category": "arme-cac",
+      "cost": 10,
+      "hands": 1,
+      "reservedTo": {
+        "profileIds": [
+          "tembos-guerrier-2",
+          "tembos-guerrier-3"
+        ]
+      },
+      "effectsText": "+1 en Agilité en attaque et en défense. +1 dégât lors des attaques à 1 PA ou gratuites.",
+      "cardImage": "cards/Tembos/tembos-guerrier.jpg"
+    },
+    {
+      "id": "petit-arc-eutheria",
+      "name": "Petit arc d'Euthéria",
+      "category": "arme-tir",
+      "cost": 20,
+      "hands": 1,
+      "reservedTo": {
+        "traits": [
+          "khemiste"
+        ]
+      },
+      "range": {
+        "short": 6,
+        "long": 12
+      },
+      "munitionKind": "fleches",
+      "effectsText": "Permet d'appliquer 1 effet supplémentaire parmi les caractéristiques choisies. Les tirs éclairs n'ont pas d'effet supplémentaire.",
+      "cardImage": "cards/Tembos/tembos-eclaireuse-1.jpg"
+    },
+    {
+      "id": "khepesh",
+      "name": "Khépesh",
+      "category": "arme-cac",
+      "cost": 25,
+      "hands": 2,
+      "allonge": 1.5,
+      "reservedTo": {
+        "traits": [
+          "tembo"
+        ]
+      },
+      "effectsText": "Allonge 1,5\". Procure « Brutalité 1 » ou augmente cette compétence de 1. +2 en attaque. +2 en défense. Pas d'attaque à 1 PA.",
+      "effects": [
+        {
+          "id": "e-khepesh-brutalite",
+          "source": {
+            "kind": "equipment",
+            "id": "khepesh"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "brutalite",
+            "value": 1
+          },
+          "sourceText": "Procure « Brutalité 1 » ou augmente cette compétence de 1."
+        }
+      ],
+      "cardImage": "cards/Tembos/khepesh.jpg"
+    },
+    {
+      "id": "godille-moringa",
+      "name": "Godille de Moringa",
+      "category": "arme-cac",
+      "cost": 25,
+      "hands": 2,
+      "allonge": 2.5,
+      "reservedTo": {
+        "profileIds": [
+          "tembos-gaal-3"
+        ]
+      },
+      "effectsText": "Allonge 2,5 toises. Confère « Riposte » et « Rusé ». Permet d'augmenter ou de baisser la difficulté des sorts qui le ciblent de 3 à sa convenance.",
+      "effects": [
+        {
+          "id": "e-godille-riposte",
+          "source": {
+            "kind": "equipment",
+            "id": "godille-moringa"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "riposte"
+          },
+          "sourceText": "Confère « Riposte »."
+        },
+        {
+          "id": "e-godille-ruse",
+          "source": {
+            "kind": "equipment",
+            "id": "godille-moringa"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "rusee"
+          },
+          "sourceText": "Confère « Rusé »."
+        }
+      ],
+      "cardImage": "cards/Tembos/gaal.jpg"
+    },
+    {
+      "id": "brassards-eutheria",
+      "name": "Brassards d'Euthéria",
+      "category": "objet",
+      "cost": 20,
+      "reservedTo": {
+        "profileIds": [
+          "tembos-nephtys-3"
+        ]
+      },
+      "effectsText": "Peuvent chacun contenir 5 pages d'un unique arcane (« Adansonia » sans restriction ou « shamanisme »).",
+      "effects": [
+        {
+          "id": "e-brassards-pages",
+          "source": {
+            "kind": "equipment",
+            "id": "brassards-eutheria"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "spell-pages",
+            "amount": 5
+          },
+          "sourceText": "Peuvent chacun contenir 5 pages d'un unique arcane."
+        }
+      ]
     }
   ],
   "grimoires": [
@@ -8064,6 +9446,73 @@
         }
       ],
       "cardImage": "cards/Kharns/kharns-maitre-ordre-1.jpg"
+    },
+    {
+      "id": "drain-d-energie",
+      "name": "Drain d'énergie",
+      "kind": "grimoire",
+      "magicWayId": "way-1783500043343",
+      "pages": 2,
+      "reservedTo": {
+        "trait": "tembo"
+      },
+      "target": "1 ennemi.",
+      "cadence": "1 / tour.",
+      "duration": "Immédiat.",
+      "difficulties": [
+        {
+          "threshold": 15,
+          "effectText": "Le lanceur prend 1 PA à un ennemi dans sa ZDC."
+        },
+        {
+          "threshold": 21,
+          "effectText": "Le lanceur prend 3 PA répartis sur 1 à 3 ennemis dans sa ZDC."
+        }
+      ]
+    },
+    {
+      "id": "guerison-vegetale",
+      "name": "Guérison végétale",
+      "kind": "grimoire",
+      "magicWayId": "way-1783500043343",
+      "pages": 1,
+      "reservedTo": {
+        "trait": "khemiste"
+      },
+      "target": "1 allié.",
+      "cadence": "2 / tour.",
+      "duration": "Immédiat.",
+      "difficulties": [
+        {
+          "threshold": 15,
+          "effectText": "L'allié est immédiatement soigné de la différence entre le résultat du jet et la difficulté."
+        }
+      ],
+      "cardImage": "cards/Tembos/tembos-pretresse.jpg"
+    },
+    {
+      "id": "confiance-partagee",
+      "name": "Confiance partagée",
+      "kind": "grimoire",
+      "magicWayId": "way-1783500043343",
+      "pages": 2,
+      "reservedTo": {
+        "trait": "tembo"
+      },
+      "target": "1 allié.",
+      "cadence": "1 / tour.",
+      "duration": "Jusqu'à la fin de la prochaine activation de la cible.",
+      "difficulties": [
+        {
+          "threshold": 15,
+          "effectText": "La cible pourra relancer 1 dé de son choix jusqu'à la fin de sa prochaine activation (sans dépenser de dé de maîtrise)."
+        },
+        {
+          "threshold": 19,
+          "effectText": "La cible pourra relancer 1 jet de son choix jusqu'à la fin de sa prochaine activation (sans dépenser de dé de maîtrise)."
+        }
+      ],
+      "cardImage": "cards/Tembos/tembos-hierophante.jpg"
     }
   ],
   "mountTypes": [
@@ -9309,6 +10758,62 @@
         }
       ],
       "cardImage": "cards/Kherops/kherops-forgeronne.jpg"
+    },
+    {
+      "id": "symbiose-universelle",
+      "name": "Symbiose Universelle",
+      "cost": 25,
+      "scope": {
+        "profileIds": [
+          "tembos-nephtys-3"
+        ]
+      },
+      "amelioration": true,
+      "rulesText": [
+        {
+          "text": "Néphtys est toujours considérée à couvert et gagne « furtivité »."
+        },
+        {
+          "text": "Les alliés de son Fer de Lance acquièrent la compétence « Moringa 3 » ou augmentent sa valeur de 2 s'ils la possèdent déjà."
+        }
+      ],
+      "constraints": [],
+      "effects": [
+        {
+          "id": "e-symbiose-furtivite",
+          "source": {
+            "kind": "special-card",
+            "id": "symbiose-universelle"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "furtivite"
+          },
+          "sourceText": "Néphtys est toujours considérée à couvert et gagne « furtivité »."
+        },
+        {
+          "id": "e-symbiose-moringa",
+          "source": {
+            "kind": "special-card",
+            "id": "symbiose-universelle"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "all": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "moringa",
+            "value": 3
+          },
+          "sourceText": "Les alliés de son Fer de Lance acquièrent « Moringa 3 » ou augmentent sa valeur de 2 s'ils la possèdent déjà."
+        }
+      ],
+      "cardImage": "cards/Tembos/tembos-nephtys.jpg"
     }
   ],
   "munitionKinds": [

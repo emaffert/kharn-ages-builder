@@ -150,6 +150,27 @@ export function equipmentDiscount(
   return d;
 }
 
+/**
+ * Surcoût « Tembo » pour un équipement AJOUTÉ (Règles de bataille p.20) : +`amount` Ko par tranche
+ * complète de `per` Ko du prix de base, appliqué aux figurines portant le trait « tembo ». Les
+ * équipements au logo Tembo (réservés au trait « tembo », ex. Khépesh) l'incluent déjà → exclus.
+ * Sérialisable : l'UI l'applique par objet (comme `equipmentDiscount`). Retourne 0 si désactivé.
+ */
+export function temboEquipmentSurcharge(
+  cat: Catalog,
+  traits: ReadonlySet<string> | readonly string[],
+  equipId: string,
+): number {
+  const cfg = cat.settings?.temboEquipmentSurcharge;
+  if (!cfg || cfg.per <= 0) return 0;
+  const isTembo = Array.isArray(traits) ? traits.includes("tembo") : (traits as ReadonlySet<string>).has("tembo");
+  if (!isTembo) return 0;
+  const e = cat.equipment.find((x) => x.id === equipId);
+  if (!e || e.reservedTo?.traits?.includes("tembo")) return 0; // déjà tarifé Tembo
+  if (e.cost <= 0) return 0; // une arme gratuite le reste
+  return Math.floor(e.cost / cfg.per) * cfg.amount;
+}
+
 interface CatalogIndex {
   profile: Map<string, Profile>;
   specialCard: Map<string, SpecialCard>;
@@ -486,7 +507,10 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog)
   const inst = ri.instance;
   let cost = ri.profile.cost;
   for (const id of inst.removedBaseEquipmentIds) cost -= idx.equipmentCost.get(id) ?? 0;
-  for (const id of inst.addedEquipmentIds) cost += idx.equipmentCost.get(id) ?? 0;
+  for (const id of inst.addedEquipmentIds) {
+    cost += idx.equipmentCost.get(id) ?? 0;
+    cost += temboEquipmentSurcharge(cat, ri.traits, id); // surcoût Tembo (p.20), équipement ajouté uniquement
+  }
   if (inst.grimoireId) cost += idx.grimoireCost.get(inst.grimoireId) ?? 0;
   for (const id of inst.spellIds) cost += idx.spellCost.get(id) ?? 0;
   cost += totalMunitionCost(cat, inst);

@@ -5,6 +5,7 @@ import {
   equipmentMatchesEquipFilter,
   munitionKindForEquip,
   resolveMunitionLines,
+  temboEquipmentSurcharge,
   type Catalog,
   type Profile,
   type Spell,
@@ -490,25 +491,33 @@ function EquipPanel({
     );
   };
 
-  // Prix d'un objet, remise incluse. La remise (Ogodeï, Commandant…) ne s'applique qu'aux objets
-  // ACHETÉS (pas l'équipement de base) : on la neutralise pour `isBase`.
+  // Prix d'un objet, remise ET surcoût Tembo inclus. Remise (Ogodeï, Commandant…) et surcoût Tembo
+  // (p.20) ne s'appliquent qu'aux objets ACHETÉS (pas l'équipement de base) : neutralisés pour `isBase`.
   const priceCell = (e: Catalog["equipment"][number], isBase: boolean) => {
     const disc = isBase ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
-    if (disc < 0 && e.cost > 0) {
-      const sources = [
-        ...new Set(
-          costRules
-            .filter(
-              (r) =>
-                equipmentMatchesEquipFilter(cat, e.id, r) &&
-                (!r.requiresBaseSwap || removed.some((id) => equipmentMatchesEquipFilter(cat, id, r))),
-            )
-            .map((r) => r.label),
-        ),
-      ];
+    const surcharge = isBase ? 0 : temboEquipmentSurcharge(cat, p.traits, e.id);
+    const adj = disc + surcharge;
+    if (adj !== 0 && e.cost > 0) {
+      const notes: string[] = [];
+      if (disc < 0) {
+        const sources = [
+          ...new Set(
+            costRules
+              .filter(
+                (r) =>
+                  equipmentMatchesEquipFilter(cat, e.id, r) &&
+                  (!r.requiresBaseSwap || removed.some((id) => equipmentMatchesEquipFilter(cat, id, r))),
+              )
+              .map((r) => r.label),
+          ),
+        ];
+        notes.push(`Remise de ${-disc} Ko (${sources.join(", ")})`);
+      }
+      if (surcharge > 0) notes.push(`Surcoût Tembo +${surcharge} Ko`);
+      const variant = adj > 0 ? "fe-item-cost--surcharge" : "fe-item-cost--disc";
       return (
-        <span className="fe-item-cost fe-item-cost--disc" title={`Remise de ${-disc} Ko (${sources.join(", ")})`}>
-          <s className="fe-item-cost-was">{e.cost}</s> {Math.max(0, e.cost + disc)} Ko
+        <span className={`fe-item-cost ${variant}`} title={notes.join(" · ")}>
+          <s className="fe-item-cost-was">{e.cost}</s> {Math.max(0, e.cost + adj)} Ko
         </span>
       );
     }

@@ -685,3 +685,27 @@ describe("montures", () => {
     expect(e.issues.some((i) => i.ruleId === "mount-option-opt-executeur")).toBe(true);
   });
 });
+
+describe("surcoût d'équipement Tembo (règles de bataille p.20)", () => {
+  const evalTembo = (m: ProfileInstance[]) => evaluateList(catalog, makeList(m, "tembos"));
+
+  it("+3 Ko par tranche de 10 sur l'équipement AJOUTÉ d'une figurine tembo (écu 12 → 15)", () => {
+    const g = inst("tembos-guerrier-2", { addedEquipmentIds: ["ecu"] });
+    expect(evalTembo([g]).totalCost).toBe(160 + 12 + 3);
+  });
+
+  it("majoration par tranche COMPLÈTE (marteau de guerre 35 → +9)", () => {
+    const g = inst("tembos-guerrier-2", { addedEquipmentIds: ["marteau-de-guerre"] });
+    expect(evalTembo([g]).totalCost).toBe(160 + 35 + 9);
+  });
+
+  it("aucun surcoût sur un équipement déjà au logo Tembo (Khépesh, réservé au trait tembo)", () => {
+    const g = inst("tembos-guerrier-2", { addedEquipmentIds: ["khepesh"] });
+    expect(evalTembo([g]).totalCost).toBe(160 + 25);
+  });
+
+  it("aucun surcoût pour une figurine khémiste (trait non tembo)", () => {
+    const k = inst("tembos-guerriere-1", { addedEquipmentIds: ["ecu"] });
+    expect(evalTembo([k]).totalCost).toBe(50 + 12);
+  });
+});

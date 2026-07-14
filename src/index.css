@@ -787,6 +787,8 @@ body {
 .fe-item-cost { flex: none; font-size: 12px; color: var(--gold-dim); font-weight: 600; }
 /* Prix remisé par un effet (Ogodeï, Commandant…) : braise, avec le prix d'origine barré. */
 .fe-item-cost--disc { color: var(--ember); }
+/* Prix majoré par le surcoût Tembo (p.20) : braise profonde, avec le prix d'origine barré. */
+.fe-item-cost--surcharge { color: var(--ember-deep); }
 .fe-item-cost-was { color: var(--bone-faint); font-weight: 500; margin-right: 2px; }
 .fe-move { flex: none; width: 26px; height: 24px; border-radius: 7px; display: grid; place-items: center; cursor: pointer;
   border: 0; font-size: 14px; transition: .16s var(--ease); }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Catalog, Faction, Grimoire, MunitionKind } from "@core";
+import type { Catalog, CatalogSettings, Faction, Grimoire, MunitionKind } from "@core";
 import { Button, Dialog } from "@ui";
 import { AddButton, Field, Glyph, PageHeader, RemoveButton, Section } from "./primitives";
 import { INPUT } from "./shared";
@@ -21,6 +21,7 @@ export function SettingsDetail({
   onAddMunitionKind,
   onUpdateMunitionKind,
   onRemoveMunitionKind,
+  onUpdateSettings,
 }: {
   cat: Catalog;
   onAddFaction: () => void;
@@ -30,7 +31,12 @@ export function SettingsDetail({
   onAddMunitionKind: () => void;
   onUpdateMunitionKind: (id: string, patch: Partial<MunitionKind>) => void;
   onRemoveMunitionKind: (id: string) => void;
+  onUpdateSettings: (patch: Partial<CatalogSettings>) => void;
 }) {
+  const surcharge = cat.settings?.temboEquipmentSurcharge;
+  const surchargeEnabled = surcharge != null;
+  const setSurcharge = (patch: Partial<NonNullable<CatalogSettings["temboEquipmentSurcharge"]>>) =>
+    onUpdateSettings({ temboEquipmentSurcharge: { per: surcharge?.per ?? 10, amount: surcharge?.amount ?? 3, ...patch } });
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
   const confirmDelete = (what: string, run: () => void) => setPendingDelete({ what, run });
 
@@ -120,6 +126,48 @@ export function SettingsDetail({
               />
             </div>
           ))}
+        </div>
+      </Section>
+
+      {/* ── Surcoût d'équipement Tembo (règles de bataille p.20) ── */}
+      <Section title="Surcoût Tembo" icon="equipment">
+        <div className="flex flex-col gap-3">
+          <p className="adm-faint text-xs">
+            Les figurines au trait « tembo » paient plus cher l'équipement <strong>ajouté</strong> (armes,
+            armures, objets) qui n'est pas déjà au logo Tembo : +N Ko par tranche complète de M Ko de son prix.
+            Une arme gratuite le reste. Les équipements réservés au trait « tembo » (ex. Khépesh) l'incluent déjà.
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={surchargeEnabled}
+              onChange={(e) =>
+                onUpdateSettings({ temboEquipmentSurcharge: e.target.checked ? { per: 10, amount: 3 } : undefined })
+              }
+            />
+            Activer le surcoût Tembo
+          </label>
+          {surchargeEnabled && (
+            <div className="flex flex-wrap items-end gap-2 text-sm">
+              <Field label="+ Ko (surcoût)" className="w-32">
+                <input
+                  type="number"
+                  value={surcharge?.amount ?? 3}
+                  onChange={(e) => setSurcharge({ amount: Number(e.target.value) || 0 })}
+                  className={INPUT}
+                />
+              </Field>
+              <span className="pb-2">par tranche de</span>
+              <Field label="Ko (tranche)" className="w-32">
+                <input
+                  type="number"
+                  value={surcharge?.per ?? 10}
+                  onChange={(e) => setSurcharge({ per: Number(e.target.value) || 1 })}
+                  className={INPUT}
+                />
+              </Field>
+            </div>
+          )}
         </div>
       </Section>
 

@@ -4,6 +4,7 @@ import {
   equipmentMatchesEquipFilter,
   munitionKindForEquip,
   resolveMunitionLines,
+  temboEquipmentSurcharge,
   type Catalog,
   type EquipmentCostRule,
   type Profile,
@@ -69,8 +70,10 @@ export function PurchaseSummary({
       .map((uid) => grantedUpgrades.find((g) => g.upgradeId === uid))
       .filter((g): g is (typeof grantedUpgrades)[number] => Boolean(g) && g!.equipmentCategories.includes(e.category));
     const upCost = upsForE.reduce((n, g) => n + g.cost, 0);
-    // Remise : seulement sur l'équipement ACHETÉ (pas l'équipement de base).
-    const disc = p.baseEquipmentIds.includes(e.id) ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
+    // Remise et surcoût Tembo (p.20) : seulement sur l'équipement ACHETÉ (pas l'équipement de base).
+    const isBase = p.baseEquipmentIds.includes(e.id);
+    const disc = isBase ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
+    const surcharge = isBase ? 0 : temboEquipmentSurcharge(cat, p.traits, e.id);
     const discSources = [
       ...new Set(
         costRules
@@ -83,10 +86,10 @@ export function PurchaseSummary({
       ),
     ];
     const base = equipInfo(e);
-    if (munCost === 0 && upCost === 0 && disc === 0) return chip(e.name, base);
+    if (munCost === 0 && upCost === 0 && disc === 0 && surcharge === 0) return chip(e.name, base);
     return chip(e.name, {
       ...base,
-      price: `${e.cost + munCost + upCost + disc} Ko`,
+      price: `${e.cost + munCost + upCost + disc + surcharge} Ko`,
       lines: [
         ...base.lines,
         ...(munCost > 0
@@ -94,6 +97,7 @@ export function PurchaseSummary({
           : []),
         ...upsForE.map((g) => `${g.label} (+${g.cost} Ko)`),
         ...(disc < 0 ? [`Remise ${disc} Ko (${discSources.join(", ")})`] : []),
+        ...(surcharge > 0 ? [`Surcoût Tembo +${surcharge} Ko`] : []),
       ],
     });
   };

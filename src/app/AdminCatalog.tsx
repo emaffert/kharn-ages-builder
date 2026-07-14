@@ -594,6 +594,7 @@ export function AdminCatalog() {
               onAddMunitionKind={store.addMunitionKind}
               onUpdateMunitionKind={store.updateMunitionKind}
               onRemoveMunitionKind={store.removeMunitionKind}
+              onUpdateSettings={store.updateSettings}
             />
           )}
         </div>

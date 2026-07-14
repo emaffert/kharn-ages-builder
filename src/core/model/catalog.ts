@@ -374,9 +374,22 @@ export const MunitionKindSchema = z.object({
 });
 export type MunitionKind = z.infer<typeof MunitionKindSchema>;
 
+/** Réglages transverses du catalogue (paramètres de règles éditables dans l'admin). */
+export const CatalogSettingsSchema = z.object({
+  /**
+   * Surcoût d'équipement des figurines « tembo » (Règles de bataille p.20) : +`amount` Ko par tranche
+   * complète de `per` Ko sur chaque équipement **ajouté** non déjà tarifé Tembo (les équipements au logo
+   * Tembo - réservés au trait « tembo » - l'incluent déjà). Absent = mécanisme désactivé.
+   */
+  temboEquipmentSurcharge: z.object({ per: z.number(), amount: z.number() }).optional(),
+});
+export type CatalogSettings = z.infer<typeof CatalogSettingsSchema>;
+
 export const CatalogSchema = z.object({
   version: z.string(),
   rulesVersion: z.string(),
+  /** Paramètres de règles transverses (ex. surcoût d'équipement Tembo). */
+  settings: CatalogSettingsSchema.optional(),
   factions: z.array(FactionSchema),
   skills: z.array(SkillSchema),
   magicWays: z.array(MagicWaySchema),

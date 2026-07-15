@@ -63,8 +63,8 @@ Autres points relevés à l'import (à garder en tête) :
 
 - Le mot-clé de faction en compétence (`frere-d-armes`, `tembo`…) se place plutôt **en fin** de la
   liste `skills` du profil (avant la compétence de magie s'il y en a une), pas forcément en tête.
-- `carnivore` / `herbivore` : peut rester **présent sur certaines cartes** même quand la FAQ dit que
-  la faction n'y est « pas soumise » (ex. Guilde Noire) - suivre la carte, pas une règle globale.
+- `carnivore` / `herbivore` : **suivre la FAQ**. Les figurines **Guilde Noire ne sont ni carnivore
+  ni herbivore** (elles n'héritent pas de l'espèce d'origine) - ne pas leur mettre ces traits.
 - Indicateur de dé d'incantation sur une carte (ligne « 0-5-1 » etc.) = le profil est **lanceur** :
   penser à la compétence de magie / `affinite` correspondante.
 - Convention confirmée : **flaguer toutes les stats** (`stats.*` + `stature` + `masteryDice` +

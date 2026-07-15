@@ -96,15 +96,21 @@ un outil de mesure, pas une barrière de CI - à faire évoluer si l'équipe le 
 État : le **cœur métier est largement couvert** ; la couche **vue reste partielle**. Priorités
 d'extension (gros fichiers encore peu ou pas testés) :
 
-- `src/app/builder/FigureEditor.tsx` - éditeur de figurine (équipement, magie, améliorations) : le
-  plus gros trou restant.
-- `src/app/RuleEditors.tsx` - éditeurs de contraintes/effets de l'admin.
-- `src/app/builder/BuilderScreen.tsx` - la logique pure est testée (`roster.test.ts`) ; le rendu ne
-  l'est pas encore.
+- `src/app/builder/BuilderScreen.tsx` - orchestrateur : la logique pure (`roster.test.ts`) et les
+  panneaux extraits (voir ci-dessous) sont testés, mais `renderUnit` et les modales restent en ligne
+  (fortement couplés à l'état de l'écran) et non couverts.
+- `src/app/RuleEditors.tsx` - les listes `ConstraintListEditor` / `EffectListEditor` (les briques
+  `OperationEditor` / `SelectorEditor` sont, elles, couvertes).
 - `src/app/builder/MountDialog.tsx`, `OstPanel.tsx`.
 
 Déjà couverts par des tests de vue (à imiter) : `AdminCatalog` (tous les onglets, y compris les pages
-de détail admin), `FactionSelect`, `PurchaseSummary`, `ProfileStatCard`.
+de détail admin), `FactionSelect`, `PurchaseSummary`, `ProfileStatCard`, et les composants extraits
+des gros fichiers - `EquipPanel`, `MagiePanel`, `MountSubline`, `RosterSidebar`,
+`ruleEditors/OperationEditor` (les 14 types d'action), `ruleEditors/SelectorEditor`.
+
+Note : découper un gros composant en sous-composants à props explicites (comme `FigureEditor` →
+`EquipPanel`/`MagiePanel`, ou l'extraction de `MountSubline`/`RosterSidebar` hors de `BuilderScreen`)
+rend chaque morceau testable en isolation - c'est le levier principal pour monter Functions/Branches.
 
 Pour chacune, commencer par un test de **rendu sans erreur** (déjà une couverture utile), puis les
 interactions clés.

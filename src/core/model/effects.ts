@@ -55,6 +55,10 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   // Octroie la connaissance d'un sort « de signature » (connu d'office, gratuit, hors budget de pages).
   // Ex. Alaric connaît « Lien Mental ». Affiché sur la fiche même pour un non-lanceur.
   z.object({ kind: z.literal("grant-spell"), spellId: z.string() }),
+  // Octroie un trait (tag mécanique) aux cibles, jusqu'au point fixe, AVANT la validation - donc lu
+  // par les règles qui inspectent les traits (ex. `validateFactionMembership` pour « apatride »).
+  // Ex. carte « Frères d'Armes » : ≥ 2 frères d'armes dans un Fer de Lance → tous « apatride ».
+  z.object({ kind: z.literal("grant-trait"), trait: z.string() }),
   z.object({
     kind: z.literal("stat-modifier"),
     stat: StatKeySchema,

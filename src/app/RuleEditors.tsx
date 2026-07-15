@@ -283,6 +283,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, skillId: "" };
     case "grant-spell":
       return { kind, spellId: "" };
+    case "grant-trait":
+      return { kind, trait: "" };
     case "stat-modifier":
       return { kind, stat: "i", amount: "level" };
     case "stat-count":
@@ -307,6 +309,7 @@ const OP_LABELS: Record<EffectOperation["kind"], string> = {
   "grimoire-discount": "Réduire un grimoire",
   "grant-skill": "Conférer une compétence",
   "grant-spell": "Conférer un sort",
+  "grant-trait": "Conférer un trait",
   "grant-mastery-die": "Conférer un dé de maîtrise",
   "unlock-upgrade": "Débloquer une amélioration",
   "stat-modifier": "Modifier une caractéristique",
@@ -320,7 +323,7 @@ const OP_LABELS: Record<EffectOperation["kind"], string> = {
 // `cap` est volontairement absent du menu (non implémenté par le moteur).
 const OP_GROUPS: { group: string; kinds: EffectOperation["kind"][] }[] = [
   { group: "Coût", kinds: ["cost-delta", "cost-set", "grimoire-discount"] },
-  { group: "Octrois", kinds: ["grant-skill", "grant-spell", "grant-mastery-die", "unlock-upgrade"] },
+  { group: "Octrois", kinds: ["grant-skill", "grant-spell", "grant-trait", "grant-mastery-die", "unlock-upgrade"] },
   { group: "Caractéristiques & compétences", kinds: ["stat-modifier", "stat-count", "stat-max", "skill-count"] },
   { group: "Divers", kinds: ["spell-pages", "limit-modifier"] },
 ];
@@ -580,6 +583,16 @@ function OperationEditor({
             onChange={(v) => onChange({ ...op, spellId: v })}
           />
         </Field>
+      )}
+
+      {op.kind === "grant-trait" && (
+        <TxtField
+          label="Trait"
+          hint="tag interne, ex. apatride"
+          w="w-56"
+          value={op.trait}
+          onChange={(v) => onChange({ ...op, trait: v })}
+        />
       )}
 
       {op.kind === "grant-mastery-die" && (

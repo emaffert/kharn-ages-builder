@@ -329,6 +329,10 @@ export function canBuy(p: Profile, cat: Catalog): boolean {
 export function isRecruitableIn(p: Profile, factionId: string): boolean {
   if (!p.factionId || p.factionId === factionId) return true;
   if (p.traits.includes("apatride")) return true;
+  // Les « frères d'armes » deviennent apatrides dès qu'ils sont 2+ dans le Fer de Lance (carte
+  // « Frères d'Armes ») : ils doivent donc apparaître dans le roster de toute faction pour qu'on
+  // puisse en réunir plusieurs. La validation (`validateFactionMembership`) refuse un frère isolé.
+  if (p.traits.includes("frere-d-armes")) return true;
   return (p.recruitment ?? []).some(
     (c) =>
       c.type === "faction-membership" &&

@@ -477,10 +477,23 @@ function applyGrants(resolved: ResolvedInstance[], occurrences: EffectOccurrence
     let changed = false;
     for (const occ of occurrences) {
       const { effect } = occ;
-      if (effect.operation.kind !== "grant-skill") continue;
+      const op = effect.operation;
+      if (op.kind !== "grant-skill" && op.kind !== "grant-trait") continue;
       if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
 
-      const { skillId, value, precision, incrementIfPresent } = effect.operation;
+      if (op.kind === "grant-trait") {
+        // Octroi de trait (ex. « apatride ») : ajouté à l'ensemble des traits résolus, jusqu'au point
+        // fixe. Comme `applyGrants` précède `validate`, ce trait est vu par les règles (recrutement…).
+        for (const ri of resolveTargets(occ, resolved)) {
+          if (!ri.traits.has(op.trait)) {
+            ri.traits.add(op.trait);
+            changed = true;
+          }
+        }
+        continue;
+      }
+
+      const { skillId, value, precision, incrementIfPresent } = op;
       for (const ri of resolveTargets(occ, resolved)) {
         // « +N si déjà connue » : la compétence native est augmentée via `skillValues` (cf.
         // computeSkillValues), pas ré-octroyée ici - sinon double affichage (« 2 et 4 »).

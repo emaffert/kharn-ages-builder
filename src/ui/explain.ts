@@ -112,6 +112,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Connaît d'office le sort « ${sp} » (${tgt})`;
       break;
     }
+    case "grant-trait":
+      base = `Octroie le trait « ${op.trait} » à ${tgt}`;
+      break;
     case "stat-modifier": {
       const amount = op.amount === "level" ? "son niveau" : `${op.amount >= 0 ? "+" : ""}${op.amount}`;
       base = `Ajoute ${amount} à ${op.stat.toUpperCase()} de ${tgt}`;

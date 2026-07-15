@@ -406,30 +406,44 @@ interface Effect {
   autoEnforced: boolean;
 }
 
+// Union complète (source de vérité = src/core/model/effects.ts, validée par Zod). Toutes sont
+// désormais appliquées par le moteur (src/core/engine) ; celles marquées « affichage » n'entrent pas
+// dans le calcul du coût mais alimentent la fiche.
 type EffectOperation =
-  | { kind: "cost-delta"; amount: number }                              // Ogodeï : -10 sur les armes à 2 mains
-  | { kind: "cost-set"; amount: number; maxCount?: number }             // 1 cible/source, plafonné par maxCount (ex. Larbins gratuits)
-  | { kind: "unlock-upgrade"; upgradeId: string; perItemCost: number }  // Forgeronne : amélioration « Borax »
-  | { kind: "grant-skill"; skillId: string }
-  | { kind: "grant-trait"; trait: string }                             // Mathys : « apatride »
-  | { kind: "cap"; value: number }
-  | { kind: "stat-modifier"; stat: "v"|"p"|"a"|"c"|"t"|"i"|"stature"|"pa"|"pv"; amount: number | "level" } // Apprentie de Nyx : +niveau en I
-  | { kind: "spell-pages"; amount: number };                           // Fille de Nyx +3 ; Crosse +3
-
-// Appliqués par le moteur (src/core/engine) : cost-delta, cost-set, grant-trait, grant-skill,
-// et spell-pages (capacité de pages, via engine/magic.ts). PAS ENCORE appliqués : stat-modifier,
-// unlock-upgrade, cap - cf. le TODO en tête de engine/evaluate.ts.
+  | { kind: "cost-delta"; amount: number; requiresBaseSwap?: boolean }  // Ogodeï -10 armes 2 mains ; Commandant si arme de base changée
+  | { kind: "cost-set"; amount: number; maxCount?: number }             // 1 cible/source, plafonné (ex. Larbins gratuits)
+  | { kind: "grimoire-discount"; tier?: "petit" | "grand"; amount: number } // Mochère : grimoire gratuit
+  | { kind: "unlock-upgrade"; upgradeId: string; label: string; cost: number; equipmentCategories: Equipment["category"][]; grantsSkills?: SkillRef[] } // Borax
+  | { kind: "grant-skill"; skillId: string; value?: string | number; precision?: string; incrementIfPresent?: number } // +N si déjà connue
+  | { kind: "grant-spell"; spellId: string }                           // sort de signature (Alaric : Lien Mental)
+  | { kind: "grant-trait"; trait: string }                             // Frères d'Armes : « apatride »
+  | { kind: "grant-mastery-die"; domains: MasteryDomain[] }            // affichage (Bannière Khéropse)
+  | { kind: "stat-modifier"; stat: StatKey; amount: number | "level" } // Apprentie de Nyx : +niveau en I
+  | { kind: "stat-count"; stat: StatKey; of: Selector; per?: number }  // carac = comptage de figurines
+  | { kind: "stat-max"; stat: StatKey; of: Selector }                  // carac = plus forte du groupe (Doctrine T/I)
+  | { kind: "skill-count"; skillId: string; of: Selector; per: number } // compétence = comptage
+  | { kind: "spell-pages"; amount: number; magicWayId?: string }       // Fille de Nyx +3 ; Brassards : pool dédié à une voie
+  | { kind: "limit-modifier"; amount: number };                        // Lieutenant : +1 à la limite « X »
+// StatKey = "v"|"p"|"a"|"c"|"t"|"i"|"stature"|"pa"|"pv".
 
 interface Selector {
-  self?: boolean;
+  self?: boolean;             // la figurine-source elle-même
+  cavalier?: boolean;         // le porteur d'une monture (pour un effet de monture)
+  all?: boolean;              // toutes les figurines de la portée
+  isLeader?: boolean;         // filtre sur le meneur (Engueran : effet si leader)
   profileIds?: string[];
   modelIds?: string[];
   traits?: string[];          // ex. "guerrier-kherops", "frere-d-armes"
   factionIds?: string[];
+  levels?: number[];
   equipmentCategories?: Equipment["category"][];
+  equipmentHands?: (1 | 2 | "1-2")[];
   countAtLeast?: number;      // ex. ≥ 2 « frères d'armes »
 }
 ```
+
+`Effect` porte aussi `appliesToListBuilding?` (`false` = effet en jeu, affiché mais hors coût) et
+`designation?` (désignation d'une cible, ex. garde du corps).
 
 Exemples (le `sourceText` porte le wording verbatim) :
 

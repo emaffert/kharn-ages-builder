@@ -121,5 +121,12 @@ export default defineConfig(({ command }) => ({
   },
   test: {
     environment: "jsdom",
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "html"],
+      include: ["src/**/*.{ts,tsx}"],
+      // Exclus : tests, données JSON, point d'entrée, service worker PWA, snapshots.
+      exclude: ["src/**/*.test.{ts,tsx}", "src/**/__snapshots__/**", "src/main.tsx", "src/**/*.d.ts"],
+    },
   },
 }));

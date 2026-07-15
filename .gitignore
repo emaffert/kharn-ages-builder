@@ -9,6 +9,9 @@ dist-ssr/
 # Vite / cache
 .vite/
 
+# Rapport de couverture des tests
+coverage/
+
 # Editor / OS
 .DS_Store
 .idea/

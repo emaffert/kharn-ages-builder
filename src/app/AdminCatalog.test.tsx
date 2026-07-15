@@ -43,4 +43,36 @@ describe("AdminCatalog (rendu)", () => {
     expect(screen.getByRole("heading", { name: /Difficultés/i })).toBeTruthy();
     expect(screen.getByText(/\+ sort/i)).toBeTruthy();
   });
+
+  it("ouvre l'onglet Voies de magie", () => {
+    render(<AdminCatalog />);
+    fireEvent.click(screen.getByRole("button", { name: "Magie" }));
+    fireEvent.click(screen.getByRole("button", { name: "Voies" }));
+    expect(screen.getByRole("heading", { name: /Voies de magie/i })).toBeTruthy();
+  });
+
+  // La grande partie de nav et sa première sous-partie partagent le même libellé (« Montures »,
+  // « Réglages ») ; après ouverture du groupe, les deux boutons coexistent → on clique le dernier
+  // (la sous-partie, rendue après le bouton de groupe) pour changer réellement de vue.
+  const clickSubtab = (name: string) => {
+    const btns = screen.getAllByRole("button", { name });
+    fireEvent.click(btns[btns.length - 1]);
+  };
+
+  it("ouvre les onglets Montures et Options de monture", () => {
+    render(<AdminCatalog />);
+    fireEvent.click(screen.getByRole("button", { name: "Montures" }));
+    clickSubtab("Montures");
+    expect(screen.getByRole("heading", { name: /Type/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Options" }));
+    expect(screen.getByRole("heading", { name: /Compétence conférée/i })).toBeTruthy();
+  });
+
+  it("ouvre l'onglet Réglages (factions, grimoires, surcoût Tembo)", () => {
+    render(<AdminCatalog />);
+    fireEvent.click(screen.getByRole("button", { name: "Réglages" }));
+    clickSubtab("Réglages");
+    expect(screen.getByRole("heading", { name: /Grimoires/i })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /Surcoût Tembo/i })).toBeTruthy();
+  });
 });

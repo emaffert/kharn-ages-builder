@@ -8,7 +8,7 @@ NVM_DIR ?= $(HOME)/.nvm
 NODE = source "$(NVM_DIR)/nvm.sh" && nvm use >/dev/null &&
 
 .DEFAULT_GOAL := help
-.PHONY: help install dev test test-watch build typecheck lint preview
+.PHONY: help install dev test test-watch coverage build typecheck lint preview
 
 help: ## Affiche cette aide
 	@echo "Cibles disponibles :"
@@ -16,6 +16,7 @@ help: ## Affiche cette aide
 	@echo "  make dev         Lancer le serveur de développement (Vite)"
 	@echo "  make test        Lancer les tests une fois (Vitest)"
 	@echo "  make test-watch  Lancer les tests en mode watch"
+	@echo "  make coverage    Rapport de couverture des tests (HTML dans coverage/)"
 	@echo "  make build       Build de production"
 	@echo "  make typecheck   Vérification TypeScript"
 	@echo "  make lint        Analyse ESLint"
@@ -32,6 +33,9 @@ test: ## Lancer les tests une fois
 
 test-watch: ## Lancer les tests en mode watch
 	@$(NODE) npx vitest
+
+coverage: ## Rapport de couverture des tests
+	@$(NODE) npm run test:coverage
 
 build: ## Build de production
 	@$(NODE) npm run build

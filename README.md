@@ -14,6 +14,8 @@ Cible mobile : PWA installable. Voir [`docs/stack-technique.md`](docs/stack-tech
 - [`docs/regles-creation-liste.md`](docs/regles-creation-liste.md) - règles métier (source de vérité).
 - [`docs/schema-donnees.md`](docs/schema-donnees.md) - modèle de données et architecture.
 - [`docs/stack-technique.md`](docs/stack-technique.md) - choix techniques.
+- [`docs/tests.md`](docs/tests.md) - organisation des tests (cœur et vue) et couverture.
+- [`docs/procedure-import-faction.md`](docs/procedure-import-faction.md) - guide d'import d'une nouvelle faction (méthode et pièges).
 
 ## Prérequis
 
@@ -66,9 +68,11 @@ Deux écrans, accessibles par les onglets du haut :
 Flux : **sélection de faction** (format escarmouche/bataille, budget en Ko, ou reprise d'une
 liste sauvegardée) → **écran de construction**.
 
-- **Roster** (à gauche ; en modale sur mobile) : profils de la faction groupés en Personnages,
-  Troupes et Recrutement conditionnel (unités qui se recrutent via un porteur, ex. Likan). Ajout
-  rapide, ou aperçu de la carte avant recrutement.
+- **Roster** (à gauche ; en modale sur mobile) : profils groupés en **Personnages**, **Troupes**,
+  **Recrutement conditionnel** (unités recrutées via un porteur, ex. Likan), **Hors Faction**
+  (recrues inter-factions : apatrides et « Allié des X »), **Frères d'armes** (compagnons qui
+  deviennent apatrides en groupe) et **Montures** (types accessibles à un profil recrutable, selon
+  son origine). Ajout rapide, ou aperçu de la carte avant recrutement.
 - **Liste** (au centre) : figurines réordonnables par glisser-déposer, dépliables ; désignation
   du **meneur**, du **garde du corps**, rattachement des unités dépendantes (Likan/Muskh).
 - **Éditeur de figurine** (modale, en onglets) : Carte, Équipement (achat/retrait, munitions,
@@ -82,29 +86,32 @@ liste sauvegardée) → **écran de construction**.
 
 ## Données du catalogue
 
-La **source de vérité du catalogue est `src/data/catalog.fangs.json`** (faction Fang).
+La **source de vérité du catalogue est `src/data/catalog.json`** (toutes les factions).
 Il est **validé par Zod** au chargement (`parseCatalog`). On ne l'édite pas à la main :
-on passe par l'éditeur admin, qui exporte un JSON à recommiter.
+on passe par l'éditeur admin, qui exporte un JSON à recommiter (les imports de faction sont
+l'exception - voir [`docs/procedure-import-faction.md`](docs/procedure-import-faction.md)).
 
 Cycle de mise à jour des données :
 
 1. lancer `make dev` et ouvrir l'éditeur ;
 2. corriger les profils dans l'interface ;
 3. cliquer **Exporter JSON** ;
-4. remplacer `src/data/catalog.fangs.json` par le fichier exporté, puis commiter.
+4. remplacer `src/data/catalog.json` par le fichier exporté, puis commiter.
 
 ## L'éditeur admin
 
 Accessible par l'onglet **Admin**. À gauche, la liste des entrées du catalogue - profils,
-équipements, compétences, cartes spéciales, sorts - avec recherche et indicateur ⚠ pour les
-profils ayant des champs à vérifier. À droite, le détail de l'entrée sélectionnée.
+équipements, compétences, cartes spéciales, sorts, voies de magie, montures, réglages - avec
+recherche et indicateur ⚠ pour les profils ayant des champs à vérifier. À droite, le détail de
+l'entrée sélectionnée.
 
 L'admin partage le **système visuel** de l'application (tokens « Forge / Braise », thème
 clair/sombre, composants `@ui`) ; son UI est découpée en modules sous `src/app/admin/`.
 
 Champs modifiables :
 
-- **identité** : nom, coût, niveau, faction, limitation (type + valeur), personnage, mage ;
+- **identité** : nom, coût, niveau, faction, limitation (type + valeur), personnage (le statut de
+  mage est **dérivé** : une figurine lance dès qu'elle possède la compétence d'une voie de magie) ;
 - **caractéristiques** : V, P, A, C, T, I, stature, PA, PV ;
 - **compétences** (depuis le dictionnaire), **traits**, **équipement de base** ;
 - **règles de carte** (texte verbatim - fait foi).
@@ -139,7 +146,9 @@ incluses dans le build de production.
 ## Tests
 
 `make test` exécute la suite Vitest : validation du catalogue, moteur d'évaluation
-(coût, contraintes, effets), traduction des règles, et rendu de l'éditeur.
+(coût, contraintes, effets), traduction des règles, sérialisation, et rendu des vues
+(React Testing Library + jsdom). Couverture : `make coverage`. Organisation, conventions et
+guide des **tests de vue** dans [`docs/tests.md`](docs/tests.md).
 
 ## Licence
 

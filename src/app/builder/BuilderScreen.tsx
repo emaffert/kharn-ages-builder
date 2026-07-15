@@ -37,14 +37,14 @@ import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from 
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
-import { TrashIcon, SearchIcon } from "./icons";
+import { TrashIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { MountPicker, MountPreview, MountSheet } from "./MountDialog";
-import { RosterGroup } from "./RosterGroup";
 import { OstPanel } from "./OstPanel";
 import { PurchaseSummary } from "./PurchaseSummary";
-import { MountPurchaseSummary } from "./MountPurchaseSummary";
+import { MountSubline } from "./MountSubline";
+import { RosterSidebar } from "./RosterSidebar";
 import { encodeList } from "../io/listCode";
 import { exportText } from "../io/listText";
 
@@ -282,65 +282,22 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
   // Contenu du roster, partagé entre l'aside desktop et la modale mobile.
   const rosterInner = (
-    <>
-      <div className="bld-roster-head">
-        <label className="bld-search">
-          <SearchIcon />
-          <input
-            value={rosterQuery}
-            onChange={(e) => setRosterQuery(e.target.value)}
-            placeholder="Rechercher un profil…"
-          />
-          {rosterQuery && (
-            <button type="button" onClick={() => setRosterQuery("")} title="Effacer" className="bld-search-x">
-              ✕
-            </button>
-          )}
-        </label>
-      </div>
-      <div className="bld-roster-scroll">
-        {models.length === 0 ? (
-          <p className="bld-empty">
-            {rosterQuery.trim() !== ""
-              ? "Aucun profil ne correspond à la recherche."
-              : `Aucune figurine à recruter pour ${fac.name} pour l'instant.`}
-          </p>
-        ) : (
-          <>
-            <RosterGroup label="Personnages" items={personnages} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-            <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-            <RosterGroup
-              label="Recrutement conditionnel"
-              items={conditionnels}
-              onOpen={(id) => setModal({ kind: "preview", modelId: id })}
-              conditional
-            />
-            <RosterGroup label="Hors Faction" items={horsFaction} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-            <RosterGroup label="Frères d'armes" items={freresDArmes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
-            {mountTypesForFaction.length > 0 && (
-              <div>
-                <div className="bld-grp-label">
-                  Montures<span className="line" />
-                </div>
-                {mountTypesForFaction.map(({ type, minCost, icon }) => (
-                  <div key={type.id} className="bld-ritem is-cond">
-                    <button
-                      className="bld-rmain"
-                      onClick={() => setModal({ kind: "mount-preview", typeId: type.id })}
-                      title="Voir la fiche"
-                    >
-                      <span className="bld-rmed">{icon ? <img className="bld-rmed-img" src={icon} alt="" /> : "🐎"}</span>
-                      <span className="bld-rname">{type.name}</span>
-                      <span className="bld-rcost">{minCost}+</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </>
+    <RosterSidebar
+      query={rosterQuery}
+      onQueryChange={setRosterQuery}
+      factionName={fac.name}
+      models={models}
+      personnages={personnages}
+      troupes={troupes}
+      conditionnels={conditionnels}
+      horsFaction={horsFaction}
+      freresDArmes={freresDArmes}
+      mountTypes={mountTypesForFaction}
+      modelMaxed={modelMaxed}
+      onQuickAdd={onQuickAdd}
+      onPreview={(id) => setModal({ kind: "preview", modelId: id })}
+      onMountPreview={(id) => setModal({ kind: "mount-preview", typeId: id })}
+    />
   );
 
   // Rendu d'une ligne d'unité. `handle` (poignée dnd-kit) n'est fourni que pour les figurines
@@ -508,53 +465,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   };
 
   // Sous-ligne de la monture (rendue comme une figurine rattachée, mais nichée dans le cavalier).
-  const renderMountSubline = (x: Item) => {
-    const id = x.inst.instanceId;
-    const mid = x.inst.mount!.mountId;
-    const mc = evaluation.mountCost[id] ?? 0;
-    const mount = cat.mounts.find((m) => m.id === mid);
-    const mType = cat.mountTypes.find((t) => t.id === mount?.typeId);
-    const mIcon = mount?.icon ?? (mType?.cardImage ? cat.icons?.[mType.cardImage] : undefined);
-    return (
-      <div className="bld-unit is-attached">
-        <div
-          className="bld-unit-main"
-          onClick={(e) => {
-            if ((e.target as HTMLElement).closest("button, input, a")) return;
-            setModal({ kind: "mount-sheet", instanceId: id });
-          }}
-        >
-          <div className="bld-thumb sm">
-            {mIcon ? <img className="bld-thumb-img" src={mIcon} alt="" /> : <span className="lvl">🐎</span>}
-          </div>
-          <div className="bld-uinfo">
-            <div className="bld-uname">
-              <button className="nm" onClick={() => setModal({ kind: "mount-sheet", instanceId: id })}>
-                {mountLabel(cat, mid)}
-              </button>
-              <span className="lvltag">Monture</span>
-            </div>
-          </div>
-          <div className="bld-ucost">
-            {mc} <span className="ko">Ko</span>
-          </div>
-          <div className="bld-uactions">
-            <button className="bld-icon danger" title="Retirer la monture" onClick={() => store.setMount(id, null)}>
-              <TrashIcon />
-            </button>
-          </div>
-        </div>
-        <MountPurchaseSummary
-          cat={cat}
-          factionId={x.p.factionId}
-          mount={x.inst.mount!}
-          mountOptionIds={x.inst.mountOptionIds}
-          onPick={setItemInfo}
-        />
-      </div>
-    );
-  };
-
   const formatLabel = store.list.format === "bataille" ? "Bataille" : "Escarmouche";
   const errorTotal = invalidCount + listErrors.length;
 
@@ -687,7 +597,16 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                     {(handle) => (
                       <>
                         {renderUnit(x, false, handle)}
-                        {x.inst.mount && renderMountSubline(x)}
+                        {x.inst.mount && (
+                          <MountSubline
+                            x={x}
+                            cat={cat}
+                            mountCost={evaluation.mountCost[x.inst.instanceId] ?? 0}
+                            onOpen={() => setModal({ kind: "mount-sheet", instanceId: x.inst.instanceId })}
+                            onRemove={() => store.setMount(x.inst.instanceId, null)}
+                            onPick={setItemInfo}
+                          />
+                        )}
                         {children.map((c) => renderUnit(c, true))}
                       </>
                     )}

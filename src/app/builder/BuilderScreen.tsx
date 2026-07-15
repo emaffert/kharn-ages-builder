@@ -5,13 +5,15 @@ import {
   FACTIONS,
   LEVEL,
   canBuy,
+  availableMountTypeIds,
   designationLabelFor,
   isAttachmentDependent,
   isDependent,
-  isRecruitableIn,
   profileMatchesAnySelector,
   protecteeSelectorsFor,
   recruitableDependentGroups,
+  recruitableRosterModels,
+  rosterSectionOf,
   type DependentGroup,
   type ItemInfo,
   type Modal,
@@ -88,39 +90,24 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     [io, exportMode, exportCode, cat, store.list],
   );
 
-  const models: ModelEntry[] = cat.models
-    .map((m) => ({
-      id: m.id,
-      name: m.name,
-      profiles: m.profileIds
-        .map((id) => cat.profiles.find((p) => p.id === id))
-        .filter((p): p is Profile => Boolean(p))
-        .sort((a, b) => (a.level ?? 0) - (b.level ?? 0)),
-    }))
+  const models: ModelEntry[] = recruitableRosterModels(cat, factionId)
     .map((m) => ({ ...m, icon: m.profiles[0] ? iconFor(cat, m.profiles[0]) : undefined }))
-    // Roster de la faction choisie + profils recrutables inter-factions (sans logo, apatride,
-    // « Allié des X » via une contrainte faction-membership).
-    .filter((m) => m.profiles.length > 0 && m.profiles.some((p) => isRecruitableIn(p, factionId)))
     .filter((m) => rosterQuery.trim() === "" || m.name.toLowerCase().includes(rosterQuery.trim().toLowerCase()));
-  const kindOf = (m: ModelEntry) => {
-    const p0 = m.profiles[0];
-    if (isDependent(p0, cat)) return "cond";
-    if (p0.limitation.kind === "U" || p0.limitation.kind === "P") return "perso";
-    return "troupe";
-  };
   const byName = (a: ModelEntry, b: ModelEntry) => a.name.localeCompare(b.name);
-  // « Hors Faction » = profil recrutable ici mais non natif à la faction courante (apatride comme
-  // Gaal, ou allié « Allié des X » comme le Bourgmestre khârn côté Guilde Noire). Regroupé à part
-  // plutôt que fondu dans Personnages/Troupes.
-  const isNative = (m: ModelEntry) => m.profiles[0].factionId === factionId;
-  const personnages = models.filter((m) => isNative(m) && kindOf(m) === "perso").sort(byName);
-  const troupes = models.filter((m) => isNative(m) && kindOf(m) === "troupe").sort(byName);
-  const conditionnels = models.filter((m) => isNative(m) && kindOf(m) === "cond").sort(byName);
-  const horsFaction = models.filter((m) => !isNative(m)).sort(byName);
-  // Montures éligibles à la faction : consultables (fiche) depuis le roster, comme Likans/Muskh.
+  // Catégorisation en sections de sidebar (logique pure dans shared.ts) : natifs répartis en
+  // Personnages/Troupes/Conditionnel ; recrues inter-factions en Frères d'armes ou Hors Faction.
+  const inSection = (s: string) => models.filter((m) => rosterSectionOf(cat, factionId, m.profiles[0]) === s).sort(byName);
+  const personnages = inSection("personnage");
+  const troupes = inSection("troupe");
+  const conditionnels = inSection("conditionnel");
+  const horsFaction = inSection("hors-faction");
+  const freresDArmes = inSection("freres-d-armes");
+  // Montures consultables (fiche) depuis le roster : toutes celles accessibles à AU MOINS un profil
+  // recrutable ici (faction courante OU recrue inter-factions via son origine), pas seulement la faction.
   const q = rosterQuery.trim().toLowerCase();
+  const mountTypeIds = availableMountTypeIds(cat, factionId);
   const mountTypesForFaction = cat.mountTypes
-    .filter((t) => t.factionEligibility.includes(factionId))
+    .filter((t) => mountTypeIds.has(t.id))
     .filter((t) => q === "" || t.name.toLowerCase().includes(q))
     .map((t) => {
       const levels = cat.mounts.filter((m) => m.typeId === t.id).sort((a, b) => a.level - b.level);
@@ -329,6 +316,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               conditional
             />
             <RosterGroup label="Hors Faction" items={horsFaction} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
+            <RosterGroup label="Frères d'armes" items={freresDArmes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={(id) => setModal({ kind: "preview", modelId: id })} />
             {mountTypesForFaction.length > 0 && (
               <div>
                 <div className="bld-grp-label">

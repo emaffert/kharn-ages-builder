@@ -4,6 +4,7 @@ import {
   pageAllocation as corePageAllocation,
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
+  eligibleMountsFor as coreEligibleMountsFor,
   mountKindOf,
   mountOptionCostOf,
 } from "@core";
@@ -449,6 +450,51 @@ export function equipInfo(e: Catalog["equipment"][number]): ItemInfo {
 }
 
 export type ModelEntry = { id: string; name: string; profiles: Profile[]; icon?: string };
+
+// ── Roster (sidebar du constructeur) ── logique pure de catégorisation, testable hors composant.
+
+/** Sections de la sidebar. `personnage`/`troupe`/`conditionnel` = natifs de la faction ; les recrues
+ *  inter-factions vont en `freres-d-armes` (trait `frere-d-armes`, ni allié ni apatride) ou `hors-faction`. */
+export type RosterSection = "personnage" | "troupe" | "conditionnel" | "hors-faction" | "freres-d-armes";
+
+/** Modèles recrutables dans une faction (faction courante + recrues inter-factions), niveaux triés.
+ *  N'ajoute pas l'icône ni le filtre de recherche (laissés au composant). */
+export function recruitableRosterModels(cat: Catalog, factionId: string): ModelEntry[] {
+  return cat.models
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      profiles: m.profileIds
+        .map((id) => cat.profiles.find((p) => p.id === id))
+        .filter((p): p is Profile => Boolean(p))
+        .sort((a, b) => (a.level ?? 0) - (b.level ?? 0)),
+    }))
+    .filter((m) => m.profiles.length > 0 && m.profiles.some((p) => isRecruitableIn(p, factionId)));
+}
+
+/** Section de sidebar d'un modèle, déterminée par son premier profil. */
+export function rosterSectionOf(cat: Catalog, factionId: string, profile: Profile): RosterSection {
+  if (profile.factionId === factionId) {
+    if (isDependent(profile, cat)) return "conditionnel";
+    if (profile.limitation.kind === "U" || profile.limitation.kind === "P") return "personnage";
+    return "troupe";
+  }
+  const frere =
+    profile.traits.includes("frere-d-armes") &&
+    !profile.traits.includes("apatride") &&
+    !(profile.recruitment ?? []).some((c) => c.type === "faction-membership");
+  return frere ? "freres-d-armes" : "hors-faction";
+}
+
+/** Ids des types de monture accessibles à au moins un profil recrutable dans la faction (faction
+ *  courante OU recrue inter-factions via son origine `monture-<faction>`). */
+export function availableMountTypeIds(cat: Catalog, factionId: string): Set<string> {
+  return new Set(
+    cat.profiles
+      .filter((p) => isRecruitableIn(p, factionId))
+      .flatMap((p) => coreEligibleMountsFor(cat, p).map((m) => m.typeId)),
+  );
+}
 
 export type Modal =
   | null

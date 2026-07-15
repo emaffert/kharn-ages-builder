@@ -864,3 +864,59 @@ describe("attribution atomique d'un sort dans un pool (maxPagesInPool)", () => {
     expect(maxPagesInPool([2, 3], Infinity)).toBe(5); // pool illimité (théorique) absorbe tout
   });
 });
+
+describe("Frères d'Armes (grant-trait + apatride conditionnel)", () => {
+  const hasApatride = (res: ReturnType<typeof evaluateList>, id: string) =>
+    (res.grantedTraits[id] ?? []).includes("apatride");
+  const factionIssues = (res: ReturnType<typeof evaluateList>) =>
+    res.issues.filter((i) => i.ruleId?.startsWith("faction:"));
+
+  it("2 frères d'armes dans un Fer de Lance non-GN → tous apatrides, recrutement valide", () => {
+    const a = inst("guilde-noire-mathys-3");
+    const b = inst("guilde-noire-kaito-2");
+    const res = evaluateList(catalog, makeList([a, b], "kharns"));
+    expect(hasApatride(res, a.instanceId)).toBe(true);
+    expect(hasApatride(res, b.instanceId)).toBe(true);
+    expect(factionIssues(res)).toHaveLength(0);
+  });
+
+  it("un frère d'armes isolé dans un Fer de Lance non-GN → pas d'apatride, recrutement invalide", () => {
+    const a = inst("guilde-noire-mathys-3");
+    const res = evaluateList(catalog, makeList([a], "kharns"));
+    expect(hasApatride(res, a.instanceId)).toBe(false);
+    expect(factionIssues(res)).toHaveLength(1);
+  });
+
+  it("un « Allié des X » ne peut rejoindre que sa faction d'origine", () => {
+    const inKharns = evaluateList(catalog, makeList([inst("guilde-noire-negociateur-2")], "kharns"));
+    expect(factionIssues(inKharns)).toHaveLength(0);
+    const inGouns = evaluateList(catalog, makeList([inst("guilde-noire-negociateur-2")], "gouns"));
+    expect(factionIssues(inGouns)).toHaveLength(1);
+  });
+
+  const ATOUTS = "guilde-noire-atouts-de-mathys";
+  const granted = (res: ReturnType<typeof evaluateList>, id: string) =>
+    (res.grantedSkills[id] ?? []).map((s) => s.skillId);
+
+  it("Inspiration (Atouts de Mathys, Mathys leader) redistribue à tous les frères les compétences en présence", () => {
+    const m = inst("guilde-noire-mathys-3", { specialCardIds: [ATOUTS] });
+    const b = inst("guilde-noire-bharbathos-3");
+    const res = evaluateList(catalog, makeList([m, b], "guilde-noire"));
+    expect(granted(res, m.instanceId)).toEqual(expect.arrayContaining(["en-eveil", "specialiste"]));
+    expect(granted(res, b.instanceId)).toEqual(expect.arrayContaining(["en-eveil", "specialiste"]));
+  });
+
+  it("Inspiration s'applique sans le seuil de 2 frères (contrairement à la carte de base)", () => {
+    const solo = inst("guilde-noire-mathys-3", { specialCardIds: [ATOUTS] });
+    expect(granted(evaluateList(catalog, makeList([solo], "guilde-noire")), solo.instanceId)).toContain("en-eveil");
+    const bare = inst("guilde-noire-mathys-3");
+    expect(granted(evaluateList(catalog, makeList([bare], "guilde-noire")), bare.instanceId)).toHaveLength(0);
+  });
+
+  it("Inspiration ne s'active pas si Mathys n'est pas leader", () => {
+    const m = inst("guilde-noire-mathys-3", { specialCardIds: [ATOUTS] });
+    const b = inst("guilde-noire-bharbathos-3");
+    const res = evaluateList(catalog, makeList([b, m], "guilde-noire")); // leader = Bharbathos
+    expect(granted(res, m.instanceId)).not.toContain("specialiste");
+  });
+});

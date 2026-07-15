@@ -36,6 +36,41 @@ un rôle mécanique doit exister **en double** :
 Symptôme d'un oubli : « le profil a perdu sa compétence Khémiste à l'import » = le trait existe mais
 la compétence homonyme manque, donc le mot-clé ne s'affiche nulle part.
 
+## Un « mot-clé » de carte : compétence, objet, ou verbatim ?
+
+Toutes les lignes listées sur une carte de profil ne sont pas des compétences. Avant d'inventer une
+entrée de dictionnaire, se poser la question dans cet ordre (retours d'expérience Guilde Noire) :
+
+- **Compétence connue** (déjà dans `catalog.skills`, ou générique du livret) : réutiliser l'`id`
+  existant. Toujours réconcilier contre le dictionnaire avant de créer (recherche normalisée sur le
+  mot-clé) - beaucoup existent déjà.
+- **Objet** : une ligne sans description qui nomme un équipement/artefact (ex. « Cape d'ombre »,
+  « Rossignol », « Bourse bien remplie », « Amulette du culte », « Ruse du pleutre », « Ombre »)
+  n'est **pas** une compétence : c'est un **objet** (`equipment`, catégorie `objet`), à mettre dans
+  `baseEquipmentIds`. Si le détail manque, créer un **placeholder** (`cost: 0`, `effectsText: ""`) à
+  compléter en admin. **Vérifier d'abord s'il existe déjà** (ex. « Peintures de guerre » existait
+  déjà en base - ne rien recréer, juste le référencer dans `baseEquipmentIds`).
+- **Capacité verbatim** : une ligne **nommée + décrite** propre à la carte, non générique (ex.
+  « Lâche : possède 2 PIONS… », « Allégeance : s'active en même temps que le leader », « Jumeaux :
+  tant que… », « Peut piller ») va en **texte verbatim** dans `profile.rules`, **pas** dans le
+  dictionnaire. Format : `{ label: "<nom court>", text: "<description>" }` - le nom dans `label`, la
+  description dans `text` (ne pas tout mettre dans `label` avec un `text` vide).
+
+En cas de doute entre « compétence à valeur » et « objet/verbatim », préférer verbatim : c'est
+réversible et n'introduit pas de fausse entrée de dictionnaire réutilisée ailleurs par erreur.
+
+Autres points relevés à l'import (à garder en tête) :
+
+- Le mot-clé de faction en compétence (`frere-d-armes`, `tembo`…) se place plutôt **en fin** de la
+  liste `skills` du profil (avant la compétence de magie s'il y en a une), pas forcément en tête.
+- `carnivore` / `herbivore` : peut rester **présent sur certaines cartes** même quand la FAQ dit que
+  la faction n'y est « pas soumise » (ex. Guilde Noire) - suivre la carte, pas une règle globale.
+- Indicateur de dé d'incantation sur une carte (ligne « 0-5-1 » etc.) = le profil est **lanceur** :
+  penser à la compétence de magie / `affinite` correspondante.
+- Convention confirmée : **flaguer toutes les stats** (`stats.*` + `stature` + `masteryDice` +
+  `baseEquipmentIds`) en `unverifiedFields` - l'utilisateur en corrige régulièrement plusieurs
+  (stature et une carac ou deux) à la relecture.
+
 ## Traits lus « en dur » par le moteur
 
 Certains traits ne sont pas exprimés par une contrainte/effet du catalogue : ils sont **codés en dur**

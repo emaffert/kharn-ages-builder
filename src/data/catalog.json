@@ -8754,9 +8754,6 @@
         },
         {
           "skillId": "osteomancie"
-        },
-        {
-          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -9167,9 +9164,6 @@
         {
           "skillId": "bond",
           "value": 3
-        },
-        {
-          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -9323,9 +9317,6 @@
         {
           "skillId": "chef-de-guerre",
           "value": 2
-        },
-        {
-          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [
@@ -9382,9 +9373,6 @@
         },
         {
           "skillId": "sadique"
-        },
-        {
-          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [],
@@ -9465,9 +9453,6 @@
         },
         {
           "skillId": "ambidextre"
-        },
-        {
-          "skillId": "carnivore"
         }
       ],
       "baseEquipmentIds": [

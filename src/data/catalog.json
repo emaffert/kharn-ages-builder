@@ -8702,7 +8702,8 @@
         ]
       ],
       "traits": [
-        "frere-d-armes"
+        "frere-d-armes",
+        "monture-kharns"
       ],
       "recruitment": [],
       "rules": [
@@ -8710,7 +8711,9 @@
           "text": "« Peut piller »"
         }
       ],
-      "notes": [],
+      "notes": [
+        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/mathys-fr.jpg",
       "unverifiedFields": []
     },
@@ -8783,7 +8786,9 @@
       ],
       "recruitment": [],
       "rules": [],
-      "notes": [],
+      "notes": [
+        "Origine Fang. Trait « monture-fangs » : sert UNIQUEMENT à définir la monture accessible (aucune (les Fangs n’ont pas de monture)), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/bharbathos.jpg",
       "unverifiedFields": []
     },
@@ -8844,11 +8849,14 @@
         ]
       ],
       "traits": [
-        "frere-d-armes"
+        "frere-d-armes",
+        "monture-gouns"
       ],
       "recruitment": [],
       "rules": [],
-      "notes": [],
+      "notes": [
+        "Origine Goûn. Trait « monture-gouns » : sert UNIQUEMENT à définir la monture accessible (Mochère), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/gakere.jpg",
       "unverifiedFields": []
     },
@@ -8912,7 +8920,8 @@
         ]
       ],
       "traits": [
-        "frere-d-armes"
+        "frere-d-armes",
+        "monture-kherops"
       ],
       "recruitment": [],
       "effects": [
@@ -8945,7 +8954,9 @@
           "text": "tant que Sükh est en jeu, Kaito gagne « foi inébranlable »."
         }
       ],
-      "notes": [],
+      "notes": [
+        "Origine Khérops. Trait « monture-kherops » : sert UNIQUEMENT à définir la monture accessible (Kœlod), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/kaito.jpg",
       "unverifiedFields": []
     },
@@ -9004,7 +9015,8 @@
         ]
       ],
       "traits": [
-        "frere-d-armes"
+        "frere-d-armes",
+        "monture-kherops"
       ],
       "recruitment": [],
       "rules": [
@@ -9013,7 +9025,9 @@
           "text": "tant que Kaito est en jeu, Sükh a +2 en défense."
         }
       ],
-      "notes": [],
+      "notes": [
+        "Origine Khérops. Trait « monture-kherops » : sert UNIQUEMENT à définir la monture accessible (Kœlod), pas l’accès aux objets/sorts réservés de ce peuple. Berserker → aucune monture en pratique."
+      ],
       "cardImage": "cards/Guilde Noire/sukh.jpg",
       "unverifiedFields": []
     },
@@ -9073,7 +9087,9 @@
           "offensive"
         ]
       ],
-      "traits": [],
+      "traits": [
+        "monture-kherops"
+      ],
       "recruitment": [
         {
           "id": "c-guilde-noire-kherops",
@@ -9118,7 +9134,9 @@
           "text": ""
         }
       ],
-      "notes": [],
+      "notes": [
+        "Origine Khérops. Trait « monture-kherops » : sert UNIQUEMENT à définir la monture accessible (Kœlod), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/brute-de-la-guilde.jpg",
       "unverifiedFields": []
     },
@@ -9196,7 +9214,9 @@
         }
       ],
       "rules": [],
-      "notes": [],
+      "notes": [
+        "Origine Fang. Trait « monture-fangs » : sert UNIQUEMENT à définir la monture accessible (aucune (les Fangs n’ont pas de monture)), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/voleur-de-la-guilde.jpg",
       "unverifiedFields": []
     },
@@ -9259,7 +9279,9 @@
           "defensive"
         ]
       ],
-      "traits": [],
+      "traits": [
+        "monture-kharns"
+      ],
       "recruitment": [
         {
           "id": "c-guilde-noire-kharns",
@@ -9275,7 +9297,9 @@
         }
       ],
       "rules": [],
-      "notes": [],
+      "notes": [
+        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/negociateur-de-la-guilde.jpg",
       "unverifiedFields": []
     },
@@ -9335,10 +9359,14 @@
           "offensive"
         ]
       ],
-      "traits": [],
+      "traits": [
+        "monture-kharns"
+      ],
       "recruitment": [],
       "rules": [],
-      "notes": [],
+      "notes": [
+        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/raimbert.jpg",
       "unverifiedFields": []
     },
@@ -9386,7 +9414,9 @@
           "objectif"
         ]
       ],
-      "traits": [],
+      "traits": [
+        "monture-kharns"
+      ],
       "recruitment": [
         {
           "id": "c-guilde-noire-kharns",
@@ -9415,7 +9445,9 @@
           "text": ""
         }
       ],
-      "notes": [],
+      "notes": [
+        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
+      ],
       "cardImage": "cards/Guilde Noire/courtisane.jpg",
       "unverifiedFields": []
     },
@@ -9474,11 +9506,14 @@
           "offensive"
         ]
       ],
-      "traits": [],
+      "traits": [
+        "monture-kharns"
+      ],
       "recruitment": [],
       "rules": [],
       "notes": [
-        "Bi-faction GN/Affranchis. Importée ici comme profil GN pur ; le profil Affranchi sera créé à l'import des Affranchis."
+        "Bi-faction GN/Affranchis. Importée ici comme profil GN pur ; le profil Affranchi sera créé à l'import des Affranchis.",
+        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
       ],
       "cardImage": "cards/Guilde Noire/affranchis-khalsa-2.jpg",
       "unverifiedFields": []
@@ -10749,7 +10784,6 @@
       "kind": "quagga",
       "factionEligibility": [
         "kharns",
-        "guilde-noire",
         "affranchis"
       ],
       "excludedProfileIds": [],

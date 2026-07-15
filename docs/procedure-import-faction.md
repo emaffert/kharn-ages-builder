@@ -82,6 +82,16 @@ Traits hardcodés connus à ce jour :
 - `apatride` : recrutable dans le fer-de-lance de n'importe quelle faction
   (`evaluate.ts` `validateFactionMembership`, `shared.ts`, `BuilderScreen.tsx`).
 - `tembo` : surcoût d'équipement Tembo (`evaluate.ts` `temboEquipmentSurcharge`).
+- `monture-<faction>` : **origine « montures uniquement »**. Les figurines des factions
+  « creuset » (Guilde Noire, Affranchis) gardent l'accès à la **monture de leur peuple d'origine**
+  (mais **pas** à ses objets/sorts réservés - FAQ). `isMountEligible` accepte un profil si la
+  `factionEligibility` d'un type de monture contient sa `factionId` **ou** un trait `monture-<f>`.
+  À poser sur chaque profil de ces factions selon son origine (ex. un membre GN d'origine khéropse
+  → `monture-kherops` → Kœlod ; origine fang → aucun trait, les Fangs n'ont pas de monture ;
+  Berserker → aucune monture quoi qu'il arrive). Ne pas confondre avec la faction du profil : pour
+  ces factions, retirer leur `factionId` de la `factionEligibility` des montures (fait pour le
+  Quagga vs `guilde-noire`) et tout passer par le trait. Garder l'origine en clair dans
+  `profile.notes`.
 
 Si un nouvel import introduit un comportement moteur attaché à un trait, ajouter une ligne dans
 `BUILTIN_TRAIT_USAGE` en même temps que le code moteur.

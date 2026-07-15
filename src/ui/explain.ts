@@ -167,6 +167,10 @@ const BUILTIN_TRAIT_USAGE: Record<string, string> = {
 export function explainTraitUsage(trait: string, cat: Catalog): string[] {
   const out: string[] = [];
   if (BUILTIN_TRAIT_USAGE[trait]) out.push(BUILTIN_TRAIT_USAGE[trait]);
+  // Traits d'origine `monture-<faction>` : donnent accès à la monture du peuple d'origine (mais pas
+  // à ses objets/sorts réservés). Ex. un membre de la Guilde Noire d'origine khéropse → Kœlod.
+  const mo = /^monture-(.+)$/.exec(trait);
+  if (mo) out.push(`moteur - accès à la monture du peuple « ${mo[1]} » (origine, règle intégrée)`);
   const selUses = (sel?: Selector | Selector[]): boolean => {
     if (!sel) return false;
     const clauses = Array.isArray(sel) ? sel : [sel];

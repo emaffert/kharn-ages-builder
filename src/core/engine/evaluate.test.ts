@@ -920,3 +920,30 @@ describe("Frères d'Armes (grant-trait + apatride conditionnel)", () => {
     expect(granted(res, m.instanceId)).not.toContain("specialiste");
   });
 });
+
+describe("Montures par origine (Guilde Noire)", () => {
+  const mountTypes = (profileId: string) => {
+    const p = catalog.profiles.find((x) => x.id === profileId)!;
+    return [...new Set(eligibleMountsFor(catalog, p).map((m) => m.typeId))].sort();
+  };
+
+  it("un GN d'origine khârne accède au Quagga (trait monture-kharns)", () => {
+    expect(mountTypes("guilde-noire-mathys-3")).toEqual(["quagga"]);
+  });
+
+  it("un GN d'origine khéropse accède au Kœlod, pas au Quagga", () => {
+    expect(mountTypes("guilde-noire-brute-2")).toEqual(["koelod"]);
+  });
+
+  it("un GN d'origine goûne accède au Mochère", () => {
+    expect(mountTypes("guilde-noire-gakere-2")).toEqual(["mochere"]);
+  });
+
+  it("un GN d'origine fang n'a aucune monture (les Fangs n'en ont pas)", () => {
+    expect(mountTypes("guilde-noire-bharbathos-3")).toEqual([]);
+  });
+
+  it("Berserker (Sükh) n'a aucune monture malgré son origine khéropse", () => {
+    expect(mountTypes("guilde-noire-sukh-2")).toEqual([]);
+  });
+});

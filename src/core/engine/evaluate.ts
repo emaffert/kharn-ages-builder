@@ -1298,7 +1298,13 @@ const BERSEKER_SKILL_ID = "berserk";
 export function isMountEligible(cat: Catalog, profile: Profile, mount: Mount): boolean {
   const type = cat.mountTypes.find((t) => t.id === mount.typeId);
   if (!type) return false;
-  if (profile.factionId == null || !type.factionEligibility.includes(profile.factionId)) return false;
+  // Éligibilité par ORIGINE : la faction du profil, OU un trait `monture-<faction>` qui encode
+  // l'origine (peuple d'avant la Guilde Noire / les Affranchis) - car ces figurines gardent l'accès
+  // à la monture de leur peuple d'origine, mais pas à ses objets/sorts réservés (FAQ).
+  const originOk = type.factionEligibility.some(
+    (f) => profile.factionId === f || profile.traits.includes(`monture-${f}`),
+  );
+  if (!originOk) return false;
   if (type.excludedProfileIds?.includes(profile.id)) return false;
   if (profile.skills.some((s) => s.skillId === BERSEKER_SKILL_ID)) return false;
   if (profile.level != null && Math.abs(mount.level - profile.level) > 1) return false;

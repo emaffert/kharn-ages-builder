@@ -81,6 +81,22 @@ body {
 .kh-toggle button:hover { color: var(--bone); }
 .kh-toggle button[data-on="true"] { color: var(--bone); background: var(--tint-3); }
 
+/* Zone « compte » de la barre supérieure. */
+.kh-account { display: inline-flex; align-items: center; gap: 8px; padding: 3px 10px 3px 3px;
+  border-radius: 999px; color: var(--bone-dim); transition: .16s var(--ease);
+  box-shadow: inset 0 0 0 1px var(--hair-strong); cursor: pointer; }
+.kh-account:hover { color: var(--bone); background: var(--tint-2); }
+.kh-account__avatar { display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 700;
+  color: var(--ink-accent); background: linear-gradient(180deg, var(--ember-bright), var(--ember)); }
+.kh-account__name { font-size: 13px; font-weight: 600; }
+.kh-account__loading { font-size: 13px; color: var(--bone-faint); }
+/* Modale de connexion / inscription. */
+.kh-auth__error { font-size: 12.5px; color: var(--on-scorch); border-radius: var(--radius-sm); padding: 7px 10px;
+  background: color-mix(in srgb, var(--scorch) 20%, transparent); }
+.kh-auth__notice { font-size: 12.5px; color: var(--on-moss); border-radius: var(--radius-sm); padding: 7px 10px;
+  background: color-mix(in srgb, var(--moss) 20%, transparent); }
+
 /* ============================================================================
    Kit UI (primitives) - Phase 1. Sur tokens, backées Radix côté comportement.
    ============================================================================ */
@@ -102,6 +118,15 @@ body {
 .ui-btn--danger:hover { background: color-mix(in srgb, var(--scorch) 30%, transparent); }
 .ui-btn--ghost { background: transparent; border-color: transparent; color: var(--bone-dim); }
 .ui-btn--ghost:hover { background: var(--tint-2); color: var(--bone); }
+
+/* Champs de saisie (l'admin a sa propre déclinaison, `.adm-input`) */
+.ui-field { display: flex; flex-direction: column; gap: 5px; }
+.ui-field__label { font-size: 12px; font-weight: 600; color: var(--bone-dim); }
+.ui-input { border-radius: var(--radius-sm); padding: 9px 11px; font: inherit; font-size: 14px;
+  background: var(--tint-2); color: var(--bone); border: 1px solid var(--hair-strong);
+  transition: border-color .16s var(--ease), box-shadow .16s var(--ease); }
+.ui-input:focus { outline: none; border-color: transparent; box-shadow: 0 0 0 1px var(--ember); }
+.ui-input::placeholder { color: var(--bone-faint); }
 
 /* Modale (taille fixe) */
 .ui-dialog__scrim { position: fixed; inset: 0; z-index: 60; background: rgba(8, 5, 3, .74);

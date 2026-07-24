@@ -19,7 +19,8 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        // Nécessaire pour récupérer la session au retour d'un login OAuth (Google) via l'URL.
+        // Récupère la session portée par l'URL au retour d'un lien e-mail (confirmation de
+        // compte, réinitialisation de mot de passe) ou d'un futur login OAuth.
         detectSessionInUrl: true,
       },
     })

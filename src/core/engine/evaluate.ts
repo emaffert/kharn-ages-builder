@@ -903,14 +903,19 @@ function validateLimitations(
 
 /**
  * Plafond d'un emplacement (modèle, niveau) = limitation du profil générique cible
- * (X → sa valeur ; U/P → 1). Partagé entre le moteur et le constructeur.
+ * (X → sa valeur ; U/P → 1 ; special → pas de plafond d'emplacement). Partagé entre le
+ * moteur et le constructeur.
  */
 export function slotCapacity(cat: Catalog, modelId: string, level: number): number {
   const target =
     cat.profiles.find((p) => p.modelId === modelId && p.level === level && p.limitation.kind === "X") ??
     cat.profiles.find((p) => p.modelId === modelId && p.level === level);
   if (!target) return Infinity;
-  return target.limitation.kind === "X" ? (target.limitation.value ?? Infinity) : 1;
+  if (target.limitation.kind === "X") return target.limitation.value ?? Infinity;
+  // « special » : la limite n'est pas un plafond d'emplacement simple mais une règle dédiée
+  // (ex. capacité de rattachement des Likans, validée par `validateAttachments`) - pas de cap ici.
+  if (target.limitation.kind === "special") return Infinity;
+  return 1;
 }
 
 /**

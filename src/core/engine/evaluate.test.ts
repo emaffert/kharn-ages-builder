@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { ListDocument, ProfileInstance } from "../model";
-import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills } from "./evaluate";
+import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills, slotCapacity } from "./evaluate";
 import { affinityWays, castableSpells, maxPagesInPool, pageAllocation } from "./magic";
 
 let counter = 0;
@@ -201,6 +201,64 @@ describe("validation des contraintes", () => {
     expect(tooMany.issues.some((i) => i.ruleId === "likan-attachment")).toBe(true);
   });
 
+});
+
+describe("Likans : capacité de rattachement (Σ niveaux ≤ niveau du porteur)", () => {
+  // Porteuse « femelle Fang » de niveau `carrier` avec les Likans donnés rattachés.
+  const withLikans = (carrierId: string, likanIds: string[]) => {
+    const likans = likanIds.map((id) => inst(id));
+    const carrier = inst(carrierId, { attachedInstanceIds: likans.map((l) => l.instanceId) });
+    return evalFang([carrier, ...likans]);
+  };
+  const hasAttachmentIssue = (likanIds: string[], carrierId: string) =>
+    withLikans(carrierId, likanIds).issues.some((i) => i.ruleId === "likan-attachment");
+
+  // Un Likan « special » n'a pas de plafond d'emplacement (modèle, niveau) : sa limite est la
+  // capacité de rattachement, pas un cap par slot. Régression du bug « un seul Likan N1 possible ».
+  it("slotCapacity d'un Likan (special) est illimité à tous les niveaux", () => {
+    expect(slotCapacity(catalog, "likan", 1)).toBe(Infinity);
+    expect(slotCapacity(catalog, "likan", 2)).toBe(Infinity);
+    expect(slotCapacity(catalog, "likan", 3)).toBe(Infinity);
+  });
+
+  it("plusieurs Likans N1 sur un même porteur (le bug rapporté)", () => {
+    // Porteuse N2 → 2 Likans N1 (Σ = 2 ≤ 2) : autorisé.
+    expect(hasAttachmentIssue(["fangs-likan-1", "fangs-likan-1"], "fangs-goulue-2")).toBe(false);
+    // Porteuse N3 → 3 Likans N1 (Σ = 3 ≤ 3) : autorisé.
+    expect(
+      hasAttachmentIssue(["fangs-likan-1", "fangs-likan-1", "fangs-likan-1"], "fangs-apathee-3"),
+    ).toBe(false);
+  });
+
+  it("porteur de niveau 1 : un seul Likan N1", () => {
+    expect(hasAttachmentIssue(["fangs-likan-1"], "fangs-goulue-1")).toBe(false);
+    // Σ = 2 > 1 : refusé.
+    expect(hasAttachmentIssue(["fangs-likan-1", "fangs-likan-1"], "fangs-goulue-1")).toBe(true);
+  });
+
+  it("porteur de niveau 3 : configurations mixtes valides (Σ ≤ 3)", () => {
+    expect(hasAttachmentIssue(["fangs-likan-3"], "fangs-apathee-3")).toBe(false); // 3
+    expect(hasAttachmentIssue(["fangs-likan-1", "fangs-likan-2"], "fangs-apathee-3")).toBe(false); // 1+2
+    expect(hasAttachmentIssue(["fangs-likan-2"], "fangs-apathee-3")).toBe(false); // 2, sous la capacité
+  });
+
+  it("porteur de niveau 3 : configurations en excès (Σ > 3)", () => {
+    expect(hasAttachmentIssue(["fangs-likan-2", "fangs-likan-2"], "fangs-apathee-3")).toBe(true); // 4
+    expect(
+      hasAttachmentIssue(["fangs-likan-1", "fangs-likan-1", "fangs-likan-2"], "fangs-apathee-3"),
+    ).toBe(true); // 4
+    expect(hasAttachmentIssue(["fangs-likan-3", "fangs-likan-1"], "fangs-apathee-3")).toBe(true); // 4
+  });
+
+  it("un Likan trop haut niveau pour le porteur", () => {
+    expect(hasAttachmentIssue(["fangs-likan-2"], "fangs-goulue-1")).toBe(true); // 2 > 1
+    expect(hasAttachmentIssue(["fangs-likan-3"], "fangs-goulue-2")).toBe(true); // 3 > 2
+    expect(hasAttachmentIssue(["fangs-likan-3"], "fangs-apathee-3")).toBe(false); // 3 = 3, limite exacte
+  });
+
+  it("porteur sans Likan rattaché : aucune contrainte de capacité", () => {
+    expect(evalFang([inst("fangs-goulue-1")]).issues.some((i) => i.ruleId === "likan-attachment")).toBe(false);
+  });
 });
 
 describe("caractéristique dérivée d'un décompte (stat-count)", () => {

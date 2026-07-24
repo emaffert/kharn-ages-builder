@@ -29,6 +29,7 @@
     "@radix-ui/react-tabs": "^1.1.16",
     "@radix-ui/react-toast": "^1.2.18",
     "@radix-ui/react-tooltip": "^1.2.11",
+    "@supabase/supabase-js": "^2.110.8",
     "dexie": "^4.4.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

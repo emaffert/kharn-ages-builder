@@ -135,6 +135,11 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       return cs != null && cs.modelId === modelId && cs.level === level;
     }).length;
   const atLimit = (p: Profile) => {
+    // 0) Figurine dépendante (Likan, Muskh) : jamais limitée par son emplacement propre. Sa seule
+    //    contrainte est la capacité de rattachement du porteur, vérifiée à part (`groupDisabled`,
+    //    modale de recrutement). Sans ce court-circuit, un modèle à limitation `special` retomberait
+    //    sur le plafond d'emplacement (1) et bloquerait le 2e Likan de même niveau.
+    if (isDependent(p, cat)) return false;
     // 1) Limitation propre du profil (par groupe modèle#niveau) : U/P → 1, X → valeur (+ bonus
     //    `limit-modifier`, ex. Lieutenant khérops : +1 aux Khérops « X »).
     const own =

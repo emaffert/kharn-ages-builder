@@ -27,9 +27,10 @@ export function AppShell() {
   const [view, setView] = useState<"builder" | "admin">("builder");
   const [theme, setTheme] = useTheme();
   const { status, isAdmin } = useSession();
-  // Sans backend configuré, l'app reste en local-first : l'admin garde l'accès libre qu'il
-  // avait avant les comptes. Avec backend, il est réservé au rôle `admin`.
-  const canAdmin = status === "unconfigured" || isAdmin;
+  // Réservé au rôle `admin`. L'exception « pas de backend configuré » (app local-first, comme
+  // avant les comptes) est cantonnée au développement : en production, un `.env` oublié au build
+  // ouvrirait l'admin à tout le monde au lieu de le fermer.
+  const canAdmin = (import.meta.env.DEV && status === "unconfigured") || isAdmin;
   // Vue effective : perdre le rôle en cours de route (déconnexion, session restaurée en simple
   // joueur) ramène au constructeur sans avoir à remettre l'état à zéro.
   const activeView = canAdmin ? view : "builder";

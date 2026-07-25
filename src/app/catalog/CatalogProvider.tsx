@@ -6,6 +6,14 @@ import { fetchLatestVersionId, fetchPublishedCatalog, type PublishedMeta } from 
 import { supabase } from "../../lib/supabase";
 import { CatalogContext, type CatalogValue } from "./context";
 
+/** Repère de la version publiée telle que connue du cache (le nom vient du catalogue lui-même). */
+function cachedMeta(): PublishedMeta | null {
+  const cached = readPublishedCatalog();
+  return cached
+    ? { versionId: cached.versionId, publishedAt: cached.publishedAt, version: cached.catalog.version }
+    : null;
+}
+
 /** Temps laissé au serveur avant de démarrer sur le catalogue local (la synchro continue derrière). */
 const REMOTE_TIMEOUT_MS = 4000;
 /** Délai avant d'afficher l'écran d'attente : en dessous, la synchro est imperceptible. */
@@ -31,18 +39,14 @@ export function CatalogProvider({
   client?: SupabaseClient | null;
 }) {
   const [catalog, setCatalog] = useState<Catalog>(() => loadCatalog());
-  const [published, setPublished] = useState<PublishedMeta | null>(() => {
-    const cached = readPublishedCatalog();
-    return cached ? { versionId: cached.versionId, publishedAt: cached.publishedAt } : null;
-  });
+  const [published, setPublished] = useState<PublishedMeta | null>(() => cachedMeta());
   // Attente initiale : uniquement s'il y a un serveur à interroger.
   const [waiting, setWaiting] = useState(() => Boolean(client));
   const [showSpinner, setShowSpinner] = useState(false);
 
   const refresh = useCallback(() => {
     setCatalog(loadCatalog());
-    const cached = readPublishedCatalog();
-    setPublished(cached ? { versionId: cached.versionId, publishedAt: cached.publishedAt } : null);
+    setPublished(cachedMeta());
   }, []);
 
   useEffect(() => {
@@ -65,7 +69,7 @@ export function CatalogProvider({
         const remote = await fetchPublishedCatalog(client);
         if (!alive || !remote) return;
         writePublishedCatalog(remote, remote.catalog);
-        setPublished({ versionId: remote.versionId, publishedAt: remote.publishedAt });
+        setPublished({ versionId: remote.versionId, publishedAt: remote.publishedAt, version: remote.version });
         // `loadCatalog` et non `remote.catalog` : un brouillon admin local reste prioritaire à
         // l'écran, même si le cache vient d'être mis à jour derrière.
         setCatalog(loadCatalog());

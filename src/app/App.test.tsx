@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import type { User } from "@supabase/supabase-js";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { AppShell } from "./App";
@@ -18,9 +18,19 @@ function renderShell(session: Partial<SessionValue> = {}) {
 const adminTab = () => screen.queryByRole("button", { name: "Admin" });
 
 describe("AppShell (accès à l'admin)", () => {
-  it("laisse l'admin accessible sans backend (mode local-first)", () => {
+  it("laisse l'admin accessible sans backend, en développement (mode local-first)", () => {
     renderShell({ status: "unconfigured" });
     expect(adminTab()).toBeTruthy();
+  });
+
+  it("ferme l'admin sans backend en production (variables d'env oubliées au build)", () => {
+    vi.stubEnv("DEV", false);
+    try {
+      renderShell({ status: "unconfigured" });
+      expect(adminTab()).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("masque l'admin à un visiteur non connecté", () => {

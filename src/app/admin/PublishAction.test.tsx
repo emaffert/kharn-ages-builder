@@ -35,7 +35,7 @@ function renderAction(session: Partial<SessionValue>, client: SupabaseClient | n
 
 describe("PublishAction", () => {
   it("reste invisible pour un joueur non admin", () => {
-    const { client } = fakeClient({ data: { id: 1, published_at: null } });
+    const { client } = fakeClient({ data: { id: 1, version: "0.2.0", published_at: null } });
     const { container } = render(
       <SessionContext.Provider value={{ ...DEFAULT_SESSION, status: "anonymous" }}>
         <PublishAction catalog={catalog} dirty={false} onPublished={vi.fn()} client={client} />
@@ -54,15 +54,40 @@ describe("PublishAction", () => {
   });
 
   it("demande confirmation avant de publier", () => {
-    const { client, insert } = fakeClient({ data: { id: 1, published_at: null } });
+    const { client, insert } = fakeClient({ data: { id: 1, version: "0.2.0", published_at: null } });
     renderAction(admin, client);
     fireEvent.click(screen.getByRole("button", { name: "Publier" }));
     expect(screen.getByText(/servi à tous les joueurs/i)).toBeTruthy();
     expect(insert).not.toHaveBeenCalled();
   });
 
+  it("propose le nom de la version courante et publie celui qu'on saisit", async () => {
+    const { client, insert } = fakeClient({ data: { id: 7, version: "0.2.0", published_at: null } });
+    const { onPublished } = renderAction(admin, client);
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    const field = screen.getByLabelText("Nom de la nouvelle version") as HTMLInputElement;
+    // Aucune version publiée : on part du nom porté par le catalogue courant.
+    expect(field.value).toBe(catalog.version);
+    fireEvent.change(field, { target: { value: "0.2.0" } });
+    fireEvent.click(screen.getByRole("button", { name: "Publier maintenant" }));
+    await waitFor(() => expect(onPublished).toHaveBeenCalled());
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ version: "0.2.0" }));
+    // Le catalogue rendu à l'admin porte le nouveau nom, pas l'ancien.
+    expect(onPublished.mock.calls[0][0].version).toBe("0.2.0");
+    expect(readPublishedCatalog()?.catalog.version).toBe("0.2.0");
+  });
+
+  it("refuse de publier sans nom de version", () => {
+    const { client, insert } = fakeClient({ data: { id: 1, version: "x", published_at: null } });
+    renderAction(admin, client);
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    fireEvent.change(screen.getByLabelText("Nom de la nouvelle version"), { target: { value: "  " } });
+    fireEvent.click(screen.getByRole("button", { name: "Publier maintenant" }));
+    expect(insert).not.toHaveBeenCalled();
+  });
+
   it("publie, met le cache à jour et abandonne le brouillon local", async () => {
-    const { client, insert } = fakeClient({ data: { id: 42, published_at: "2026-07-25T10:00:00Z" } });
+    const { client, insert } = fakeClient({ data: { id: 42, version: "0.2.0", published_at: "2026-07-25T10:00:00Z" } });
     const { onPublished } = renderAction(admin, client);
     fireEvent.click(screen.getByRole("button", { name: "Publier" }));
     fireEvent.click(screen.getByRole("button", { name: "Publier maintenant" }));

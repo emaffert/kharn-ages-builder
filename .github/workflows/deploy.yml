@@ -41,7 +41,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # Les deux valeurs sont publiques par conception (elles finissent dans le JS livré, c'est la
+      # RLS qui protège) : des `vars` de dépôt, donc, et non des `secrets`. Sans elles, le build
+      # sort sans backend - ni comptes, ni synchro, ni admin.
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

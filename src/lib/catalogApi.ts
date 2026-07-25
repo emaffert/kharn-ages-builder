@@ -10,11 +10,11 @@ import { parseCatalog, type Catalog } from "@core";
  * la donnée seulement si elle est nouvelle.
  */
 
-/** Repère d'une version publiée, sans sa donnée. */
-export type PublishedMeta = { versionId: number; publishedAt: string | null };
+/** Repère d'une version publiée, sans sa donnée. `version` est le nom libre donné à la publication. */
+export type PublishedMeta = { versionId: number; publishedAt: string | null; version: string };
 
 /** Version publiée, donnée comprise et validée. */
-export type PublishedVersion = PublishedMeta & { version: string; catalog: Catalog };
+export type PublishedVersion = PublishedMeta & { catalog: Catalog };
 
 /**
  * Numéro de la dernière version publiée (quelques octets), ou `null` si le serveur est
@@ -24,13 +24,13 @@ export async function fetchLatestVersionId(client: SupabaseClient): Promise<Publ
   try {
     const { data, error } = await client
       .from("catalog_versions")
-      .select("id, published_at")
+      .select("id, version, published_at")
       .order("id", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (error || !data) return null;
-    const row = data as { id: number; published_at: string | null };
-    return { versionId: row.id, publishedAt: row.published_at };
+    const row = data as { id: number; version: string; published_at: string | null };
+    return { versionId: row.id, publishedAt: row.published_at, version: row.version };
   } catch {
     return null;
   }
@@ -88,9 +88,9 @@ export async function publishCatalog(
   const { data, error } = await client
     .from("catalog_versions")
     .insert({ version: payload.version, data: payload, author_id: authorId })
-    .select("id, published_at")
+    .select("id, version, published_at")
     .single();
   if (error) return { published: null, error: publishErrorMessage(error) };
-  const row = data as { id: number; published_at: string | null };
-  return { published: { versionId: row.id, publishedAt: row.published_at }, error: null };
+  const row = data as { id: number; version: string; published_at: string | null };
+  return { published: { versionId: row.id, publishedAt: row.published_at, version: row.version }, error: null };
 }

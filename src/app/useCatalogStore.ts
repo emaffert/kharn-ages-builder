@@ -525,10 +525,16 @@ export function useCatalogStore() {
   }, [dropDraft]);
 
   /**
-   * Après publication : le catalogue édité est désormais la version de référence côté serveur,
-   * on abandonne le brouillon local pour qu'aucune divergence ne subsiste.
+   * Après publication : le catalogue publié (nom de version compris) devient la référence,
+   * et le brouillon local est abandonné pour qu'aucune divergence ne subsiste.
    */
-  const markPublished = useCallback(() => dropDraft(), [dropDraft]);
+  const markPublished = useCallback(
+    (published: Catalog) => {
+      setCatalog(published);
+      dropDraft();
+    },
+    [dropDraft],
+  );
 
   /** Charge un catalogue depuis du JSON (validé). Retourne un message d'erreur, ou null si OK. */
   const importJson = useCallback(

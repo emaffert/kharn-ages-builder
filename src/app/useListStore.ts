@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { evaluateList, type Catalog, type EvaluationResult, type ListDocument, type ProfileInstance } from "@core";
 import { useCatalog } from "./catalog/context";
-import { allSavedLists, deleteSavedList, saveList } from "./io/listsDb";
+import { useSavedLists, type SyncState } from "./lists/useSavedLists";
 import { newInstanceId, newListId } from "./io/ids";
 
 /**
@@ -86,6 +86,8 @@ export interface ListStore {
   setGuard: (instanceId: string, ofInstanceId: string | null) => void;
   // Persistance locale (Dexie).
   savedLists: ListDocument[];
+  /** Où en est la bibliothèque vis-à-vis du compte (local, synchro en cours, à jour, hors-ligne). */
+  syncState: SyncState;
   saveCurrent: () => Promise<void>;
   loadSaved: (doc: ListDocument) => void;
   removeSaved: (id: string) => Promise<void>;
@@ -110,12 +112,8 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     [patchFdl],
   );
 
-  // Bibliothèque des listes sauvegardées (IndexedDB).
-  const [savedLists, setSavedLists] = useState<ListDocument[]>([]);
-  const refreshSaved = useCallback(() => {
-    allSavedLists().then(setSavedLists).catch(() => setSavedLists([]));
-  }, []);
-  useEffect(() => refreshSaved(), [refreshSaved]);
+  // Bibliothèque des listes sauvegardées : cache local + synchro du compte.
+  const { savedLists, syncState, save, remove } = useSavedLists();
 
   return {
     catalog,
@@ -313,6 +311,7 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     setGuard: (instanceId, ofInstanceId) =>
       patchMember(instanceId, (m) => ({ ...m, bodyguardOfInstanceId: ofInstanceId ?? undefined })),
     savedLists,
+    syncState,
     saveCurrent: async () => {
       // On fige l'instantané dénormalisé (coût total + entrées) pour l'affichage « Mes listes ».
       const entries = list.fersDeLance.flatMap((f) =>
@@ -324,13 +323,9 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
       );
       const doc = touch({ ...list, snapshot: { totalCost: evaluation.totalCost, entries } });
       setList(doc);
-      await saveList(doc);
-      refreshSaved();
+      await save(doc);
     },
     loadSaved: (doc) => setList(doc),
-    removeSaved: async (id) => {
-      await deleteSavedList(id);
-      refreshSaved();
-    },
+    removeSaved: (id) => remove(id),
   };
 }

@@ -10,11 +10,11 @@ afterEach(cleanup);
 
 /**
  * Tests de vue de l'écran d'accueil (choix de faction / format / budget). `FactionSelect` ne lit du
- * store que `catalog`, `savedLists` et `removeSaved` : un store partiel typé suffit, inutile de monter
+ * store que `catalog`, `savedLists`, `syncState` et `removeSaved` : un store partiel typé suffit, inutile de monter
  * tout `useListStore`.
  */
 function makeStore(over: Partial<ListStore> = {}): ListStore {
-  return { catalog, savedLists: [], removeSaved: vi.fn(), ...over } as unknown as ListStore;
+  return { catalog, savedLists: [], syncState: "local", removeSaved: vi.fn(), ...over } as unknown as ListStore;
 }
 
 describe("FactionSelect (vue)", () => {

@@ -276,6 +276,13 @@ body {
 .fs-saved-head h2 { font-family: "Cinzel", serif; font-weight: 600; font-size: 18px; margin: 0; color: var(--bone);
   white-space: nowrap; }
 .fs-saved-head .fs-line { flex: 1; height: 1px; background: var(--hair); }
+/* État de synchro de la bibliothèque de listes (cf. SyncBadge). */
+.fs-sync { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; padding: 2px 9px; border-radius: 999px;
+  color: var(--bone-faint); box-shadow: inset 0 0 0 1px var(--hair-strong); cursor: default; white-space: nowrap; }
+.fs-sync[data-state="synced"] { color: var(--on-moss); background: color-mix(in srgb, var(--moss) 18%, transparent);
+  box-shadow: none; }
+.fs-sync[data-state="offline"] { color: var(--on-amber); background: color-mix(in srgb, var(--amber) 18%, transparent);
+  box-shadow: none; }
 .fs-slist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .fs-scard { position: relative; padding: 14px; border-radius: var(--radius);
   background: linear-gradient(180deg, var(--soot-2), var(--forge-2)); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair);

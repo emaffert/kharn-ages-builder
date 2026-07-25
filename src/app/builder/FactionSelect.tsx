@@ -3,6 +3,7 @@ import type { ListDocument } from "@core";
 import { Button, SegmentedControl, Dialog } from "@ui";
 import type { ListStore } from "../useListStore";
 import { FACTIONS } from "./shared";
+import { SyncBadge } from "../lists/SyncBadge";
 import { FactionEmblem } from "./FactionEmblem";
 import { resolveImport } from "./importList";
 import logoUrl from "../../assets/ka-logo.png";
@@ -153,6 +154,7 @@ export function FactionSelect({
         <div className="fs-saved">
           <div className="fs-saved-head">
             <h2>Reprendre une liste</h2>
+            <SyncBadge state={store.syncState} />
             <span className="fs-line" />
             <Button
               variant="default"

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
-import { catalog, readPublishedCatalog } from "@data";
+import { catalog, readPublishedCatalog, writePublishedCatalog } from "@data";
 import { PublishAction } from "./PublishAction";
 import { DEFAULT_SESSION, SessionContext, type SessionValue } from "../auth/context";
 import { createMemoryStorage } from "../../testing/memoryStorage";
@@ -106,5 +106,19 @@ describe("PublishAction", () => {
     expect(screen.getByRole("alert").textContent).toMatch(/administrateur/i);
     expect(onPublished).not.toHaveBeenCalled();
     expect(readPublishedCatalog()).toBeNull();
+  });
+
+  it("alerte quand le catalog.json du dépôt a décroché de la version publiée", () => {
+    const { client } = fakeClient({ data: { id: 1, version: "x", published_at: null } });
+    writePublishedCatalog({ versionId: 9, publishedAt: null }, { ...catalog, version: "0.9.9" });
+    renderAction(admin, client);
+    expect(screen.getByText(/ne correspond plus à la version publiée/i)).toBeTruthy();
+  });
+
+  it("n'alerte pas quand le fichier correspond à la version publiée", () => {
+    const { client } = fakeClient({ data: { id: 1, version: "x", published_at: null } });
+    writePublishedCatalog({ versionId: 9, publishedAt: null }, catalog);
+    renderAction(admin, client);
+    expect(screen.queryByText(/ne correspond plus à la version publiée/i)).toBeNull();
   });
 });

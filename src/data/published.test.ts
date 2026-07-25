@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { catalog, loadCatalog, readPublishedCatalog, writePublishedCatalog } from "@data";
+import { catalog, loadCatalog, publishedDivergesFromFile, readPublishedCatalog, writePublishedCatalog } from "@data";
 import { createMemoryStorage } from "../testing/memoryStorage";
 
 const ADMIN_KEY = "kharn-admin-catalog-v1";
@@ -47,5 +47,21 @@ describe("loadCatalog (ordre de priorité)", () => {
     writePublishedCatalog({ versionId: 2, publishedAt: null }, { ...catalog, version: "publiée" });
     localStorage.setItem(ADMIN_KEY, "{cassé");
     expect(loadCatalog().version).toBe("publiée");
+  });
+});
+
+describe("publishedDivergesFromFile", () => {
+  it("ne signale rien tant qu'aucune version n'est publiée", () => {
+    expect(publishedDivergesFromFile()).toBe(false);
+  });
+
+  it("ne signale rien quand la version publiée est identique au fichier", () => {
+    writePublishedCatalog({ versionId: 1, publishedAt: null }, catalog);
+    expect(publishedDivergesFromFile()).toBe(false);
+  });
+
+  it("signale que le fichier du dépôt a décroché de la version publiée", () => {
+    writePublishedCatalog({ versionId: 2, publishedAt: null }, { ...catalog, version: "0.2.0" });
+    expect(publishedDivergesFromFile()).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Catalog } from "@core";
-import { writePublishedCatalog } from "@data";
+import { publishedDivergesFromFile, writePublishedCatalog } from "@data";
 import { Button, Dialog } from "@ui";
 import { useSession } from "../auth/context";
 import { useCatalog } from "../catalog/context";
@@ -43,6 +43,8 @@ export function PublishAction({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  // Recalculé quand la version publiée change (publication, ou synchro au démarrage).
+  const fileStale = useMemo(() => publishedDivergesFromFile(), [published?.versionId]);
 
   if (!client || !isAdmin || !user) return null;
 
@@ -85,6 +87,12 @@ export function PublishAction({
           : "Jamais publié"}
         {dirty && <span className="adm-accent"> · brouillon local non publié</span>}
       </p>
+      {fileStale && (
+        <p className="ui-warn w-full">
+          Le <code>catalog.json</code> du dépôt ne correspond plus à la version publiée. Il sert de repli hors-ligne
+          et à la première visite : exporte le JSON et committe-le pour le remettre à niveau.
+        </p>
+      )}
       <Button variant="primary" size="sm" onClick={open}>
         Publier
       </Button>

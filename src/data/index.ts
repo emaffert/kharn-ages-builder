@@ -75,6 +75,20 @@ export function loadCatalog(): Catalog {
  * Sert de garde-fou en dev : la copie locale masque le fichier, donc les modifications directes
  * de `catalog.json` ne sont pas reflétées tant qu'on ne l'a pas rechargée (Admin › Réinit.).
  */
+/**
+ * La dernière version publiée diffère-t-elle du `catalog.json` embarqué dans le build ?
+ *
+ * Le fichier du dépôt reste le repli (première visite, hors-ligne, aucune version publiée) : quand
+ * il décroche de ce qui est réellement servi aux joueurs, il faut le resynchroniser (Exporter le
+ * JSON depuis l'admin, puis le committer). Les deux catalogues sortent de `parseCatalog`, donc
+ * comparables texte à texte sans risque de faux positif dû à l'ordre des clés.
+ */
+export function publishedDivergesFromFile(): boolean {
+  const published = readPublishedCatalog();
+  if (!published) return false;
+  return JSON.stringify(published.catalog) !== JSON.stringify(catalog);
+}
+
 export function localCatalogDivergesFromFile(): boolean {
   const raw = readLocalStorage(ADMIN_CATALOG_KEY);
   if (!raw) return false;

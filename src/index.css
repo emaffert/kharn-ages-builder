@@ -132,6 +132,9 @@ body {
   background: color-mix(in srgb, var(--scorch) 20%, transparent); }
 .ui-notice { font-size: 12.5px; color: var(--on-moss); border-radius: var(--radius-sm); padding: 7px 10px;
   background: color-mix(in srgb, var(--moss) 20%, transparent); }
+.ui-warn { font-size: 12.5px; color: var(--on-amber); border-radius: var(--radius-sm); padding: 7px 10px;
+  background: color-mix(in srgb, var(--amber) 18%, transparent); }
+.ui-warn code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .95em; }
 
 /* Modale (taille fixe) */
 .ui-dialog__scrim { position: fixed; inset: 0; z-index: 60; background: rgba(8, 5, 3, .74);

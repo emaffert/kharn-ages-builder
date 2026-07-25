@@ -2,6 +2,7 @@ import { Suspense, lazy, useMemo, useState } from "react";
 import { localCatalogDivergesFromFile } from "@data";
 import { AccountMenu } from "./auth/AccountMenu";
 import { useSession } from "./auth/context";
+import { PasswordRecovery } from "./auth/PasswordRecovery";
 import { SessionProvider } from "./auth/SessionProvider";
 import { CatalogProvider } from "./catalog/CatalogProvider";
 import { ListBuilder } from "./ListBuilder";
@@ -17,6 +18,9 @@ export function App() {
     <SessionProvider>
       <CatalogProvider>
         <AppShell />
+        {/* Hors de la coquille : le retour d'un lien de réinitialisation doit s'imposer, quel que
+            soit l'écran affiché. */}
+        <PasswordRecovery />
       </CatalogProvider>
     </SessionProvider>
   );

@@ -28,7 +28,19 @@ export type SessionValue = {
   /** `needsConfirmation` : compte créé mais e-mail à confirmer (aucune session ouverte). */
   signUp: (email: string, password: string, pseudo: string) => Promise<AuthResult & { needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
+  /** Envoie le lien de réinitialisation de mot de passe à l'adresse donnée. */
+  requestPasswordReset: (email: string) => Promise<AuthResult>;
+  /** Définit un nouveau mot de passe pour la session en cours. */
+  updatePassword: (password: string) => Promise<AuthResult>;
+  updatePseudo: (pseudo: string) => Promise<AuthResult>;
+  /** Supprime définitivement le compte et tout ce qui s'y rattache, puis déconnecte. */
+  deleteAccount: () => Promise<AuthResult>;
+  /** Vrai au retour d'un lien de réinitialisation : un nouveau mot de passe est attendu. */
+  recovering: boolean;
+  endRecovery: () => void;
 };
+
+const unavailable = async () => ({ error: "Authentification indisponible." });
 
 /**
  * Valeur par défaut : « pas de backend ». Elle rend les composants d'auth utilisables
@@ -39,9 +51,15 @@ export const DEFAULT_SESSION: SessionValue = {
   user: null,
   profile: null,
   isAdmin: false,
-  signIn: async () => ({ error: "Authentification indisponible." }),
+  signIn: unavailable,
   signUp: async () => ({ error: "Authentification indisponible.", needsConfirmation: false }),
   signOut: async () => {},
+  requestPasswordReset: unavailable,
+  updatePassword: unavailable,
+  updatePseudo: unavailable,
+  deleteAccount: unavailable,
+  recovering: false,
+  endRecovery: () => {},
 };
 
 export const SessionContext = createContext<SessionValue>(DEFAULT_SESSION);

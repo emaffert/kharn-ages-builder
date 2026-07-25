@@ -91,6 +91,10 @@ body {
   color: var(--ink-accent); background: linear-gradient(180deg, var(--ember-bright), var(--ember)); }
 .kh-account__name { font-size: 13px; font-weight: 600; }
 .kh-account__loading { font-size: 13px; color: var(--bone-faint); }
+/* Lien textuel discret dans les formulaires (mot de passe oublié, retour). */
+.kh-link { align-self: center; font-size: 12.5px; color: var(--bone-dim); text-decoration: underline;
+  text-underline-offset: 2px; background: none; border: 0; cursor: pointer; }
+.kh-link:hover { color: var(--bone); }
 
 /* ============================================================================
    Kit UI (primitives) - Phase 1. Sur tokens, backées Radix côté comportement.

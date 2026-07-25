@@ -82,6 +82,15 @@ export async function clearDeletions(ids: readonly string[]): Promise<void> {
   await db.deletedLists.bulkDelete([...ids]);
 }
 
+/** Efface du cache tout ce qui appartient à un compte (suppression de compte). */
+export async function purgeCachedLists(ownerId: string): Promise<void> {
+  if (!db) return;
+  const rows = await db.lists.toArray();
+  await db.lists.bulkDelete(rows.filter((r) => r.ownerId === ownerId).map((r) => r.id));
+  const tombs = await db.deletedLists.toArray();
+  await db.deletedLists.bulkDelete(tombs.filter((t) => t.ownerId === ownerId).map((t) => t.id));
+}
+
 /** Remplace le cache du compte par l'état issu de la synchro (et rattache les listes migrées). */
 export async function replaceCachedLists(docs: readonly ListDocument[], ownerId: string): Promise<void> {
   if (!db) return;

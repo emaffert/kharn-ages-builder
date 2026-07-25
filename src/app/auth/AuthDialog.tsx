@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Button, Dialog, SegmentedControl } from "@ui";
 import { useSession } from "./context";
 
-type Mode = "signin" | "signup";
+/** `forgot` est un aparté du mode connexion, pas une troisième option du contrôle segmenté. */
+type Mode = "signin" | "signup" | "forgot";
 
 const MODES = [
   { value: "signin" as const, label: "Connexion" },
@@ -16,7 +17,7 @@ const MODES = [
  * trigger `handle_new_user` qui crée la ligne `profiles` correspondante côté serveur.
  */
 export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const { signIn, signUp } = useSession();
+  const { signIn, signUp, requestPasswordReset } = useSession();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +37,13 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     setBusy(true);
     setError(null);
     setNotice(null);
-    if (mode === "signin") {
+    if (mode === "forgot") {
+      const { error: message } = await requestPasswordReset(email.trim());
+      setError(message);
+      if (!message) {
+        setNotice("Si un compte existe pour cette adresse, un lien de réinitialisation vient d'y être envoyé.");
+      }
+    } else if (mode === "signin") {
       const { error: message } = await signIn(email.trim(), password);
       setError(message);
       // Le succès ferme la modale : la session change et la barre affiche le compte.
@@ -61,14 +68,21 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       open={open}
       onOpenChange={onOpenChange}
       size="sm"
-      title={mode === "signin" ? "Se connecter" : "Créer un compte"}
+      title={mode === "forgot" ? "Mot de passe oublié" : mode === "signin" ? "Se connecter" : "Créer un compte"}
       description="Connexion au compte Khârn-Âges pour retrouver ses listes sur tous ses appareils."
     >
       <div className="flex flex-col gap-4">
         {/* Enveloppé : en enfant direct de la colonne flex, le contrôle segmenté serait étiré. */}
-        <div>
-          <SegmentedControl options={MODES} value={mode} onChange={switchMode} ariaLabel="Connexion ou inscription" />
-        </div>
+        {mode !== "forgot" && (
+          <div>
+            <SegmentedControl options={MODES} value={mode} onChange={switchMode} ariaLabel="Connexion ou inscription" />
+          </div>
+        )}
+        {mode === "forgot" && (
+          <p className="text-sm" style={{ color: "var(--bone-dim)" }}>
+            Indique l'adresse de ton compte : tu recevras un lien pour choisir un nouveau mot de passe.
+          </p>
+        )}
 
         <form className="flex flex-col gap-3" onSubmit={submit}>
           {mode === "signup" && (
@@ -94,18 +108,20 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               autoComplete="email"
             />
           </label>
-          <label className="ui-field">
-            <span className="ui-field__label">Mot de passe</span>
-            <input
-              className="ui-input"
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            />
-          </label>
+          {mode !== "forgot" && (
+            <label className="ui-field">
+              <span className="ui-field__label">Mot de passe</span>
+              <input
+                className="ui-input"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              />
+            </label>
+          )}
 
           {error && (
             <p className="ui-error" role="alert">
@@ -115,8 +131,19 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           {notice && <p className="ui-notice">{notice}</p>}
 
           <Button type="submit" variant="primary" disabled={busy}>
-            {mode === "signin" ? "Se connecter" : "Créer le compte"}
+            {mode === "forgot" ? "Envoyer le lien" : mode === "signin" ? "Se connecter" : "Créer le compte"}
           </Button>
+
+          {mode === "signin" && (
+            <button type="button" className="kh-link" onClick={() => switchMode("forgot")}>
+              Mot de passe oublié ?
+            </button>
+          )}
+          {mode === "forgot" && (
+            <button type="button" className="kh-link" onClick={() => switchMode("signin")}>
+              Retour à la connexion
+            </button>
+          )}
         </form>
       </div>
     </Dialog>

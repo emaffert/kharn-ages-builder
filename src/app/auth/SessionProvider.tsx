@@ -24,14 +24,18 @@ export function SessionProvider({
   // Profil mémorisé avec l'utilisateur auquel il appartient : au changement de compte, le
   // profil devient caduc par simple dérivation, sans effet de remise à zéro.
   const [loaded, setLoaded] = useState<{ userId: string; profile: Profile | null } | null>(null);
+  const [recovering, setRecovering] = useState(false);
 
   // Restauration de la session + écoute des changements (login, logout, refresh de token,
   // retour d'un lien e-mail). `onAuthStateChange` émet immédiatement l'état initial, ce qui
   // sort du statut `loading` sans appel supplémentaire.
   useEffect(() => {
     if (!client) return;
-    const { data } = client.auth.onAuthStateChange((_event, session) => {
+    const { data } = client.auth.onAuthStateChange((event, session) => {
       setAuth({ user: session?.user ?? null });
+      // Retour d'un lien « mot de passe oublié » : la session est ouverte, mais l'utilisateur
+      // doit choisir un nouveau mot de passe avant de reprendre le cours normal.
+      if (event === "PASSWORD_RECOVERY") setRecovering(true);
       // Volontairement aucun appel Supabase ici : le SDK tient un verrou pendant ce callback
       // et une requête imbriquée peut s'y bloquer. Le profil est chargé par l'effet suivant.
     });
@@ -86,6 +90,51 @@ export function SessionProvider({
     await client.auth.signOut();
   }, [client]);
 
+  const requestPasswordReset = useCallback(
+    async (email: string) => {
+      if (!client) return { error: "Authentification indisponible." };
+      // Le lien doit revenir sur l'app, sous-chemin compris (GitHub Pages sert sous /<dépôt>/).
+      const redirectTo = new URL(import.meta.env.BASE_URL, window.location.origin).href;
+      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
+      return { error: authErrorMessage(error) };
+    },
+    [client],
+  );
+
+  const updatePassword = useCallback(
+    async (password: string) => {
+      if (!client) return { error: "Authentification indisponible." };
+      const { error } = await client.auth.updateUser({ password });
+      if (!error) setRecovering(false);
+      return { error: authErrorMessage(error) };
+    },
+    [client],
+  );
+
+  const updatePseudo = useCallback(
+    async (pseudo: string) => {
+      if (!client || !userId) return { error: "Authentification indisponible." };
+      // Seule la colonne `pseudo` est accordée à `authenticated` : le rôle reste hors de portée.
+      const { error } = await client.from("profiles").update({ pseudo }).eq("id", userId);
+      if (error) return { error: error.message };
+      setLoaded((prev) => (prev && prev.userId === userId && prev.profile ? { ...prev, profile: { ...prev.profile, pseudo } } : prev));
+      return { error: null };
+    },
+    [client, userId],
+  );
+
+  const deleteAccount = useCallback(async () => {
+    if (!client) return { error: "Authentification indisponible." };
+    // La suppression de `auth.users` passe par une fonction serveur : le navigateur n'a pas
+    // (et ne doit pas avoir) les droits sur le schéma `auth`. Cf. migration 0003.
+    const { error } = await client.rpc("delete_account");
+    if (error) return { error: error.message };
+    await client.auth.signOut();
+    return { error: null };
+  }, [client]);
+
+  const endRecovery = useCallback(() => setRecovering(false), []);
+
   const value = useMemo<SessionValue>(
     () => ({
       status,
@@ -95,8 +144,27 @@ export function SessionProvider({
       signIn,
       signUp,
       signOut,
+      requestPasswordReset,
+      updatePassword,
+      updatePseudo,
+      deleteAccount,
+      recovering,
+      endRecovery,
     }),
-    [status, user, profile, signIn, signUp, signOut],
+    [
+      status,
+      user,
+      profile,
+      signIn,
+      signUp,
+      signOut,
+      requestPasswordReset,
+      updatePassword,
+      updatePseudo,
+      deleteAccount,
+      recovering,
+      endRecovery,
+    ],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

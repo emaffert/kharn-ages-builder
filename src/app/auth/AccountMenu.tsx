@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Popover, Tag } from "@ui";
+import { AccountDialog } from "./AccountDialog";
 import { AuthDialog } from "./AuthDialog";
 import { useSession } from "./context";
 
@@ -16,6 +17,7 @@ function displayName(pseudo: string | null | undefined, email: string | undefine
 export function AccountMenu() {
   const { status, user, profile, isAdmin, signOut } = useSession();
   const [authOpen, setAuthOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   if (status === "unconfigured") return null;
 
@@ -58,9 +60,13 @@ export function AccountMenu() {
           </div>
         </div>
         {isAdmin && <Tag tone="amber">Administrateur</Tag>}
+        <Button size="sm" onClick={() => setAccountOpen(true)}>
+          Mon compte
+        </Button>
         <Button size="sm" onClick={() => void signOut()}>
           Se déconnecter
         </Button>
+        <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
       </div>
     </Popover>
   );

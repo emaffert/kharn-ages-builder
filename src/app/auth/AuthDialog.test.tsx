@@ -75,4 +75,24 @@ describe("AuthDialog", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
+  it("propose le parcours mot de passe oublié et envoie le lien", async () => {
+    const requestPasswordReset = vi.fn(async () => ({ error: null }));
+    const { onOpenChange } = renderDialog({ requestPasswordReset });
+    fireEvent.click(screen.getByRole("button", { name: /Mot de passe oublié/i }));
+    // Le mot de passe n'a plus de raison d'être demandé à cette étape.
+    expect(screen.queryByLabelText("Mot de passe")).toBeNull();
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "a@b.c" } });
+    fireEvent.click(screen.getByRole("button", { name: "Envoyer le lien" }));
+    await waitFor(() => expect(requestPasswordReset).toHaveBeenCalledWith("a@b.c"));
+    // Réponse volontairement neutre : elle ne révèle pas si l'adresse a un compte.
+    expect(await screen.findByText(/Si un compte existe/i)).toBeTruthy();
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("revient à la connexion depuis le mot de passe oublié", () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: /Mot de passe oublié/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Retour à la connexion/i }));
+    expect(screen.getByLabelText("Mot de passe")).toBeTruthy();
+  });
 });

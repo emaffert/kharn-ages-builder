@@ -3,6 +3,7 @@ import { localCatalogDivergesFromFile } from "@data";
 import { AccountMenu } from "./auth/AccountMenu";
 import { useSession } from "./auth/context";
 import { SessionProvider } from "./auth/SessionProvider";
+import { CatalogProvider } from "./catalog/CatalogProvider";
 import { ListBuilder } from "./ListBuilder";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "./useTheme";
@@ -14,7 +15,9 @@ const AdminCatalog = lazy(() => import("./AdminCatalog").then((m) => ({ default:
 export function App() {
   return (
     <SessionProvider>
-      <AppShell />
+      <CatalogProvider>
+        <AppShell />
+      </CatalogProvider>
     </SessionProvider>
   );
 }

@@ -1,0 +1,85 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
+import { catalog, readPublishedCatalog } from "@data";
+import { PublishAction } from "./PublishAction";
+import { DEFAULT_SESSION, SessionContext, type SessionValue } from "../auth/context";
+import { createMemoryStorage } from "../../testing/memoryStorage";
+
+afterEach(cleanup);
+beforeEach(() => vi.stubGlobal("localStorage", createMemoryStorage()));
+
+const admin: Partial<SessionValue> = {
+  status: "authenticated",
+  user: { id: "admin-1", email: "chef@nyx.fr" } as User,
+  profile: { id: "admin-1", pseudo: "Chef", role: "admin" },
+  isAdmin: true,
+};
+
+function fakeClient(result: { data: unknown; error?: { code?: string; message: string } | null }) {
+  const insert = vi.fn(() => ({
+    select: () => ({ single: async () => ({ data: result.data, error: result.error ?? null }) }),
+  }));
+  return { client: { from: () => ({ insert }) } as unknown as SupabaseClient, insert };
+}
+
+function renderAction(session: Partial<SessionValue>, client: SupabaseClient | null, onPublished = vi.fn()) {
+  render(
+    <SessionContext.Provider value={{ ...DEFAULT_SESSION, ...session }}>
+      <PublishAction catalog={catalog} dirty={false} onPublished={onPublished} client={client} />
+    </SessionContext.Provider>,
+  );
+  return { onPublished };
+}
+
+describe("PublishAction", () => {
+  it("reste invisible pour un joueur non admin", () => {
+    const { client } = fakeClient({ data: { id: 1, published_at: null } });
+    const { container } = render(
+      <SessionContext.Provider value={{ ...DEFAULT_SESSION, status: "anonymous" }}>
+        <PublishAction catalog={catalog} dirty={false} onPublished={vi.fn()} client={client} />
+      </SessionContext.Provider>,
+    );
+    expect(container.textContent).toBe("");
+  });
+
+  it("reste invisible sans backend configuré", () => {
+    const { container } = render(
+      <SessionContext.Provider value={{ ...DEFAULT_SESSION, ...admin }}>
+        <PublishAction catalog={catalog} dirty={false} onPublished={vi.fn()} client={null} />
+      </SessionContext.Provider>,
+    );
+    expect(container.textContent).toBe("");
+  });
+
+  it("demande confirmation avant de publier", () => {
+    const { client, insert } = fakeClient({ data: { id: 1, published_at: null } });
+    renderAction(admin, client);
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    expect(screen.getByText(/servi à tous les joueurs/i)).toBeTruthy();
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("publie, met le cache à jour et abandonne le brouillon local", async () => {
+    const { client, insert } = fakeClient({ data: { id: 42, published_at: "2026-07-25T10:00:00Z" } });
+    const { onPublished } = renderAction(admin, client);
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    fireEvent.click(screen.getByRole("button", { name: "Publier maintenant" }));
+    await waitFor(() => expect(onPublished).toHaveBeenCalled());
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ author_id: "admin-1" }));
+    expect(readPublishedCatalog()?.versionId).toBe(42);
+    expect(await screen.findByText(/est en ligne/i)).toBeTruthy();
+  });
+
+  it("affiche le refus du serveur sans rien changer localement", async () => {
+    const { client } = fakeClient({ data: null, error: { code: "42501", message: "row-level security" } });
+    const { onPublished } = renderAction(admin, client);
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    fireEvent.click(screen.getByRole("button", { name: "Publier maintenant" }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByRole("alert").textContent).toMatch(/administrateur/i);
+    expect(onPublished).not.toHaveBeenCalled();
+    expect(readPublishedCatalog()).toBeNull();
+  });
+});

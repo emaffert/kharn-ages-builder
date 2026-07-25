@@ -12,6 +12,7 @@ import { MountsDetail } from "./admin/MountsDetail";
 import { MountOptionDetail } from "./admin/MountOptionDetail";
 import { SettingsDetail } from "./admin/SettingsDetail";
 import { AdminDocs } from "./admin/AdminDocs";
+import { PublishAction } from "./admin/PublishAction";
 import "./admin/admin.css";
 
 // Ordre et libellés des catégories d'équipement pour le regroupement de la barre latérale.
@@ -415,6 +416,7 @@ export function AdminCatalog() {
               Enregistrer
             </Button>
           )}
+          <PublishAction catalog={catalog} dirty={store.dirty} onPublished={store.markPublished} />
           <Button variant="primary" size="sm" onClick={store.exportJson}>
             Exporter
           </Button>

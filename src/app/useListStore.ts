@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { evaluateList, type Catalog, type EvaluationResult, type ListDocument, type ProfileInstance } from "@core";
-import { loadCatalog } from "@data";
+import { useCatalog } from "./catalog/context";
 import { allSavedLists, deleteSavedList, saveList } from "./io/listsDb";
 import { newInstanceId, newListId } from "./io/ids";
 
@@ -92,7 +92,8 @@ export interface ListStore {
 }
 
 export function useListStore(initialFactionId = "fangs"): ListStore {
-  const catalog = useMemo(() => loadCatalog(), []);
+  // Catalogue actif fourni par `CatalogProvider` (version publiée ou brouillon admin local).
+  const { catalog } = useCatalog();
   const [list, setList] = useState<ListDocument>(() => emptyList(catalog, initialFactionId));
   const evaluation = useMemo(() => evaluateList(catalog, list), [catalog, list]);
   const fdl = list.fersDeLance[0];

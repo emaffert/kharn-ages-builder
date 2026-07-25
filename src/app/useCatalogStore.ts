@@ -18,6 +18,7 @@ import {
   type Spell,
 } from "@core";
 import { loadCatalog } from "@data";
+import { useCatalog } from "./catalog/context";
 
 const STORAGE_KEY = "kharn-admin-catalog-v1";
 
@@ -81,7 +82,9 @@ function isModelReferenced(cat: Catalog, modelId: string): boolean {
 export function useCatalogStore() {
   // Une seule lecture/validation Zod du catalogue stocké au montage (évite un double parse).
   const stored = useMemo(() => readStored(), []);
-  const [catalog, setCatalog] = useState<Catalog>(() => stored ?? loadCatalog());
+  // Sans brouillon local, on édite la version publiée servie par `CatalogProvider`.
+  const { catalog: active, refresh: refreshActive } = useCatalog();
+  const [catalog, setCatalog] = useState<Catalog>(() => stored ?? active);
   const [dirty, setDirty] = useState<boolean>(() => stored != null);
 
   const apply = useCallback((updater: (c: Catalog) => Catalog) => {
@@ -505,15 +508,27 @@ export function useCatalogStore() {
     [apply],
   );
 
-  const reset = useCallback(() => {
+  /** Abandonne le brouillon local : la source redevient la version publiée (ou le fichier). */
+  const dropDraft = useCallback(() => {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
       /* ignore */
     }
-    setCatalog(loadCatalog());
     setDirty(false);
-  }, []);
+    refreshActive();
+  }, [refreshActive]);
+
+  const reset = useCallback(() => {
+    dropDraft();
+    setCatalog(loadCatalog());
+  }, [dropDraft]);
+
+  /**
+   * Après publication : le catalogue édité est désormais la version de référence côté serveur,
+   * on abandonne le brouillon local pour qu'aucune divergence ne subsiste.
+   */
+  const markPublished = useCallback(() => dropDraft(), [dropDraft]);
 
   /** Charge un catalogue depuis du JSON (validé). Retourne un message d'erreur, ou null si OK. */
   const importJson = useCallback(
@@ -545,17 +560,12 @@ export function useCatalogStore() {
         return j.error ?? `HTTP ${res.status}`;
       }
       // Le fichier devient la source ; on abandonne la copie locale pour éviter toute divergence.
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {
-        /* ignore */
-      }
-      setDirty(false);
+      dropDraft();
       return null;
     } catch (e) {
       return e instanceof Error ? e.message : "échec de l'enregistrement";
     }
-  }, [catalog]);
+  }, [catalog, dropDraft]);
 
   const exportJson = useCallback(() => {
     const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" });
@@ -621,5 +631,6 @@ export function useCatalogStore() {
     exportJson,
     importJson,
     saveToProject,
+    markPublished,
   };
 }

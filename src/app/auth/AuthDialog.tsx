@@ -108,11 +108,11 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           </label>
 
           {error && (
-            <p className="kh-auth__error" role="alert">
+            <p className="ui-error" role="alert">
               {error}
             </p>
           )}
-          {notice && <p className="kh-auth__notice">{notice}</p>}
+          {notice && <p className="ui-notice">{notice}</p>}
 
           <Button type="submit" variant="primary" disabled={busy}>
             {mode === "signin" ? "Se connecter" : "Créer le compte"}

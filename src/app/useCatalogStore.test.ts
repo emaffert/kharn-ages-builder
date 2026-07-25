@@ -80,32 +80,24 @@ describe("useCatalogStore", () => {
     expect(m).toMatchObject({ factionId: "kherops", profileIds: [] });
   });
 
-  it("importe un catalogue JSON valide (round-trip)", () => {
-    const { result } = renderHook(() => useCatalogStore());
-    const json = JSON.stringify({ ...result.current.catalog, version: "importe" });
-    let err: string | null = "non exécuté";
-    act(() => {
-      err = result.current.importJson(json);
-    });
-    expect(err).toBeNull();
-    expect(result.current.catalog.version).toBe("importe");
-  });
-
-  it("rejette un JSON invalide à l'import", () => {
-    const { result } = renderHook(() => useCatalogStore());
-    let err: string | null = null;
-    act(() => {
-      err = result.current.importJson("{ ceci n'est pas du json");
-    });
-    expect(err).not.toBeNull();
-  });
-
-  it("réinitialise les modifications locales", () => {
+  it("repart du fichier du dépôt et abandonne le brouillon", () => {
     const { result } = renderHook(() => useCatalogStore());
     const id = result.current.catalog.profiles[0]!.id;
     act(() => result.current.updateField(id, "cost", 1));
-    act(() => result.current.reset());
+    act(() => result.current.resetToFile());
     expect(result.current.dirty).toBe(false);
     expect(result.current.catalog.profiles.find((p) => p.id === id)!.cost).not.toBe(1);
+  });
+
+  it("adopte un catalogue publié comme nouvelle référence", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    const id = result.current.catalog.profiles[0]!.id;
+    act(() => result.current.updateField(id, "cost", 1));
+    expect(result.current.dirty).toBe(true);
+    const published = { ...result.current.catalog, version: "0.2.0" };
+    act(() => result.current.adoptPublished(published));
+    // Le catalogue affiché devient celui du serveur, et il n'y a plus de brouillon en attente.
+    expect(result.current.catalog.version).toBe("0.2.0");
+    expect(result.current.dirty).toBe(false);
   });
 });

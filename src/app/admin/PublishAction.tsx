@@ -44,7 +44,8 @@ export function PublishAction({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   // Recalculé quand la version publiée change (publication, ou synchro au démarrage).
-  const fileStale = useMemo(() => publishedDivergesFromFile(), [published?.versionId]);
+  // Rappel de resynchronisation du dépôt : seul le développement peut y donner suite.
+  const fileStale = useMemo(() => import.meta.env.DEV && publishedDivergesFromFile(), [published?.versionId]);
 
   if (!client || !isAdmin || !user) return null;
 
@@ -89,8 +90,9 @@ export function PublishAction({
       </p>
       {fileStale && (
         <p className="ui-warn w-full">
-          Le <code>catalog.json</code> du dépôt ne correspond plus à la version publiée. Il sert de repli hors-ligne
-          et à la première visite : exporte le JSON et committe-le pour le remettre à niveau.
+          Le <code>catalog.json</code> du dépôt ne correspond plus à la version publiée, alors qu'il sert de repli
+          hors-ligne et à la première visite. Pour le remettre à niveau : « Repartir de la version publiée », puis
+          « Enregistrer », puis committer.
         </p>
       )}
       <Button variant="primary" size="sm" onClick={open}>

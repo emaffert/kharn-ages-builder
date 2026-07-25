@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Button, Dialog } from "@ui";
 import { useCatalogStore } from "./useCatalogStore";
 import { LEVEL_LABEL } from "./admin/shared";
@@ -13,6 +13,8 @@ import { MountOptionDetail } from "./admin/MountOptionDetail";
 import { SettingsDetail } from "./admin/SettingsDetail";
 import { AdminDocs } from "./admin/AdminDocs";
 import { PublishAction } from "./admin/PublishAction";
+import { PullPublishedAction } from "./admin/PullPublishedAction";
+import { ResetToFileAction } from "./admin/ResetToFileAction";
 import "./admin/admin.css";
 
 // Ordre et libellés des catégories d'équipement pour le regroupement de la barre latérale.
@@ -64,15 +66,6 @@ export function AdminCatalog() {
   const [factionFilter, setFactionFilter] = useState("all");
   const [zoom, setZoom] = useState<string | null>(null);
   const [showDocs, setShowDocs] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    const err = store.importJson(await file.text());
-    if (err) alert(`Import impossible : ${err}`);
-  };
 
   const onSave = async () => {
     const err = await store.saveToProject();
@@ -411,28 +404,18 @@ export function AdminCatalog() {
         </ul>
 
         <div className="adm-sidebar-foot flex flex-wrap gap-1.5 p-3">
+          <PublishAction catalog={catalog} dirty={store.dirty} onPublished={store.adoptPublished} />
+          {/* Outils de développement : ils écrivent dans le dépôt ou rejouent une source de
+              référence, ce qui n'a de sens que sur la machine du développeur. */}
           {import.meta.env.DEV && (
-            <Button variant="primary" size="sm" className="flex-1" onClick={onSave}>
-              Enregistrer
-            </Button>
+            <>
+              <Button variant="primary" size="sm" onClick={onSave}>
+                Enregistrer
+              </Button>
+              <PullPublishedAction dirty={store.dirty} onPulled={store.adoptPublished} />
+              <ResetToFileAction dirty={store.dirty} onReset={store.resetToFile} />
+            </>
           )}
-          <PublishAction catalog={catalog} dirty={store.dirty} onPublished={store.markPublished} />
-          <Button variant="primary" size="sm" onClick={store.exportJson}>
-            Exporter
-          </Button>
-          <Button size="sm" onClick={() => fileRef.current?.click()}>
-            Importer
-          </Button>
-          <Button size="sm" onClick={store.reset} disabled={!store.dirty}>
-            Réinit.
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            onChange={onImport}
-            className="hidden"
-          />
         </div>
       </aside>
 

@@ -17,7 +17,7 @@ import {
   type SpecialCard,
   type Spell,
 } from "@core";
-import { loadCatalog } from "@data";
+import { catalog as bundledCatalog } from "@data";
 import { useCatalog } from "./catalog/context";
 
 const STORAGE_KEY = "kharn-admin-catalog-v1";
@@ -519,35 +519,26 @@ export function useCatalogStore() {
     refreshActive();
   }, [refreshActive]);
 
-  const reset = useCallback(() => {
+  /**
+   * Repart du `catalog.json` du dépôt : le brouillon est abandonné et le fichier redevient la
+   * source éditée. C'est le pendant d'« Enregistrer » pour le développement.
+   */
+  const resetToFile = useCallback(() => {
     dropDraft();
-    setCatalog(loadCatalog());
+    setCatalog(bundledCatalog);
   }, [dropDraft]);
 
   /**
-   * Après publication : le catalogue publié (nom de version compris) devient la référence,
-   * et le brouillon local est abandonné pour qu'aucune divergence ne subsiste.
+   * Repart d'un catalogue de référence venu du serveur - après une publication, ou quand on
+   * récupère la dernière version publiée. Le brouillon local est abandonné pour qu'aucune
+   * divergence ne subsiste.
    */
-  const markPublished = useCallback(
+  const adoptPublished = useCallback(
     (published: Catalog) => {
       setCatalog(published);
       dropDraft();
     },
     [dropDraft],
-  );
-
-  /** Charge un catalogue depuis du JSON (validé). Retourne un message d'erreur, ou null si OK. */
-  const importJson = useCallback(
-    (text: string): string | null => {
-      try {
-        const next = parseCatalog(JSON.parse(text));
-        apply(() => next);
-        return null;
-      } catch (e) {
-        return e instanceof Error ? e.message : "JSON invalide";
-      }
-    },
-    [apply],
   );
 
   /**
@@ -572,16 +563,6 @@ export function useCatalogStore() {
       return e instanceof Error ? e.message : "échec de l'enregistrement";
     }
   }, [catalog, dropDraft]);
-
-  const exportJson = useCallback(() => {
-    const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `catalog.${catalog.version}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [catalog]);
 
   const unverifiedCount = catalog.profiles.reduce(
     (n, p) => n + (p.unverifiedFields?.length ?? 0),
@@ -633,10 +614,8 @@ export function useCatalogStore() {
     removeSpell,
     setIcon,
     toggleUnverified,
-    reset,
-    exportJson,
-    importJson,
+    resetToFile,
     saveToProject,
-    markPublished,
+    adoptPublished,
   };
 }

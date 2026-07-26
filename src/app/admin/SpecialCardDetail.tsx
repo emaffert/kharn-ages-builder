@@ -1,7 +1,7 @@
 import type { Catalog, SpecialCard } from "@core";
 import { SegmentedControl } from "@ui";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
-import { CardImageSection, CheckField, ChipMultiSelect, DetailHeader, DetailPage, Field, FieldGroup, Section } from "./primitives";
+import { CardImageSection, CheckField, ChipMultiSelect, DetailHeader, DetailPage, Field, FieldGroup, NotesSection, Section } from "./primitives";
 import { INPUT, SECTION } from "./shared";
 import { ProfileMultiSelect, TextLinesEditor } from "./editors";
 
@@ -183,6 +183,8 @@ export function SpecialCardDetail({
           <Section title={SECTION.constraints} icon="constraints">
             <ConstraintListEditor constraints={card.constraints} cat={cat} onChange={(c) => onChange({ constraints: c })} />
           </Section>
+
+          <NotesSection notes={card.notes ?? []} onChange={(v) => onChange({ notes: v })} />
 
           <CardImageSection value={card.cardImage} onChange={(v) => onChange({ cardImage: v })} />
         </>

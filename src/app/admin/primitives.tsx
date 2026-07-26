@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Tag } from "@ui";
 import type { FieldValue } from "../useCatalogStore";
-import { INPUT } from "./shared";
+import { INPUT, SECTION } from "./shared";
 import offensive from "../../assets/maitrise/offensive.png";
 import defensive from "../../assets/maitrise/defensive.png";
 import objectif from "../../assets/maitrise/objectif.png";
@@ -400,6 +400,38 @@ export function CardImageSection({
       <Field label="Emplacement du fichier" hint={hint}>
         <input value={value} placeholder="cards/..." onChange={(e) => onChange(e.target.value)} className={`${INPUT} max-w-md`} />
       </Field>
+    </Section>
+  );
+}
+
+/**
+ * Section « Notes internes » canonique (profils, cartes spéciales). Texte libre hors carte, jamais
+ * montré aux joueurs : c'est le bon endroit pour une règle qu'aucune contrainte ne sait exprimer.
+ */
+export function NotesSection({
+  notes,
+  onChange,
+}: {
+  notes: string[];
+  onChange: (v: string[] | undefined) => void;
+}) {
+  const commit = (next: string[]) => onChange(next.length ? next : undefined);
+  return (
+    <Section title={SECTION.notes} icon="notes" note="hors carte, pour la relecture humaine">
+      <div className="space-y-2">
+        {notes.map((n, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <textarea
+              value={n}
+              rows={2}
+              onChange={(e) => commit(notes.map((x, j) => (j === i ? e.target.value : x)))}
+              className={`${INPUT} flex-1`}
+            />
+            <RemoveButton onClick={() => commit(notes.filter((_, j) => j !== i))} />
+          </div>
+        ))}
+        <AddButton onClick={() => commit([...notes, ""])}>+ note</AddButton>
+      </div>
     </Section>
   );
 }

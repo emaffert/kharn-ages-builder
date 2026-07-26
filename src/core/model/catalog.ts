@@ -349,6 +349,11 @@ export const SpecialCardSchema = z.object({
   rulesText: z.array(RuleTextSchema),
   constraints: z.array(ConstraintSchema),
   effects: z.array(EffectSchema),
+  /**
+   * Notes internes (hors carte, jamais montrées aux joueurs) : c'est ici que se consigne une règle
+   * qu'aucun type de contrainte ne couvre, plutôt que dans une contrainte inerte.
+   */
+  notes: z.array(z.string()).optional(),
   cardImage: z.string(),
 });
 export type SpecialCard = z.infer<typeof SpecialCardSchema>;

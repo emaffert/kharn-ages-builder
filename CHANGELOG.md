@@ -7,6 +7,25 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-07-26
+
+### Administration du catalogue
+
+- Les contraintes de recrutement n'affichent plus de réglages sans effet : la « portée » n'est
+  proposée que lorsqu'elle change réellement quelque chose. Sur « nécessite une présence », on
+  choisit désormais si la figurine requise doit être dans le même Fer de Lance ou n'importe où
+  dans l'Ost, et le moteur en tient compte.
+- Le rattachement (Likan et sa porteuse, par exemple) se règle avec un vrai formulaire : on choisit
+  si le porteur est désigné par un trait, par des profils ou par des modèles, et on lui donne le nom
+  lisible affiché aux joueurs. Ce nom n'est plus effacé par la modification du reste.
+- Le réglage « sévérité » disparaît des contraintes : une contrainte bloque toujours la liste. Une
+  règle qui ne bloque pas se consigne en note interne.
+- Le type de contrainte « personnalisée », qui n'était jamais vérifié, est remplacé par des notes
+  internes, désormais disponibles aussi sur les cartes spéciales. Les contraintes de ce type déjà
+  saisies sont reversées automatiquement dans ces notes.
+- « Équipement réservé » s'appelle maintenant « Interdit d'acquérir un grimoire », ce qu'il faisait
+  réellement.
+
 ## 2026-07-25
 
 ### Comptes joueurs

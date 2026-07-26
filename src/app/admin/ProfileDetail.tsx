@@ -5,7 +5,7 @@ import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForP
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
-import { AddButton, Badge, CardImageSection, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, RemoveButton, RuleCard, Section } from "./primitives";
+import { AddButton, Badge, CardImageSection, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, NotesSection, RemoveButton, RuleCard, Section } from "./primitives";
 import { INPUT, LEVEL_LABEL, MASTERY_DOMAINS, SECTION, STATS_COMBAT, STATS_SECONDARY, STAT_LABELS, removeAt, replaceAt } from "./shared";
 import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
 
@@ -436,27 +436,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
             </div>
           </Section>
 
-          <Section title={SECTION.notes} icon="notes">
-            <div className="space-y-2">
-              {(profile.notes ?? []).map((n, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <textarea
-                    value={n}
-                    rows={2}
-                    onChange={(e) => patch({ notes: replaceAt(profile.notes ?? [], i, e.target.value) })}
-                    className={`${INPUT} flex-1`}
-                  />
-                  <RemoveButton
-                    onClick={() => {
-                      const next = removeAt(profile.notes ?? [], i);
-                      patch({ notes: next.length ? next : undefined });
-                    }}
-                  />
-                </div>
-              ))}
-              <AddButton onClick={() => patch({ notes: [...(profile.notes ?? []), ""] })}>+ note</AddButton>
-            </div>
-          </Section>
+          <NotesSection notes={profile.notes ?? []} onChange={(v) => patch({ notes: v })} />
 
           <Section title={SECTION.effects} icon="effects" id="sec-effects">
             <EffectListEditor
@@ -506,7 +486,6 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
                     sourceText={c.sourceText}
                     badges={
                       <>
-                        <Badge tone={c.severity === "error" ? "red" : "amber"}>{c.severity}</Badge>
                         <Badge>{c.type}</Badge>
                         <Badge tone="violet">via « {via} »</Badge>
                       </>

@@ -186,10 +186,11 @@ export function pagesUsed(cat: Catalog, inst: ProfileInstance): number {
   return inst.spellIds.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
 }
 
-/** Grimoires que la figurine ne peut pas acquérir (param `forbidGrimoires` d'une contrainte de profil). */
+/** Grimoires que la figurine ne peut pas acquérir (contrainte `forbids-grimoire` de son profil). */
 export function forbiddenGrimoires(profile: Profile): Set<string> {
   const out = new Set<string>();
   for (const c of profile.recruitment) {
+    if (c.type !== "forbids-grimoire") continue;
     (c.params as { forbidGrimoires?: string[] })?.forbidGrimoires?.forEach((g) => out.add(g));
   }
   return out;

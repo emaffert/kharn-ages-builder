@@ -1,9 +1,13 @@
-import type { Catalog, Constraint, ConstraintType, Effect, Selector } from "@core";
+import { useState } from "react";
+import type { Catalog, Constraint, ConstraintScope, ConstraintType, Effect, Selector } from "@core";
+import { CONSTRAINT_SCOPES, defaultConstraintScope, scopeIsChosen } from "@core";
+import { SegmentedControl } from "@ui";
 import { describeConstraint, describeEffect } from "@ui/explain";
 import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared";
-import { Combobox, Field, CheckField } from "./admin/primitives";
-import { AddButton, ChipsField, TxtField } from "./ruleEditors/kit";
-import { GRIMOIRE_OPTIONS, profileOptions, type Option } from "./ruleEditors/helpers";
+import { Combobox, Field, FieldGroup, CheckField } from "./admin/primitives";
+import { ProfileMultiSelect } from "./admin/editors";
+import { AddButton, ChipsField, StringList, TxtField } from "./ruleEditors/kit";
+import { GRIMOIRE_OPTIONS, modelOptions, profileOptions, type Option } from "./ruleEditors/helpers";
 import { SelectorEditor } from "./ruleEditors/SelectorEditor";
 import { OperationEditor } from "./ruleEditors/OperationEditor";
 
@@ -14,26 +18,39 @@ import { OperationEditor } from "./ruleEditors/OperationEditor";
  * de contrainte.
  */
 
-// Types réellement appliqués par le moteur (+ « custom » = note libre non vérifiée).
-// Les types prévus mais non implémentés sont retirés jusqu'à leur implémentation, pour ne pas
-// exposer des champs sans effet.
+// Tous les types du modèle sont proposés : chacun est réellement appliqué par le moteur. Une règle
+// qu'aucun type ne couvre se consigne dans les notes internes, pas en contrainte.
 const CONSTRAINT_TYPES: ConstraintType[] = [
   "forbids-equipment",
   "requires-present",
   "faction-membership",
-  "equipment-reserved",
+  "forbids-grimoire",
   "attachment",
-  "custom",
 ];
 
 // Libellés français des types de contrainte proposés (fallback sur l'identifiant brut).
-const CONSTRAINT_LABELS: Partial<Record<ConstraintType, string>> = {
+const CONSTRAINT_LABELS: Record<ConstraintType, string> = {
   "forbids-equipment": "Interdit d'équiper",
   "requires-present": "Nécessite une présence",
   "faction-membership": "Appartenance de faction",
-  "equipment-reserved": "Équipement réservé",
+  "forbids-grimoire": "Interdit d'acquérir un grimoire",
   attachment: "Rattachement (garde / porteur)",
-  custom: "Personnalisée (note libre)",
+};
+
+// Où le moteur cherche, dit du point de vue de l'utilisateur.
+const SCOPE_LABEL: Record<ConstraintScope, string> = {
+  profil: "La figurine elle-même",
+  "fer-de-lance": "Le Fer de Lance",
+  ost: "L'Ost (toute la liste)",
+};
+
+// Pour les types dont la portée est imposée par la mécanique : pourquoi elle ne se choisit pas.
+const SCOPE_FIXED_REASON: Record<ConstraintType, string> = {
+  "forbids-equipment": "La règle ne regarde que l'équipement de cette figurine.",
+  "forbids-grimoire": "La règle ne regarde que les acquisitions de cette figurine.",
+  "faction-membership": "La faction de la figurine est comparée à celle du Fer de Lance qui l'accueille.",
+  attachment: "Le porteur et ses rattachés appartiennent au même Fer de Lance.",
+  "requires-present": "",
 };
 
 // ── Params d'une contrainte (selon le type) ───────────────────────────────────
@@ -109,7 +126,7 @@ function ParamsEditor({
           onChange={(v) => set({ allowedFactions: v })}
         />
       );
-    case "equipment-reserved":
+    case "forbids-grimoire":
       return (
         <ChipsField
           label="Grimoires interdits"
@@ -118,42 +135,121 @@ function ParamsEditor({
           onChange={(v) => set({ forbidGrimoires: v })}
         />
       );
-    case "attachment": {
-      const carrier = (params.carrier as { trait?: string } | undefined) ?? {};
+    case "attachment":
       return (
-        <div className="flex flex-wrap gap-3">
-          <TxtField
-            label="Trait du porteur"
-            value={carrier.trait ?? ""}
-            onChange={(v) => set({ carrier: v ? { trait: v } : undefined })}
-          />
-          <TxtField
-            label="Règle de capacité"
-            value={str("capacityRule")}
-            onChange={(v) => set({ capacityRule: v || undefined })}
-          />
-        </div>
+        <CarrierEditor
+          carrier={params.carrier as CarrierParams | undefined}
+          cat={cat}
+          onChange={(v) => set({ carrier: v })}
+        />
       );
-    }
     default:
-      // Types sans éditeur dédié (custom…) : params libres en JSON.
-      return (
-        <Field label="Paramètres (JSON)">
-          <textarea
-            defaultValue={JSON.stringify(params, null, 2)}
-            onBlur={(e) => {
-              try {
-                onChange(JSON.parse(e.target.value));
-              } catch {
-                /* JSON invalide : ignoré jusqu'à correction */
-              }
-            }}
-            className={`${INPUT} block w-full font-mono`}
-            rows={3}
-          />
-        </Field>
-      );
+      return null;
   }
+}
+
+/** Porteur d'un rattachement : par trait, par profils ou par modèles, plus son libellé lisible. */
+type CarrierParams = { trait?: string; label?: string; profileIds?: string[]; modelIds?: string[] };
+
+/** Manières de désigner le porteur. Elles s'excluent : une seule est renseignée à la fois. */
+type CarrierMode = "trait" | "profiles" | "models";
+
+const CARRIER_MODES: { value: CarrierMode; label: string }[] = [
+  { value: "trait", label: "Un trait" },
+  { value: "profiles", label: "Des profils" },
+  { value: "models", label: "Des modèles" },
+];
+
+/** Manière déjà employée par la donnée (défaut : le trait, cas le plus courant). */
+function carrierModeOf(c: CarrierParams): CarrierMode {
+  if (c.profileIds?.length) return "profiles";
+  if (c.modelIds?.length) return "models";
+  return "trait";
+}
+
+/**
+ * Qui peut porter la figurine rattachée. Ce bloc pilote le **recrutement** (le dépendant ne
+ * s'achète pas seul, il se recrute depuis son porteur), pas la validation : la capacité, elle,
+ * est toujours « somme des niveaux des rattachés ≤ niveau du porteur ».
+ *
+ * Le porteur se désigne d'**une seule** manière : le sélecteur choisit laquelle, et seule la
+ * dimension correspondante est enregistrée. Le nom lisible, lui, survit à tous les changements.
+ */
+function CarrierEditor({
+  carrier,
+  cat,
+  onChange,
+}: {
+  carrier: CarrierParams | undefined;
+  cat: Catalog;
+  onChange: (v: CarrierParams | undefined) => void;
+}) {
+  const c = carrier ?? {};
+  const [mode, setMode] = useState<CarrierMode>(() => carrierModeOf(c));
+  // N'écrit que la dimension active : changer de manière ne laisse pas l'ancienne derrière elle.
+  const write = (patch: Partial<CarrierParams>, on: CarrierMode = mode) => {
+    const next: CarrierParams = { ...c, ...patch };
+    const out: CarrierParams = {};
+    if (next.label) out.label = next.label;
+    if (on === "trait" && next.trait) out.trait = next.trait;
+    if (on === "profiles" && next.profileIds?.length) out.profileIds = next.profileIds;
+    if (on === "models" && next.modelIds?.length) out.modelIds = next.modelIds;
+    onChange(Object.keys(out).length ? out : undefined);
+  };
+  const switchMode = (m: CarrierMode) => {
+    setMode(m);
+    write({}, m); // les dimensions des autres manières sont abandonnées
+  };
+  const empty = !c.trait && !c.profileIds?.length && !c.modelIds?.length;
+  return (
+    <div className="space-y-3">
+      <Field label="Porteur désigné par">
+        <SegmentedControl
+          ariaLabel="Porteur désigné par"
+          value={mode}
+          onChange={(v) => switchMode(v as CarrierMode)}
+          options={CARRIER_MODES}
+        />
+      </Field>
+      {mode === "trait" && (
+        <TxtField
+          label="Trait du porteur"
+          hint="ex. femelle-fang"
+          w="w-56"
+          value={c.trait ?? ""}
+          onChange={(v) => write({ trait: v || undefined })}
+        />
+      )}
+      {mode === "profiles" && (
+        <ProfileMultiSelect
+          label="Profils porteurs"
+          ids={c.profileIds ?? []}
+          cat={cat}
+          onChange={(v) => write({ profileIds: v })}
+        />
+      )}
+      {mode === "models" && (
+        <StringList
+          label="Modèles porteurs"
+          values={c.modelIds ?? []}
+          onChange={(v) => write({ modelIds: v })}
+          options={modelOptions(cat)}
+        />
+      )}
+      <TxtField
+        label="Nom lisible du porteur"
+        hint="affiché aux joueurs, ex. « une femelle Fang »"
+        w="w-72"
+        value={c.label ?? ""}
+        onChange={(v) => write({ label: v || undefined })}
+      />
+      {empty && (
+        <p className="adm-field-hint">
+          Sans porteur, cette figurine redevient recrutable directement dans le constructeur.
+        </p>
+      )}
+    </div>
+  );
 }
 
 // ── Carte d'édition (commune) ─────────────────────────────────────────────────
@@ -203,7 +299,15 @@ export function ConstraintListEditor({
         <EditorCard key={i} preview={describeConstraint(c, cat)} onRemove={() => onChange(removeAt(constraints, i))}>
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Type" className="w-56">
-              <select value={c.type} onChange={(e) => update(i, { ...c, type: e.target.value as ConstraintType, params: {} })} className={INPUT}>
+              <select
+                value={c.type}
+                onChange={(e) => {
+                  // Changer de type remet des params vierges ET la portée propre au nouveau type.
+                  const type = e.target.value as ConstraintType;
+                  update(i, { ...c, type, params: {}, scope: defaultConstraintScope(type) });
+                }}
+                className={INPUT}
+              >
                 {CONSTRAINT_TYPES.map((t) => (
                   <option key={t} value={t}>
                     {CONSTRAINT_LABELS[t] ?? t}
@@ -211,19 +315,27 @@ export function ConstraintListEditor({
                 ))}
               </select>
             </Field>
-            <Field label="Portée" className="w-40">
-              <select value={c.scope} onChange={(e) => update(i, { ...c, scope: e.target.value as Constraint["scope"] })} className={INPUT}>
-                <option value="profil">profil</option>
-                <option value="fer-de-lance">fer-de-lance</option>
-                <option value="ost">ost</option>
-              </select>
-            </Field>
-            <Field label="Sévérité" className="w-32">
-              <select value={c.severity} onChange={(e) => update(i, { ...c, severity: e.target.value as Constraint["severity"] })} className={INPUT}>
-                <option value="error">erreur</option>
-                <option value="warning">avertissement</option>
-              </select>
-            </Field>
+            {scopeIsChosen(c.type) ? (
+              <Field label="Où chercher" className="w-52">
+                <select
+                  value={c.scope}
+                  onChange={(e) => update(i, { ...c, scope: e.target.value as ConstraintScope })}
+                  className={INPUT}
+                >
+                  {CONSTRAINT_SCOPES[c.type].map((s) => (
+                    <option key={s} value={s}>
+                      {SCOPE_LABEL[s]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            ) : (
+              <FieldGroup label="Où chercher" className="max-w-xs">
+                <p className="adm-faint text-xs leading-snug">
+                  {SCOPE_LABEL[c.scope]}. {SCOPE_FIXED_REASON[c.type]}
+                </p>
+              </FieldGroup>
+            )}
           </div>
           <div className="adm-field-label pt-1">Paramètres</div>
           <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} onProfile={onProfile} />
@@ -238,11 +350,10 @@ export function ConstraintListEditor({
             ...constraints,
             {
               id: `c-${Date.now()}`,
-              type: "custom",
+              type: "forbids-equipment",
               params: {},
-              scope: "profil",
+              scope: defaultConstraintScope("forbids-equipment"),
               sourceText: "",
-              severity: "error",
             },
           ])
         }

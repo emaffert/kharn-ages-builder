@@ -1017,7 +1017,7 @@ function validateForbiddenEquipment(
       );
       if (offending.length > 0) {
         issues.push({
-          severity: constraint.severity,
+          severity: "error",
           ferDeLanceId: ri.ferDeLanceId,
           instanceId: ri.instance.instanceId,
           ruleId: constraint.id,
@@ -1128,6 +1128,11 @@ function validateReservedEquipment(cat: Catalog, resolved: ResolvedInstance[], i
   }
 }
 
+/**
+ * « X ne peut pas être recruté sans Y ». La **portée** de la contrainte dit où chercher Y :
+ * `fer-de-lance` (défaut, ex. Xayìn & Muskh « réunis dans un même Fer de Lance ») ou `ost`
+ * (la présence de Y n'importe où dans la bande suffit).
+ */
 function validateRequiresPresent(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
   type Req = { subjectProfileId: string; requiredProfileId: string; constraint: Constraint };
   const reqs: Req[] = [];
@@ -1151,23 +1156,26 @@ function validateRequiresPresent(cat: Catalog, resolved: ResolvedInstance[], iss
   }
 
   for (const req of reqs) {
-    // Vérifié par Fer de Lance.
-    const fdlIds = [...new Set(resolved.map((ri) => ri.ferDeLanceId))];
-    for (const fdlId of fdlIds) {
-      const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdlId);
-      const hasSubject = inFdl.some((ri) => ri.profile.id === req.subjectProfileId);
-      const hasRequired = inFdl.some((ri) => ri.profile.id === req.requiredProfileId);
-      if (hasSubject && !hasRequired) {
-        const subject = inFdl.find((ri) => ri.profile.id === req.subjectProfileId)!;
-        issues.push({
-          severity: req.constraint.severity,
-          ferDeLanceId: fdlId,
-          instanceId: subject.instance.instanceId,
-          ruleId: req.constraint.id,
-          message: `« ${subject.profile.name} » nécessite la présence d'une autre figurine dans le Fer de Lance.`,
-          sourceText: req.constraint.sourceText,
-        });
-      }
+    const inOst = req.constraint.scope === "ost";
+    // Portée « ost » : un seul groupe (toute la liste). Sinon, un groupe par Fer de Lance.
+    const groups = inOst
+      ? [resolved]
+      : [...new Set(resolved.map((ri) => ri.ferDeLanceId))].map((id) =>
+          resolved.filter((ri) => ri.ferDeLanceId === id),
+        );
+    const where = inOst ? "l'Ost" : "le Fer de Lance";
+    for (const pool of groups) {
+      const subject = pool.find((ri) => ri.profile.id === req.subjectProfileId);
+      if (!subject) continue;
+      if (pool.some((ri) => ri.profile.id === req.requiredProfileId)) continue;
+      issues.push({
+        severity: "error",
+        ferDeLanceId: subject.ferDeLanceId,
+        instanceId: subject.instance.instanceId,
+        ruleId: req.constraint.id,
+        message: `« ${subject.profile.name} » nécessite la présence d'une autre figurine dans ${where}.`,
+        sourceText: req.constraint.sourceText,
+      });
     }
   }
 }
@@ -1201,7 +1209,7 @@ function validateAttachments(
       const sumLevels = attachedRis.reduce((s, ri) => s + (ri.profile.level ?? 0), 0);
       if (sumLevels > carrierLevel) {
         issues.push({
-          severity: attachmentConstraint.severity,
+          severity: "error",
           ferDeLanceId: fdl.id,
           instanceId: carrier.instanceId,
           ruleId: attachmentConstraint.id,

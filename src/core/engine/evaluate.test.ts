@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
-import type { ListDocument, ProfileInstance } from "../model";
+import type { Catalog, ListDocument, ProfileInstance } from "../model";
 import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills, slotCapacity } from "./evaluate";
-import { affinityWays, castableSpells, maxPagesInPool, pageAllocation } from "./magic";
+import { affinityWays, castableSpells, forbiddenGrimoires, maxPagesInPool, pageAllocation } from "./magic";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -373,6 +373,59 @@ describe("validation magie & emplacements", () => {
 
     const petit = evalFang([inst("fangs-meneuse-1", { grimoireId: "petit" })]);
     expect(petit.issues.some((i) => i.ruleId === "grimoire-forbidden")).toBe(false);
+  });
+
+  it("ignore un « forbidGrimoires » porté par un autre type de contrainte", () => {
+    // Le param n'a d'effet que sur une contrainte « forbids-grimoire » : ailleurs, il est inerte.
+    const meneuse = catalog.profiles.find((p) => p.id === "fangs-meneuse-1")!;
+    const detourne = {
+      ...meneuse,
+      recruitment: meneuse.recruitment.map((c) =>
+        c.type === "forbids-grimoire" ? { ...c, type: "forbids-equipment" as const } : c,
+      ),
+    };
+    expect(forbiddenGrimoires(detourne).size).toBe(0);
+    expect(forbiddenGrimoires(meneuse).has("grand")).toBe(true);
+  });
+});
+
+describe("portée d'une contrainte « nécessite une présence »", () => {
+  // La contrainte « Muskh sans Xayìn » est portée par la carte « Xayìn & Muskh ».
+  const withScope = (scope: "fer-de-lance" | "ost"): Catalog => ({
+    ...catalog,
+    specialCards: catalog.specialCards.map((card) => ({
+      ...card,
+      constraints: card.constraints.map((c) =>
+        c.id === "muskh-requires-xayin" ? { ...c, scope } : c,
+      ),
+    })),
+  });
+
+  /** Deux Fers de Lance dans un même Ost. */
+  const twoFdl = (a: ProfileInstance[], b: ProfileInstance[]): ListDocument => ({
+    ...makeList([...a, ...b]),
+    fersDeLance: [
+      { id: "fdl1", factionId: "fangs", leaderInstanceId: a[0]?.instanceId ?? "", members: a },
+      { id: "fdl2", factionId: "fangs", leaderInstanceId: b[0]?.instanceId ?? "", members: b },
+    ],
+  });
+
+  const flagged = (cat: Catalog, list: ListDocument) =>
+    evaluateList(cat, list).issues.some((i) => i.ruleId === "muskh-requires-xayin");
+
+  it("portée « fer-de-lance » : Xayìn dans l'autre Fer de Lance ne suffit pas", () => {
+    const list = twoFdl([inst("fangs-muskh-1")], [inst("fangs-xayin-2")]);
+    expect(flagged(withScope("fer-de-lance"), list)).toBe(true);
+  });
+
+  it("portée « ost » : Xayìn n'importe où dans la liste suffit", () => {
+    const list = twoFdl([inst("fangs-muskh-1")], [inst("fangs-xayin-2")]);
+    expect(flagged(withScope("ost"), list)).toBe(false);
+  });
+
+  it("portée « ost » : Xayìn absent de toute la liste reste une erreur", () => {
+    const list = twoFdl([inst("fangs-muskh-1")], [inst("fangs-goulue-1")]);
+    expect(flagged(withScope("ost"), list)).toBe(true);
   });
 });
 

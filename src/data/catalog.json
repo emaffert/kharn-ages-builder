@@ -1130,8 +1130,7 @@
             ]
           },
           "scope": "profil",
-          "sourceText": "Éprouvé : ne peut être recruté avec une arme.",
-          "severity": "error"
+          "sourceText": "Éprouvé : ne peut être recruté avec une arme."
         }
       ],
       "rules": [
@@ -1203,12 +1202,10 @@
             "carrier": {
               "label": "une femelle Fang",
               "trait": "femelle-fang"
-            },
-            "capacityRule": "sum(attached.level) <= carrier.level"
+            }
           },
           "scope": "fer-de-lance",
-          "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
-          "severity": "error"
+          "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau."
         },
         {
           "id": "likan-no-equipment",
@@ -1225,8 +1222,7 @@
             ]
           },
           "scope": "profil",
-          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
-          "severity": "error"
+          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil."
         }
       ],
       "rules": [
@@ -1297,12 +1293,10 @@
             "carrier": {
               "label": "une femelle Fang",
               "trait": "femelle-fang"
-            },
-            "capacityRule": "sum(attached.level) <= carrier.level"
+            }
           },
           "scope": "fer-de-lance",
-          "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
-          "severity": "error"
+          "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau."
         },
         {
           "id": "likan-no-equipment",
@@ -1319,8 +1313,7 @@
             ]
           },
           "scope": "profil",
-          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
-          "severity": "error"
+          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil."
         }
       ],
       "rules": [
@@ -1398,12 +1391,10 @@
             "carrier": {
               "label": "une femelle Fang",
               "trait": "femelle-fang"
-            },
-            "capacityRule": "sum(attached.level) <= carrier.level"
+            }
           },
           "scope": "fer-de-lance",
-          "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau.",
-          "severity": "error"
+          "sourceText": "La somme des niveaux des Likans, qu'elles possèdent, ne peut pas excéder leur niveau."
         },
         {
           "id": "likan-no-equipment",
@@ -1420,8 +1411,7 @@
             ]
           },
           "scope": "profil",
-          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil.",
-          "severity": "error"
+          "sourceText": "Ne peuvent pas bénéficier de l'ajout d'équipement et ne peuvent posséder que les éventuelles armes décrites sur leur carte de profil."
         }
       ],
       "rules": [
@@ -1873,15 +1863,14 @@
       "recruitment": [
         {
           "id": "meneuse-1-no-grand-grimoire",
-          "type": "equipment-reserved",
+          "type": "forbids-grimoire",
           "params": {
             "forbidGrimoires": [
               "grand"
             ]
           },
           "scope": "profil",
-          "sourceText": "Ne peut pas acquérir de « Grand Grimoire ».",
-          "severity": "error"
+          "sourceText": "Ne peut pas acquérir de « Grand Grimoire »."
         }
       ],
       "rules": [
@@ -5828,9 +5817,8 @@
               "affranchis"
             ]
           },
-          "scope": "profil",
-          "sourceText": "",
-          "severity": "error"
+          "scope": "fer-de-lance",
+          "sourceText": ""
         }
       ],
       "rules": [],
@@ -9099,9 +9087,8 @@
               "kherops"
             ]
           },
-          "scope": "profil",
-          "sourceText": "",
-          "severity": "error"
+          "scope": "fer-de-lance",
+          "sourceText": ""
         }
       ],
       "effects": [
@@ -9208,9 +9195,8 @@
               "fangs"
             ]
           },
-          "scope": "profil",
-          "sourceText": "",
-          "severity": "error"
+          "scope": "fer-de-lance",
+          "sourceText": ""
         }
       ],
       "rules": [],
@@ -9291,9 +9277,8 @@
               "kharns"
             ]
           },
-          "scope": "profil",
-          "sourceText": "",
-          "severity": "error"
+          "scope": "fer-de-lance",
+          "sourceText": ""
         }
       ],
       "rules": [],
@@ -9426,9 +9411,8 @@
               "kharns"
             ]
           },
-          "scope": "profil",
-          "sourceText": "",
-          "severity": "error"
+          "scope": "fer-de-lance",
+          "sourceText": ""
         }
       ],
       "rules": [
@@ -11386,8 +11370,7 @@
             "requiredProfileId": "fangs-xayin-2"
           },
           "scope": "fer-de-lance",
-          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
-          "severity": "error"
+          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement."
         },
         {
           "id": "muskh-no-equipment",
@@ -11403,8 +11386,7 @@
             ]
           },
           "scope": "profil",
-          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement.",
-          "severity": "error"
+          "sourceText": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement."
         }
       ],
       "effects": [],

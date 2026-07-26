@@ -58,26 +58,39 @@ export function describeConstraint(c: Constraint, cat: Catalog): string {
     }
     case "requires-present": {
       const req = (c.params as { requiredProfileId?: string }).requiredProfileId;
-      return `Nécessite la présence de « ${req ? profileName(cat, req) : "?"} » dans le Fer de Lance.`;
+      const where = c.scope === "ost" ? "l'Ost" : "le Fer de Lance";
+      return `Nécessite la présence de « ${req ? profileName(cat, req) : "?"} » dans ${where}.`;
     }
     case "attachment": {
-      const p = c.params as { carrier?: { trait?: string }; capacityRule?: string };
-      return `Doit être rattaché à une figurine « ${p.carrier?.trait ?? "?"} ». Capacité : ${p.capacityRule ?? "?"}.`;
+      const car = (c.params as { carrier?: CarrierParams }).carrier;
+      return `Doit être rattaché à ${carrierText(car, cat)}. La somme des niveaux des rattachés ne peut pas dépasser le niveau du porteur.`;
     }
-    case "equipment-reserved": {
-      const p = c.params as { forbidGrimoires?: string[]; trait?: string };
-      if (p.forbidGrimoires) return `Ne peut pas acquérir : grimoire(s) ${p.forbidGrimoires.join(", ")}.`;
-      if (p.trait) return `Réservé aux figurines « ${p.trait} ».`;
-      return c.sourceText;
+    case "forbids-grimoire": {
+      const g = (c.params as { forbidGrimoires?: string[] }).forbidGrimoires ?? [];
+      return `Ne peut pas acquérir : grimoire(s) ${g.join(", ") || "?"}.`;
     }
     case "faction-membership": {
       const f = (c.params as { allowedFactions?: string[] }).allowedFactions ?? [];
       return `Recrutable dans les factions : ${f.join(", ")}.`;
     }
-    case "custom":
     default:
       return c.sourceText;
   }
+}
+
+/** Porteur d'une contrainte de rattachement : trait, profils ou modèles, plus un libellé lisible. */
+type CarrierParams = { trait?: string; label?: string; profileIds?: string[]; modelIds?: string[] };
+
+/** Formulation lisible du porteur (« une femelle Fang », sinon les noms, sinon le tag brut). */
+function carrierText(car: CarrierParams | undefined, cat: Catalog): string {
+  if (!car) return "un porteur";
+  if (car.label) return car.label;
+  const names = [
+    ...(car.profileIds ?? []).map((id) => profileName(cat, id)),
+    ...(car.modelIds ?? []).map((id) => cat.models.find((m) => m.id === id)?.name ?? id),
+  ];
+  if (names.length) return names.map((n) => `« ${n} »`).join(" ou ");
+  return car.trait ? `une figurine « ${car.trait} »` : "un porteur";
 }
 
 export function describeEffect(e: Effect, cat: Catalog): string {
@@ -177,10 +190,8 @@ export function explainTraitUsage(trait: string, cat: Catalog): string[] {
     return clauses.some((s) => Boolean(s.traits?.includes(trait)));
   };
   const constraintUses = (c: Constraint) => {
-    const p = c.params as { carrier?: { trait?: string }; trait?: string };
-    if (c.type === "attachment" && p.carrier?.trait === trait) return true;
-    if (c.type === "equipment-reserved" && p.trait === trait) return true;
-    return false;
+    const p = c.params as { carrier?: { trait?: string } };
+    return c.type === "attachment" && p.carrier?.trait === trait;
   };
   // Un effet référence le trait via sa cible, sa condition, le `of` de son opération
   // (stat-count / stat-max / skill-count) ou la désignation garde du corps.

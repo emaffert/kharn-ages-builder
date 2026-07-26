@@ -256,7 +256,7 @@ function CarrierEditor({
 
 function EditorCard({ children, preview, onRemove }: { children: React.ReactNode; preview: string; onRemove: () => void }) {
   return (
-    <details className="adm-card">
+    <details className="adm-card adm-rulecard">
       <summary className="adm-summary flex cursor-pointer list-none items-center gap-2 p-3 [&::-webkit-details-marker]:hidden">
         <span className="adm-ok flex-1 text-sm">↳ {preview}</span>
         <span className="adm-faint text-xs">modifier ▾</span>
@@ -273,7 +273,7 @@ function EditorCard({ children, preview, onRemove }: { children: React.ReactNode
           ✕
         </button>
       </summary>
-      <div className="adm-bd space-y-2 border-t p-3">{children}</div>
+      <div className="adm-bd border-t">{children}</div>
     </details>
   );
 }

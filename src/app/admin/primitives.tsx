@@ -120,10 +120,24 @@ export function Section({
 export function Block({ title, note, children }: { title: string; note?: ReactNode; children: ReactNode }) {
   return (
     <div className="adm-block">
-      <div className="adm-block-head">
-        <span className="adm-block-title">{title}</span>
-        <span className="adm-block-rule" />
+      <span className="adm-block-title">{title}</span>
+      <div className="adm-block-content">
+        {note && <p className="adm-block-note">{note}</p>}
+        {children}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Sous-groupe **dans** un bloc (le filtre d'équipement d'un coût, le groupe compté d'un décompte).
+ * Marqué par un filet à gauche et non par une gouttière : imbriquer deux gouttières rendrait la
+ * structure illisible et amputerait deux fois la largeur utile.
+ */
+export function SubBlock({ title, note, children }: { title: string; note?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="adm-subblock">
+      <span className="adm-subblock-title">{title}</span>
       {note && <p className="adm-block-note">{note}</p>}
       {children}
     </div>

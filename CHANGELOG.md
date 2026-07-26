@@ -49,6 +49,11 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
   montant porte sur la figurine ou sur certains objets, et si l'effet est réservé aux figurines
   reliées. Les champs n'apparaissent qu'ensuite.
 - Les choix segmentés de l'administration annoncent correctement leur libellé aux lecteurs d'écran.
+- Les parties d'une règle se lisent dans une colonne à gauche, séparées par un filet : on repère la
+  structure sans la chercher. Les contrôles à deux choix passent en contour, pour que la couleur
+  n'attire plus l'œil avant les titres.
+- L'explication placée sous une case à cocher ne se collait pas à son libellé, faute d'un retour à
+  la ligne. Corrigé partout où une case porte une explication.
 - Sur une monture, la cible « le cavalier » remplace le doublon « lui-même », et le libellé de la
   source s'adapte à ce qui porte l'effet (une figurine, une carte, un équipement).
 - Les cartes d'effet et de contrainte sont découpées en parties titrées, au lieu d'une suite de

@@ -92,6 +92,7 @@
 .adm-detail-id { font-size: 11px; color: var(--bone-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 /* Cartes / boîtes d'édition (RuleCard, EditorCard, SelectorEditor) */
+.adm-rulecard { container-type: inline-size; }
 .adm-card { border-radius: var(--radius-sm); border: 1px solid var(--hair-strong); background: var(--tint-1); }
 .adm-summary:hover { background: var(--tint-2); }
 .adm-quote { border-left: 2px solid color-mix(in srgb, var(--ember) 50%, transparent); color: var(--bone-faint); }
@@ -240,17 +241,38 @@
 
 /* ── Bloc : le niveau qui manquait entre la section et le champ ────────────────
    Une carte de règle se compose de parties (opération, cible, conditions…) qui ne sont ni des
-   sections de page ni des champs. La hiérarchie se lit à la FONTE, pas à la taille :
-   Cinzel = structure (section 15px, bloc 13px), Inter = donnée (label de champ 13px).
-   Le bloc n'a ni fond ni cadre - un simple filet qui court jusqu'au bord suffit à le poser. */
-.adm-block { display: flex; flex-direction: column; gap: 9px; }
-.adm-block + .adm-block { margin-top: 18px; }
-.adm-block-head { display: flex; align-items: center; gap: 10px; }
+   sections de page ni des champs. Le titre quitte le flux et s'aligne dans une gouttière à gauche :
+   on lit la structure verticalement, sans la chercher, et un filet pleine largeur sépare les blocs.
+   C'est le seul dispositif qui tienne quand une carte s'allonge à cinq ou six blocs. */
+.adm-block { display: grid; grid-template-columns: 132px 1fr; gap: 18px; padding: 16px 14px; }
+.adm-block + .adm-block { border-top: 1px solid var(--hair); }
 .adm-block-title { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 13px;
-  color: var(--bone); letter-spacing: .02em; white-space: nowrap; }
-.adm-block-rule { flex: 1; height: 1px; background: var(--hair-strong); }
-.adm-block-note { font-size: 11.5px; color: var(--bone-faint); line-height: 1.45; margin-top: -2px; }
+  color: var(--bone-dim); text-align: right; letter-spacing: .02em; line-height: 1.35; padding-top: 2px; }
+.adm-block-content { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.adm-block-note { font-size: 11.5px; color: var(--bone-faint); line-height: 1.45; }
 .adm-block-note strong { color: var(--bone-dim); font-weight: 600; }
+
+/* Sous-groupe dans un bloc : filet à gauche, jamais une seconde gouttière. */
+.adm-subblock { display: flex; flex-direction: column; gap: 8px; padding-left: 12px;
+  border-left: 2px solid var(--hair-strong); }
+.adm-subblock-title { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 12.5px;
+  color: var(--bone-dim); letter-spacing: .02em; }
+
+/* Étroit (colonne de détail comprimée) : la gouttière se replie au-dessus du contenu. La requête
+   porte sur la carte elle-même (`.adm-rulecard`), pas sur la fenêtre : c'est sa largeur qui décide. */
+@container (max-width: 520px) {
+  .adm-block { grid-template-columns: 1fr; gap: 8px; }
+  .adm-block-title { text-align: left; color: var(--ember-bright); }
+}
+
+/* Contrôles segmentés de l'admin : en contour, pas en braise pleine. Le style d'origine vient du
+   constructeur, où un segmenté porte un choix rare et structurant (faction, niveau). Une carte de
+   règle en contient deux ou trois : remplis, ils captaient l'œil avant les titres de bloc. */
+.adm-detail .ui-seg { background: transparent; box-shadow: none; padding: 0; gap: 6px; }
+.adm-detail .ui-seg button { border: 1px solid var(--hair-strong); background: var(--tint-1); }
+.adm-detail .ui-seg button:hover { color: var(--bone); border-color: var(--bone-faint); }
+.adm-detail .ui-seg button[data-on="true"] { color: var(--ember-bright); border-color: var(--ember);
+  background: color-mix(in srgb, var(--ember) 13%, transparent); }
 
 /* Groupe étiqueté : label (+ hint) au-dessus d'un contenu libre (puces, sous-champs…). */
 .adm-fieldgroup { display: flex; flex-direction: column; gap: 6px; }
@@ -259,8 +281,8 @@
 .adm-check { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: var(--radius-sm);
   background: var(--tint-2); box-shadow: inset 0 0 0 1px var(--hair); cursor: pointer; }
 .adm-check > input { margin-top: 2px; width: 15px; height: 15px; flex: none; accent-color: var(--ember); }
-.adm-check-label { font-size: 13px; font-weight: 600; color: var(--bone); }
-.adm-check-hint { font-size: 12px; color: var(--bone-faint); line-height: 1.45; margin-top: 3px; }
+.adm-check-label { display: block; font-size: 13px; font-weight: 600; color: var(--bone); }
+.adm-check-hint { display: block; font-size: 12px; color: var(--bone-faint); line-height: 1.45; margin-top: 3px; }
 
 /* Encart conditionnel : contenu dépendant d'un choix ci-dessus, contenu DANS le bloc (accent braise). */
 .adm-cond { margin-top: 14px; padding: 14px 15px; border-radius: var(--radius-sm); border-left: 3px solid var(--ember);

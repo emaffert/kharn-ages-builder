@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Catalog, EffectSource, Selector } from "@core";
 import { EQUIPMENT_CATEGORIES, INPUT } from "../admin/shared";
 import { SegmentedControl } from "@ui";
-import { Block, Field, CheckField, FieldGroup, NumberField } from "../admin/primitives";
+import { Field, CheckField, FieldGroup, NumberField, SubBlock } from "../admin/primitives";
 import { ChipRow, StringList } from "./kit";
 import { cleanSelector, modelOptions, profileOptions, type Option } from "./helpers";
 
@@ -109,8 +109,6 @@ export function SelectorEditor({
 
   return (
     <div className="space-y-3">
-      <p className="adm-block-note">{ROLE_NOTE[role]}</p>
-
       {has("self") && (
         <FieldGroup label="Qui est visé" hint={sourceChecked ? SELF_HINT[sourceKind] : undefined}>
           <SegmentedControl
@@ -143,6 +141,7 @@ export function SelectorEditor({
       {/* Une cible « source » se suffit à elle-même : les dimensions d'identité ne la restreignent pas. */}
       {!(has("self") && sourceChecked) && (
         <div className="space-y-2">
+          <p className="adm-block-note">{ROLE_NOTE[role]}</p>
           {has("all") && (
             <CheckField
               label="toutes les figurines de la portée"
@@ -213,7 +212,7 @@ export function SelectorEditor({
       )}
 
       {withEquipment && has("equipmentCategories") && (
-        <Block title="Sur quoi porte le montant">
+        <SubBlock title="Sur quoi porte le montant">
           <FieldGroup label="Le montant s'applique">
             <SegmentedControl
               ariaLabel="Sur quoi porte le montant"
@@ -261,7 +260,7 @@ export function SelectorEditor({
               />
             </>
           )}
-        </Block>
+        </SubBlock>
       )}
     </div>
   );
@@ -283,9 +282,9 @@ export function OfSelector({
 }) {
   return (
     <div className="w-full">
-      <Block title={label} note={note}>
+      <SubBlock title={label} note={note}>
         <SelectorEditor selector={of} cat={cat} role="group" onChange={onChange} />
-      </Block>
+      </SubBlock>
     </div>
   );
 }

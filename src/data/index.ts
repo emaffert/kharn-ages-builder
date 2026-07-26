@@ -89,8 +89,14 @@ export function publishedDivergesFromFile(): boolean {
   return JSON.stringify(published.catalog) !== JSON.stringify(catalog);
 }
 
+// Sérialisation du catalogue embarqué, calculée une fois : c'est la partie coûteuse de la
+// comparaison, et elle ne change jamais. Sans ce cache, le garde-fou ne pouvait être appelé qu'avec
+// parcimonie - d'où un bandeau qui restait affiché après avoir été résolu.
+let bundledSerialized: string | null = null;
+
 export function localCatalogDivergesFromFile(): boolean {
   const raw = readLocalStorage(ADMIN_CATALOG_KEY);
   if (!raw) return false;
-  return raw !== JSON.stringify(catalog);
+  bundledSerialized ??= JSON.stringify(catalog);
+  return raw !== bundledSerialized;
 }

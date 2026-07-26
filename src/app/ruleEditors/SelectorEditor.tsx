@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import type { Catalog, EffectSource, Selector } from "@core";
 import { EQUIPMENT_CATEGORIES, INPUT } from "../admin/shared";
 import { SegmentedControl } from "@ui";
-import { Field, CheckField, FieldGroup, NumberField, SubBlock } from "../admin/primitives";
+import { Field, FieldGroup, NumberField, SubBlock } from "../admin/primitives";
 import { ChipRow, StringList } from "./kit";
 import { cleanSelector, modelOptions, profileOptions, type Option } from "./helpers";
 
@@ -55,6 +55,23 @@ const ROLE_NOTE: Record<SelectorRole, React.ReactNode> = {
     </>
   ),
 };
+
+/** Dimensions qui restreignent réellement l'ensemble visé (par opposition à `all`, qui l'ouvre). */
+const CRITERIA: readonly (keyof Selector)[] = ["profileIds", "modelIds", "traits", "factionIds", "levels", "isLeader"];
+const hasCriteria = (sel: Selector) =>
+  CRITERIA.some((k) => { const v = sel[k]; return Array.isArray(v) ? v.length > 0 : v != null; });
+
+/**
+ * Les trois manières de désigner un ensemble, telles que le moteur les distingue vraiment.
+ *
+ * `all` n'est pas un critère : il lève le drapeau « au moins un critère existe » sans rien filtrer.
+ * Un sélecteur vide ne vise donc personne, `all` seul vise tout le monde, et `all` accompagné d'un
+ * critère ne change rien - c'est le critère qui décide. Un contrôle à trois branches rend cette
+ * dernière combinaison, qui n'a aucun sens, impossible à saisir.
+ */
+type TargetMode = "source" | "all" | "criteria";
+
+const ALL_NOTE = "Toutes les figurines du périmètre, sans distinction.";
 
 /** Libellé court de la source, pour le choix segmenté (l'explication vit dans le hint). */
 const SOURCE_SHORT: Record<EffectSource["kind"], string> = {
@@ -113,51 +130,57 @@ export function SelectorEditor({
       : "figure",
   );
 
+  // Un critère l'emporte sur `all` dans la lecture, puisque c'est lui qui filtre réellement : une
+  // donnée ancienne portant les deux s'affiche donc pour ce qu'elle fait, et se nettoie à la première
+  // modification.
+  const mode: TargetMode =
+    has("self") && sourceChecked ? "source" : hasCriteria(selector) ? "criteria" : selector.all ? "all" : "criteria";
+
+  const modeOptions = [
+    ...(has("self") ? [{ value: "source" as const, label: SOURCE_SHORT[sourceKind] }] : []),
+    ...(has("all") ? [{ value: "all" as const, label: "Toutes les figurines" }] : []),
+    { value: "criteria" as const, label: "Selon des critères" },
+  ];
+
+  const switchMode = (m: TargetMode) => {
+    // Le filtre d'équipement survit à toutes les bascules : « son porteur, sur ses armes à 2 mains »
+    // (Ogodeï) comme « les guerriers, sur leurs armes » (Commandant) sont légitimes.
+    const equip = {
+      equipmentCategories: selector.equipmentCategories,
+      equipmentIds: selector.equipmentIds,
+      equipmentHands: selector.equipmentHands,
+    };
+    if (m === "source") onChange(cleanSelector({ ...(isMount ? { cavalier: true } : { self: true }), ...equip }));
+    else if (m === "all") onChange(cleanSelector({ all: true, countAtLeast: selector.countAtLeast, ...equip }));
+    else {
+      const next: Selector = { ...selector, ...equip };
+      delete next.self;
+      delete next.cavalier;
+      delete next.all;
+      onChange(cleanSelector(next));
+    }
+  };
+
   return (
     <div className="space-y-3">
-      {has("self") && (
-        <FieldGroup label="Qui est visé" hint={sourceChecked ? SELF_HINT[sourceKind] : undefined}>
+      {modeOptions.length > 1 && (
+        <FieldGroup label="Qui est visé" hint={mode === "source" ? SELF_HINT[sourceKind] : undefined}>
           <SegmentedControl
             ariaLabel="Qui est visé"
-            value={sourceChecked ? "source" : "others"}
-            onChange={(m) =>
-              // Le filtre d'équipement survit au changement de mode : « son porteur, sur ses armes
-              // à 2 mains » est une combinaison légitime (Ogodeï). Le reste, non.
-              onChange(
-                cleanSelector(
-                  m === "source"
-                    ? {
-                        ...(isMount ? { cavalier: true } : { self: true }),
-                        equipmentCategories: selector.equipmentCategories,
-                        equipmentIds: selector.equipmentIds,
-                        equipmentHands: selector.equipmentHands,
-                      }
-                    : { ...selector, self: undefined, cavalier: undefined },
-                ),
-              )
-            }
-            options={[
-              { value: "source", label: SOURCE_SHORT[sourceKind] },
-              { value: "others", label: "D'autres figurines" },
-            ]}
+            value={mode}
+            onChange={switchMode}
+            options={modeOptions}
           />
         </FieldGroup>
       )}
 
       {scopeField}
 
-      {/* Une cible « source » se suffit à elle-même : les dimensions d'identité ne la restreignent pas. */}
-      {!(has("self") && sourceChecked) && (
+      {mode === "all" && <p className="adm-block-note">{ALL_NOTE}</p>}
+
+      {mode === "criteria" && (
         <div className="space-y-2">
           <p className="adm-block-note">{ROLE_NOTE[role]}</p>
-          {has("all") && (
-            <CheckField
-              label="toutes les figurines de la portée"
-              hint="Les lignes ci-dessous restreignent encore cet ensemble."
-              checked={selector.all ?? false}
-              onChange={(b) => set({ all: b })}
-            />
-          )}
           <StringList
             label="Profils"
             values={selector.profileIds ?? []}

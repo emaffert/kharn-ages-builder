@@ -43,10 +43,34 @@ describe("SelectorEditor - la position décide des champs", () => {
     expect(screen.getByRole("radio", { name: /Son porteur/i })).toBeTruthy();
   });
 
-  it("montre que viser d'autres figurines est possible, au lieu d'une case à cocher", () => {
+  it("expose les trois manières de désigner un ensemble", () => {
     render(<Harness />);
     expect(screen.getByRole("radio", { name: /Cette figurine/i })).toBeTruthy();
-    expect(screen.getByRole("radio", { name: /D'autres figurines/i })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: /Toutes les figurines/i })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: /Selon des critères/i })).toBeTruthy();
+  });
+
+  it("« Toutes les figurines » écrit `all` seul et masque les critères", () => {
+    const onChange = vi.fn();
+    render(<Harness initial={{ traits: ["dogon"] }} onChange={onChange} />);
+    fireEvent.click(screen.getByRole("radio", { name: /Toutes les figurines/i }));
+    // `all` accompagné d'un critère ne veut rien dire : la combinaison devient inatteignable.
+    expect(onChange).toHaveBeenCalledWith({ all: true });
+    expect(screen.queryByText(/^Traits$/)).toBeNull();
+  });
+
+  it("revenir aux critères efface `all`", () => {
+    const onChange = vi.fn();
+    render(<Harness initial={{ all: true }} onChange={onChange} />);
+    fireEvent.click(screen.getByRole("radio", { name: /Selon des critères/i }));
+    expect(onChange).toHaveBeenCalledWith({});
+    expect(screen.getByText(/^Traits$/)).toBeTruthy();
+  });
+
+  it("une donnée mêlant `all` et un critère se lit pour ce qu'elle fait", () => {
+    // Le critère filtre réellement : on affiche donc la branche « critères », pas « toutes ».
+    render(<Harness initial={{ all: true, traits: ["dogon"] }} />);
+    expect(screen.getByRole("radio", { name: /Selon des critères/i }).getAttribute("aria-checked")).toBe("true");
   });
 
   it("sur une monture, ne propose que le cavalier et écrit « cavalier »", () => {

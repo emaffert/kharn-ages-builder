@@ -393,12 +393,25 @@ const GROUP_TARGET_NOTE =
   "niveau donné. Sans effet sur les profils uniques ou personnages, dont la limitation n'est pas un " +
   "nombre. Le bonus se cumule par figurine source recrutée.";
 
-/** Ce que le périmètre délimite ici : les figurines touchées, ou celles que l'effet observe. */
-function scopeHint(e: Effect): string {
-  return targetsSourceOnly(e)
-    ? "où l'effet observe et compte les figurines"
-    : "où l'effet cherche les figurines à toucher";
+/**
+ * Le périmètre sert à trois choses selon l'effet : délimiter les cibles, délimiter l'endroit où la
+ * condition s'évalue, ou délimiter le groupe qu'une opération compte. Il doit s'afficher **dans le
+ * bloc de la question à laquelle il répond** - sinon il paraît décoratif là où il est posé, comme
+ * un périmètre « Ost » à côté d'une cible « cette figurine » alors qu'il sert à trouver Sükh.
+ */
+type ScopeOwner = "target" | "condition" | "operation";
+
+function scopeOwner(e: Effect): ScopeOwner | null {
+  if (!scopeMatters(e)) return null;
+  if (!targetsSourceOnly(e)) return "target";
+  return e.condition != null ? "condition" : "operation";
 }
+
+const SCOPE_HINT: Record<ScopeOwner, string> = {
+  target: "où l'effet cherche les figurines à toucher",
+  condition: "où la condition est évaluée",
+  operation: "où l'effet compte les figurines",
+};
 
 /** L'effet ne vise-t-il que la figurine qui le porte ? (`cavalier` = `self` pour une monture.) */
 function targetsSourceOnly(e: Effect): boolean {
@@ -529,12 +542,25 @@ export function EffectListEditor({
   onChange: (e: Effect[]) => void;
 }) {
   const update = (i: number, e: Effect) => onChange(replaceAt(effects, i, e));
+  const scopeFieldFor = (e: Effect, i: number, owner: ScopeOwner) => (
+    <Field label="Périmètre" hint={SCOPE_HINT[owner]} className="max-w-[16rem]">
+      <select
+        value={e.scope}
+        onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })}
+        className={INPUT}
+      >
+        <option value="fer-de-lance">le Fer de Lance de la source</option>
+        <option value="ost">l'Ost (toute la liste)</option>
+      </select>
+    </Field>
+  );
   return (
     <div className="space-y-2">
       {effects.map((e, i) => (
         <EditorCard key={i} preview={describeEffect(e, cat)} onRemove={() => onChange(removeAt(effects, i))}>
           <Block title="Ce que fait l'effet">
             <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, withOperation(e, op))} />
+            {scopeOwner(e) === "operation" && scopeFieldFor(e, i, "operation")}
           </Block>
 
           <Block title="À qui il s'applique" note={groupTarget(e) ? GROUP_TARGET_NOTE : undefined}>
@@ -551,20 +577,7 @@ export function EffectListEditor({
                 sourceKind={e.source.kind}
                 withEquipment={e.operation.kind === "cost-delta"}
                 withSource={!groupTarget(e)}
-                scopeField={
-                  scopeMatters(e) ? (
-                    <Field label="Périmètre" hint={scopeHint(e)} className="max-w-[16rem]">
-                      <select
-                        value={e.scope}
-                        onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })}
-                        className={INPUT}
-                      >
-                        <option value="fer-de-lance">le Fer de Lance de la source</option>
-                        <option value="ost">l'Ost (toute la liste)</option>
-                      </select>
-                    </Field>
-                  ) : undefined
-                }
+                scopeField={scopeOwner(e) === "target" ? scopeFieldFor(e, i, "target") : undefined}
                 onChange={(s) => update(i, { ...e, target: s })}
               />
             )}
@@ -576,6 +589,7 @@ export function EffectListEditor({
             note="Facultatif. Sans clause, l'effet est actif dès que sa source est recrutée. Avec plusieurs clauses, toutes doivent être vraies en même temps."
           >
             <div className="space-y-2">
+              {scopeOwner(e) === "condition" && scopeFieldFor(e, i, "condition")}
               {(() => {
                 const conds: Selector[] = e.condition
                   ? Array.isArray(e.condition)

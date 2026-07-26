@@ -74,6 +74,29 @@ describe("EffectListEditor - la portée n'est demandée que si elle change quelq
     expect(scopeSelect()).toBeTruthy();
   });
 
+  /** Titre du bloc qui contient un élément donné. */
+  const blockOf = (el: Element) =>
+    el.closest(".adm-block")?.querySelector(".adm-block-title")?.textContent;
+
+  it("la pose dans le bloc de la question à laquelle elle répond", () => {
+    // Elle délimite les cibles…
+    render(<Harness initial={enginePowered({ target: { traits: ["goun"] } })} />);
+    open();
+    expect(blockOf(scopeSelect()!)).toBe("À qui il s'applique");
+    cleanup();
+
+    // …ou l'endroit où la condition s'évalue (cas Kaito : « ost » sert à trouver Sükh)…
+    render(<Harness initial={enginePowered({ condition: { profileIds: ["guilde-noire-sukh-2"] } })} />);
+    open();
+    expect(blockOf(scopeSelect()!)).toBe("À quelles conditions");
+    cleanup();
+
+    // …ou le groupe que l'opération compte.
+    render(<Harness initial={alaric({ operation: { kind: "stat-count", stat: "t", of: { traits: ["dogon"] } } })} />);
+    open();
+    expect(blockOf(scopeSelect()!)).toBe("Ce que fait l'effet");
+  });
+
   it("la place sous le choix de cible, pas au-dessus", () => {
     // Les deux répondent à « à qui » : les séparer, ou inverser leur ordre, casse la lecture.
     render(<Harness initial={enginePowered({ target: { traits: ["goun"] } })} />);

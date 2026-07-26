@@ -71,12 +71,33 @@ const hasCriteria = (sel: Selector) =>
  */
 type TargetMode = "source" | "all" | "criteria";
 
-const ALL_NOTE = "Toutes les figurines du périmètre, sans distinction.";
+/** La question posée par le contrôle, qui n'est pas la même selon la position. */
+const MODE_LABEL: Record<SelectorRole, string> = {
+  target: "Qui est visé",
+  condition: "Ce que la liste doit contenir",
+  group: "Quelles figurines compter",
+  link: "À qui la liaison peut se faire",
+};
+
+/** Branche « sans critère » : elle ouvre l'ensemble, et se dit autrement dans une condition. */
+const ALL_LABEL: Record<SelectorRole, string> = {
+  target: "Toutes les figurines",
+  condition: "N'importe laquelle",
+  group: "Toutes les figurines",
+  link: "Toutes les figurines",
+};
+
+const ALL_NOTE: Record<SelectorRole, string> = {
+  target: "Toutes les figurines du périmètre, sans distinction.",
+  condition: "N'importe quelle figurine du périmètre : seul son nombre compte.",
+  group: "Toutes les figurines du périmètre, sans distinction.",
+  link: "Toutes les figurines du périmètre, sans distinction.",
+};
 
 /** Libellé court de la source, pour le choix segmenté (l'explication vit dans le hint). */
 const SOURCE_SHORT: Record<EffectSource["kind"], string> = {
   profile: "Cette figurine",
-  "special-card": "La figurine visée",
+  "special-card": "La figurine concernée",
   equipment: "Son porteur",
   mount: "Le cavalier",
 };
@@ -138,7 +159,7 @@ export function SelectorEditor({
 
   const modeOptions = [
     ...(has("self") ? [{ value: "source" as const, label: SOURCE_SHORT[sourceKind] }] : []),
-    ...(has("all") ? [{ value: "all" as const, label: "Toutes les figurines" }] : []),
+    ...(has("all") ? [{ value: "all" as const, label: ALL_LABEL[role] }] : []),
     { value: "criteria" as const, label: "Selon des critères" },
   ];
 
@@ -164,9 +185,9 @@ export function SelectorEditor({
   return (
     <div className="space-y-3">
       {modeOptions.length > 1 && (
-        <FieldGroup label="Qui est visé" hint={mode === "source" ? SELF_HINT[sourceKind] : undefined}>
+        <FieldGroup label={MODE_LABEL[role]} hint={mode === "source" ? SELF_HINT[sourceKind] : undefined}>
           <SegmentedControl
-            ariaLabel="Qui est visé"
+            ariaLabel={MODE_LABEL[role]}
             value={mode}
             onChange={switchMode}
             options={modeOptions}
@@ -176,7 +197,7 @@ export function SelectorEditor({
 
       {scopeField}
 
-      {mode === "all" && <p className="adm-block-note">{ALL_NOTE}</p>}
+      {mode === "all" && <p className="adm-block-note">{ALL_NOTE[role]}</p>}
 
       {mode === "criteria" && (
         <div className="space-y-2">

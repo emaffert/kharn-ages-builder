@@ -73,6 +73,15 @@ describe("EffectListEditor - la portée n'est demandée que si elle change quelq
     open();
     expect(scopeSelect()).toBeTruthy();
   });
+
+  it("la place sous le choix de cible, pas au-dessus", () => {
+    // Les deux répondent à « à qui » : les séparer, ou inverser leur ordre, casse la lecture.
+    render(<Harness initial={enginePowered({ target: { traits: ["goun"] } })} />);
+    open();
+    const mode = screen.getByRole("radiogroup", { name: /Qui est visé/i });
+    const scope = scopeSelect()!;
+    expect(mode.compareDocumentPosition(scope) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
 
 describe("EffectListEditor - la liaison n'apparaît que là où elle joue", () => {

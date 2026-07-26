@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { Catalog, EffectSource, Selector } from "@core";
 import { EQUIPMENT_CATEGORIES, INPUT } from "../admin/shared";
 import { SegmentedControl } from "@ui";
@@ -80,6 +80,7 @@ export function SelectorEditor({
   sourceKind = "profile",
   withEquipment = false,
   withSource = true,
+  scopeField,
 }: {
   selector: Selector;
   cat: Catalog;
@@ -95,6 +96,11 @@ export function SelectorEditor({
    * serait auto-référentiel, et rendrait cette limite impossible à dépasser.
    */
   withSource?: boolean;
+  /**
+   * Champ « Périmètre » de l'effet, rendu juste **après** le choix de cible : les deux répondent à
+   * la même question (à qui), et les séparer par les critères d'identité cassait la lecture.
+   */
+  scopeField?: ReactNode;
 }) {
   const set = (patch: Partial<Selector>) => onChange(cleanSelector({ ...selector, ...patch }));
   const has = (k: keyof Selector) => ALLOWED[role].includes(k) && (k !== "self" || withSource);
@@ -137,6 +143,8 @@ export function SelectorEditor({
           />
         </FieldGroup>
       )}
+
+      {scopeField}
 
       {/* Une cible « source » se suffit à elle-même : les dimensions d'identité ne la restreignent pas. */}
       {!(has("self") && sourceChecked) && (

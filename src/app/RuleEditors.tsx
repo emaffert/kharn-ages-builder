@@ -538,18 +538,6 @@ export function EffectListEditor({
           </Block>
 
           <Block title="À qui il s'applique" note={groupTarget(e) ? GROUP_TARGET_NOTE : undefined}>
-            {scopeMatters(e) && (
-              <Field label="Périmètre" hint={scopeHint(e)} className="max-w-[16rem]">
-                <select
-                  value={e.scope}
-                  onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })}
-                  className={INPUT}
-                >
-                  <option value="fer-de-lance">le Fer de Lance de la source</option>
-                  <option value="ost">l'Ost (toute la liste)</option>
-                </select>
-              </Field>
-            )}
             {bearerOnly(e) ? (
               <p className="adm-block-note">
                 À la figurine qui porte l'effet : celle du profil, celle que vise la carte, ou celle
@@ -563,6 +551,20 @@ export function EffectListEditor({
                 sourceKind={e.source.kind}
                 withEquipment={e.operation.kind === "cost-delta"}
                 withSource={!groupTarget(e)}
+                scopeField={
+                  scopeMatters(e) ? (
+                    <Field label="Périmètre" hint={scopeHint(e)} className="max-w-[16rem]">
+                      <select
+                        value={e.scope}
+                        onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })}
+                        className={INPUT}
+                      >
+                        <option value="fer-de-lance">le Fer de Lance de la source</option>
+                        <option value="ost">l'Ost (toute la liste)</option>
+                      </select>
+                    </Field>
+                  ) : undefined
+                }
                 onChange={(s) => update(i, { ...e, target: s })}
               />
             )}

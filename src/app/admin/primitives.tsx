@@ -480,6 +480,28 @@ export function CheckField({
   );
 }
 
+/**
+ * Case à cocher **inline**, pour un qualificatif attaché au champ qui la précède (« si arme de base
+ * changée » sous une valeur). À réserver à ce cas : dès qu'une case porte une idée autonome, c'est
+ * `CheckField` (bloc, avec son explication) qu'il faut.
+ */
+export function InlineCheck({
+  label,
+  checked,
+  onChange,
+}: {
+  label: ReactNode;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="adm-checkfield">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 /** Multi-sélection en puces : remplace les longues listes de checkbox (traits, domaines, catégories…). */
 export function ChipMultiSelect<T extends string>({
   options,

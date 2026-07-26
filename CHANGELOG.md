@@ -41,6 +41,14 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 - « Modifier la limitation » explique ce qu'elle relève réellement — des groupes de recrutement, un
   modèle à un niveau donné, hors uniques et personnages — et ne propose plus de viser la figurine
   qui porte l'effet, ce qui aurait rendu sa propre limitation impossible à dépasser.
+- La cible se choisit entre « cette figurine » et « d'autres figurines », au lieu d'une case cochée
+  qui laissait croire qu'il n'y avait rien d'autre à décider.
+- Le périmètre de l'effet est passé dans la section « À qui il s'applique » : il n'apparaît plus
+  dans une autre section au gré d'un réglage situé deux blocs plus bas.
+- Le filtre d'équipement et la liaison ne s'étalent plus par défaut : on choisit d'abord si le
+  montant porte sur la figurine ou sur certains objets, et si l'effet est réservé aux figurines
+  reliées. Les champs n'apparaissent qu'ensuite.
+- Les choix segmentés de l'administration annoncent correctement leur libellé aux lecteurs d'écran.
 - Sur une monture, la cible « le cavalier » remplace le doublon « lui-même », et le libellé de la
   source s'adapte à ce qui porte l'effet (une figurine, une carte, un équipement).
 - Les cartes d'effet et de contrainte sont découpées en parties titrées, au lieu d'une suite de

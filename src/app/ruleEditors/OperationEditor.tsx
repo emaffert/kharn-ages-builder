@@ -1,6 +1,6 @@
 import type { Catalog, EffectOperation } from "@core";
 import { EQUIPMENT_CATEGORIES, MASTERY_DOMAINS, INPUT, removeAt, replaceAt } from "../admin/shared";
-import { Combobox, DomainIcon, Field, CheckField, ChipMultiSelect, NumberField } from "../admin/primitives";
+import { Combobox, DomainIcon, Field, ChipMultiSelect, InlineCheck, NumberField } from "../admin/primitives";
 import { AddButton, RemoveButton, StatSelect, TxtField } from "./kit";
 import { skillOptions, spellOptions } from "./helpers";
 import { OfSelector } from "./SelectorEditor";
@@ -97,16 +97,15 @@ export function OperationEditor({
 
       <div className="flex flex-wrap items-end gap-3">
       {op.kind === "cost-delta" && (
-        <>
+        /* Le gate « arme de base changée » qualifie la valeur : sous elle, en retrait, pas à côté. */
+        <div className="space-y-1.5">
           <NumberField label="Valeur (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
-          <div className="self-center">
-            <CheckField
-              label="si arme de base changée"
-              checked={op.requiresBaseSwap ?? false}
-              onChange={(b) => onChange({ ...op, requiresBaseSwap: b || undefined })}
-            />
-          </div>
-        </>
+          <InlineCheck
+            label="seulement si l'arme de base a été remplacée"
+            checked={op.requiresBaseSwap ?? false}
+            onChange={(b) => onChange({ ...op, requiresBaseSwap: b || undefined })}
+          />
+        </div>
       )}
 
       {op.kind === "cost-set" && (

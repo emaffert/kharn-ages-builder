@@ -1,6 +1,8 @@
+import { useState } from "react";
 import type { Catalog, EffectSource, Selector } from "@core";
 import { EQUIPMENT_CATEGORIES, INPUT } from "../admin/shared";
-import { Block, Field, CheckField, NumberField } from "../admin/primitives";
+import { SegmentedControl } from "@ui";
+import { Block, Field, CheckField, FieldGroup, NumberField } from "../admin/primitives";
 import { ChipRow, StringList } from "./kit";
 import { cleanSelector, modelOptions, profileOptions, type Option } from "./helpers";
 
@@ -54,12 +56,12 @@ const ROLE_NOTE: Record<SelectorRole, React.ReactNode> = {
   ),
 };
 
-/** Libellé de la case « source » selon ce qui porte l'effet (le mot juste, pas « self »). */
-const SELF_LABEL: Record<EffectSource["kind"], string> = {
-  profile: "cette figurine",
-  "special-card": "la figurine qui porte la carte",
-  equipment: "la figurine qui porte cet équipement",
-  mount: "le cavalier (la figurine qui monte)",
+/** Libellé court de la source, pour le choix segmenté (l'explication vit dans le hint). */
+const SOURCE_SHORT: Record<EffectSource["kind"], string> = {
+  profile: "Cette figurine",
+  "special-card": "La figurine visée",
+  equipment: "Son porteur",
+  mount: "Le cavalier",
 };
 
 const SELF_HINT: Record<EffectSource["kind"], string> = {
@@ -99,18 +101,43 @@ export function SelectorEditor({
   // Une monture ne peut viser que son cavalier : `self` et `cavalier` y désignent la même figurine.
   const isMount = sourceKind === "mount";
   const sourceChecked = isMount ? (selector.cavalier ?? selector.self ?? false) : (selector.self ?? false);
+  const [costMode, setCostMode] = useState<"figure" | "items">(() =>
+    selector.equipmentCategories?.length || selector.equipmentIds?.length || selector.equipmentHands?.length
+      ? "items"
+      : "figure",
+  );
 
   return (
     <div className="space-y-3">
       <p className="adm-block-note">{ROLE_NOTE[role]}</p>
 
       {has("self") && (
-        <CheckField
-          label={SELF_LABEL[sourceKind]}
-          hint={SELF_HINT[sourceKind]}
-          checked={sourceChecked}
-          onChange={(b) => set(isMount ? { cavalier: b, self: undefined } : { self: b })}
-        />
+        <FieldGroup label="Qui est visé" hint={sourceChecked ? SELF_HINT[sourceKind] : undefined}>
+          <SegmentedControl
+            ariaLabel="Qui est visé"
+            value={sourceChecked ? "source" : "others"}
+            onChange={(m) =>
+              // Le filtre d'équipement survit au changement de mode : « son porteur, sur ses armes
+              // à 2 mains » est une combinaison légitime (Ogodeï). Le reste, non.
+              onChange(
+                cleanSelector(
+                  m === "source"
+                    ? {
+                        ...(isMount ? { cavalier: true } : { self: true }),
+                        equipmentCategories: selector.equipmentCategories,
+                        equipmentIds: selector.equipmentIds,
+                        equipmentHands: selector.equipmentHands,
+                      }
+                    : { ...selector, self: undefined, cavalier: undefined },
+                ),
+              )
+            }
+            options={[
+              { value: "source", label: SOURCE_SHORT[sourceKind] },
+              { value: "others", label: "D'autres figurines" },
+            ]}
+          />
+        </FieldGroup>
       )}
 
       {/* Une cible « source » se suffit à elle-même : les dimensions d'identité ne la restreignent pas. */}
@@ -186,37 +213,54 @@ export function SelectorEditor({
       )}
 
       {withEquipment && has("equipmentCategories") && (
-        <Block
-          title="Sur quel équipement"
-          note={
+        <Block title="Sur quoi porte le montant">
+          <FieldGroup label="Le montant s'applique">
+            <SegmentedControl
+              ariaLabel="Sur quoi porte le montant"
+              value={costMode}
+              onChange={(m) => {
+                setCostMode(m);
+                // Repasser « sur la figurine » emporte le filtre : il ne serait plus lu.
+                if (m === "figure") {
+                  set({ equipmentCategories: undefined, equipmentIds: undefined, equipmentHands: undefined });
+                }
+              }}
+              options={[
+                { value: "figure", label: "Sur la figurine" },
+                { value: "items", label: "Sur certains objets" },
+              ]}
+            />
+          </FieldGroup>
+          {costMode === "items" && (
             <>
-              Facultatif. Renseigné, le montant s'applique <strong>par objet</strong> correspondant.
-              Un objet correspond dès qu'il valide <strong>l'une</strong> de ces trois lignes.
+              <p className="adm-block-note">
+                Le montant s'applique <strong>par objet acheté</strong> qui correspond. Un objet
+                correspond dès qu'il valide <strong>l'une</strong> des trois lignes.
+              </p>
+              <ChipRow
+                label="Catégories"
+                options={EQUIPMENT_CATEGORIES.map((c): Option => ({ value: c, label: c }))}
+                selected={selector.equipmentCategories ?? []}
+                onChange={(v) => set({ equipmentCategories: v.length ? (v as Selector["equipmentCategories"]) : undefined })}
+              />
+              <StringList
+                label="Objets précis"
+                values={selector.equipmentIds ?? []}
+                onChange={(v) => set({ equipmentIds: v })}
+                options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
+                combo
+              />
+              <ChipRow
+                label="Mains"
+                options={[
+                  { value: "1", label: "1 main" },
+                  { value: "2", label: "2 mains" },
+                ]}
+                selected={(selector.equipmentHands ?? []).map(String)}
+                onChange={(v) => set({ equipmentHands: v.length ? v.map(Number) : undefined })}
+              />
             </>
-          }
-        >
-          <ChipRow
-            label="Catégories"
-            options={EQUIPMENT_CATEGORIES.map((c): Option => ({ value: c, label: c }))}
-            selected={selector.equipmentCategories ?? []}
-            onChange={(v) => set({ equipmentCategories: v.length ? (v as Selector["equipmentCategories"]) : undefined })}
-          />
-          <StringList
-            label="Objets précis"
-            values={selector.equipmentIds ?? []}
-            onChange={(v) => set({ equipmentIds: v })}
-            options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
-            combo
-          />
-          <ChipRow
-            label="Mains"
-            options={[
-              { value: "1", label: "1 main" },
-              { value: "2", label: "2 mains" },
-            ]}
-            selected={(selector.equipmentHands ?? []).map(String)}
-            onChange={(v) => set({ equipmentHands: v.length ? v.map(Number) : undefined })}
-          />
+          )}
         </Block>
       )}
     </div>

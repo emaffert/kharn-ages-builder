@@ -47,13 +47,12 @@ function open() {
 
 describe("EffectListEditor - la portée n'est demandée que si elle change quelque chose", () => {
   /** Le menu de portée lui-même : « portée » apparaît aussi dans le libellé d'une case du sélecteur. */
-  const scopeSelect = () => screen.queryByRole("combobox", { name: /Portée/i });
+  const scopeSelect = () => screen.queryByRole("combobox", { name: /Périmètre/i });
 
   it("ne la demande pas quand l'effet ne vise que sa source", () => {
     render(<Harness initial={enginePowered()} />);
     open();
     expect(scopeSelect()).toBeNull();
-    expect(screen.getByText(/la portée ne changerait rien/i)).toBeTruthy();
   });
 
   it("la demande dès que l'effet vise d'autres figurines", () => {
@@ -211,7 +210,7 @@ describe("EffectListEditor - « Modifier la limitation » vise des groupes, pas 
   it("ne propose pas de viser la figurine qui porte l'effet", () => {
     render(<Harness initial={limit()} />);
     open();
-    expect(screen.queryByLabelText(/cette figurine/i)).toBeNull();
+    expect(screen.queryByRole("radio", { name: /Cette figurine/i })).toBeNull();
     // Les dimensions d'identité, elles, restent : c'est par elles qu'on désigne les groupes.
     expect(screen.getByText(/^Profils$/)).toBeTruthy();
   });
@@ -237,7 +236,7 @@ describe("EffectListEditor - actions résolues hors du moteur", () => {
     open();
     expect(screen.getByText(/ne sait pas en viser d'autres/i)).toBeTruthy();
     expect(screen.queryByText(/^À quelles conditions$/)).toBeNull();
-    expect(screen.queryByRole("combobox", { name: /Portée/i })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: /Périmètre/i })).toBeNull();
   });
 
   it("laisse cible et conditions ouvertes aux actions que le moteur résout", () => {

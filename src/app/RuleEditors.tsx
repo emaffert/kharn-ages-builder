@@ -4,7 +4,7 @@ import { CONSTRAINT_SCOPES, defaultConstraintScope, scopeIsChosen } from "@core"
 import { SegmentedControl } from "@ui";
 import { describeConstraint, describeEffect } from "@ui/explain";
 import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared";
-import { Block, Combobox, Field, FieldGroup } from "./admin/primitives";
+import { Block, CheckField, Combobox, Field, FieldGroup } from "./admin/primitives";
 import { ProfileMultiSelect } from "./admin/editors";
 import { AddButton, ChipsField, StringList, TxtField } from "./ruleEditors/kit";
 import { GRIMOIRE_OPTIONS, modelOptions, profileOptions, type Option } from "./ruleEditors/helpers";
@@ -203,14 +203,14 @@ function CarrierEditor({
   const empty = !c.trait && !c.profileIds?.length && !c.modelIds?.length;
   return (
     <div className="space-y-3">
-      <Field label="Porteur désigné par">
+      <FieldGroup label="Porteur désigné par">
         <SegmentedControl
           ariaLabel="Porteur désigné par"
           value={mode}
           onChange={(v) => switchMode(v as CarrierMode)}
           options={CARRIER_MODES}
         />
-      </Field>
+      </FieldGroup>
       {mode === "trait" && (
         <TxtField
           label="Trait du porteur"
@@ -393,6 +393,13 @@ const GROUP_TARGET_NOTE =
   "niveau donné. Sans effet sur les profils uniques ou personnages, dont la limitation n'est pas un " +
   "nombre. Le bonus se cumule par figurine source recrutée.";
 
+/** Ce que le périmètre délimite ici : les figurines touchées, ou celles que l'effet observe. */
+function scopeHint(e: Effect): string {
+  return targetsSourceOnly(e)
+    ? "où l'effet observe et compte les figurines"
+    : "où l'effet cherche les figurines à toucher";
+}
+
 /** L'effet ne vise-t-il que la figurine qui le porte ? (`cavalier` = `self` pour une monture.) */
 function targetsSourceOnly(e: Effect): boolean {
   return Boolean(e.target.self || (e.target.cavalier && e.source.kind === "mount"));
@@ -453,6 +460,63 @@ function withOperation(e: Effect, operation: EffectOperation): Effect {
   return next;
 }
 
+/**
+ * Verrou de liaison : replié par défaut, car il ne concerne qu'une poignée de règles. Cocher
+ * n'écrit rien tant qu'aucun critère n'est saisi - une liaison sans critère bloquerait l'effet pour
+ * toujours (`designationOk` ne peut alors correspondre à personne).
+ */
+function LinkBlock({
+  effect,
+  cat,
+  onChange,
+}: {
+  effect: Effect;
+  cat: Catalog;
+  onChange: (e: Effect) => void;
+}) {
+  const [on, setOn] = useState(() => effect.designation != null);
+  return (
+    <Block title="Liaison à une autre figurine">
+      <CheckField
+        label="Réservé aux figurines reliées"
+        hint="L'effet ne joue que si le joueur relie cette figurine à une autre dans le constructeur, comme un garde du corps à son protégé. Sinon, il s'applique d'office."
+        checked={on}
+        onChange={(b) => {
+          setOn(b);
+          if (!b) onChange({ ...effect, designation: undefined });
+        }}
+      />
+      {on && (
+        <>
+          <Field label="Nom de la liaison" hint="montré au joueur (défaut « garde du corps »)" className="max-w-sm">
+            <input
+              value={effect.designation?.label ?? ""}
+              placeholder="garde du corps"
+              disabled={!effect.designation}
+              onChange={(ev) =>
+                effect.designation &&
+                onChange({ ...effect, designation: { ...effect.designation, label: ev.target.value || undefined } })
+              }
+              className={INPUT}
+            />
+          </Field>
+          <SelectorEditor
+            selector={effect.designation?.of ?? {}}
+            cat={cat}
+            role="link"
+            onChange={(sel) =>
+              onChange({
+                ...effect,
+                designation: Object.keys(sel).length ? { ...effect.designation, of: sel } : undefined,
+              })
+            }
+          />
+        </>
+      )}
+    </Block>
+  );
+}
+
 export function EffectListEditor({
   effects,
   newSource,
@@ -470,23 +534,22 @@ export function EffectListEditor({
       {effects.map((e, i) => (
         <EditorCard key={i} preview={describeEffect(e, cat)} onRemove={() => onChange(removeAt(effects, i))}>
           <Block title="Ce que fait l'effet">
-            {scopeMatters(e) ? (
-              <Field label="Portée" hint="jusqu'où l'effet rayonne" className="max-w-[14rem]">
-                <select value={e.scope} onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })} className={INPUT}>
-                  <option value="fer-de-lance">le Fer de Lance de la source</option>
-                  <option value="ost">l'Ost (toute la liste)</option>
-                </select>
-              </Field>
-            ) : (
-              <p className="adm-block-note">
-                L'effet ne vise que la figurine qui le porte : la portée ne changerait rien, elle
-                n'est pas demandée.
-              </p>
-            )}
             <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, withOperation(e, op))} />
           </Block>
 
           <Block title="À qui il s'applique" note={groupTarget(e) ? GROUP_TARGET_NOTE : undefined}>
+            {scopeMatters(e) && (
+              <Field label="Périmètre" hint={scopeHint(e)} className="max-w-[16rem]">
+                <select
+                  value={e.scope}
+                  onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })}
+                  className={INPUT}
+                >
+                  <option value="fer-de-lance">le Fer de Lance de la source</option>
+                  <option value="ost">l'Ost (toute la liste)</option>
+                </select>
+              </Field>
+            )}
             {bearerOnly(e) ? (
               <p className="adm-block-note">
                 À la figurine qui porte l'effet : celle du profil, celle que vise la carte, ou celle
@@ -555,39 +618,7 @@ export function EffectListEditor({
           </Block>
           )}
 
-          {linkMatters(e) && (
-            <Block
-              title="Liaison à une autre figurine"
-              note="Facultatif. Renseignée, l'effet ne joue que si le joueur relie la figurine à une autre dans le constructeur (un garde du corps et son protégé). Laissée vide, l'effet s'applique d'office."
-            >
-              <Field label="Nom de la liaison" hint="montré au joueur (défaut « garde du corps »)" className="max-w-sm">
-                <input
-                  value={e.designation?.label ?? ""}
-                  placeholder="garde du corps"
-                  disabled={!e.designation}
-                  onChange={(ev) =>
-                    e.designation &&
-                    update(i, {
-                      ...e,
-                      designation: { ...e.designation, label: ev.target.value || undefined },
-                    })
-                  }
-                  className={INPUT}
-                />
-              </Field>
-              <SelectorEditor
-                selector={e.designation?.of ?? {}}
-                cat={cat}
-                role="link"
-                onChange={(s) =>
-                  update(i, {
-                    ...e,
-                    designation: Object.keys(s).length ? { ...e.designation, of: s } : undefined,
-                  })
-                }
-              />
-            </Block>
-          )}
+          {linkMatters(e) && <LinkBlock effect={e} cat={cat} onChange={(next) => update(i, next)} />}
 
           <Block title="Source">
             <Field label="Texte verbatim" hint="fait foi">

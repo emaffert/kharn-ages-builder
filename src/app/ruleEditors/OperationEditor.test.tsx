@@ -17,7 +17,7 @@ function Harness() {
 // Chaque type d'action affiche des champs spécifiques : un marqueur par branche (texte, ou
 // placeholder pour les champs sans libellé unique comme stat-modifier).
 const KIND_MARKERS: [EffectOperation["kind"], { text?: RegExp; placeholder?: RegExp }][] = [
-  ["cost-delta", { text: /si arme de base changée/i }],
+  ["cost-delta", { text: /l'arme de base a été remplacée/i }],
   ["cost-set", { text: /Plafond de cibles/i }],
   ["grimoire-discount", { text: /Grimoire concerné/i }],
   ["unlock-upgrade", { text: /Catégories d'équipement/i }],

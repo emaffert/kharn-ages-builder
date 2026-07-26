@@ -65,7 +65,7 @@ export function SpecialCardDetail({
       body={
         <>
           <Section title="Type de carte" icon="type">
-            <Field label="Nature de la carte">
+            <FieldGroup label="Nature de la carte">
               <SegmentedControl
                 ariaLabel="Nature de la carte"
                 value={kind}
@@ -77,7 +77,7 @@ export function SpecialCardDetail({
                 ]}
               />
               <span className="adm-field-hint mt-1 block">{KIND_HINT[kind]}</span>
-            </Field>
+            </FieldGroup>
 
             {kind === "amelioration" && (
               <div className="adm-cond">

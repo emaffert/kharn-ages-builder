@@ -77,6 +77,7 @@ export function SelectorEditor({
   role = "target",
   sourceKind = "profile",
   withEquipment = false,
+  withSource = true,
 }: {
   selector: Selector;
   cat: Catalog;
@@ -86,9 +87,15 @@ export function SelectorEditor({
   sourceKind?: EffectSource["kind"];
   /** true : l'opération sait filtrer par équipement (`cost-delta`). Ailleurs, ces champs sont inertes. */
   withEquipment?: boolean;
+  /**
+   * false : l'opération ne peut pas viser la figurine qui la porte. Cas de `limit-modifier`, qui
+   * vise des **groupes de recrutement** : « augmenter la limite du groupe auquel j'appartiens »
+   * serait auto-référentiel, et rendrait cette limite impossible à dépasser.
+   */
+  withSource?: boolean;
 }) {
   const set = (patch: Partial<Selector>) => onChange(cleanSelector({ ...selector, ...patch }));
-  const has = (k: keyof Selector) => ALLOWED[role].includes(k);
+  const has = (k: keyof Selector) => ALLOWED[role].includes(k) && (k !== "self" || withSource);
   // Une monture ne peut viser que son cavalier : `self` et `cavalier` y désignent la même figurine.
   const isMount = sourceKind === "mount";
   const sourceChecked = isMount ? (selector.cavalier ?? selector.self ?? false) : (selector.self ?? false);

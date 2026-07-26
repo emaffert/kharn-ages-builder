@@ -528,6 +528,24 @@ describe("Khérops - concepts (Lieutenant / Commandant / Ogodeï)", () => {
     expect(avec.limitBonuses["kherops-guerrier-1#1"]).toBe(1);
   });
 
+  it("« Modifier la limitation » ne vise jamais sa propre source", () => {
+    // Auto-référentiel : N recrutés produiraient N occurrences, donc une limite de base + N,
+    // toujours supérieure à N - la limitation cesserait d'exister. L'éditeur interdit ce réglage ;
+    // ce test verrouille le contrat côté moteur si une donnée ancienne le portait quand même.
+    const cat: Catalog = {
+      ...catalog,
+      profiles: catalog.profiles.map((p) =>
+        p.id !== "kherops-lieutenant-2"
+          ? p
+          : { ...p, effects: (p.effects ?? []).map((e) => ({ ...e, target: { self: true } })) },
+      ),
+    };
+    const four = [g1(), g1(), g1(), g1(), inst("kherops-lieutenant-2")];
+    const res = evaluateList(cat, makeList(four, "kherops", "bataille"));
+    expect(res.limitBonuses["kherops-guerrier-1#1"]).toBeUndefined();
+    expect(res.issues.some((i) => i.ruleId === "limitation:kherops-guerrier-1#1")).toBe(true);
+  });
+
   it("Ogodeï : −10 Ko sur une arme à 2 mains ajoutée, rien sur une arme à 1 main", () => {
     const twoH = inst("kherops-ogodei-3", { addedEquipmentIds: ["fauchard-kherops"] });
     const r2 = evaluateList(catalog, makeList([twoH], "kherops", "bataille"));

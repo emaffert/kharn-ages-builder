@@ -204,6 +204,33 @@ describe("EffectListEditor - changer d'action ne laisse pas de réglage mort der
   });
 });
 
+describe("EffectListEditor - « Modifier la limitation » vise des groupes, pas le porteur", () => {
+  const limit = (over: Partial<Effect> = {}): Effect =>
+    alaric({ operation: { kind: "limit-modifier", amount: 1 }, target: { factionIds: ["kherops"] }, ...over });
+
+  it("ne propose pas de viser la figurine qui porte l'effet", () => {
+    render(<Harness initial={limit()} />);
+    open();
+    expect(screen.queryByLabelText(/cette figurine/i)).toBeNull();
+    // Les dimensions d'identité, elles, restent : c'est par elles qu'on désigne les groupes.
+    expect(screen.getByText(/^Profils$/)).toBeTruthy();
+  });
+
+  it("énonce ce que l'action fait vraiment aux groupes", () => {
+    render(<Harness initial={limit()} />);
+    open();
+    expect(screen.getByText(/uniques ou personnages/i)).toBeTruthy();
+  });
+
+  it("retire une cible « la source » héritée en basculant sur cette action", () => {
+    let last = alaric();
+    render(<Harness initial={enginePowered({ target: { self: true } })} onChange={(e) => (last = e)} />);
+    open();
+    fireEvent.change(screen.getByRole("combobox", { name: /Action/i }), { target: { value: "limit-modifier" } });
+    expect(last.target).toEqual({});
+  });
+});
+
 describe("EffectListEditor - actions résolues hors du moteur", () => {
   it("énonce la cible au lieu de la proposer, et ne demande ni portée ni conditions", () => {
     render(<Harness initial={alaric()} />);

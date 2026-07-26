@@ -844,6 +844,11 @@ function limitGroupKey(ri: ResolvedInstance): string {
 /**
  * Bonus de limitation (effet `limit-modifier`, ex. Lieutenant khérops : +1) par groupe `modèle#niveau`.
  * N'affecte que les limitations « X » (numériques) ; +amount une fois par groupe et par source.
+ *
+ * Volontairement `instanceMatchesIdentity` et non `resolveTargets` : cette opération vise des
+ * **groupes de recrutement**, jamais la figurine-source. Honorer `self` ici rendrait la limitation
+ * inopérante - N exemplaires recrutés produiraient N occurrences, donc une limite de `base + N`,
+ * toujours supérieure à N. L'éditeur interdit d'ailleurs `self` sur cette action.
  */
 function collectLimitBonuses(resolved: ResolvedInstance[], occurrences: EffectOccurrence[]): Map<string, number> {
   const bonus = new Map<string, number>();

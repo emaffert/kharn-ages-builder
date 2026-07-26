@@ -380,6 +380,19 @@ export function ConstraintListEditor({
 const BEARER_ONLY_OPS: EffectOperation["kind"][] = ["grant-spell", "spell-pages"];
 const bearerOnly = (e: Effect) => BEARER_ONLY_OPS.includes(e.operation.kind);
 
+/**
+ * Actions qui visent des **groupes de recrutement** (modèle + niveau), jamais la figurine qui les
+ * porte : « augmenter la limite du groupe auquel j'appartiens » est auto-référentiel et rendrait
+ * cette limite impossible à dépasser. Cf. `collectLimitBonuses` dans `evaluate.ts`.
+ */
+const GROUP_TARGET_OPS: EffectOperation["kind"][] = ["limit-modifier"];
+const groupTarget = (e: Effect) => GROUP_TARGET_OPS.includes(e.operation.kind);
+
+const GROUP_TARGET_NOTE =
+  "Relève la limite de recrutement des groupes correspondants - un groupe étant un modèle à un " +
+  "niveau donné. Sans effet sur les profils uniques ou personnages, dont la limitation n'est pas un " +
+  "nombre. Le bonus se cumule par figurine source recrutée.";
+
 /** L'effet ne vise-t-il que la figurine qui le porte ? (`cavalier` = `self` pour une monture.) */
 function targetsSourceOnly(e: Effect): boolean {
   return Boolean(e.target.self || (e.target.cavalier && e.source.kind === "mount"));
@@ -421,6 +434,13 @@ function withOperation(e: Effect, operation: EffectOperation): Effect {
     // Ces actions ne savent viser que le porteur, et jamais sous condition.
     next.target = { self: true };
     next.condition = undefined;
+  }
+  if (GROUP_TARGET_OPS.includes(operation.kind)) {
+    // À l'inverse, celles-ci ne peuvent pas viser le porteur.
+    const target = { ...next.target };
+    delete target.self;
+    delete target.cavalier;
+    next.target = target;
   }
   if (operation.kind !== "cost-delta") {
     const target = { ...next.target };
@@ -466,7 +486,7 @@ export function EffectListEditor({
             <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, withOperation(e, op))} />
           </Block>
 
-          <Block title="À qui il s'applique">
+          <Block title="À qui il s'applique" note={groupTarget(e) ? GROUP_TARGET_NOTE : undefined}>
             {bearerOnly(e) ? (
               <p className="adm-block-note">
                 À la figurine qui porte l'effet : celle du profil, celle que vise la carte, ou celle
@@ -479,6 +499,7 @@ export function EffectListEditor({
                 role="target"
                 sourceKind={e.source.kind}
                 withEquipment={e.operation.kind === "cost-delta"}
+                withSource={!groupTarget(e)}
                 onChange={(s) => update(i, { ...e, target: s })}
               />
             )}

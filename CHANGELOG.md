@@ -38,6 +38,9 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 - Un sort connu d'office peut désormais venir d'une carte ou d'un objet porté, et plus seulement de
   la carte de profil. Symétriquement, des pages de sorts peuvent venir directement d'un profil.
   Auparavant, ces effets étaient ignorés en silence selon l'endroit où on les avait placés.
+- « Modifier la limitation » explique ce qu'elle relève réellement — des groupes de recrutement, un
+  modèle à un niveau donné, hors uniques et personnages — et ne propose plus de viser la figurine
+  qui porte l'effet, ce qui aurait rendu sa propre limitation impossible à dépasser.
 - Sur une monture, la cible « le cavalier » remplace le doublon « lui-même », et le libellé de la
   source s'adapte à ce qui porte l'effet (une figurine, une carte, un équipement).
 - Les cartes d'effet et de contrainte sont découpées en parties titrées, au lieu d'une suite de

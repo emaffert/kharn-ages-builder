@@ -1,7 +1,7 @@
 import type { Catalog, EffectOperation } from "@core";
 import { EQUIPMENT_CATEGORIES, MASTERY_DOMAINS, INPUT, removeAt, replaceAt } from "../admin/shared";
-import { Combobox, DomainIcon, Field, CheckField, ChipMultiSelect } from "../admin/primitives";
-import { AddButton, NumField, RemoveButton, StatSelect, TxtField } from "./kit";
+import { Combobox, DomainIcon, Field, CheckField, ChipMultiSelect, NumberField } from "../admin/primitives";
+import { AddButton, RemoveButton, StatSelect, TxtField } from "./kit";
 import { skillOptions, spellOptions } from "./helpers";
 import { OfSelector } from "./SelectorEditor";
 
@@ -98,7 +98,7 @@ export function OperationEditor({
       <div className="flex flex-wrap items-end gap-3">
       {op.kind === "cost-delta" && (
         <>
-          <NumField label="Valeur (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <NumberField label="Valeur (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
           <div className="self-center">
             <CheckField
               label="si arme de base changée"
@@ -111,8 +111,8 @@ export function OperationEditor({
 
       {op.kind === "cost-set" && (
         <>
-          <NumField label="Coût (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
-          <NumField
+          <NumberField label="Coût (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <NumberField
             label="Plafond de cibles"
             hint="défaut : 1 par source"
             value={op.maxCount ?? null}
@@ -123,7 +123,7 @@ export function OperationEditor({
 
       {op.kind === "grimoire-discount" && (
         <>
-          <NumField label="Réduction (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <NumberField label="Réduction (Ko)" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
           <Field label="Grimoire concerné">
             <select
               value={op.tier ?? ""}
@@ -142,7 +142,7 @@ export function OperationEditor({
         <>
           <TxtField label="Identifiant" value={op.upgradeId} onChange={(v) => onChange({ ...op, upgradeId: v })} w="w-32" />
           <TxtField label="Libellé" value={op.label} onChange={(v) => onChange({ ...op, label: v })} />
-          <NumField label="Coût / objet" value={op.cost} onChange={(v) => onChange({ ...op, cost: v ?? 0 })} />
+          <NumberField label="Coût / objet" value={op.cost} onChange={(v) => onChange({ ...op, cost: v ?? 0 })} />
           <div className="w-full space-y-1">
             <div className="adm-field-label">Catégories d'équipement</div>
             <ChipMultiSelect
@@ -217,10 +217,10 @@ export function OperationEditor({
             value={op.precision ?? ""}
             onChange={(v) => onChange({ ...op, precision: v || undefined })}
           />
-          <NumField
+          <NumberField
             label="+ si déjà connue"
             hint="option."
-            w="w-32"
+            className="w-32"
             value={op.incrementIfPresent ?? null}
             onChange={(v) => onChange({ ...op, incrementIfPresent: v ?? undefined })}
           />
@@ -283,7 +283,8 @@ export function OperationEditor({
         <>
           <StatSelect value={op.stat} onChange={(s) => onChange({ ...op, stat: s })} />
           <OfSelector
-            label="= nombre de figurines correspondant à (plancher : valeur de base du profil)"
+            label="Figurines à compter"
+            note="La caractéristique est fixée à ce nombre, sans jamais descendre sous la valeur de base imprimée du profil."
             of={op.of}
             cat={cat}
             onChange={(s) => onChange({ ...op, of: s })}
@@ -295,7 +296,8 @@ export function OperationEditor({
         <>
           <StatSelect value={op.stat} onChange={(s) => onChange({ ...op, stat: s })} />
           <OfSelector
-            label="= valeur la plus forte parmi le groupe (dans la portée)"
+            label="Groupe à comparer"
+            note="La caractéristique prend la plus forte valeur de base trouvée dans ce groupe."
             of={op.of}
             cat={cat}
             onChange={(s) => onChange({ ...op, of: s })}
@@ -314,9 +316,10 @@ export function OperationEditor({
               onChange={(v) => onChange({ ...op, skillId: v })}
             />
           </Field>
-          <NumField label="Par groupe de" value={op.per ?? 1} onChange={(v) => onChange({ ...op, per: v || 1 })} w="w-20" />
+          <NumberField label="Par groupe de" value={op.per ?? 1} onChange={(v) => onChange({ ...op, per: v || 1 })} className="w-20" />
           <OfSelector
-            label="figurines à compter (dans la portée) - arrondi à l'inférieur"
+            label="Figurines à compter"
+            note="La valeur de la compétence vaut ce nombre divisé par la taille de groupe indiquée, arrondi à l'inférieur."
             of={op.of}
             cat={cat}
             onChange={(s) => onChange({ ...op, of: s })}
@@ -326,7 +329,7 @@ export function OperationEditor({
 
       {op.kind === "spell-pages" && (
         <>
-          <NumField label="Pages" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+          <NumberField label="Pages" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
           <Field label="Voie dédiée" hint="option. (pool)">
             <select
               value={op.magicWayId ?? ""}
@@ -345,7 +348,7 @@ export function OperationEditor({
       )}
 
       {op.kind === "limit-modifier" && (
-        <NumField label="Montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
+        <NumberField label="Montant" value={op.amount} onChange={(v) => onChange({ ...op, amount: v ?? 0 })} />
       )}
       </div>
     </div>

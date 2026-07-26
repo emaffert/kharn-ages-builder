@@ -109,6 +109,27 @@ export function Section({
   );
 }
 
+/**
+ * Bloc : niveau intermédiaire entre la `Section` (bloc de page, ancré au sommaire) et le `Field`
+ * (un contrôle). Structure l'intérieur d'une carte de règle en ses parties - opération, cible,
+ * conditions, liaison - qui sont des frères et doivent se lire comme tels.
+ *
+ * `note` est l'endroit où poser la règle de lecture du bloc (le ET/OU d'un sélecteur, par exemple) :
+ * une fois, en tête, plutôt que répétée sur chaque champ.
+ */
+export function Block({ title, note, children }: { title: string; note?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="adm-block">
+      <div className="adm-block-head">
+        <span className="adm-block-title">{title}</span>
+        <span className="adm-block-rule" />
+      </div>
+      {note && <p className="adm-block-note">{note}</p>}
+      {children}
+    </div>
+  );
+}
+
 /** id stable dérivé d'un titre (pour l'ancre du sommaire quand la page n'en fournit pas). */
 function slugId(title: string): string {
   return (

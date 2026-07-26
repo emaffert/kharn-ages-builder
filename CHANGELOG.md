@@ -26,6 +26,26 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 - « Équipement réservé » s'appelle maintenant « Interdit d'acquérir un grimoire », ce qu'il faisait
   réellement.
 
+### Éditeur d'effets plus lisible
+
+- La cible d'un effet n'affiche plus que les critères qui comptent à l'endroit où on est : une
+  condition, un groupe à compter et une liaison n'ont pas les mêmes réglages utiles. Les critères
+  sans effet à cet endroit ne sont plus proposés.
+- Chaque bloc explique en une phrase comment il se lit : ce qu'il faut valider entièrement, et où
+  une seule valeur suffit. Le filtre d'équipement, qui fonctionne différemment des autres, le dit.
+- Changer l'action d'un effet emporte les réglages que la nouvelle action ne lit pas (filtre
+  d'équipement, liaison), au lieu de les laisser derrière elle, invisibles et sans effet.
+- Sur une monture, la cible « le cavalier » remplace le doublon « lui-même », et le libellé de la
+  source s'adapte à ce qui porte l'effet (une figurine, une carte, un équipement).
+- Les cartes d'effet et de contrainte sont découpées en parties titrées, au lieu d'une suite de
+  champs de même poids.
+- La portée n'est demandée que lorsqu'elle change quelque chose : un effet qui ne concerne que la
+  figurine qui le porte ne la propose plus.
+- La case « au choix du joueur » disparaît. Elle ne faisait qu'exiger une liaison, ce que la liaison
+  exprime déjà : renseigner « Liaison à une autre figurine » suffit désormais à conditionner l'effet.
+  Le réglage n'apparaît que sur les deux actions de coût, les seules que le moteur sache verrouiller
+  ainsi.
+
 ## 2026-07-25
 
 ### Comptes joueurs

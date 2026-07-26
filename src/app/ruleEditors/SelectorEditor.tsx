@@ -1,128 +1,240 @@
-import type { Catalog, Selector } from "@core";
+import type { Catalog, EffectSource, Selector } from "@core";
 import { EQUIPMENT_CATEGORIES, INPUT } from "../admin/shared";
-import { Field, CheckField } from "../admin/primitives";
-import { ChipRow, NumField, StringList } from "./kit";
+import { Block, Field, CheckField, NumberField } from "../admin/primitives";
+import { ChipRow, StringList } from "./kit";
 import { cleanSelector, modelOptions, profileOptions, type Option } from "./helpers";
 
-/** Éditeur d'un sélecteur (cible d'un effet, condition, sous-groupe `of`). */
+/**
+ * Un même sélecteur sert à quatre choses, et le moteur n'en lit pas les mêmes dimensions selon
+ * l'endroit. Afficher partout les douze champs revenait à en proposer la moitié sans effet.
+ *
+ * - `target` : à qui l'effet s'applique.
+ * - `condition` : ce que la liste doit contenir pour que l'effet s'active (seul endroit qui compte).
+ * - `group` : le groupe de figurines qu'une opération de comptage mesure (`of`).
+ * - `link` : les figurines auxquelles la cible peut être liée (garde du corps). Le constructeur
+ *   n'y résout que l'identité d'un profil : pas de meneur, pas de « toutes les figurines ».
+ */
+export type SelectorRole = "target" | "condition" | "group" | "link";
+
+/** Dimensions lues par le moteur pour chaque position (cf. `evaluate.ts` et `builder/shared.ts`). */
+const ALLOWED: Record<SelectorRole, readonly (keyof Selector)[]> = {
+  target: ["self", "cavalier", "all", "profileIds", "modelIds", "traits", "factionIds", "levels", "isLeader",
+    "equipmentCategories", "equipmentIds", "equipmentHands"],
+  condition: ["all", "profileIds", "modelIds", "traits", "factionIds", "levels", "isLeader", "countAtLeast"],
+  group: ["all", "profileIds", "modelIds", "traits", "factionIds", "levels", "isLeader"],
+  link: ["profileIds", "modelIds", "traits", "factionIds", "levels"],
+};
+
+/** Règle de lecture du bloc, énoncée une fois en tête plutôt que devinée champ par champ. */
+const ROLE_NOTE: Record<SelectorRole, React.ReactNode> = {
+  target: (
+    <>
+      L'effet s'applique aux figurines qui valident <strong>toutes</strong> les lignes renseignées.
+      Dans une même ligne, correspondre à <strong>une seule</strong> valeur suffit. Tout laisser vide
+      ne vise personne.
+    </>
+  ),
+  condition: (
+    <>
+      La clause est vraie quand assez de figurines valident <strong>toutes</strong> les lignes
+      renseignées. Dans une même ligne, <strong>une seule</strong> valeur suffit.
+    </>
+  ),
+  group: (
+    <>
+      Sont comptées les figurines de la portée qui valident <strong>toutes</strong> les lignes
+      renseignées. Dans une même ligne, <strong>une seule</strong> valeur suffit.
+    </>
+  ),
+  link: (
+    <>
+      La figurine à laquelle la cible se lie doit valider <strong>toutes</strong> les lignes
+      renseignées. Seule son identité compte ici.
+    </>
+  ),
+};
+
+/** Libellé de la case « source » selon ce qui porte l'effet (le mot juste, pas « self »). */
+const SELF_LABEL: Record<EffectSource["kind"], string> = {
+  profile: "cette figurine",
+  "special-card": "la figurine qui porte la carte",
+  equipment: "la figurine qui porte cet équipement",
+  mount: "le cavalier (la figurine qui monte)",
+};
+
+const SELF_HINT: Record<EffectSource["kind"], string> = {
+  profile: "La source de l'effet, et elle seule.",
+  "special-card": "Chaque figurine à laquelle la carte s'applique.",
+  equipment: "Le porteur de l'objet, tant qu'il l'a sur lui.",
+  mount: "Une monture n'agit que sur son cavalier : c'est la seule cible possible.",
+};
+
+/** Éditeur d'un sélecteur, réduit aux dimensions que sa position rend réellement effectives. */
 export function SelectorEditor({
   selector,
   cat,
   onChange,
-  allowSelf = true,
+  role = "target",
+  sourceKind = "profile",
+  withEquipment = false,
 }: {
   selector: Selector;
   cat: Catalog;
   onChange: (s: Selector) => void;
-  allowSelf?: boolean;
+  role?: SelectorRole;
+  /** Ce qui porte l'effet : détermine le mot juste pour « la source » (cible uniquement). */
+  sourceKind?: EffectSource["kind"];
+  /** true : l'opération sait filtrer par équipement (`cost-delta`). Ailleurs, ces champs sont inertes. */
+  withEquipment?: boolean;
 }) {
   const set = (patch: Partial<Selector>) => onChange(cleanSelector({ ...selector, ...patch }));
+  const has = (k: keyof Selector) => ALLOWED[role].includes(k);
+  // Une monture ne peut viser que son cavalier : `self` et `cavalier` y désignent la même figurine.
+  const isMount = sourceKind === "mount";
+  const sourceChecked = isMount ? (selector.cavalier ?? selector.self ?? false) : (selector.self ?? false);
+
   return (
-    <div className="adm-card space-y-2 p-2.5">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        {allowSelf && (
-          <CheckField label="lui-même (self)" checked={selector.self ?? false} onChange={(b) => set({ self: b })} />
-        )}
+    <div className="space-y-3">
+      <p className="adm-block-note">{ROLE_NOTE[role]}</p>
+
+      {has("self") && (
         <CheckField
-          label="le cavalier (effet de monture)"
-          checked={selector.cavalier ?? false}
-          onChange={(b) => set({ cavalier: b })}
+          label={SELF_LABEL[sourceKind]}
+          hint={SELF_HINT[sourceKind]}
+          checked={sourceChecked}
+          onChange={(b) => set(isMount ? { cavalier: b, self: undefined } : { self: b })}
         />
-        <CheckField
-          label="toutes les figurines (portée entière)"
-          checked={selector.all ?? false}
-          onChange={(b) => set({ all: b })}
+      )}
+
+      {/* Une cible « source » se suffit à elle-même : les dimensions d'identité ne la restreignent pas. */}
+      {!(has("self") && sourceChecked) && (
+        <div className="space-y-2">
+          {has("all") && (
+            <CheckField
+              label="toutes les figurines de la portée"
+              hint="Les lignes ci-dessous restreignent encore cet ensemble."
+              checked={selector.all ?? false}
+              onChange={(b) => set({ all: b })}
+            />
+          )}
+          <StringList
+            label="Profils"
+            values={selector.profileIds ?? []}
+            onChange={(v) => set({ profileIds: v })}
+            options={profileOptions(cat)}
+            combo
+          />
+          <StringList
+            label="Modèles"
+            values={selector.modelIds ?? []}
+            onChange={(v) => set({ modelIds: v })}
+            options={modelOptions(cat)}
+          />
+          <StringList
+            label="Traits"
+            values={selector.traits ?? []}
+            onChange={(v) => set({ traits: v })}
+            placeholder="trait"
+          />
+          <ChipRow
+            label="Niveaux"
+            options={[
+              { value: "1", label: "I" },
+              { value: "2", label: "II" },
+              { value: "3", label: "III" },
+            ]}
+            selected={(selector.levels ?? []).map(String)}
+            onChange={(v) => set({ levels: v.length ? v.map(Number) : undefined })}
+          />
+          <ChipRow
+            label="Factions"
+            options={cat.factions.map((f): Option => ({ value: f.id, label: f.name }))}
+            selected={selector.factionIds ?? []}
+            onChange={(v) => set({ factionIds: v.length ? v : undefined })}
+          />
+          {has("isLeader") && (
+            <Field label="Meneur" className="w-48">
+              <select
+                value={selector.isLeader == null ? "" : selector.isLeader ? "yes" : "no"}
+                onChange={(e) => set({ isLeader: e.target.value === "" ? undefined : e.target.value === "yes" })}
+                className={INPUT}
+              >
+                <option value="">indifférent</option>
+                <option value="yes">est le meneur</option>
+                <option value="no">n'est pas le meneur</option>
+              </select>
+            </Field>
+          )}
+        </div>
+      )}
+
+      {has("countAtLeast") && (
+        <NumberField
+          label="Figurines correspondantes (au moins)"
+          hint="défaut : 1"
+          className="w-52"
+          value={selector.countAtLeast ?? null}
+          onChange={(v) => set({ countAtLeast: v ?? undefined })}
         />
-      </div>
-      <StringList
-        label="Profils"
-        values={selector.profileIds ?? []}
-        onChange={(v) => set({ profileIds: v })}
-        options={profileOptions(cat)}
-        combo
-      />
-      <StringList
-        label="Modèles"
-        values={selector.modelIds ?? []}
-        onChange={(v) => set({ modelIds: v })}
-        options={modelOptions(cat)}
-      />
-      <StringList label="Traits" values={selector.traits ?? []} onChange={(v) => set({ traits: v })} placeholder="trait" />
-      <ChipRow
-        label="Niveaux"
-        options={[
-          { value: "1", label: "I" },
-          { value: "2", label: "II" },
-          { value: "3", label: "III" },
-        ]}
-        selected={(selector.levels ?? []).map(String)}
-        onChange={(v) => set({ levels: v.length ? v.map(Number) : undefined })}
-      />
-      <ChipRow
-        label="Factions"
-        options={cat.factions.map((f): Option => ({ value: f.id, label: f.name }))}
-        selected={selector.factionIds ?? []}
-        onChange={(v) => set({ factionIds: v.length ? v : undefined })}
-      />
-      <Field label="Meneur" className="w-48">
-        <select
-          value={selector.isLeader == null ? "" : selector.isLeader ? "yes" : "no"}
-          onChange={(e) => set({ isLeader: e.target.value === "" ? undefined : e.target.value === "yes" })}
-          className={INPUT}
+      )}
+
+      {withEquipment && has("equipmentCategories") && (
+        <Block
+          title="Sur quel équipement"
+          note={
+            <>
+              Facultatif. Renseigné, le montant s'applique <strong>par objet</strong> correspondant.
+              Un objet correspond dès qu'il valide <strong>l'une</strong> de ces trois lignes.
+            </>
+          }
         >
-          <option value="">indifférent</option>
-          <option value="yes">est le meneur</option>
-          <option value="no">n'est pas le meneur</option>
-        </select>
-      </Field>
-      <ChipRow
-        label="Équip. (catégories)"
-        options={EQUIPMENT_CATEGORIES.map((c): Option => ({ value: c, label: c }))}
-        selected={selector.equipmentCategories ?? []}
-        onChange={(v) => set({ equipmentCategories: v.length ? (v as Selector["equipmentCategories"]) : undefined })}
-      />
-      <StringList
-        label="Équip. (précis)"
-        values={selector.equipmentIds ?? []}
-        onChange={(v) => set({ equipmentIds: v })}
-        options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
-        combo
-      />
-      <ChipRow
-        label="Mains"
-        options={[
-          { value: "1", label: "1 main" },
-          { value: "2", label: "2 mains" },
-        ]}
-        selected={(selector.equipmentHands ?? []).map(String)}
-        onChange={(v) => set({ equipmentHands: v.length ? v.map(Number) : undefined })}
-      />
-      <NumField
-        label="Au moins (nombre)"
-        w="w-24"
-        value={selector.countAtLeast ?? null}
-        onChange={(v) => set({ countAtLeast: v ?? undefined })}
-      />
+          <ChipRow
+            label="Catégories"
+            options={EQUIPMENT_CATEGORIES.map((c): Option => ({ value: c, label: c }))}
+            selected={selector.equipmentCategories ?? []}
+            onChange={(v) => set({ equipmentCategories: v.length ? (v as Selector["equipmentCategories"]) : undefined })}
+          />
+          <StringList
+            label="Objets précis"
+            values={selector.equipmentIds ?? []}
+            onChange={(v) => set({ equipmentIds: v })}
+            options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
+            combo
+          />
+          <ChipRow
+            label="Mains"
+            options={[
+              { value: "1", label: "1 main" },
+              { value: "2", label: "2 mains" },
+            ]}
+            selected={(selector.equipmentHands ?? []).map(String)}
+            onChange={(v) => set({ equipmentHands: v.length ? v.map(Number) : undefined })}
+          />
+        </Block>
+      )}
     </div>
   );
 }
 
-/** Sous-sélecteur `of` (groupe de figurines à compter / comparer), sur toute la largeur. */
+/** Sous-sélecteur `of` d'une opération de comptage, présenté comme un bloc à part entière. */
 export function OfSelector({
   label,
+  note,
   of,
   cat,
   onChange,
 }: {
   label: string;
+  note?: React.ReactNode;
   of: Selector;
   cat: Catalog;
   onChange: (s: Selector) => void;
 }) {
   return (
-    <div className="w-full space-y-1">
-      <div className="adm-field-label">{label}</div>
-      <SelectorEditor selector={of} cat={cat} allowSelf={false} onChange={onChange} />
+    <div className="w-full">
+      <Block title={label} note={note}>
+        <SelectorEditor selector={of} cat={cat} role="group" onChange={onChange} />
+      </Block>
     </div>
   );
 }

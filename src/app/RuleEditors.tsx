@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { Catalog, Constraint, ConstraintScope, ConstraintType, Effect, Selector } from "@core";
+import type { Catalog, Constraint, ConstraintScope, ConstraintType, Effect, EffectOperation, Selector } from "@core";
 import { CONSTRAINT_SCOPES, defaultConstraintScope, scopeIsChosen } from "@core";
 import { SegmentedControl } from "@ui";
 import { describeConstraint, describeEffect } from "@ui/explain";
 import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared";
-import { Combobox, Field, FieldGroup, CheckField } from "./admin/primitives";
+import { Block, Combobox, Field, FieldGroup } from "./admin/primitives";
 import { ProfileMultiSelect } from "./admin/editors";
 import { AddButton, ChipsField, StringList, TxtField } from "./ruleEditors/kit";
 import { GRIMOIRE_OPTIONS, modelOptions, profileOptions, type Option } from "./ruleEditors/helpers";
@@ -297,6 +297,7 @@ export function ConstraintListEditor({
     <div className="space-y-2">
       {constraints.map((c, i) => (
         <EditorCard key={i} preview={describeConstraint(c, cat)} onRemove={() => onChange(removeAt(constraints, i))}>
+          <Block title="Nature de la règle">
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Type" className="w-56">
               <select
@@ -337,11 +338,17 @@ export function ConstraintListEditor({
               </FieldGroup>
             )}
           </div>
-          <div className="adm-field-label pt-1">Paramètres</div>
-          <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} onProfile={onProfile} />
-          <Field label="Texte verbatim" hint="fait foi">
-            <textarea value={c.sourceText} onChange={(e) => update(i, { ...c, sourceText: e.target.value })} className={`${INPUT} block w-full`} rows={2} />
-          </Field>
+          </Block>
+
+          <Block title="Ce qu'elle exige">
+            <ParamsEditor type={c.type} params={c.params} cat={cat} onChange={(p) => update(i, { ...c, params: p })} onProfile={onProfile} />
+          </Block>
+
+          <Block title="Source">
+            <Field label="Texte verbatim" hint="fait foi">
+              <textarea value={c.sourceText} onChange={(e) => update(i, { ...c, sourceText: e.target.value })} className={`${INPUT} block w-full`} rows={2} />
+            </Field>
+          </Block>
         </EditorCard>
       ))}
       <AddButton
@@ -364,6 +371,53 @@ export function ConstraintListEditor({
   );
 }
 
+/** L'effet ne vise-t-il que la figurine qui le porte ? (`cavalier` = `self` pour une monture.) */
+function targetsSourceOnly(e: Effect): boolean {
+  return Boolean(e.target.self || (e.target.cavalier && e.source.kind === "mount"));
+}
+
+/**
+ * La portée délimite un ensemble de figurines. Elle ne sert donc à rien quand l'effet ne vise que
+ * sa propre source, sauf s'il faut quand même parcourir la liste : pour évaluer une condition, ou
+ * pour compter un groupe (`of`). Cf. `instancesInScope` / `conditionHolds` dans `evaluate.ts`.
+ */
+function scopeMatters(e: Effect): boolean {
+  const counts = ["stat-count", "stat-max", "skill-count"].includes(e.operation.kind);
+  return !targetsSourceOnly(e) || e.condition != null || counts;
+}
+
+/**
+ * La liaison est un mécanisme de coût, et rien d'autre. Deux chemins la lisent :
+ * - « Fixer le coût » : seules les cibles reliées voient leur coût fixé (ex. le Larbin gratuit) ;
+ * - « Modifier le coût » porté par une figurine : l'effet entier est verrouillé tant que la source
+ *   n'est pas reliée (ex. Djouked). Une carte spéciale n'a pas ce verrou.
+ *
+ * Ailleurs, une liaison apparaîtrait au joueur dans le constructeur sans rien conditionner.
+ */
+function linkMatters(e: Effect): boolean {
+  if (e.operation.kind === "cost-set") return true;
+  return e.operation.kind === "cost-delta" && e.source.kind !== "special-card";
+}
+
+/**
+ * Change l'action d'un effet en emportant ce que la nouvelle action ne lit pas. Sans ça, régler un
+ * filtre d'équipement ou une liaison puis changer d'action laisserait la donnée en place, invisible
+ * et sans effet - exactement la donnée morte que l'éditeur doit empêcher de naître.
+ */
+function withOperation(e: Effect, operation: EffectOperation): Effect {
+  if (operation.kind === e.operation.kind) return { ...e, operation };
+  const next: Effect = { ...e, operation };
+  if (operation.kind !== "cost-delta") {
+    const target = { ...next.target };
+    delete target.equipmentCategories;
+    delete target.equipmentIds;
+    delete target.equipmentHands;
+    next.target = target;
+  }
+  if (!linkMatters(next)) next.designation = undefined;
+  return next;
+}
+
 export function EffectListEditor({
   effects,
   newSource,
@@ -380,21 +434,39 @@ export function EffectListEditor({
     <div className="space-y-2">
       {effects.map((e, i) => (
         <EditorCard key={i} preview={describeEffect(e, cat)} onRemove={() => onChange(removeAt(effects, i))}>
-          <Field label="Portée" className="max-w-[12rem]">
-            <select value={e.scope} onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })} className={INPUT}>
-              <option value="fer-de-lance">fer-de-lance</option>
-              <option value="ost">ost</option>
-            </select>
-          </Field>
-          <div className="adm-field-label pt-1">Opération</div>
-          <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, { ...e, operation: op })} />
-          <div className="adm-field-label pt-1">Cible</div>
-          <SelectorEditor selector={e.target} cat={cat} onChange={(s) => update(i, { ...e, target: s })} />
-          <details>
-            <summary className="cursor-pointer text-xs adm-faint">
-              conditions (optionnelles) - toutes doivent être vraies
-            </summary>
-            <div className="mt-1 space-y-1.5">
+          <Block title="Ce que fait l'effet">
+            {scopeMatters(e) ? (
+              <Field label="Portée" hint="jusqu'où l'effet rayonne" className="max-w-[14rem]">
+                <select value={e.scope} onChange={(ev) => update(i, { ...e, scope: ev.target.value as Effect["scope"] })} className={INPUT}>
+                  <option value="fer-de-lance">le Fer de Lance de la source</option>
+                  <option value="ost">l'Ost (toute la liste)</option>
+                </select>
+              </Field>
+            ) : (
+              <p className="adm-block-note">
+                L'effet ne vise que la figurine qui le porte : la portée ne changerait rien, elle
+                n'est pas demandée.
+              </p>
+            )}
+            <OperationEditor op={e.operation} cat={cat} onChange={(op) => update(i, withOperation(e, op))} />
+          </Block>
+
+          <Block title="À qui il s'applique">
+            <SelectorEditor
+              selector={e.target}
+              cat={cat}
+              role="target"
+              sourceKind={e.source.kind}
+              withEquipment={e.operation.kind === "cost-delta"}
+              onChange={(s) => update(i, { ...e, target: s })}
+            />
+          </Block>
+
+          <Block
+            title="À quelles conditions"
+            note="Facultatif. Sans clause, l'effet est actif dès que sa source est recrutée. Avec plusieurs clauses, toutes doivent être vraies en même temps."
+          >
+            <div className="space-y-2">
               {(() => {
                 const conds: Selector[] = e.condition
                   ? Array.isArray(e.condition)
@@ -412,12 +484,12 @@ export function EffectListEditor({
                 return (
                   <>
                     {conds.map((c, ci) => (
-                      <div key={ci} className="flex items-start gap-2">
+                      <div key={ci} className="adm-card flex items-start gap-2 p-2.5">
                         <div className="flex-1">
                           <SelectorEditor
                             selector={c}
                             cat={cat}
-                            allowSelf={false}
+                            role="condition"
                             onChange={(s) => commit(replaceAt(conds, ci, s))}
                           />
                         </div>
@@ -436,17 +508,14 @@ export function EffectListEditor({
                 );
               })()}
             </div>
-          </details>
-          <details>
-            <summary className="cursor-pointer text-xs adm-faint">
-              liaison à une autre figurine (optionnel)
-            </summary>
-            <div className="mt-1 space-y-1">
-              <p className="text-xs adm-faint">
-                Si renseigné, la cible (ex. le garde) ne bénéficie de l'effet que si elle est désignée
-                pour être liée à l'une de ces figurines.
-              </p>
-              <Field label="Nom de la liaison" hint="affiché dans le constructeur (défaut « garde du corps »)">
+          </Block>
+
+          {linkMatters(e) && (
+            <Block
+              title="Liaison à une autre figurine"
+              note="Facultatif. Renseignée, l'effet ne joue que si le joueur relie la figurine à une autre dans le constructeur (un garde du corps et son protégé). Laissée vide, l'effet s'applique d'office."
+            >
+              <Field label="Nom de la liaison" hint="montré au joueur (défaut « garde du corps »)" className="max-w-sm">
                 <input
                   value={e.designation?.label ?? ""}
                   placeholder="garde du corps"
@@ -458,13 +527,13 @@ export function EffectListEditor({
                       designation: { ...e.designation, label: ev.target.value || undefined },
                     })
                   }
-                  className={`${INPUT} block w-full`}
+                  className={INPUT}
                 />
               </Field>
               <SelectorEditor
                 selector={e.designation?.of ?? {}}
                 cat={cat}
-                allowSelf={false}
+                role="link"
                 onChange={(s) =>
                   update(i, {
                     ...e,
@@ -472,16 +541,14 @@ export function EffectListEditor({
                   })
                 }
               />
-            </div>
-          </details>
-          <CheckField
-            label="au choix du joueur (opt-in)"
-            checked={e.optIn ?? false}
-            onChange={(b) => update(i, { ...e, optIn: b || undefined })}
-          />
-          <Field label="Texte verbatim" hint="fait foi">
-            <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} block w-full`} rows={2} />
-          </Field>
+            </Block>
+          )}
+
+          <Block title="Source">
+            <Field label="Texte verbatim" hint="fait foi">
+              <textarea value={e.sourceText} onChange={(ev) => update(i, { ...e, sourceText: ev.target.value })} className={`${INPUT} block w-full`} rows={2} />
+            </Field>
+          </Block>
         </EditorCard>
       ))}
       <AddButton

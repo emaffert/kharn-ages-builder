@@ -160,7 +160,6 @@ export function describeEffect(e: Effect, cat: Catalog): string {
   }
   if (e.designation)
     base += ` - ${e.designation.label ?? "garde du corps"} de ${describeSelector(e.designation.of, cat)}`;
-  if (e.optIn) base += " (au choix du joueur)";
   return base;
 }
 

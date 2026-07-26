@@ -119,15 +119,17 @@ export const EffectSchema = z.object({
   /** Cible de l'effet (peut être `self`). */
   target: SelectorSchema,
   /**
-   * Liaison à une autre figurine : la source (ex. le garde) ne bénéficie de l'effet que si elle est
-   * assignée à l'une des figurines décrites par `of`. Pilote l'UI de désignation du constructeur ET
-   * conditionne l'effet dans le moteur (ex. Larbin → Fille de Nyx ; Djouked → Broutcha).
-   * `label` = nom de la liaison affiché dans le constructeur (défaut « garde du corps »).
+   * Liaison à une autre figurine, et **verrou de l'effet** : présent, l'effet ne joue que si le
+   * joueur a relié la figurine concernée à l'une de celles décrites par `of`. Pilote aussi l'UI de
+   * désignation du constructeur. `label` = nom de la liaison montré au joueur (défaut « garde du corps »).
+   *
+   * Deux lectures selon l'opération, car le sujet de la liaison diffère :
+   * - `cost-set` : ce sont les **cibles** qui doivent être reliées (ex. le Larbin, à une Fille de Nyx) ;
+   * - effet porté par une figurine (profil, monture, équipement) : c'est la **source** qui doit être
+   *   reliée (ex. Djouked, à Broutcha), et l'effet entier est ignoré tant qu'elle ne l'est pas.
    */
   designation: z.object({ of: SelectorSchema, label: z.string().optional() }).optional(),
   operation: EffectOperationSchema,
-  /** true => effet optionnel (choix du joueur) : NON appliqué automatiquement par le moteur. */
-  optIn: z.boolean().optional(),
   sourceText: z.string(),
 });
 export type Effect = z.infer<typeof EffectSchema>;

@@ -238,6 +238,20 @@
 .adm-sec-meta { margin-left: auto; display: flex; align-items: center; gap: 10px; padding-top: 3px; }
 .adm-sec-body { padding: 16px; }
 
+/* ── Bloc : le niveau qui manquait entre la section et le champ ────────────────
+   Une carte de règle se compose de parties (opération, cible, conditions…) qui ne sont ni des
+   sections de page ni des champs. La hiérarchie se lit à la FONTE, pas à la taille :
+   Cinzel = structure (section 15px, bloc 13px), Inter = donnée (label de champ 13px).
+   Le bloc n'a ni fond ni cadre - un simple filet qui court jusqu'au bord suffit à le poser. */
+.adm-block { display: flex; flex-direction: column; gap: 9px; }
+.adm-block + .adm-block { margin-top: 18px; }
+.adm-block-head { display: flex; align-items: center; gap: 10px; }
+.adm-block-title { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 13px;
+  color: var(--bone); letter-spacing: .02em; white-space: nowrap; }
+.adm-block-rule { flex: 1; height: 1px; background: var(--hair-strong); }
+.adm-block-note { font-size: 11.5px; color: var(--bone-faint); line-height: 1.45; margin-top: -2px; }
+.adm-block-note strong { color: var(--bone-dim); font-weight: 600; }
+
 /* Groupe étiqueté : label (+ hint) au-dessus d'un contenu libre (puces, sous-champs…). */
 .adm-fieldgroup { display: flex; flex-direction: column; gap: 6px; }
 

@@ -297,11 +297,11 @@ function collectEffectOccurrences(
 ): EffectOccurrence[] {
   const occurrences: EffectOccurrence[] = [];
 
-  // Effets portés par les profils présents. Un effet « optIn » (choix du joueur) n'est appliqué
-  // que si l'instance a explicitement opté - désignée garde du corps (ex. Djouked → −35 pour Broutcha).
+  // Effets portés par les profils présents. Un effet muni d'une `designation` est verrouillé : il
+  // n'agit que si la figurine a été reliée à une figurine correspondante (ex. Djouked → −35 pour Broutcha).
   for (const ri of resolved) {
     for (const effect of ri.profile.effects ?? []) {
-      if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
+      if (effect.designation && !designationOk(effect, ri, resolved)) continue;
       occurrences.push({
         effect,
         ferDeLanceId: ri.ferDeLanceId,
@@ -318,7 +318,7 @@ function collectEffectOccurrences(
     if (!mountId) continue;
     const mount = cat.mounts.find((m) => m.id === mountId);
     for (const effect of mount?.effects ?? []) {
-      if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
+      if (effect.designation && !designationOk(effect, ri, resolved)) continue;
       occurrences.push({
         effect,
         ferDeLanceId: ri.ferDeLanceId,
@@ -334,7 +334,7 @@ function collectEffectOccurrences(
     for (const eqId of wornEquipmentIds(ri.profile, ri.instance)) {
       const eq = cat.equipment.find((e) => e.id === eqId);
       for (const effect of eq?.effects ?? []) {
-        if (effect.optIn && !designationOk(effect, ri, resolved)) continue;
+        if (effect.designation && !designationOk(effect, ri, resolved)) continue;
         occurrences.push({
           effect,
           ferDeLanceId: ri.ferDeLanceId,
@@ -359,7 +359,6 @@ function collectEffectOccurrences(
       const sources = inFdl.filter((ri) => specialCardScopeMatches(card, ri));
       if (sources.length === 0) continue;
       for (const effect of card.effects) {
-        if (effect.optIn) continue;
         if (effect.target.self) {
           // Effet ciblant la source elle-même (ex. Syrga → « Embuscade ») : il faut l'identité de
           // chaque porteuse, donc une occurrence par figurine-source.

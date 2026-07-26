@@ -2681,7 +2681,6 @@
             "kind": "cost-delta",
             "amount": -35
           },
-          "optIn": true,
           "sourceText": "Coûte 35 de moins s'il est le « garde rapproché » de Broutcha."
         }
       ],

@@ -10,6 +10,7 @@ import {
   STATS_SECONDARY,
   equipInfo,
   equipBits,
+  innateSpellIds,
   spellInfo,
   type ItemInfo,
 } from "./shared";
@@ -61,6 +62,7 @@ export function ProfileStatCard({
   onSetUpgradeCount,
   mods,
   wornArmors,
+  wornEquipIds,
 }: {
   p: Profile;
   cat: Catalog;
@@ -76,6 +78,8 @@ export function ProfileStatCard({
   mods?: ProfileMods;
   /** Armures portées (équipement de catégorie « armure », ex. Brigandine), affichées après l'armure innée. */
   wornArmors?: ArmorDisplay[];
+  /** Équipement réellement porté ; défaut = l'équipement de base (aperçu d'une fiche hors liste). */
+  wornEquipIds?: string[];
 }) {
   // Effets responsables d'une modification affichée (clé « stat:… » / « skill:… »).
   const sourceRefs = (key: string) => mods?.effectSources?.[key] ?? [];
@@ -122,10 +126,9 @@ export function ProfileStatCard({
     }
   }
   const grantedTraits = mods?.grantedTraitIds ?? [];
-  // Sorts connus d'office (signature) - affichés même pour les non-mages, cliquables.
-  // Sorts connus d'office = effets `grant-spell` du profil ciblant lui-même (affichés même sans voie).
-  const innateSpells = (p.effects ?? [])
-    .flatMap((e) => (e.operation.kind === "grant-spell" && e.target.self ? [e.operation.spellId] : []))
+  // Sorts connus d'office (signature) - affichés même pour les non-mages, cliquables. Ils peuvent
+  // venir du profil, d'une carte qui le vise ou d'un objet porté (cf. `innateSpellIds`).
+  const innateSpells = innateSpellIds(p, cat, upgrades ?? [], wornEquipIds ?? p.baseEquipmentIds)
     .map((id) => cat.spells.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => Boolean(s));
   const cards = specialCardsForProfile(p, cat);

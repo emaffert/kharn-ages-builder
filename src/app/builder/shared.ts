@@ -1,6 +1,7 @@
 import {
   castWays as coreCastWays,
   pageBonusSources as corePageBonusSources,
+  innateSpellIds as coreInnateSpellIds,
   pageAllocation as corePageAllocation,
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
@@ -386,6 +387,16 @@ export function pageBonusSources(
   wornEquipIds: string[] = p.baseEquipmentIds,
 ): PageSource[] {
   return corePageBonusSources(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits));
+}
+
+/** Sorts connus d'office par la figurine (profil, carte qui la vise, équipement porté). */
+export function innateSpellIds(
+  p: Profile,
+  cat: Catalog,
+  selectedUpgrades: string[],
+  wornEquipIds: string[] = p.baseEquipmentIds,
+): string[] {
+  return coreInnateSpellIds(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits));
 }
 
 export function pageBonus(p: Profile, cat: Catalog, selectedUpgrades: string[], wornEquipIds: string[] = p.baseEquipmentIds): number {

@@ -4,7 +4,7 @@
  * et à la validation de l'emplacement d'armure - cf. docs/regles-creation-liste.md.
  * La limitation de mains ne s'applique qu'en jeu : elle n'est pas validée au recrutement.
  */
-import type { Catalog, Profile, SpecialCard, Spell } from "../model";
+import type { Catalog, Effect, Profile, SpecialCard, Spell } from "../model";
 import type { ProfileInstance } from "../model";
 
 /** Équipement effectivement porté : équipement de base non retiré + équipement acheté. */
@@ -43,13 +43,42 @@ export function castWays(
     .map((w) => w.id);
 }
 
-/** Une source de pages : un effet `spell-pages` (carte/amélioration ou équipement). `magicWayId` = pool dédié à une voie. */
+/** Une source de pages : un effet `spell-pages` (profil, carte/amélioration ou équipement). `magicWayId` = pool dédié à une voie. */
 export type PageSource = { name: string; amount: number; magicWayId?: string };
 
 /**
- * Sources de pages conférées à la figurine : cartes/améliorations applicables (Fille de Nyx +3, Crosse +3…)
- * ET équipement porté (ex. Brassards d'Euthéria : 5 pages Adansonia + 5 pages shamanisme). Chaque source
- * porte un effet `spell-pages` ; `magicWayId` renseigné = pool dédié à cette voie (cf. `pageAllocation`).
+ * Effets **portés** par une figurine, calculables sans aucun contexte de liste : ceux de son profil,
+ * ceux des cartes qui la visent (une amélioration ne compte que si elle est achetée) et ceux de
+ * l'équipement qu'elle a sur elle.
+ *
+ * C'est la base des deux opérations que le moteur ne résout pas dans son pipeline d'occurrences
+ * (`spell-pages`, `grant-spell`) : elles doivent rester calculables sur une fiche isolée - aperçu de
+ * profil avant recrutement, panneau de magie qui simule un équipement - où aucune liste n'existe.
+ * Elles ne visent donc jamais que le porteur, et ne peuvent pas être conditionnelles.
+ */
+function borneEffects(
+  cat: Catalog,
+  profile: Profile,
+  inst: ProfileInstance,
+  traits: ReadonlySet<string>,
+): { name: string; effect: Effect }[] {
+  const selected = inst.specialCardIds ?? [];
+  const out: { name: string; effect: Effect }[] = [];
+  for (const e of profile.effects ?? []) out.push({ name: profile.name, effect: e });
+  for (const c of cat.specialCards) {
+    if (cardApplies(c, profile, traits, selected)) for (const e of c.effects) out.push({ name: c.name, effect: e });
+  }
+  for (const id of wornEquipmentIds(profile, inst)) {
+    const eq = cat.equipment.find((x) => x.id === id);
+    if (!eq) continue;
+    for (const e of eq.effects ?? []) out.push({ name: eq.name, effect: e });
+  }
+  return out;
+}
+
+/**
+ * Sources de pages conférées à la figurine (ex. Fille de Nyx +3, Crosse +3, Brassards d'Euthéria :
+ * 5 pages Adansonia + 5 pages shamanisme). `magicWayId` renseigné = pool dédié (cf. `pageAllocation`).
  */
 export function pageBonusSources(
   cat: Catalog,
@@ -57,21 +86,29 @@ export function pageBonusSources(
   inst: ProfileInstance,
   traits: ReadonlySet<string>,
 ): PageSource[] {
-  const selected = inst.specialCardIds ?? [];
-  const toSource = (name: string, op: { amount?: number; magicWayId?: string }): PageSource => ({
-    name,
-    amount: op.amount ?? 0,
-    magicWayId: op.magicWayId,
-  });
-  const asPages = (op: unknown) => op as { amount?: number; magicWayId?: string };
-  const fromCards = cat.specialCards
-    .filter((c) => cardApplies(c, profile, traits, selected))
-    .flatMap((c) => c.effects.filter((e) => e.operation.kind === "spell-pages").map((e) => toSource(c.name, asPages(e.operation))));
-  const fromEquipment = wornEquipmentIds(profile, inst)
-    .map((id) => cat.equipment.find((e) => e.id === id))
-    .filter((e): e is NonNullable<typeof e> => Boolean(e))
-    .flatMap((e) => (e.effects ?? []).filter((ef) => ef.operation.kind === "spell-pages").map((ef) => toSource(e.name, asPages(ef.operation))));
-  return [...fromCards, ...fromEquipment].filter((s) => s.amount > 0);
+  return borneEffects(cat, profile, inst, traits)
+    .flatMap(({ name, effect }) =>
+      effect.operation.kind === "spell-pages"
+        ? [{ name, amount: effect.operation.amount, magicWayId: effect.operation.magicWayId }]
+        : [],
+    )
+    .filter((s) => s.amount > 0);
+}
+
+/**
+ * Sorts connus d'office (« de signature ») : gratuits, hors budget de pages, affichés même sur une
+ * figurine qui ne lance pas de sorts. Ex. Alaric → « Lien Mental ».
+ */
+export function innateSpellIds(
+  cat: Catalog,
+  profile: Profile,
+  inst: ProfileInstance,
+  traits: ReadonlySet<string>,
+): string[] {
+  const ids = borneEffects(cat, profile, inst, traits).flatMap(({ effect }) =>
+    effect.operation.kind === "grant-spell" && effect.target.self ? [effect.operation.spellId] : [],
+  );
+  return [...new Set(ids)];
 }
 
 export function pageBonus(cat: Catalog, profile: Profile, inst: ProfileInstance, traits: ReadonlySet<string>): number {

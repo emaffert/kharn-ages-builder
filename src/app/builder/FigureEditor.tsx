@@ -104,6 +104,7 @@ export function FigureEditor({
           onSetUpgradeCount={onSetUpgradeCount}
           mods={mods}
           wornArmors={wornArmorsFrom(cat, [...activeBase, ...added], undefined, p.armor)}
+          wornEquipIds={[...activeBase, ...added]}
         />
       )}
       {active === "equip" && (

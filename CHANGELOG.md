@@ -35,6 +35,9 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
   une seule valeur suffit. Le filtre d'équipement, qui fonctionne différemment des autres, le dit.
 - Changer l'action d'un effet emporte les réglages que la nouvelle action ne lit pas (filtre
   d'équipement, liaison), au lieu de les laisser derrière elle, invisibles et sans effet.
+- Un sort connu d'office peut désormais venir d'une carte ou d'un objet porté, et plus seulement de
+  la carte de profil. Symétriquement, des pages de sorts peuvent venir directement d'un profil.
+  Auparavant, ces effets étaient ignorés en silence selon l'endroit où on les avait placés.
 - Sur une monture, la cible « le cavalier » remplace le doublon « lui-même », et le libellé de la
   source s'adapte à ce qui porte l'effet (une figurine, une carte, un équipement).
 - Les cartes d'effet et de contrainte sont découpées en parties titrées, au lieu d'une suite de

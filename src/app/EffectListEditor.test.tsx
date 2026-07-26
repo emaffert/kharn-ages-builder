@@ -21,6 +21,10 @@ const alaric = (over: Partial<Effect> = {}): Effect => ({
   ...over,
 });
 
+/** Même effet, mais avec une action que le moteur résout dans son pipeline. */
+const enginePowered = (over: Partial<Effect> = {}): Effect =>
+  alaric({ operation: { kind: "grant-skill", skillId: "riposte" }, ...over });
+
 function Harness({ initial, onChange }: { initial: Effect; onChange?: (e: Effect) => void }) {
   const [list, setList] = useState<Effect[]>([initial]);
   return (
@@ -46,21 +50,21 @@ describe("EffectListEditor - la portée n'est demandée que si elle change quelq
   const scopeSelect = () => screen.queryByRole("combobox", { name: /Portée/i });
 
   it("ne la demande pas quand l'effet ne vise que sa source", () => {
-    render(<Harness initial={alaric()} />);
+    render(<Harness initial={enginePowered()} />);
     open();
     expect(scopeSelect()).toBeNull();
     expect(screen.getByText(/la portée ne changerait rien/i)).toBeTruthy();
   });
 
   it("la demande dès que l'effet vise d'autres figurines", () => {
-    render(<Harness initial={alaric({ target: { traits: ["goun"] } })} />);
+    render(<Harness initial={enginePowered({ target: { traits: ["goun"] } })} />);
     open();
     expect(scopeSelect()).toBeTruthy();
   });
 
   it("la demande sur une cible « source » assortie d'une condition", () => {
     // La condition, elle, s'évalue sur un ensemble : la portée dit lequel.
-    render(<Harness initial={alaric({ condition: { traits: ["goun"], countAtLeast: 3 } })} />);
+    render(<Harness initial={enginePowered({ condition: { traits: ["goun"], countAtLeast: 3 } })} />);
     open();
     expect(scopeSelect()).toBeTruthy();
   });
@@ -180,5 +184,39 @@ describe("EffectListEditor - changer d'action ne laisse pas de réglage mort der
     open();
     chooseAction("cost-delta");
     expect(last.designation).toEqual({ of: { traits: ["fille-de-nyx"] } });
+  });
+
+  it("ramène cible et conditions au porteur en passant à une action résolue hors moteur", () => {
+    let last = alaric();
+    render(
+      <Harness
+        initial={enginePowered({
+          target: { traits: ["goun"] },
+          condition: { traits: ["goun"], countAtLeast: 2 },
+        })}
+        onChange={(e) => (last = e)}
+      />,
+    );
+    open();
+    chooseAction("spell-pages");
+    expect(last.target).toEqual({ self: true });
+    expect(last.condition).toBeUndefined();
+  });
+});
+
+describe("EffectListEditor - actions résolues hors du moteur", () => {
+  it("énonce la cible au lieu de la proposer, et ne demande ni portée ni conditions", () => {
+    render(<Harness initial={alaric()} />);
+    open();
+    expect(screen.getByText(/ne sait pas en viser d'autres/i)).toBeTruthy();
+    expect(screen.queryByText(/^À quelles conditions$/)).toBeNull();
+    expect(screen.queryByRole("combobox", { name: /Portée/i })).toBeNull();
+  });
+
+  it("laisse cible et conditions ouvertes aux actions que le moteur résout", () => {
+    render(<Harness initial={enginePowered()} />);
+    open();
+    expect(screen.queryByText(/ne sait pas en viser d'autres/i)).toBeNull();
+    expect(screen.getByText(/^À quelles conditions$/)).toBeTruthy();
   });
 });

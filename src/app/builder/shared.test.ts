@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { catalog } from "@data";
-import { wornArmorsFrom } from "./shared";
+import { innateSpellIds, pageBonusSources, wornArmorsFrom } from "./shared";
 
 /**
  * Armure de Combat Khârne (équipement `eq-armure-combat-kharne`, `heavySeuil` 5) : le seuil de réussite
@@ -32,5 +32,61 @@ describe("wornArmorsFrom - heavySeuil conditionnel", () => {
       protectionReussite: -3,
     })[0];
     expect(brig?.seuil).toBe(catalog.equipment.find((e) => e.id === "brigandine")?.seuil);
+  });
+});
+
+/**
+ * Sorts d'office et pages de sorts sont résolus hors du pipeline du moteur, pour rester calculables
+ * sur une fiche isolée. Ils doivent donc reconnaître les trois porteurs possibles - profil, carte
+ * qui vise la figurine, objet porté - sans quoi l'effet disparaît selon l'endroit où on le pose.
+ */
+describe("effets portés par une figurine (hors contexte de liste)", () => {
+  const alaric = catalog.profiles.find((p) => p.id === "gouns-alaric-1")!;
+  const meneuse = catalog.profiles.find((p) => p.id === "fangs-meneuse-1")!;
+
+  it("reconnaît un sort d'office porté par le profil (Alaric → Lien Mental)", () => {
+    expect(innateSpellIds(alaric, catalog, [])).toContain("lien-mental");
+  });
+
+  it("reconnaît un sort d'office porté par un objet équipé", () => {
+    // Le catalogue n'en contient pas encore : on le simule sur un objet réel du catalogue.
+    const eq = catalog.equipment.find((e) => e.id === "faucille-os")!;
+    const cat = {
+      ...catalog,
+      equipment: catalog.equipment.map((e) =>
+        e.id !== eq.id
+          ? e
+          : {
+              ...e,
+              effects: [
+                {
+                  id: "test-innate",
+                  source: { kind: "equipment" as const, id: eq.id },
+                  scope: "fer-de-lance" as const,
+                  target: { self: true },
+                  operation: { kind: "grant-spell" as const, spellId: "lien-mental" },
+                  sourceText: "",
+                },
+              ],
+            },
+      ),
+    };
+    expect(innateSpellIds(meneuse, cat, [], [eq.id])).toContain("lien-mental");
+    // Sans l'objet sur elle, rien.
+    expect(innateSpellIds(meneuse, cat, [], [])).not.toContain("lien-mental");
+  });
+
+  it("compte les pages d'un objet porté (Brassards d'Euthéria : 2 pools dédiés de 5)", () => {
+    const pools = pageBonusSources(meneuse, catalog, [], ["brassards-eutheria"]).filter((s) => s.magicWayId);
+    expect(pools.map((s) => s.amount)).toEqual([5, 5]);
+    expect(new Set(pools.map((s) => s.magicWayId)).size).toBe(2);
+    // Sans les brassards au bras, aucun pool dédié.
+    expect(pageBonusSources(meneuse, catalog, [], []).filter((s) => s.magicWayId)).toEqual([]);
+  });
+
+  it("compte les pages d'une carte qui vise la figurine (Fille de Nyx : +3)", () => {
+    const nyx = catalog.profiles.find((p) => p.traits.includes("fille-de-nyx"))!;
+    const general = pageBonusSources(nyx, catalog, [], []).filter((s) => !s.magicWayId);
+    expect(general.some((s) => s.name === "Fille de Nyx" && s.amount === 3)).toBe(true);
   });
 });

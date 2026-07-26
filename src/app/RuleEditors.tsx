@@ -371,6 +371,15 @@ export function ConstraintListEditor({
   );
 }
 
+/**
+ * Actions résolues **hors du pipeline du moteur**, sur la seule figurine qui les porte : elles
+ * doivent rester calculables sur une fiche isolée (aperçu de profil, panneau de magie), où aucune
+ * liste n'existe. Cf. `borneEffects` dans `core/engine/magic.ts`. Conséquence assumée : elles ne
+ * visent jamais d'autres figurines et ne peuvent pas être conditionnelles.
+ */
+const BEARER_ONLY_OPS: EffectOperation["kind"][] = ["grant-spell", "spell-pages"];
+const bearerOnly = (e: Effect) => BEARER_ONLY_OPS.includes(e.operation.kind);
+
 /** L'effet ne vise-t-il que la figurine qui le porte ? (`cavalier` = `self` pour une monture.) */
 function targetsSourceOnly(e: Effect): boolean {
   return Boolean(e.target.self || (e.target.cavalier && e.source.kind === "mount"));
@@ -382,6 +391,7 @@ function targetsSourceOnly(e: Effect): boolean {
  * pour compter un groupe (`of`). Cf. `instancesInScope` / `conditionHolds` dans `evaluate.ts`.
  */
 function scopeMatters(e: Effect): boolean {
+  if (bearerOnly(e)) return false;
   const counts = ["stat-count", "stat-max", "skill-count"].includes(e.operation.kind);
   return !targetsSourceOnly(e) || e.condition != null || counts;
 }
@@ -407,6 +417,11 @@ function linkMatters(e: Effect): boolean {
 function withOperation(e: Effect, operation: EffectOperation): Effect {
   if (operation.kind === e.operation.kind) return { ...e, operation };
   const next: Effect = { ...e, operation };
+  if (BEARER_ONLY_OPS.includes(operation.kind)) {
+    // Ces actions ne savent viser que le porteur, et jamais sous condition.
+    next.target = { self: true };
+    next.condition = undefined;
+  }
   if (operation.kind !== "cost-delta") {
     const target = { ...next.target };
     delete target.equipmentCategories;
@@ -452,16 +467,24 @@ export function EffectListEditor({
           </Block>
 
           <Block title="À qui il s'applique">
-            <SelectorEditor
-              selector={e.target}
-              cat={cat}
-              role="target"
-              sourceKind={e.source.kind}
-              withEquipment={e.operation.kind === "cost-delta"}
-              onChange={(s) => update(i, { ...e, target: s })}
-            />
+            {bearerOnly(e) ? (
+              <p className="adm-block-note">
+                À la figurine qui porte l'effet : celle du profil, celle que vise la carte, ou celle
+                qui a l'objet sur elle. Cette action ne sait pas en viser d'autres.
+              </p>
+            ) : (
+              <SelectorEditor
+                selector={e.target}
+                cat={cat}
+                role="target"
+                sourceKind={e.source.kind}
+                withEquipment={e.operation.kind === "cost-delta"}
+                onChange={(s) => update(i, { ...e, target: s })}
+              />
+            )}
           </Block>
 
+          {!bearerOnly(e) && (
           <Block
             title="À quelles conditions"
             note="Facultatif. Sans clause, l'effet est actif dès que sa source est recrutée. Avec plusieurs clauses, toutes doivent être vraies en même temps."
@@ -509,6 +532,7 @@ export function EffectListEditor({
               })()}
             </div>
           </Block>
+          )}
 
           {linkMatters(e) && (
             <Block

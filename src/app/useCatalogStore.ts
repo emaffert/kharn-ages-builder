@@ -450,7 +450,9 @@ export function useCatalogStore() {
     const id = `spell-${Date.now()}`;
     apply((c) => ({
       ...c,
-      spells: [...c.spells, { id, name: "Nouveau sort", kind: "generique", target: "", difficulties: [] }],
+      // « grimoire » par défaut, et sans voie : un brouillon n'est proposé à personne dans le
+      // constructeur tant qu'on ne lui a pas donné une voie (ou choisi « générique » sciemment).
+      spells: [...c.spells, { id, name: "Nouveau sort", kind: "grimoire", target: "", difficulties: [] }],
     }));
     return id;
   }, [apply]);

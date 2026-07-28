@@ -135,6 +135,12 @@ export const EquipmentSchema = z.object({
   baseMunitions: z.number().optional(),
   /** Durée de vie (DV) - boucliers et armures. */
   durability: z.number().optional(),
+  /**
+   * Armure **cumulable** : elle ne consomme pas l'unique emplacement d'armure et peut donc être portée
+   * en plus d'une armure ordinaire (ex. Gambison, « 1 seule armure par Safar en plus d'un gambison »).
+   * Le plafond devient : 1 armure ordinaire + 1 cumulable.
+   */
+  stacksWithArmor: z.boolean().optional(),
   /** Valeurs d'armure (équipement de catégorie « armure ») : cf. `Profile.armor`. */
   protectionEchec: z.number().optional(),
   seuil: z.number().optional(),
@@ -209,8 +215,22 @@ export const SpellSchema = z.object({
   magicWayId: z.string().optional(),
   pages: z.number().optional(),
   cost: z.number().optional(),
+  /**
+   * Coût en **niveaux** d'un sort générique (défaut 1) : un lanceur peut en connaître autant que son
+   * niveau, et « Passe-Passe » en vaut 3 à lui seul. Sans objet pour les sorts de grimoire, qui se
+   * comptent en pages.
+   */
+  levelCost: z.number().optional(),
+  /**
+   * Réservation : le sort n'est accessible qu'aux profils correspondant à *au moins une* des dimensions
+   * fournies. S'applique aussi aux sorts génériques (ex. « Passe-Passe », réservé à Bharbathos).
+   */
   reservedTo: z
-    .object({ profileIds: z.array(z.string()).optional(), trait: z.string().optional() })
+    .object({
+      profileIds: z.array(z.string()).optional(),
+      trait: z.string().optional(),
+      factionIds: z.array(z.string()).optional(),
+    })
     .optional(),
   target: z.string(),
   cadence: z.string().optional(),

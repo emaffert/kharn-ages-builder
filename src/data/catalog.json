@@ -10715,6 +10715,7 @@
       "category": "armure",
       "cost": 8,
       "durability": 7,
+      "stacksWithArmor": true,
       "protectionEchec": 0,
       "seuil": 7,
       "protectionReussite": -1,
@@ -11575,7 +11576,7 @@
       "name": "Passe-Passe",
       "kind": "generique",
       "magicWayId": "osteomancie",
-      "pages": 0,
+      "levelCost": 3,
       "cost": 0,
       "reservedTo": {
         "profileIds": [

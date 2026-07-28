@@ -14,7 +14,14 @@ import type {
   Selector,
   SpecialCard,
 } from "../model";
-import { armorsWorn, castWays, forbiddenGrimoires, pageAllocation, wornEquipmentIds } from "./magic";
+import {
+  armorsWorn,
+  castWays,
+  forbiddenGrimoires,
+  genericSpellAllocation,
+  pageAllocation,
+  wornEquipmentIds,
+} from "./magic";
 import { totalMunitionCost } from "./munitions";
 
 /**
@@ -814,6 +821,14 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
       if (castWays(cat, p, inst, traits, [...ri.grantedSkills.keys()]).length === 0) {
         push("spells-no-caster", `« ${p.name} » a des sorts alors qu'elle ne peut pas en lancer.`);
       } else {
+        // Sorts génériques : budget en niveaux (autant de niveaux de sorts que le niveau du profil).
+        const gen = genericSpellAllocation(cat, p, inst);
+        if (gen.over) {
+          push(
+            "generic-spells-over-level",
+            `« ${p.name} » : ${gen.used} niveaux de sorts génériques pour un profil de niveau ${gen.cap}.`,
+          );
+        }
         // Attribution optimale : les pools dédiés (Brassards) absorbent d'abord, le surplus va au général.
         const alloc = pageAllocation(cat, p, inst, traits);
         if (alloc.over) {
@@ -831,7 +846,10 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
     }
 
     // La limitation de mains ne s'applique qu'en jeu : on n'en fait pas une contrainte de recrutement.
-    if (armorsWorn(cat, p, inst) > 1) push("multiple-armor", `« ${p.name} » porte plusieurs armures.`);
+    // Une armure ordinaire au plus, plus une armure cumulable (Gambison) qui a son propre emplacement.
+    const armor = armorsWorn(cat, p, inst);
+    if (armor.standard > 1) push("multiple-armor", `« ${p.name} » porte plusieurs armures.`);
+    if (armor.stackable > 1) push("multiple-armor", `« ${p.name} » porte plusieurs armures cumulables.`);
   }
 }
 

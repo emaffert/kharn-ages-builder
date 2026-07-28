@@ -2,7 +2,15 @@ import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { Catalog, ListDocument, ProfileInstance } from "../model";
 import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills, slotCapacity, upgradesForEquipment } from "./evaluate";
-import { affinityWays, castableSpells, forbiddenGrimoires, maxPagesInPool, pageAllocation } from "./magic";
+import {
+  affinityWays,
+  armorsWorn,
+  castableSpells,
+  forbiddenGrimoires,
+  genericSpellAllocation,
+  maxPagesInPool,
+  pageAllocation,
+} from "./magic";
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -389,6 +397,45 @@ describe("validation magie & emplacements", () => {
     };
     expect(forbiddenGrimoires(detourne).size).toBe(0);
     expect(forbiddenGrimoires(meneuse).has("grand")).toBe(true);
+  });
+
+  // « 1 seule armure par Safar en plus d'un gambison » : le Gambison a son propre emplacement.
+  it("deux armures ordinaires → invalide", () => {
+    const res = evalFang([
+      inst("fangs-larbin-1", { addedEquipmentIds: ["armure-de-cuir", "cotte-de-maille"] }),
+    ]);
+    expect(res.issues.some((i) => i.ruleId === "multiple-armor")).toBe(true);
+  });
+
+  it("une armure + un gambison → valide", () => {
+    const res = evalFang([
+      inst("fangs-larbin-1", { addedEquipmentIds: ["armure-de-cuir", "gambison"] }),
+    ]);
+    expect(res.issues.some((i) => i.ruleId === "multiple-armor")).toBe(false);
+  });
+
+  it("sorts génériques : budget en niveaux, pas en pages", () => {
+    // Passe-Passe vaut 3 niveaux : hors de portée d'un lanceur de niveau 2, à la limite pour un niveau 3.
+    const bharbathos = catalog.profiles.find((p) => p.id === "guilde-noire-bharbathos-3")!;
+    expect(genericSpellAllocation(catalog, bharbathos, inst(bharbathos.id, { spellIds: ["guilde-noire-passe-passe"] })))
+      .toEqual({ cap: 3, used: 3, over: false });
+    expect(
+      genericSpellAllocation(catalog, { ...bharbathos, level: 2 }, inst(bharbathos.id, { spellIds: ["guilde-noire-passe-passe"] })).over,
+    ).toBe(true);
+  });
+
+  it("un générique n'entame pas le budget de pages du grimoire", () => {
+    const bharbathos = catalog.profiles.find((p) => p.id === "guilde-noire-bharbathos-3")!;
+    const alloc = pageAllocation(catalog, bharbathos, inst(bharbathos.id, { spellIds: ["guilde-noire-passe-passe"] }), new Set(bharbathos.traits));
+    expect(alloc.totalUsed).toBe(0);
+  });
+
+  it("le gambison seul ne consomme pas l'emplacement d'armure ordinaire", () => {
+    const armor = armorsWorn(catalog, catalog.profiles.find((p) => p.id === "fangs-larbin-1")!, {
+      ...inst("fangs-larbin-1"),
+      addedEquipmentIds: ["gambison"],
+    });
+    expect(armor).toEqual({ standard: 0, stackable: 1 });
   });
 });
 
@@ -909,6 +956,39 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
     const spells = castableSpells(catalog, nephtys, new Set(nephtys.traits), ["way-1783500043343"]).map((s) => s.id);
     expect(spells).toContain("test-shamanisme"); // école ouverte par l'Affinité
     expect(spells).toContain("test-adansonia"); // sa voie maîtrisée
+  });
+});
+
+describe("réservation des sorts génériques", () => {
+  const bharbathos = catalog.profiles.find((p) => p.id === "guilde-noire-bharbathos-3")!;
+  const nephtys = catalog.profiles.find((p) => p.id === "tembos-nephtys-3")!;
+  // Chaque mage avec sa propre voie maîtrisée : sans voie, une figurine ne lance rien du tout.
+  const spellsOf = (cat: Catalog, p: typeof bharbathos, ways: string[]) =>
+    castableSpells(cat, p, new Set(p.traits), ways).map((s) => s.id);
+
+  it("un générique réservé à un personnage n'apparaît que chez lui", () => {
+    expect(spellsOf(catalog, bharbathos, ["osteomancie"])).toContain("guilde-noire-passe-passe");
+    expect(spellsOf(catalog, nephtys, ["way-1783500043343"])).not.toContain("guilde-noire-passe-passe");
+  });
+
+  it("un générique sans réservation reste ouvert à tous les lanceurs", () => {
+    expect(spellsOf(catalog, nephtys, ["way-1783500043343"])).toContain("confusion");
+  });
+
+  it("une figurine sans voie maîtrisée ne voit aucun sort, pas même un générique", () => {
+    const larbin = catalog.profiles.find((p) => p.id === "fangs-larbin-1")!;
+    expect(castableSpells(catalog, larbin, new Set(larbin.traits), [])).toEqual([]);
+  });
+
+  it("une réservation de faction filtre sur la faction du profil", () => {
+    const reserve: Catalog = {
+      ...catalog,
+      spells: catalog.spells.map((s) =>
+        s.id === "confusion" ? { ...s, reservedTo: { factionIds: ["guilde-noire"] } } : s,
+      ),
+    };
+    expect(spellsOf(reserve, bharbathos, ["osteomancie"])).toContain("confusion");
+    expect(spellsOf(reserve, nephtys, ["way-1783500043343"])).not.toContain("confusion");
   });
 });
 

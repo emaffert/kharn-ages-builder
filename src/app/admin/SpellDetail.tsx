@@ -1,5 +1,5 @@
 import type { Catalog, Spell } from "@core";
-import { AddButton, CardImageSection, Combobox, DetailHeader, DetailPage, Field, IdField, RemoveButton, Section } from "./primitives";
+import { AddButton, CardImageSection, ChipMultiSelect, Combobox, DetailHeader, DetailPage, Field, IdField, RemoveButton, Section } from "./primitives";
 import { INPUT, removeAt, replaceAt } from "./shared";
 import { ProfileMultiSelect } from "./editors";
 
@@ -60,14 +60,27 @@ export function SpellDetail({
                   onChange={(v) => onChange({ magicWayId: v || undefined })}
                 />
               </Field>
-              <Field label="Pages" className="w-20">
-                <input
-                  type="number"
-                  value={s.pages ?? ""}
-                  onChange={(e) => onChange({ pages: numOrUndef(e.target.value) })}
-                  className={INPUT}
-                />
-              </Field>
+              {/* Un générique se compte en niveaux (budget = niveau du profil), les autres en pages de grimoire. */}
+              {s.kind === "generique" ? (
+                <Field label="Coût en niveaux" className="w-32">
+                  <input
+                    type="number"
+                    value={s.levelCost ?? ""}
+                    placeholder="1"
+                    onChange={(e) => onChange({ levelCost: numOrUndef(e.target.value) })}
+                    className={INPUT}
+                  />
+                </Field>
+              ) : (
+                <Field label="Pages" className="w-20">
+                  <input
+                    type="number"
+                    value={s.pages ?? ""}
+                    onChange={(e) => onChange({ pages: numOrUndef(e.target.value) })}
+                    className={INPUT}
+                  />
+                </Field>
+              )}
             </div>
             <div className="mt-3 flex flex-wrap items-end gap-3">
               <Field label="Cible" className="w-56">
@@ -121,6 +134,10 @@ export function SpellDetail({
 
           <Section title="Réservé à" icon="constraints" note="qui peut le lancer">
             <div className="space-y-3">
+              <p className="text-xs adm-faint">
+                Vide = sort ouvert à tous les lanceurs. Sinon, réservé aux figurines validant au moins une des
+                dimensions renseignées. S'applique aussi aux sorts génériques.
+              </p>
               <Field label="Trait" className="w-56">
                 <input
                   value={reserved.trait ?? ""}
@@ -130,6 +147,18 @@ export function SpellDetail({
                   className={INPUT}
                 />
               </Field>
+              <div className="space-y-1">
+                <span className="adm-field-label">Factions</span>
+                <ChipMultiSelect
+                  options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+                  selected={reserved.factionIds ?? []}
+                  onToggle={(id) => {
+                    const fs = reserved.factionIds ?? [];
+                    const next = fs.includes(id) ? fs.filter((f) => f !== id) : [...fs, id];
+                    onChange({ reservedTo: cleanReserved({ ...reserved, factionIds: next.length ? next : undefined }) });
+                  }}
+                />
+              </div>
               <ProfileMultiSelect
                 label="Profils"
                 ids={reserved.profileIds ?? []}
@@ -148,9 +177,10 @@ export function SpellDetail({
   );
 }
 
-function cleanReserved(r: { profileIds?: string[]; trait?: string }) {
-  const out: { profileIds?: string[]; trait?: string } = {};
+function cleanReserved(r: NonNullable<Spell["reservedTo"]>): Spell["reservedTo"] {
+  const out: NonNullable<Spell["reservedTo"]> = {};
   if (r.trait) out.trait = r.trait;
   if (r.profileIds?.length) out.profileIds = r.profileIds;
+  if (r.factionIds?.length) out.factionIds = r.factionIds;
   return Object.keys(out).length ? out : undefined;
 }

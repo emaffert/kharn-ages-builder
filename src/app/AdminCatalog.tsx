@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { COLLECTION_OF, findReferences, type RefKind, type Reference } from "@core";
 import { Button, Dialog } from "@ui";
 import { useCatalogStore } from "./useCatalogStore";
-import { LEVEL_LABEL } from "./admin/shared";
+import { LEVEL_LABEL, listLabel } from "./admin/shared";
 import { ProfileDetail } from "./admin/ProfileDetail";
 import { EquipmentDetail } from "./admin/EquipmentDetail";
 import { SkillCatalogDetail } from "./admin/SkillCatalogDetail";
@@ -261,7 +261,7 @@ export function AdminCatalog() {
                   <li>
                     <button onClick={() => setSelectedProfileId(p.id)} className={itemClass(p.id === selectedProfileId)}>
                       <span>
-                        {p.name}
+                        {listLabel(p.name)}
                         {p.level && <span className="ml-1 adm-faint">{LEVEL_LABEL[p.level]}</span>}
                       </span>
                       <span className="flex items-center gap-1 text-xs adm-faint">
@@ -289,7 +289,7 @@ export function AdminCatalog() {
                         onClick={() => setSelectedEquipId(e.id)}
                         className={itemClass(e.id === selectedEquipId)}
                       >
-                        <span>{e.name}</span>
+                        <span>{listLabel(e.name)}</span>
                         <span className="text-xs adm-faint">{e.cost}</span>
                       </button>
                     </li>
@@ -331,7 +331,7 @@ export function AdminCatalog() {
               {filteredCards.map((s) => (
                 <li key={s.id}>
                   <button onClick={() => setSelectedCardId(s.id)} className={itemClass(s.id === selectedCardId)}>
-                    <span>{s.name}</span>
+                    <span>{listLabel(s.name)}</span>
                     <span className="text-xs adm-faint">{s.cost > 0 ? s.cost : "auto"}</span>
                   </button>
                 </li>
@@ -351,7 +351,7 @@ export function AdminCatalog() {
               {filteredSpells.map((s) => (
                 <li key={s.id}>
                   <button onClick={() => setSelectedSpellId(s.id)} className={itemClass(s.id === selectedSpellId)}>
-                    <span>{s.name}</span>
+                    <span>{listLabel(s.name)}</span>
                     {s.cost != null && <span className="text-xs adm-faint">{s.cost}</span>}
                   </button>
                 </li>
@@ -412,7 +412,7 @@ export function AdminCatalog() {
                     onClick={() => setSelectedMountOptionId(o.id)}
                     className={itemClass(o.id === selectedMountOptionId)}
                   >
-                    <span>{o.name}</span>
+                    <span>{listLabel(o.name)}</span>
                     <span className="text-xs adm-faint">{o.bucket}</span>
                   </button>
                 </li>

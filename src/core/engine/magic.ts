@@ -181,10 +181,12 @@ export function pageAllocation(
     }
   }
   // Tailles (en pages) des sorts sélectionnés, par voie (sorts sans pages/voie n'occupent pas de pool).
+  // Les génériques sont hors grimoire : ils se comptent en niveaux (cf. `genericSpellAllocation`).
   const byWaySizes = new Map<string, number[]>();
   let totalUsed = 0;
   for (const id of inst.spellIds) {
     const sp = cat.spells.find((x) => x.id === id);
+    if (sp?.kind === "generique") continue;
     const pages = sp?.pages ?? 0;
     if (pages <= 0) continue;
     totalUsed += pages;
@@ -220,7 +222,35 @@ export function pageCapacity(cat: Catalog, profile: Profile, inst: ProfileInstan
 }
 
 export function pagesUsed(cat: Catalog, inst: ProfileInstance): number {
-  return inst.spellIds.reduce((n, id) => n + (cat.spells.find((s) => s.id === id)?.pages ?? 0), 0);
+  return inst.spellIds.reduce((n, id) => {
+    const s = cat.spells.find((x) => x.id === id);
+    return s == null || s.kind === "generique" ? n : n + (s.pages ?? 0);
+  }, 0);
+}
+
+/** Coût en niveaux d'un sort générique : 1 par défaut, davantage pour les plus puissants (Passe-Passe : 3). */
+export function spellLevelCost(spell: Spell): number {
+  return spell.levelCost ?? 1;
+}
+
+/**
+ * Budget de sorts **génériques**, compté en niveaux et non en pages : un lanceur peut en connaître
+ * autant que son niveau (un profil de niveau 3 dispose de 3 niveaux de sorts génériques), chaque sort
+ * en consommant `levelCost`. Indépendant du grimoire, qui ne finance que les sorts de voie.
+ */
+export interface GenericSpellAllocation {
+  cap: number;
+  used: number;
+  over: boolean;
+}
+
+export function genericSpellAllocation(cat: Catalog, profile: Profile, inst: ProfileInstance): GenericSpellAllocation {
+  const used = inst.spellIds.reduce((n, id) => {
+    const s = cat.spells.find((x) => x.id === id);
+    return s?.kind === "generique" ? n + spellLevelCost(s) : n;
+  }, 0);
+  const cap = profile.level ?? 1;
+  return { cap, used, over: used > cap };
 }
 
 /** Grimoires que la figurine ne peut pas acquérir (contrainte `forbids-grimoire` de son profil). */
@@ -266,7 +296,28 @@ export function affinityWays(cat: Catalog, profile: Profile): string[] {
   return [...out];
 }
 
-/** Sorts lançables : génériques (tout lanceur) + sorts des voies maîtrisées ou d'affinité (réservations respectées). */
+/**
+ * La figurine satisfait-elle la réservation d'un sort ? Une réservation absente n'exclut personne ;
+ * sinon il suffit de valider *une* des dimensions (trait, profil nommé, faction).
+ */
+function spellReservationOk(spell: Spell, profile: Profile, traits: ReadonlySet<string>): boolean {
+  const r = spell.reservedTo;
+  if (!r) return true;
+  return (
+    (r.trait != null && traits.has(r.trait)) ||
+    (r.profileIds?.includes(profile.id) ?? false) ||
+    (profile.factionId != null && (r.factionIds?.includes(profile.factionId) ?? false))
+  );
+}
+
+/**
+ * Sorts lançables : génériques (ouverts à tout lanceur) + sorts des voies maîtrisées ou d'affinité.
+ * Une figurine qui ne maîtrise aucune voie ne lance rien du tout, pas même un générique.
+ * La réservation s'applique dans tous les cas, y compris aux génériques : un générique réservé à un
+ * personnage ou à une faction ne doit apparaître que là (ex. « Passe-Passe » → Bharbathos).
+ * Un sort de voie sans voie renseignée n'est lançable par personne : c'est un brouillon d'admin,
+ * qui ne doit pas fuiter dans le constructeur avant d'être achevé.
+ */
 export function castableSpells(
   cat: Catalog,
   profile: Profile,
@@ -274,21 +325,28 @@ export function castableSpells(
   ways: string[],
 ): Spell[] {
   const allWays = new Set([...ways, ...affinityWays(cat, profile)]);
+  if (allWays.size === 0) return [];
   return cat.spells.filter((s) => {
+    if (!spellReservationOk(s, profile, traits)) return false;
     if (s.kind === "generique") return true;
-    if (s.magicWayId && !allWays.has(s.magicWayId)) return false;
-    if (s.reservedTo) {
-      const okTrait = s.reservedTo.trait ? traits.has(s.reservedTo.trait) : false;
-      const okProfile = s.reservedTo.profileIds?.includes(profile.id) ?? false;
-      if (!okTrait && !okProfile) return false;
-    }
-    return true;
+    return s.magicWayId != null && allWays.has(s.magicWayId);
   });
 }
 
-/** Nombre d'armures portées (pour le plafond d'une seule armure). */
-export function armorsWorn(cat: Catalog, profile: Profile, inst: ProfileInstance): number {
-  return wornEquipmentIds(profile, inst).filter(
-    (id) => cat.equipment.find((e) => e.id === id)?.category === "armure",
-  ).length;
+/**
+ * Armures portées, réparties selon les deux emplacements : `standard` (une seule par Safar) et
+ * `stackable` (une armure cumulable en plus, ex. le Gambison - cf. `Equipment.stacksWithArmor`).
+ */
+export function armorsWorn(
+  cat: Catalog,
+  profile: Profile,
+  inst: ProfileInstance,
+): { standard: number; stackable: number } {
+  const armors = wornEquipmentIds(profile, inst)
+    .map((id) => cat.equipment.find((e) => e.id === id))
+    .filter((e): e is NonNullable<typeof e> => e?.category === "armure");
+  return {
+    standard: armors.filter((e) => !e.stacksWithArmor).length,
+    stackable: armors.filter((e) => e.stacksWithArmor).length,
+  };
 }

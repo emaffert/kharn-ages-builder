@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Khârn-Âges - Onglet Magie, deux budgets (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="forge.css" />
+<style>
+/* ============================================================================
+   Maquette « onglet Magie » - séparation des deux budgets de sorts.
+   Un sort générique se paie en NIVEAUX du profil, un sort de grimoire en PAGES.
+   Deux monnaies, donc deux sélections : le contrôle segmenté nomme laquelle
+   on dépense, et chaque budget s'affiche dans son unité propre (pastilles
+   pleines/vides pour les niveaux - discrets et bornés au niveau du profil ;
+   compteur chiffré pour les pages - qui peuvent être illimitées).
+   Namespacing mg- pour ne pas heurter forge.css.
+   ============================================================================ */
+body{--faction:#b0472b;--faction-2:#e0553f;--faction-deep:#5e1a13;padding:26px 0 60px}
+.wrap{max-width:1020px;margin:0 auto;padding:0 22px;position:relative;z-index:2}
+
+.mg-intro{margin-bottom:26px}
+.mg-intro h1{font-family:Cinzel;font-weight:600;font-size:23px;margin:0 0 6px}
+.mg-intro p{margin:0;font-size:13.5px;color:var(--bone-dim);max-width:70ch;line-height:1.55}
+.mg-scene-label{display:flex;align-items:center;gap:10px;margin:30px 0 10px}
+.mg-scene-label .n{font-family:Cinzel;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ember)}
+.mg-scene-label .t{font-size:12.5px;color:var(--bone-faint)}
+.mg-scene-label .rule{flex:1;height:1px;background:var(--hair)}
+
+/* ---- Fenêtre de figurine (reprise de figure-edit.html, réduite à l'onglet Magie) ---- */
+.mg-modal{border-radius:16px;overflow:hidden;background:linear-gradient(180deg,var(--forge-2),var(--forge));
+  box-shadow:0 40px 90px -34px #000, inset 0 0 0 1px var(--hair-strong)}
+.mg-head{display:flex;align-items:center;gap:14px;padding:15px 20px;
+  background:radial-gradient(120% 200% at 0% 0%, var(--header-glow), transparent 55%), linear-gradient(180deg,var(--forge-2),transparent);
+  border-bottom:1px solid var(--hair)}
+.mg-thumb{width:42px;height:42px;flex:none;border-radius:11px;display:grid;place-items:center;
+  background:radial-gradient(120% 120% at 30% 15%, var(--faction-deep), var(--panel-dark));
+  box-shadow:inset 0 0 0 1px var(--ember), 0 0 20px -6px var(--ember-glow)}
+.mg-thumb span{font-family:Cinzel;font-weight:700;font-size:16px;color:var(--panel-ink)}
+.mg-title h2{margin:0;font-family:Cinzel;font-weight:600;font-size:19px}
+.mg-title .sub{font-size:12px;color:var(--bone-dim)}
+.mg-cost{margin-left:auto;font-family:Cinzel;font-weight:600;font-size:17px;color:var(--gold)}
+.mg-cost i{font-style:normal;font-size:11.5px;color:var(--gold-dim);font-family:Inter}
+.mg-tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--hair);background:var(--forge-2)}
+.mg-tab{font-family:Cinzel;padding:11px 15px;font-size:13.5px;color:color-mix(in srgb,var(--bone) 55%,transparent);
+  border-bottom:2px solid transparent;margin-bottom:-1px;letter-spacing:.02em}
+.mg-tab.on{color:var(--bone);border-bottom-color:var(--ember)}
+.mg-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+
+/* ---- Le choix de monnaie : contrôle segmenté, chaque segment porte son solde ---- */
+.mg-seg{display:inline-flex;padding:3px;gap:2px;border-radius:11px;background:var(--tint-2);
+  box-shadow:inset 0 0 0 1px var(--hair);align-self:flex-start}
+.mg-seg button{display:flex;align-items:baseline;gap:8px;padding:7px 15px;border-radius:9px;font-size:13px;
+  font-weight:500;color:var(--bone-dim);transition:.16s var(--ease)}
+.mg-seg button:hover{color:var(--bone)}
+.mg-seg button .bal{font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--bone-faint)}
+.mg-seg button[aria-checked="true"]{color:var(--ink-accent);background:linear-gradient(180deg,var(--ember-bright),var(--ember));
+  box-shadow:0 0 16px -6px var(--ember-glow)}
+.mg-seg button[aria-checked="true"] .bal{color:var(--ink-accent);opacity:.72}
+
+/* ---- Bandeau du budget actif ---- */
+.mg-budget{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mg-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;font-size:12px;
+  color:var(--bone-dim);background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair)}
+.mg-chip .lab{font-family:Cinzel;text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;opacity:.85}
+.mg-chip .num{font-variant-numeric:tabular-nums;font-weight:600;color:var(--bone)}
+.mg-chip.full{color:var(--on-amber);background:color-mix(in srgb,var(--amber) 11%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 38%,transparent)}
+.mg-chip.full .num{color:var(--on-amber)}
+/* Pastilles de niveaux : bornées (1 à 3), donc lisibles d'un coup d'oeil sans lire de chiffre. */
+.mg-pips{display:inline-flex;gap:4px}
+.mg-pip{width:9px;height:9px;border-radius:50%;background:var(--ash-2)}
+.mg-pip.on{background:var(--ember);box-shadow:0 0 9px -1px var(--ember-glow)}
+.mg-chip.full .mg-pip.on{background:var(--amber);box-shadow:0 0 9px -1px color-mix(in srgb,var(--amber) 60%,transparent)}
+.mg-note{font-size:12px;color:var(--bone-faint);font-style:italic}
+.mg-warn{padding:8px 11px;border-radius:8px;font-size:12.5px;font-weight:500;color:var(--on-scorch);
+  background:color-mix(in srgb,var(--scorch) 16%,transparent)}
+
+/* Palier de grimoire : n'existe que sous l'onglet Grimoire. */
+.mg-tiers{display:inline-flex;padding:3px;gap:2px;border-radius:9px;background:var(--tint-2);box-shadow:inset 0 0 0 1px var(--hair)}
+.mg-tiers button{padding:5px 12px;border-radius:7px;font-size:12.5px;color:var(--bone-dim)}
+.mg-tiers button.on{color:var(--ember-bright);background:color-mix(in srgb,var(--ember) 13%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ember) 45%,transparent)}
+
+/* ---- Les deux volets, idiome identique au choix d'équipement ---- */
+.mg-panes{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.mg-pane-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.mg-pane-title{font-family:Cinzel;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ember)}
+.mg-pane-tot{font-size:12.5px;color:var(--bone-dim)}
+.mg-pane-tot b{color:var(--bone);font-variant-numeric:tabular-nums}
+.mg-search{width:100%;margin-bottom:8px;padding:8px 11px;border-radius:9px;font-size:13px;color:var(--bone);
+  background:var(--soot);border:1px solid var(--hair);outline:none}
+.mg-search::placeholder{color:var(--bone-faint)}
+.mg-list{display:flex;flex-direction:column;gap:10px;min-height:190px}
+.mg-group-label{font-family:Cinzel;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--bone-faint);margin-bottom:5px}
+.mg-col{display:flex;flex-direction:column;gap:5px}
+.mg-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;background:var(--tint-1);
+  font-size:13.5px;transition:background .16s var(--ease)}
+.mg-item:hover{background:var(--tint-3)}
+.mg-item.blocked{opacity:.42}
+.mg-item .nm{flex:1;min-width:0}
+.mg-item .nm b{font-weight:500}
+.mg-item .bits{color:var(--bone-faint);font-size:11.5px;margin-left:7px}
+.mg-item .px{flex:none;font-size:12px;color:var(--gold-dim);font-weight:600}
+.mg-mv{width:26px;height:24px;flex:none;border-radius:7px;display:grid;place-items:center;font-size:14px}
+.mg-mv.add{color:var(--ink-accent);background:linear-gradient(180deg,var(--ember-bright),var(--ember))}
+.mg-mv.add.off{background:var(--ash);color:var(--bone-faint);cursor:not-allowed}
+.mg-mv.rm{color:var(--bone-faint);box-shadow:inset 0 0 0 1px var(--hair-strong)}
+.mg-empty{font-size:12px;color:var(--bone-dim)}
+.mg-blockmsg{font-size:11px;color:var(--on-scorch);padding:1px 2px 0}
+
+/* ---- Notes de conception ---- */
+.mg-why{margin-top:34px;padding:18px 20px;border-radius:13px;background:var(--tint-1);box-shadow:inset 0 0 0 1px var(--hair)}
+.mg-why h3{font-family:Cinzel;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);margin:0 0 10px}
+.mg-why ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px}
+.mg-why li{font-size:13px;color:var(--bone-dim);line-height:1.5}
+.mg-why b{color:var(--bone);font-weight:600}
+
+@media (max-width:760px){.mg-panes{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mg-intro">
+    <h1>Onglet Magie - deux budgets, deux sélections</h1>
+    <p>
+      Un sort générique se paie en <b>niveaux du profil</b> (autant de niveaux de sorts que le niveau de la figurine,
+      Passe-Passe en valant 3 à lui seul) et ne demande aucun grimoire. Un sort de voie se paie en <b>pages</b> et
+      suppose un grimoire acheté. Ce sont deux monnaies : la maquette les sépare au lieu de les mélanger dans une seule
+      liste.
+    </p>
+  </div>
+
+  <!-- ================= SCÈNE 1 : Apathée III, budget de niveaux ================= -->
+  <div class="mg-scene-label">
+    <span class="n">Scène 1</span>
+    <span class="t">Apathée III - onglet « Sorts génériques »</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="mg-modal">
+    <div class="mg-head">
+      <div class="mg-thumb"><span>III</span></div>
+      <div class="mg-title">
+        <h2>Apathée <span style="color:var(--bone-faint);font-size:15px">III</span></h2>
+        <span class="sub">Fille de Nyx · Ostéomancie</span>
+      </div>
+      <div class="mg-cost">140 <i>Ko</i></div>
+    </div>
+    <div class="mg-tabs">
+      <button class="mg-tab">Carte</button>
+      <button class="mg-tab">Équipement</button>
+      <button class="mg-tab">Améliorations</button>
+      <button class="mg-tab on">Magie</button>
+    </div>
+
+    <div class="mg-body">
+      <div class="mg-seg" role="radiogroup" aria-label="Budget de sorts">
+        <button role="radio" aria-checked="true">Sorts génériques <span class="bal">1/3 niv</span></button>
+        <button role="radio" aria-checked="false">Grimoire <span class="bal">4/8 p</span></button>
+      </div>
+
+      <div class="mg-budget">
+        <span class="mg-chip">
+          <span class="lab">Niveaux</span>
+          <span class="mg-pips"><i class="mg-pip on"></i><i class="mg-pip"></i><i class="mg-pip"></i></span>
+          <span class="num">1/3</span>
+        </span>
+        <span class="mg-note">Autant de niveaux de sorts que le niveau du profil. Sans grimoire.</span>
+      </div>
+
+      <div class="mg-panes">
+        <div>
+          <div class="mg-pane-head">
+            <span class="mg-pane-title">Sélectionnés</span>
+            <span class="mg-pane-tot">niveaux <b>1/3</b></span>
+          </div>
+          <div class="mg-list">
+            <div class="mg-col">
+              <div class="mg-item">
+                <span class="nm"><b>Blessure arcanique</b><span class="bits">1 niv</span></span>
+                <button class="mg-mv rm" title="Retirer">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="mg-pane-head"><span class="mg-pane-title">Disponible</span></div>
+          <input class="mg-search" placeholder="Rechercher un sort générique…" />
+          <div class="mg-list">
+            <div class="mg-col">
+              <div class="mg-item">
+                <button class="mg-mv add" title="Ajouter">←</button>
+                <span class="nm"><b>Confusion</b><span class="bits">1 niv</span></span>
+              </div>
+            </div>
+            <p class="mg-empty">Passe-Passe est réservé à Bharbathos : il n'apparaît plus ici.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SCÈNE 2 : Apathée III, budget de pages ================= -->
+  <div class="mg-scene-label">
+    <span class="n">Scène 2</span>
+    <span class="t">Apathée III - onglet « Grimoire » (même figurine, l'autre monnaie)</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="mg-modal">
+    <div class="mg-tabs">
+      <button class="mg-tab">Carte</button>
+      <button class="mg-tab">Équipement</button>
+      <button class="mg-tab">Améliorations</button>
+      <button class="mg-tab on">Magie</button>
+    </div>
+    <div class="mg-body">
+      <div class="mg-seg" role="radiogroup" aria-label="Budget de sorts">
+        <button role="radio" aria-checked="false">Sorts génériques <span class="bal">1/3 niv</span></button>
+        <button role="radio" aria-checked="true">Grimoire <span class="bal">4/8 p</span></button>
+      </div>
+
+      <div class="mg-budget">
+        <span class="mg-tiers">
+          <button>Sans grimoire</button>
+          <button class="on">Petit +20</button>
+          <button>Grand +40</button>
+        </span>
+        <span class="mg-chip"><span class="lab">Pages</span><span class="num">4/8</span></span>
+        <span class="mg-note">Bonus pages : +3 Fille de Nyx</span>
+      </div>
+
+      <div class="mg-panes">
+        <div>
+          <div class="mg-pane-head">
+            <span class="mg-pane-title">Sélectionnés</span>
+            <span class="mg-pane-tot">pages <b>4/8</b></span>
+          </div>
+          <div class="mg-list">
+            <div>
+              <p class="mg-group-label">Ostéomancie</p>
+              <div class="mg-col">
+                <div class="mg-item">
+                  <span class="nm"><b>Séduction du Fiel</b><span class="bits">2 p</span></span>
+                  <span class="px">10 Ko</span>
+                  <button class="mg-mv rm" title="Retirer">→</button>
+                </div>
+                <div class="mg-item">
+                  <span class="nm"><b>Inflection Mentale</b><span class="bits">2 p</span></span>
+                  <span class="px">10 Ko</span>
+                  <button class="mg-mv rm" title="Retirer">→</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="mg-pane-head"><span class="mg-pane-title">Disponible</span></div>
+          <input class="mg-search" placeholder="Rechercher un sort de grimoire…" />
+          <div class="mg-list">
+            <div>
+              <p class="mg-group-label">Ostéomancie</p>
+              <div class="mg-col">
+                <div class="mg-item">
+                  <button class="mg-mv add" title="Ajouter">←</button>
+                  <span class="nm"><b>Alliés d'outre-tombe</b><span class="bits">2 p</span></span>
+                  <span class="px">10 Ko</span>
+                </div>
+                <div class="mg-item">
+                  <button class="mg-mv add" title="Ajouter">←</button>
+                  <span class="nm"><b>Test — Ostéomancie</b><span class="bits">1 p</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SCÈNE 3 : Bharbathos III, budget saturé ================= -->
+  <div class="mg-scene-label">
+    <span class="n">Scène 3</span>
+    <span class="t">Bharbathos III - budget de niveaux saturé par Passe-Passe</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="mg-modal">
+    <div class="mg-head">
+      <div class="mg-thumb" style="--faction-deep:#241f2d"><span>III</span></div>
+      <div class="mg-title">
+        <h2>Bharbathos <span style="color:var(--bone-faint);font-size:15px">III</span></h2>
+        <span class="sub">Guilde Noire · Ostéomancie</span>
+      </div>
+      <div class="mg-cost">120 <i>Ko</i></div>
+    </div>
+    <div class="mg-tabs">
+      <button class="mg-tab">Carte</button>
+      <button class="mg-tab">Équipement</button>
+      <button class="mg-tab">Améliorations</button>
+      <button class="mg-tab on">Magie</button>
+    </div>
+    <div class="mg-body">
+      <div class="mg-seg" role="radiogroup" aria-label="Budget de sorts">
+        <button role="radio" aria-checked="true">Sorts génériques <span class="bal">3/3 niv</span></button>
+        <button role="radio" aria-checked="false">Grimoire <span class="bal">0/5 p</span></button>
+      </div>
+
+      <div class="mg-budget">
+        <span class="mg-chip full">
+          <span class="lab">Niveaux</span>
+          <span class="mg-pips"><i class="mg-pip on"></i><i class="mg-pip on"></i><i class="mg-pip on"></i></span>
+          <span class="num">3/3</span>
+        </span>
+        <span class="mg-note">Passe-Passe vaut 3 niveaux : il occupe tout le budget d'un profil de niveau III.</span>
+      </div>
+
+      <div class="mg-panes">
+        <div>
+          <div class="mg-pane-head">
+            <span class="mg-pane-title">Sélectionnés</span>
+            <span class="mg-pane-tot">niveaux <b>3/3</b></span>
+          </div>
+          <div class="mg-list">
+            <div class="mg-col">
+              <div class="mg-item">
+                <span class="nm"><b>Passe-Passe</b><span class="bits">3 niv</span></span>
+                <button class="mg-mv rm" title="Retirer">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="mg-pane-head"><span class="mg-pane-title">Disponible</span></div>
+          <input class="mg-search" placeholder="Rechercher un sort générique…" />
+          <div class="mg-list">
+            <div class="mg-col">
+              <div class="mg-item blocked">
+                <button class="mg-mv add off" title="Budget de niveaux insuffisant">←</button>
+                <span class="nm"><b>Blessure arcanique</b><span class="bits">1 niv</span></span>
+              </div>
+              <div class="mg-item blocked">
+                <button class="mg-mv add off" title="Budget de niveaux insuffisant">←</button>
+                <span class="nm"><b>Confusion</b><span class="bits">1 niv</span></span>
+              </div>
+              <p class="mg-blockmsg">Budget de niveaux insuffisant - retire Passe-Passe pour en ajouter d'autres.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mg-why">
+    <h3>Ce que la maquette décide</h3>
+    <ul>
+      <li>
+        <b>Un contrôle segmenté, pas deux blocs empilés.</b> Les deux volets « Sélectionnés / Disponible » restent
+        l'idiome du choix d'équipement. Les empiler deux fois donnerait quatre volets et une page interminable ; le
+        segment porte son propre solde, donc rien n'est caché même quand l'autre onglet est actif.
+      </li>
+      <li>
+        <b>Chaque budget dans son unité.</b> Les niveaux se comptent en pastilles pleines/vides : ils sont bornés au
+        niveau du profil (1 à 3), donc lisibles sans lire de chiffre, et Passe-Passe qui en remplit trois d'un coup se
+        voit immédiatement. Les pages restent un compteur chiffré : elles montent haut et peuvent être illimitées
+        (grand grimoire).
+      </li>
+      <li>
+        <b>Le palier de grimoire descend sous l'onglet Grimoire.</b> Acheter un livre ne finance que des pages : le
+        contrôle n'a rien à faire au-dessus d'une sélection de génériques.
+      </li>
+      <li>
+        <b>Ouverture sur l'onglet déjà utilisé.</b> Une figurine qui a un grimoire ou des sorts de voie ouvre sur
+        « Grimoire » ; sinon sur « Sorts génériques ». Aucune figurine existante ne perd de vue ce qu'elle avait.
+      </li>
+      <li>
+        <b>Pas de nouvelle couleur ni de nouvelle police.</b> Tokens Forge/Braise, Cinzel pour les étiquettes, braise
+        pour l'actif, ambre pour le budget plein. La seule nouveauté visuelle est le contraste pastilles / chiffres,
+        qui porte une information de règle.
+      </li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

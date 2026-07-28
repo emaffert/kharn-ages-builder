@@ -3,13 +3,25 @@ import {
   pageBonusSources as corePageBonusSources,
   innateSpellIds as coreInnateSpellIds,
   pageAllocation as corePageAllocation,
+  genericSpellAllocation as coreGenericSpellAllocation,
+  spellLevelCost as coreSpellLevelCost,
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
   eligibleMountsFor as coreEligibleMountsFor,
   mountKindOf,
   mountOptionCostOf,
 } from "@core";
-import type { Catalog, MountOption, PageAllocation, PageSource, Profile, ProfileInstance, Selector, Spell } from "@core";
+import type {
+  Catalog,
+  GenericSpellAllocation,
+  MountOption,
+  PageAllocation,
+  PageSource,
+  Profile,
+  ProfileInstance,
+  Selector,
+  Spell,
+} from "@core";
 import type { ArmorDisplay } from "./StatSheet";
 // Libellés de présentation partagés avec l'admin (source unique dans @ui) - alias pour garder les noms locaux.
 import { STAT_LABELS as STATS, LEVEL_LABEL as LEVEL } from "@ui";
@@ -420,17 +432,28 @@ export function pageAllocation(
   return corePageAllocation(cat, p, inst, new Set(p.traits));
 }
 
+/** Budget de sorts génériques (compté en niveaux) pour l'état courant. */
+export function genericSpellAllocation(p: Profile, cat: Catalog, spellIds: string[]): GenericSpellAllocation {
+  return coreGenericSpellAllocation(cat, p, { ...synthInstance(p, [], p.baseEquipmentIds), spellIds });
+}
+
 export function spellsFor(p: Profile, cat: Catalog, ways: string[]): Spell[] {
   return coreCastableSpells(cat, p, new Set(p.traits), ways);
 }
 
+/** Ce que coûte un sort dans son propre budget : des niveaux pour un générique, des pages sinon. */
+export function spellBudgetBits(s: Spell): string {
+  return s.kind === "generique" ? `${coreSpellLevelCost(s)} niv` : `${s.pages ?? 0} p`;
+}
+
 export function spellInfo(s: Spell, cat: Catalog): ItemInfo {
   const way = cat.magicWays.find((w) => w.id === s.magicWayId)?.name;
+  const budget = s.kind === "generique" ? `${coreSpellLevelCost(s)} niveau(x)` : `${s.pages ?? 0} page(s)`;
   return {
     title: s.name,
     price: s.cost != null && s.cost > 0 ? `${s.cost} Ko` : "-",
     lines: [
-      `${s.pages ?? 0} page(s)${way ? ` · ${way}` : ""}`,
+      `${budget}${way ? ` · ${way}` : ""}`,
       `Cible : ${s.target}`,
       ...s.difficulties.map((d) => `${d.threshold}+ : ${d.effectText}`),
     ],
@@ -444,7 +467,8 @@ export function equipBits(e: Catalog["equipment"][number]): string {
   if (e.category === "arme-tir") bits.push("Tir");
   if (e.hands) bits.push(e.hands === "1-2" ? "1/2 m" : `${e.hands} m`);
   if (e.allonge != null) bits.push(`All.${e.allonge}`);
-  if (e.range) bits.push(`Port.${e.range.short}/${e.range.long}`);
+  // Portée courte/longue, puis la max quand l'arme en a une (au-delà, elle ne peut pas tirer).
+  if (e.range) bits.push(`Port.${e.range.short}/${e.range.long}${e.range.max != null ? ` max ${e.range.max}` : ""}`);
   if (e.seuil != null) bits.push(`Arm.${e.protectionEchec ?? "-"}/${e.seuil}/${e.protectionReussite ?? "-"}`);
   if (e.durability != null) bits.push(`DV ${e.durability}`);
   if (e.perceArmure != null) bits.push(`PA ${e.perceArmure}`);

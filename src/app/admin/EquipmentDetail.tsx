@@ -39,6 +39,24 @@ export function EquipmentDetail({
       onChange={(v) => onChange({ [key]: v } as Partial<Equipment>)}
     />
   );
+  // Mains occupées : commun aux deux familles d'armes (un arc en occupe deux, un javelot une).
+  const handsField = (
+    <Field label="mains" className="w-32">
+      <select
+        value={e.hands ?? ""}
+        onChange={(ev) => {
+          const v = ev.target.value;
+          onChange({ hands: v === "" ? undefined : v === "1-2" ? "1-2" : (Number(v) as 1 | 2) });
+        }}
+        className={INPUT}
+      >
+        <option value="">-</option>
+        <option value="1">1 main</option>
+        <option value="2">2 mains</option>
+        <option value="1-2">1 ou 2 mains</option>
+      </select>
+    </Field>
+  );
   const perceArmureField = (
     <Field label="perce-armure" className="w-28">
       <input
@@ -97,21 +115,7 @@ export function EquipmentDetail({
           {isCac && (
             <Section title="Corps à corps" icon="equipment" note="mains, allonge, perce-armure">
               <div className="flex flex-wrap items-end gap-3">
-                <Field label="mains" className="w-32">
-                  <select
-                    value={e.hands ?? ""}
-                    onChange={(ev) => {
-                      const v = ev.target.value;
-                      onChange({ hands: v === "" ? undefined : v === "1-2" ? "1-2" : (Number(v) as 1 | 2) });
-                    }}
-                    className={INPUT}
-                  >
-                    <option value="">-</option>
-                    <option value="1">1 main</option>
-                    <option value="2">2 mains</option>
-                    <option value="1-2">1 ou 2 mains</option>
-                  </select>
-                </Field>
+                {handsField}
                 {num("allonge", e.allonge, "allonge")}
                 {perceArmureField}
               </div>
@@ -120,8 +124,9 @@ export function EquipmentDetail({
 
           {/* Armes de tir : portée, recharge, munitions. */}
           {isTir && (
-            <Section title="Tir" icon="equipment" note="portée, recharge, munitions">
+            <Section title="Tir" icon="equipment" note="mains, portée, recharge, munitions">
               <div className="flex flex-wrap items-end gap-3">
+                {handsField}
                 <Field label="portée courte" className="w-24">
                   <input
                     type="number"
@@ -218,6 +223,16 @@ export function EquipmentDetail({
                 )}
                 {num("durée de vie (DV)", e.durability, "durability")}
               </div>
+              {isArmure && (
+                <label className="mt-3 flex items-center gap-2 text-xs adm-muted">
+                  <input
+                    type="checkbox"
+                    checked={e.stacksWithArmor ?? false}
+                    onChange={(ev) => onChange({ stacksWithArmor: ev.target.checked || undefined })}
+                  />
+                  Cumulable avec une autre armure (emplacement à part, ex. Gambison)
+                </label>
+              )}
             </Section>
           )}
 

@@ -66,13 +66,22 @@ export function EquipPanel({
 
   const worn = [...activeBase, ...added].map(eq).filter((e): e is NonNullable<typeof e> => Boolean(e));
   // La limitation de mains ne s'applique qu'en jeu : on peut acheter autant d'armes que voulu.
+  // L'armure, si : une seule par Safar, plus une armure cumulable (Gambison) sur son propre emplacement.
   const armorCap = 1;
-  const armorUsed = worn.filter((e) => e.category === "armure").length;
+  const isStackableArmor = (e: Catalog["equipment"][number]) => e.category === "armure" && Boolean(e.stacksWithArmor);
+  const wornArmors = worn.filter((e) => e.category === "armure");
+  const armorUsed = wornArmors.filter((e) => !isStackableArmor(e)).length;
+  const stackableUsed = wornArmors.filter(isStackableArmor).length;
   const canWearArmor = !forbidden.has("armure");
+  // Le compteur « cumulable » n'a de sens que si la figurine en porte une ou peut en acheter une.
+  const showStackableSlot = canWearArmor && (stackableUsed > 0 || cat.equipment.some(isStackableArmor));
 
   const blockReason = (e: Catalog["equipment"][number]): string | null => {
-    if (e.category === "armure" && armorUsed >= armorCap) return "Emplacement d'armure déjà occupé";
-    return null;
+    if (e.category !== "armure") return null;
+    if (isStackableArmor(e)) {
+      return stackableUsed >= armorCap ? "Emplacement d'armure cumulable déjà occupé" : null;
+    }
+    return armorUsed >= armorCap ? "Emplacement d'armure déjà occupé" : null;
   };
 
   const q = query.trim().toLowerCase();
@@ -301,7 +310,12 @@ export function EquipPanel({
     return <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>;
   };
 
-  const equipWarning = armorUsed > armorCap ? "Plusieurs armures équipées." : null;
+  const equipWarning =
+    armorUsed > armorCap
+      ? "Plusieurs armures équipées."
+      : stackableUsed > armorCap
+        ? "Plusieurs armures cumulables équipées."
+        : null;
 
   return (
     <div className="fe-root">
@@ -309,6 +323,7 @@ export function EquipPanel({
       {canWearArmor && (
         <div className="flex flex-wrap items-center gap-2">
           <SlotChip label="Armure" used={armorUsed} cap={armorCap} />
+          {showStackableSlot && <SlotChip label="Armure cumulable" used={stackableUsed} cap={armorCap} />}
         </div>
       )}
 

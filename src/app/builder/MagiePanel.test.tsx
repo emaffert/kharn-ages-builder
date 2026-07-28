@@ -24,9 +24,13 @@ function baseProps(over: Partial<React.ComponentProps<typeof MagiePanel>> = {}) 
   };
 }
 
+/** Bascule vers le budget de pages (l'onglet s'ouvre sur les génériques quand il n'y a pas de grimoire). */
+const openGrimoire = () => fireEvent.click(screen.getByText(/^Grimoire /));
+
 describe("MagiePanel (vue)", () => {
   it("propose les trois paliers de grimoire et le compteur de pages", () => {
     render(<MagiePanel {...baseProps()} />);
+    openGrimoire();
     expect(screen.getByText("Sans grimoire")).toBeTruthy();
     expect(screen.getByText(/Petit \+/)).toBeTruthy();
     expect(screen.getByText(/Grand \+/)).toBeTruthy();
@@ -36,6 +40,7 @@ describe("MagiePanel (vue)", () => {
   it("remonte le choix de grimoire via onGrimoire", () => {
     const onGrimoire = vi.fn();
     render(<MagiePanel {...baseProps({ onGrimoire })} />);
+    openGrimoire();
     fireEvent.click(screen.getByText(/Petit \+/));
     expect(onGrimoire).toHaveBeenCalledWith("petit");
   });
@@ -44,5 +49,45 @@ describe("MagiePanel (vue)", () => {
     const spell = catalog.spells[0];
     render(<MagiePanel {...baseProps({ ways: [], spells: [spell.id] })} />);
     expect(screen.getByText(/ne peut pas lancer de sorts/i)).toBeTruthy();
+  });
+});
+
+describe("MagiePanel - séparation des deux budgets", () => {
+  const bharbathos = catalog.profiles.find((p) => p.id === "guilde-noire-bharbathos-3")!;
+  const mage = (over: Partial<React.ComponentProps<typeof MagiePanel>> = {}) =>
+    baseProps({ profile: bharbathos, ways: ["osteomancie"], ...over });
+
+  it("ouvre sur les génériques quand la figurine n'a ni grimoire ni sort de voie", () => {
+    render(<MagiePanel {...mage()} />);
+    // Le palier de grimoire vit sous l'autre onglet : il n'est pas rendu ici.
+    expect(screen.queryByText("Sans grimoire")).toBeNull();
+    expect(screen.getByText("Niveaux")).toBeTruthy();
+  });
+
+  it("ouvre sur le grimoire quand la figurine en a déjà un", () => {
+    render(<MagiePanel {...mage({ grimoire: "petit" })} />);
+    expect(screen.getByText("Sans grimoire")).toBeTruthy();
+    expect(screen.queryByText("Niveaux")).toBeNull();
+  });
+
+  it("chaque segment porte son solde, l'autre budget reste lisible sans y basculer", () => {
+    render(<MagiePanel {...mage({ spells: ["guilde-noire-passe-passe"] })} />);
+    // Passe-Passe vaut 3 niveaux et n'entame pas les pages.
+    expect(screen.getByText("Sorts génériques 3/3 niv")).toBeTruthy();
+    expect(screen.getByText("Grimoire 0/0 p")).toBeTruthy();
+  });
+
+  it("un générique hors budget est proposé mais bloqué", () => {
+    render(<MagiePanel {...mage({ spells: ["guilde-noire-passe-passe"] })} />);
+    const add = screen.getAllByTitle("Budget de niveaux insuffisant");
+    expect(add.length).toBeGreaterThan(0);
+  });
+
+  it("ne mélange pas les deux familles dans un même volet", () => {
+    render(<MagiePanel {...mage({ grimoire: "petit" })} />);
+    // Onglet grimoire : les génériques du catalogue n'y figurent pas.
+    expect(screen.queryByText("Confusion")).toBeNull();
+    fireEvent.click(screen.getByText(/^Sorts génériques /));
+    expect(screen.getByText("Confusion")).toBeTruthy();
   });
 });

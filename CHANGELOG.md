@@ -9,6 +9,45 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-28
 
+### Sorts génériques et sorts de grimoire séparés
+
+- L'onglet Magie distingue désormais les deux façons de payer un sort. Un sort générique se paie en
+  niveaux de la figurine : un profil de niveau III en connaît trois niveaux, et « Passe-Passe » en
+  vaut trois à lui seul. Un sort de voie se paie en pages et suppose un grimoire.
+- Les deux budgets ont leur propre sélection, avec le même fonctionnement que le choix d'armes. Le
+  sélecteur du haut porte les deux soldes, donc l'autre budget reste lisible sans y basculer. Le
+  palier de grimoire est passé sous l'onglet Grimoire, le seul qu'il finance.
+- Les sorts génériques n'entament plus la capacité de pages du grimoire.
+
+### Correction : sorts réservés visibles par tout le monde
+
+- Un sort générique réservé à un personnage ou à une faction était proposé à tous les lanceurs.
+  « Passe-Passe », réservé à Bharbathos, apparaissait par exemple sur n'importe quelle figurine
+  capable de lancer des sorts. La réservation s'applique maintenant aussi aux génériques, et peut
+  viser une faction entière.
+- Une figurine qui ne maîtrise aucune voie de magie ne se voit plus proposer le moindre sort.
+- Un sort en cours de rédaction dans l'administration n'apparaît plus dans le constructeur tant
+  qu'il n'a pas reçu sa voie.
+
+### Le gambison se porte en plus d'une armure
+
+- La règle spéciale du gambison est prise en compte : il occupe son propre emplacement et se cumule
+  donc avec une armure ordinaire, sans plus déclencher l'avertissement « porte plusieurs armures ».
+- La fiche de figurine affiche les deux protections, chacune sur sa ligne.
+
+### Portée maximale des armes de tir
+
+- Quand une arme a une portée maximale, au-delà de laquelle le tir est impossible, elle est affichée
+  avec ses portées courte et longue, sur la fiche comme dans le choix d'équipement.
+
+### Administration : saisie de l'équipement et des listes
+
+- Le nombre de mains se renseigne aussi sur les armes de tir, et plus seulement sur les armes de
+  corps à corps.
+- Une armure peut être déclarée cumulable avec une autre, ce qui lui donne son propre emplacement.
+- Une entité dont le nom a été vidé apparaît dans les listes sous la mention « (sans nom) », au lieu
+  d'une ligne vide impossible à rouvrir pour la corriger ou la supprimer.
+
 ### Correction : améliorations d'objet invisibles
 
 - Une amélioration optionnelle définie sur un objet (l'Épée courte et ses « deux effets », par

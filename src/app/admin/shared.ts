@@ -30,5 +30,12 @@ export const SECTION = {
   effects: "Effets / octrois",
 } as const;
 
+/**
+ * Libellé d'une entité dans les listes de navigation. Une entité dont le nom a été vidé produirait
+ * une ligne vide, donc invisible et impossible à rouvrir pour la corriger ou la supprimer : on la
+ * nomme explicitement.
+ */
+export const listLabel = (name: string | undefined): string => (name?.trim() ? name : "(sans nom)");
+
 export const replaceAt = <T,>(arr: T[], i: number, v: T): T[] => arr.map((x, j) => (j === i ? v : x));
 export const removeAt = <T,>(arr: T[], i: number): T[] => arr.filter((_, j) => j !== i);

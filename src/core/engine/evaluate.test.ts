@@ -119,8 +119,11 @@ describe("calcul de coût", () => {
 
   it("Exécuteur II paye 10 de moins son arbalète de poing", () => {
     const res = evalFang([inst("fangs-executeur-2", { addedEquipmentIds: ["arbalete-de-poing"] })]);
-    // 80 (Exécuteur II) + 0 (arbalète) - 10 (arme de prédilection) = 70
-    expect(res.totalCost).toBe(70);
+    // 80 (Exécuteur II) + 25 (arbalète) - 10 (arme de prédilection) = 95
+    expect(res.totalCost).toBe(95);
+    // Sans la remise, l'arbalète coûterait son plein tarif : c'est bien elle qu'on mesure.
+    const sansRemise = evalFang([inst("fangs-goulue-1", { addedEquipmentIds: ["arbalete-de-poing"] })]);
+    expect(sansRemise.totalCost).toBe(45 + 25);
   });
 });
 

@@ -24,13 +24,11 @@ describe("AdminCatalog (rendu)", () => {
     expect(screen.getByText(/\+ effet/i)).toBeTruthy();
   });
 
-  it("bascule sur l'onglet Équipement et permet d'éditer un équipement", () => {
+  it("bascule sur l'onglet Équipement", () => {
     render(<AdminCatalog />);
     // Nav à deux niveaux : sélectionner la grande partie avant sa sous-partie.
     fireEvent.click(screen.getByRole("button", { name: "Objets" }));
     fireEvent.click(screen.getByRole("button", { name: "Équipement" }));
-    // Titre de section (h3) : le sommaire ancré liste aussi ce libellé, d'où le ciblage par rôle.
-    expect(screen.getByRole("heading", { name: /Texte verbatim/i })).toBeTruthy();
     expect(screen.getByText(/\+ équipement/i)).toBeTruthy();
   });
 

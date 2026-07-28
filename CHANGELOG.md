@@ -7,6 +7,18 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-07-28
+
+### Catalogue d'équipement enrichi
+
+- 68 nouveaux équipements : boucliers (rondache, broquel, pavois), armures (gambison, armure de
+  cuir, cotte de mailles), armes d'hast, munitions et objets de la Guilde Noire.
+- Prix, portées et valeurs de perce-armure corrigés sur une quarantaine d'objets existants.
+- Les réservations sont précisées : un objet réservé à un personnage l'est désormais aussi à son
+  niveau et à sa faction, ce qui évite de le voir proposé à des figurines qui n'y ont pas droit.
+- Le Sabre Khémiste n'est plus une arme de base des Guerrières et de la Prêtresse Émérite tembos :
+  il leur reste réservé, mais devient un achat optionnel.
+
 ## 2026-07-26
 
 ### Administration du catalogue

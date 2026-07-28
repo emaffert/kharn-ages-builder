@@ -2,6 +2,7 @@ import { useState } from "react";
 import { iconFor } from "@core";
 import type { Catalog, Constraint, Effect, Level, Model, Profile } from "@core";
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
+import { iconSrc } from "../../lib/icons";
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
@@ -78,6 +79,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
   const cards = specialCardsForProfile(profile, cat);
   // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
   const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
+  // Références (`<hash>.webp`), pas des images : `iconSrc` les résout pour l'affichage.
   const shared = profile.cardImage ? cat.icons?.[profile.cardImage] : undefined;
   const own = profile.icon; // déroge au partage : l'emporte sur la partagée
   const displayed = iconFor(cat, profile); // ce que voit réellement l'app
@@ -169,7 +171,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
                 <IconSlot
                   title="Partagée (par carte)"
                   hint="Commune à tous les niveaux de ce modèle."
-                  src={shared}
+                  src={iconSrc(shared)}
                   active={shared != null && own == null}
                   onEdit={() => setEditingIcon("shared")}
                   onRemove={() => setIcon(profile.cardImage, null)}
@@ -177,7 +179,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
                 <IconSlot
                   title="Propre à ce niveau"
                   hint="Déroge au partage : remplace la partagée pour ce profil seul."
-                  src={own}
+                  src={iconSrc(own)}
                   active={own != null}
                   createLabel="Déroger au partage…"
                   onEdit={() => setEditingIcon("own")}

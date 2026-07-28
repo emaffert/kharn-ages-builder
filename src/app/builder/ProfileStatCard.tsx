@@ -1,6 +1,7 @@
 import { specialCardsForProfile } from "@ui/explain";
 import { Tag, STAT_FULL } from "@ui";
 import { iconFor, type Armor, type Catalog, type EquipmentCostRule, type MasteryDomain, type Profile } from "@core";
+import { iconSrc } from "../../lib/icons";
 import { SectionTitle } from "./components";
 import { ArmorBlock, RulesBlock, SheetHeader, SkillChips, StatCell, type ArmorDisplay } from "./StatSheet";
 import { MasteryDie } from "./MasteryDie";
@@ -184,7 +185,7 @@ export function ProfileStatCard({
     <div className="fe-statcard">
       <div className="fe-card">
         <SheetHeader
-          icon={iconFor(cat, p)}
+          icon={iconSrc(iconFor(cat, p))}
           name={p.name}
           level={p.level ? LEVEL[p.level] : undefined}
           cost={`${p.cost} Ko`}

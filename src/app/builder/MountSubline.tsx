@@ -1,4 +1,5 @@
-import { mountLabel, type Catalog, type Profile, type ProfileInstance } from "@core";
+import { mountIconFor, mountLabel, type Catalog, type Profile, type ProfileInstance } from "@core";
+import { iconSrc } from "../../lib/icons";
 import { TrashIcon } from "./icons";
 import { MountPurchaseSummary } from "./MountPurchaseSummary";
 import type { ItemInfo } from "./shared";
@@ -25,8 +26,7 @@ export function MountSubline({
 }) {
   const mid = x.inst.mount!.mountId;
   const mount = cat.mounts.find((m) => m.id === mid);
-  const mType = cat.mountTypes.find((t) => t.id === mount?.typeId);
-  const mIcon = mount?.icon ?? (mType?.cardImage ? cat.icons?.[mType.cardImage] : undefined);
+  const mIcon = iconSrc(mountIconFor(cat, mount));
   return (
     <div className="bld-unit is-attached">
       <div

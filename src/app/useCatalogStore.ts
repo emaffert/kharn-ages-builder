@@ -22,6 +22,7 @@ import {
   type RefKind,
 } from "@core";
 import { catalog as bundledCatalog } from "@data";
+import { freezeIcons } from "../lib/freezeIcons";
 import { useCatalog } from "./catalog/context";
 
 const STORAGE_KEY = "kharn-admin-catalog-v1";
@@ -543,24 +544,34 @@ export function useCatalogStore() {
 
   /**
    * DEV uniquement : enregistre le catalogue directement dans `src/data/catalog.json`
-   * via l'endpoint du serveur Vite. Retourne un message d'erreur, ou null si OK.
+   * via l'endpoint du serveur Vite.
+   *
+   * Les icônes sont **figées d'abord** : le fichier ne doit jamais citer un portrait que le dépôt
+   * ne sert pas, sinon il cesse d'être un repli hors-ligne complet (cf. `freezeIcons`). L'échec du
+   * gel interrompt l'enregistrement plutôt que d'écrire un catalogue incohérent.
+   *
+   * Retourne le nombre d'icônes figées, ou un message d'erreur.
    */
-  const saveToProject = useCallback(async (): Promise<string | null> => {
+  const saveToProject = useCallback(async (): Promise<{ frozen: number; error: string | null }> => {
+    const { catalog: toSave, written, error: freezeError } = await freezeIcons(catalog);
+    if (freezeError) return { frozen: 0, error: `Icônes : ${freezeError}` };
     try {
       const res = await fetch("/__save-catalog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(catalog),
+        body: JSON.stringify(toSave),
       });
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
-        return j.error ?? `HTTP ${res.status}`;
+        return { frozen: written, error: j.error ?? `HTTP ${res.status}` };
       }
+      // Le gel a pu remplacer des data-URI par des références : l'écran doit refléter le fichier.
+      setCatalog(toSave);
       // Le fichier devient la source ; on abandonne la copie locale pour éviter toute divergence.
       dropDraft();
-      return null;
+      return { frozen: written, error: null };
     } catch (e) {
-      return e instanceof Error ? e.message : "échec de l'enregistrement";
+      return { frozen: written, error: e instanceof Error ? e.message : "échec de l'enregistrement" };
     }
   }, [catalog, dropDraft]);
 

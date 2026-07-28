@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { eligibleMountsFor, iconFor, mountLabel, slotCapacity, type Profile } from "@core";
+import { eligibleMountsFor, iconFor, mountIconFor, mountLabel, slotCapacity, type Profile } from "@core";
+import { iconSrc } from "../../lib/icons";
 import type { ListStore } from "../useListStore";
 import {
   FACTIONS,
@@ -91,7 +92,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   );
 
   const models: ModelEntry[] = recruitableRosterModels(cat, factionId)
-    .map((m) => ({ ...m, icon: m.profiles[0] ? iconFor(cat, m.profiles[0]) : undefined }))
+    .map((m) => ({ ...m, icon: m.profiles[0] ? iconSrc(iconFor(cat, m.profiles[0])) : undefined }))
     .filter((m) => rosterQuery.trim() === "" || m.name.toLowerCase().includes(rosterQuery.trim().toLowerCase()));
   const byName = (a: ModelEntry, b: ModelEntry) => a.name.localeCompare(b.name);
   // Catégorisation en sections de sidebar (logique pure dans shared.ts) : natifs répartis en
@@ -115,7 +116,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       return {
         type: t,
         minCost: levels.length ? Math.min(...levels.map((m) => m.cost)) : 0,
-        icon: first?.icon ?? (t.cardImage ? cat.icons?.[t.cardImage] : undefined),
+        // Le roster liste les types : le niveau le plus bas fournit l'icône représentative.
+        icon: iconSrc(mountIconFor(cat, first)),
       };
     })
     .filter((e) => e.type && cat.mounts.some((m) => m.typeId === e.type.id))
@@ -313,7 +315,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     handle?: { isDragging: boolean; handleProps: Record<string, unknown> },
   ) => {
     const id = x.inst.instanceId;
-    const icon = iconFor(cat, x.p);
+    const icon = iconSrc(iconFor(cat, x.p));
     const buyable = canBuy(x.p, cat); // faux si forbids-equipment bloque tout (Likan/Muskh).
     const isLeader = id === fdl.leaderInstanceId;
     const guarded = x.inst.bodyguardOfInstanceId != null;

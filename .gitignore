@@ -36,3 +36,6 @@ cards/
 
 # Références visuelles (captures de sites tiers, logo) - inputs de travail, non versionnés
 graphic/
+
+# Table de correspondance intermédiaire de la migration des icônes (régénérable)
+scripts/.icons-map.json

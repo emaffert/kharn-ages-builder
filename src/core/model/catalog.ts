@@ -106,9 +106,10 @@ export const ProfileSchema = z.object({
   notes: z.array(z.string()).optional(),
   cardImage: z.string(),
   /**
-   * Icône/portrait recadré (data-URI) *propre à ce profil*, qui **déroge** au partage : si présent,
-   * il l'emporte sur l'icône partagée par `cardImage` (cf. `iconFor`). Utile quand un niveau doit
-   * avoir sa propre illustration. Par défaut on préfère `Catalog.icons` (partagé entre niveaux).
+   * Référence d'icône *propre à ce profil*, qui **déroge** au partage : si présente, elle l'emporte
+   * sur l'icône partagée par `cardImage` (cf. `iconFor`). Utile quand un niveau doit avoir sa propre
+   * illustration. Par défaut on préfère `Catalog.icons` (partagé entre niveaux). Même forme que les
+   * valeurs de `Catalog.icons` : un nom `<hash>.webp`, pas une image.
    */
   icon: z.string().optional(),
   /** Champs dont la lecture sur la carte est incertaine (chemins, ex. "stature", "stats.t"). */
@@ -282,7 +283,10 @@ export const MountSchema = z.object({
   effects: z.array(EffectSchema).optional(),
   /** Règles verbatim propres à ce niveau (ex. Ruade, Piétinement), comme `Profile.rules`. */
   rules: z.array(RuleTextSchema).optional(),
-  /** Icône propre à ce niveau : déroge à l'icône partagée du type (`MountType.cardImage`). Cf. `Profile.icon`. */
+  /**
+   * Référence d'icône propre à ce niveau : déroge à celle partagée du type (`MountType.cardImage`).
+   * Cf. `Profile.icon` et `mountIconFor`.
+   */
   icon: z.string().optional(),
 });
 export type Mount = z.infer<typeof MountSchema>;
@@ -430,19 +434,38 @@ export const CatalogSchema = z.object({
   /** Sortes de munitions achetables (flèches, carreaux…) ; référencées par `equipment.munitionKind`. */
   munitionKinds: z.array(MunitionKindSchema).optional(),
   /**
-   * Icônes/portraits recadrés, indexés par `cardImage` (data-URI). Comme plusieurs profils (les
-   * niveaux d'un même modèle) partagent une illustration de carte, les indexer par `cardImage`
-   * partage automatiquement l'icône : on ne recadre qu'une fois par carte.
+   * Icônes/portraits recadrés, indexés par `cardImage`. Comme plusieurs profils (les niveaux d'un
+   * même modèle) partagent une illustration de carte, les indexer par `cardImage` partage
+   * automatiquement l'icône : on ne recadre qu'une fois par carte.
+   *
+   * La valeur est une **référence**, pas une image : le nom de fichier adressé par contenu
+   * `<hash>.webp` (cf. `iconName` côté app). Les octets vivent ailleurs - miroir précaché dans le
+   * dépôt, ou bucket Supabase - et c'est `iconSrc` qui résout la référence en URL affichable.
+   * Une data-URI reste tolérée en lecture : les versions publiées avant la sortie des images du
+   * catalogue en contiennent encore, et l'historique en conserve dix.
    */
   icons: z.record(z.string(), z.string()).optional(),
 });
 export type Catalog = z.infer<typeof CatalogSchema>;
 
 /**
- * Icône à afficher pour un profil : l'icône *propre au profil* (`p.icon`) si définie - elle déroge
- * au partage pour ce niveau précis -, sinon celle partagée par `cardImage` (commune aux niveaux),
- * sinon aucune.
+ * Référence d'icône d'un profil : celle *propre au profil* (`p.icon`) si définie - elle déroge au
+ * partage pour ce niveau précis -, sinon celle partagée par `cardImage` (commune aux niveaux),
+ * sinon aucune. À passer à `iconSrc` pour obtenir une URL affichable.
  */
 export function iconFor(cat: Catalog, p: Profile): string | undefined {
   return p.icon ?? cat.icons?.[p.cardImage];
+}
+
+/**
+ * Référence d'icône d'une monture, même règle de dérogation que `iconFor` : l'icône propre au
+ * niveau l'emporte sur celle partagée par le `cardImage` de son type.
+ *
+ * Passer le niveau le plus bas d'un type donne l'icône représentative de ce type (c'est ce
+ * qu'affiche le roster, qui liste les types et non les niveaux).
+ */
+export function mountIconFor(cat: Catalog, mount: Mount | undefined): string | undefined {
+  if (!mount) return undefined;
+  const type = cat.mountTypes.find((t) => t.id === mount.typeId);
+  return mount.icon ?? (type?.cardImage ? cat.icons?.[type.cardImage] : undefined);
 }

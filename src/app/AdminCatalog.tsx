@@ -70,8 +70,18 @@ export function AdminCatalog() {
   const [showDocs, setShowDocs] = useState(false);
 
   const onSave = async () => {
-    const err = await store.saveToProject();
-    alert(err ? `Enregistrement impossible : ${err}` : "Catalogue enregistré dans le projet.");
+    const { frozen, error } = await store.saveToProject();
+    if (error) {
+      alert(`Enregistrement impossible : ${error}`);
+      return;
+    }
+    // Le nombre d'icônes figées se dit : ce sont de nouveaux fichiers dans `src/assets/icons/`,
+    // à committer avec le catalogue sous peine de le laisser citer des images absentes du dépôt.
+    alert(
+      frozen > 0
+        ? `Catalogue enregistré, ${frozen} icône(s) écrite(s) dans src/assets/icons/ (à committer).`
+        : "Catalogue enregistré dans le projet.",
+    );
   };
 
   const q = query.trim().toLowerCase();

@@ -167,6 +167,11 @@
 .adm-doc-code { margin: 8px 0 14px; padding: 12px 14px; overflow-x: auto; border-radius: var(--radius-sm);
   background: var(--forge); border: 1px solid var(--hair-strong); color: var(--bone-dim);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.5; white-space: pre; }
+/* Aide servie dans une modale du kit (@ui/Dialog) plutôt que dans l'overlay plein écran : la
+   modale porte déjà son padding et son défilement, le bloc de doc ne doit pas les redoubler.
+   Le premier titre n'a pas non plus à s'écarter du haut, il n'a rien au-dessus de lui. */
+.ui-dialog__body > .adm-doc-body { padding: 0; }
+.ui-dialog__body > .adm-doc-body > .adm-doc-h2:first-child { margin-top: 0; }
 
 /* Modale / scrim (IconEditor, zoom carte) */
 .adm-scrim { background: color-mix(in srgb, #000 78%, transparent); }

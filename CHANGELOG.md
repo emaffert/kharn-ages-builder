@@ -9,6 +9,14 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-28
 
+### Chargement et mises à jour nettement plus rapides
+
+- Les portraits des figurines ne voyagent plus avec les données du catalogue. Le premier chargement
+  de l'application est environ trois fois plus léger.
+- Une correction de données, un coût ou une règle par exemple, ne fait plus retélécharger tous les
+  portraits : seules les données changent, les images déjà connues du navigateur sont conservées.
+- Les portraits restent affichés sans connexion, y compris lors de la toute première visite.
+
 ### Sorts génériques et sorts de grimoire séparés
 
 - L'onglet Magie distingue désormais les deux façons de payer un sort. Un sort générique se paie en

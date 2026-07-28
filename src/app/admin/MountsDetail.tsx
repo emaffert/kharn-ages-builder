@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Catalog, Mount, MountType } from "@core";
+import { iconSrc } from "../../lib/icons";
 import { INPUT, SECTION } from "./shared";
 import { ChipMultiSelect, Combobox, DetailHeader, DetailPage, EditableNumber, Field, FieldGroup, IdField, RemoveButton, Section } from "./primitives";
 import { IconSlot } from "./ProfileDetail";
@@ -50,6 +51,7 @@ export function MountsDetail({
   const m = cat.mounts.find((x) => x.id === mountId);
   if (!m) return <p className="adm-faint">Sélectionnez une monture.</p>;
   const type = cat.mountTypes.find((t) => t.id === m.typeId);
+  // Références (`<hash>.webp`), pas des images : `iconSrc` les résout pour l'affichage.
   const shared = type?.cardImage ? cat.icons?.[type.cardImage] : undefined;
   const own = m.icon;
   const excludable = type
@@ -91,7 +93,7 @@ export function MountsDetail({
                 <IconSlot
                   title="Partagée (par type)"
                   hint="Commune à tous les niveaux de ce type."
-                  src={shared}
+                  src={iconSrc(shared)}
                   active={shared != null && own == null}
                   onEdit={() => setEditingIcon("shared")}
                   onRemove={() => type?.cardImage && setIcon(type.cardImage, null)}
@@ -99,7 +101,7 @@ export function MountsDetail({
                 <IconSlot
                   title="Propre à ce niveau"
                   hint="Déroge au partage : remplace la partagée pour ce niveau seul."
-                  src={own}
+                  src={iconSrc(own)}
                   active={own != null}
                   createLabel="Déroger au partage…"
                   onEdit={() => setEditingIcon("own")}

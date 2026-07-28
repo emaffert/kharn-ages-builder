@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Catalog, CatalogSettings, Faction, Grimoire, MunitionKind } from "@core";
 import { Button, Dialog } from "@ui";
+import { IconBucketSection } from "./IconBucketSection";
 import { AddButton, Field, Glyph, PageHeader, RemoveButton, Section } from "./primitives";
 import { INPUT } from "./shared";
 
@@ -54,7 +55,7 @@ export function SettingsDetail({
         </div>
       </div>
 
-      <PageHeader title="Réglages" subtitle="Données de référence : factions, grimoires, munitions." />
+      <PageHeader title="Réglages" subtitle="Données de référence : factions, grimoires, munitions, icônes." />
 
       {/* ── Factions ─────────────────────────────────────────────── */}
       <Section title="Factions" icon="identity">
@@ -186,6 +187,9 @@ export function SettingsDetail({
           <AddButton onClick={onAddMunitionKind}>+ sorte de munition</AddButton>
         </div>
       </Section>
+
+      {/* ── Icônes ───────────────────────────────────────────────── */}
+      <IconBucketSection cat={cat} />
 
       <Dialog
         open={pendingDelete !== null}

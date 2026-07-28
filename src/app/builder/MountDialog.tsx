@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SegmentedControl } from "@ui";
-import { eligibleMountsFor, mountOptionSkills, mountSheetSkills, type Catalog, type GrantedSkill, type Mount, type MountType, type Profile, type ProfileInstance } from "@core";
+import { eligibleMountsFor, mountIconFor, mountOptionSkills, mountSheetSkills, type Catalog, type GrantedSkill, type Mount, type MountType, type Profile, type ProfileInstance } from "@core";
+import { iconSrc } from "../../lib/icons";
 import { wornArmorsFrom, type ItemInfo } from "./shared";
 import { MountEquipEditor, MountOptionsEditor } from "./MountOptions";
 import { ArmorBlock, RulesBlock, SheetHeader, SkillChips, StatCell } from "./StatSheet";
@@ -34,11 +35,6 @@ function bonusSummary(b: NonNullable<Mount["bonuses"]>): string {
   return BONUS_ORDER.filter(([k]) => b[k] != null && b[k] !== 0)
     .map(([k, lab]) => `${b[k]! > 0 ? "+" : ""}${b[k]} ${lab}`)
     .join(" · ");
-}
-
-/** Icône affichée pour une monture : propre au niveau, sinon partagée par le type. */
-function mountIcon(cat: Catalog, mount: Mount, type?: MountType): string | undefined {
-  return mount.icon ?? (type?.cardImage ? cat.icons?.[type.cardImage] : undefined);
 }
 
 /** Petite modale de choix : uniquement les montures éligibles au cavalier (filtre moteur). */
@@ -216,7 +212,7 @@ export function MountStatCard({
   const boughtSkillIds = new Set(
     instance ? mountOptionSkills(cat, instance, ["mount", "both", "rider"]).map((s) => s.skillId) : [],
   );
-  const icon = mountIcon(cat, mount, type);
+  const icon = iconSrc(mountIconFor(cat, mount));
   const skillName = (id: string) => cat.skills.find((s) => s.id === id)?.keyword ?? id;
   const showSkill = (skillId: string, label: string) => {
     const sk = cat.skills.find((x) => x.id === skillId);

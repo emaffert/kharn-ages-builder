@@ -8,15 +8,28 @@ import {
   type WheelEvent as ReactWheelEvent,
 } from "react";
 import { Button } from "@ui";
+import { uploadIcon } from "../lib/icons";
+import { supabase } from "../lib/supabase";
 
 const FRAME = 300; // taille d'édition (px)
 const OUT = 256; // résolution de l'icône exportée (px)
+// Qualité WebP : mesurée à -37 % de poids par rapport au JPEG q85 qu'on produisait avant, sans
+// différence visible aux tailles d'affichage réelles (40 à 84 px).
+const QUALITY = 0.78;
 
 type Pan = { x: number; y: number };
 
 /**
- * Éditeur d'icône : charge une image de référence (fichier ou `initialSrc`),
- * la déplace/zoome derrière un cadre carré, et exporte le recadrage en data-URI.
+ * Éditeur d'icône : charge une image de référence (fichier ou `initialSrc`), la déplace/zoome
+ * derrière un cadre carré, et exporte le recadrage en WebP 256 px.
+ *
+ * L'image part dans le bucket dès l'enregistrement, et c'est sa **référence** (`<hash>.webp`) qui
+ * est rendue à l'appelant : le catalogue ne transporte jamais d'octets. Déposer avant publication
+ * est sans effet visible - tant qu'aucune version publiée ne cite la référence, l'objet n'est vu
+ * de personne - et ça garde la publication atomique, un simple insert.
+ *
+ * Sans backend configuré (dev local-first, cf. `canAdmin` dans App.tsx), on retombe sur une
+ * data-URI : le travail local reste possible, et l'export figera l'icône en fichier.
  */
 export function IconEditor({
   initialSrc,
@@ -24,7 +37,8 @@ export function IconEditor({
   onClose,
 }: {
   initialSrc?: string;
-  onSave: (dataUrl: string) => void;
+  /** Référence `<hash>.webp` téléversée, ou data-URI en repli sans backend. */
+  onSave: (ref: string) => void;
   onClose: () => void;
 }) {
   const [src, setSrc] = useState<string | undefined>(initialSrc);
@@ -32,6 +46,7 @@ export function IconEditor({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<Pan>({ x: 0, y: 0 });
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const drag = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
 
@@ -108,14 +123,15 @@ export function IconEditor({
     r.readAsDataURL(f);
   };
 
-  const save = () => {
+  /** Rend le recadrage courant sur un canvas hors écran, à la résolution d'export. */
+  const renderToCanvas = (): HTMLCanvasElement | null => {
     const el = imgRef.current;
-    if (!el || !nat) return;
+    if (!el || !nat) return null;
     const c = document.createElement("canvas");
     c.width = OUT;
     c.height = OUT;
     const ctx = c.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return null;
     const k = OUT / FRAME;
     ctx.fillStyle = "#1a1410";
     ctx.fillRect(0, 0, OUT, OUT);
@@ -123,7 +139,34 @@ export function IconEditor({
     const top = (FRAME / 2 + pan.y - dh / 2) * k;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(el, left, top, dw * k, dh * k);
-    onSave(c.toDataURL("image/jpeg", 0.85));
+    return c;
+  };
+
+  const save = async () => {
+    const c = renderToCanvas();
+    if (!c) return;
+    setBusy(true);
+    setError(null);
+    // `toBlob` plutôt que `toDataURL` : on veut les octets, pas leur transcription base64.
+    const blob = await new Promise<Blob | null>((resolve) => c.toBlob(resolve, "image/webp", QUALITY));
+    if (!blob) {
+      setBusy(false);
+      setError("Encodage WebP impossible dans ce navigateur.");
+      return;
+    }
+    if (!supabase) {
+      // Pas de backend : repli data-URI, que `iconSrc` sait afficher et que l'export figera.
+      setBusy(false);
+      onSave(c.toDataURL("image/webp", QUALITY));
+      return;
+    }
+    const { name, error: uploadError } = await uploadIcon(supabase, await blob.arrayBuffer());
+    setBusy(false);
+    if (uploadError || !name) {
+      setError(uploadError ?? "Téléversement impossible.");
+      return;
+    }
+    onSave(name);
   };
 
   // rendu du cadre à une taille arbitraire (édition + aperçus), même géométrie.
@@ -206,10 +249,12 @@ export function IconEditor({
           </label>
 
           <div className="mt-auto flex flex-col gap-2">
-            <Button variant="primary" onClick={save} disabled={!nat}>
-              Enregistrer l'icône
+            <Button variant="primary" onClick={save} disabled={!nat || busy}>
+              {busy ? "Enregistrement…" : "Enregistrer l'icône"}
             </Button>
-            <Button onClick={onClose}>Annuler</Button>
+            <Button onClick={onClose} disabled={busy}>
+              Annuler
+            </Button>
           </div>
         </div>
       </div>

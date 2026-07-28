@@ -9,6 +9,14 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-28
 
+### Mises à jour du site appliquées sans délai
+
+- Le site cherche désormais activement une nouvelle version : au retour sur l'onglet, et une fois
+  par heure. Un onglet laissé ouvert, ou l'application installée sur l'écran d'accueil, ne restait
+  sinon sur son ancienne version que jusqu'à une prochaine visite - parfois plusieurs jours.
+- Dès qu'une nouvelle version est prête, la page se recharge pour l'appliquer. Rien n'est perdu :
+  listes et modifications en cours sont enregistrées au fil de l'eau.
+
 ### Administration : identifiants modifiables
 
 - L'identifiant d'un profil, d'un équipement, d'une compétence, d'un sort, d'une carte ou d'une

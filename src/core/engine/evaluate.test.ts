@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
-import type { Catalog, ListDocument, ProfileInstance } from "../model";
+import type { Catalog, ListDocument, ProfileInstance, Spell } from "../model";
 import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills, slotCapacity, upgradesForEquipment } from "./evaluate";
 import {
   affinityWays,
@@ -11,6 +11,52 @@ import {
   maxPagesInPool,
   pageAllocation,
 } from "./magic";
+
+/** L'identifiant de la voie Adansonia dans le catalogue (créée avec un id technique). */
+const ADANSONIA = "way-1783500043343";
+
+/**
+ * Sorts de banc d'essai : une page, aucune réservation. Éprouver l'Affinité et les pools de pages
+ * dédiés demande un sort qu'un lanceur peut librement choisir dans une voie donnée - or tous les
+ * sorts réels sont réservés. Ils sont montés ici plutôt que dans `catalog.json` : des bouchons
+ * « Test - X » y ont traîné jusqu'à ce que les vrais sorts arrivent, et se sont retrouvés servis
+ * aux joueurs. Un banc d'essai n'a rien à faire dans la donnée livrée.
+ */
+const BENCH_SPELLS: Spell[] = [
+  {
+    id: "banc-shamanisme",
+    name: "Banc d'essai - Shamanisme",
+    kind: "grimoire",
+    magicWayId: "shamanisme",
+    pages: 1,
+    target: "Soi-même",
+    difficulties: [],
+  },
+  {
+    id: "banc-adansonia",
+    name: "Banc d'essai - Adansonia",
+    kind: "grimoire",
+    magicWayId: ADANSONIA,
+    pages: 1,
+    target: "Soi-même",
+    difficulties: [],
+  },
+  // Même voie que le premier, mais réservé à un trait : sert à montrer que l'Affinité ouvre l'école
+  // sans lever pour autant les réserves plus fines.
+  {
+    id: "banc-shamanisme-reserve",
+    name: "Banc d'essai - Shamanisme réservé",
+    kind: "grimoire",
+    magicWayId: "shamanisme",
+    pages: 1,
+    reservedTo: { trait: "synkherces" },
+    target: "Soi-même",
+    difficulties: [],
+  },
+];
+
+/** Le catalogue livré, augmenté des seuls sorts de banc d'essai. */
+const benched: Catalog = { ...catalog, spells: [...catalog.spells, ...BENCH_SPELLS] };
 
 let counter = 0;
 function inst(profileId: string, over: Partial<ProfileInstance> = {}): ProfileInstance {
@@ -946,16 +992,17 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
     );
   });
 
-  it("l'affinité n'annule PAS les réserves profil/trait plus fines (sorts shamanisme de Néphtys restent bloqués)", () => {
-    const spells = castableSpells(catalog, nephtys, new Set(nephtys.traits), ["way-1783500043343"]);
-    expect(spells.map((s) => s.id)).toContain("guerison-vegetale"); // sa voie Adansonia (rés. khemiste) ✓
-    expect(spells.map((s) => s.id)).not.toContain("onde-revigorante"); // shamanisme rés. synkherces ✗
+  it("l'affinité n'annule PAS les réserves profil/trait plus fines", () => {
+    const spells = castableSpells(benched, nephtys, new Set(nephtys.traits), [ADANSONIA]).map((s) => s.id);
+    expect(spells).toContain("guerison-vegetale"); // sa voie Adansonia (rés. khemiste) ✓
+    expect(spells).toContain("banc-shamanisme"); // école ouverte par l'Affinité ✓
+    expect(spells).not.toContain("banc-shamanisme-reserve"); // ... mais la réserve de trait tient ✗
   });
 
-  it("Néphtys voit le sort de test shamanisme via son Affinité (non réservé) + celui d'Adansonia (voie maîtrisée)", () => {
-    const spells = castableSpells(catalog, nephtys, new Set(nephtys.traits), ["way-1783500043343"]).map((s) => s.id);
-    expect(spells).toContain("test-shamanisme"); // école ouverte par l'Affinité
-    expect(spells).toContain("test-adansonia"); // sa voie maîtrisée
+  it("Néphtys voit le sort de banc shamanisme via son Affinité (non réservé) + celui d'Adansonia (voie maîtrisée)", () => {
+    const spells = castableSpells(benched, nephtys, new Set(nephtys.traits), [ADANSONIA]).map((s) => s.id);
+    expect(spells).toContain("banc-shamanisme"); // école ouverte par l'Affinité
+    expect(spells).toContain("banc-adansonia"); // sa voie maîtrisée
   });
 });
 
@@ -1003,8 +1050,6 @@ describe("pools de pages dédiés à une voie (Brassards d'Euthéria)", () => {
     spellIds: [],
     ...over,
   });
-  const ADANSONIA = "way-1783500043343";
-
   it("les Brassards créent deux pools dédiés (Adansonia 5 + shamanisme 5), budget général 0 sans grimoire", () => {
     const a = pageAllocation(catalog, nephtys, mk(), traits);
     expect(a.general.cap).toBe(0);
@@ -1029,8 +1074,8 @@ describe("pools de pages dédiés à une voie (Brassards d'Euthéria)", () => {
   });
 
   it("le surplus au-delà du pool déborde sur le général → invalide sans grimoire (6 pages Adansonia)", () => {
-    const i = mk({ spellIds: ["drain-d-energie", "confiance-partagee", "guerison-vegetale", "test-adansonia"] });
-    const a = pageAllocation(catalog, nephtys, i, traits);
+    const i = mk({ spellIds: ["drain-d-energie", "confiance-partagee", "guerison-vegetale", "banc-adansonia"] });
+    const a = pageAllocation(benched, nephtys, i, traits);
     expect(a.pools.find((p) => p.wayId === ADANSONIA)?.used).toBe(5); // pool saturé
     expect(a.general.used).toBe(1); // surplus
     expect(a.over).toBe(true);
@@ -1039,16 +1084,16 @@ describe("pools de pages dédiés à une voie (Brassards d'Euthéria)", () => {
   it("un petit grimoire (général 5) absorbe le surplus → redevient valide", () => {
     const i = mk({
       grimoireId: "petit",
-      spellIds: ["drain-d-energie", "confiance-partagee", "guerison-vegetale", "test-adansonia"],
+      spellIds: ["drain-d-energie", "confiance-partagee", "guerison-vegetale", "banc-adansonia"],
     });
-    const a = pageAllocation(catalog, nephtys, i, traits);
+    const a = pageAllocation(benched, nephtys, i, traits);
     expect(a.general.cap).toBe(5);
     expect(a.general.used).toBe(1);
     expect(a.over).toBe(false);
   });
 
   it("les pools sont indépendants : un sort shamanisme ne consomme pas le pool Adansonia", () => {
-    const a = pageAllocation(catalog, nephtys, mk({ spellIds: ["test-shamanisme"] }), traits);
+    const a = pageAllocation(benched, nephtys, mk({ spellIds: ["banc-shamanisme"] }), traits);
     expect(a.pools.find((p) => p.wayId === "shamanisme")?.used).toBe(1);
     expect(a.pools.find((p) => p.wayId === ADANSONIA)?.used).toBe(0);
     expect(a.general.used).toBe(0);

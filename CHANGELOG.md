@@ -113,6 +113,21 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
   sont retirées de la liste d'équipement, où elles faisaient doublon avec la table des munitions.
 - Trois nouveaux sorts : « Alliés d'outre-tombe », « Blessure arcanique » et « Confusion ».
 
+### Catalogue de sorts complété
+
+- Une quarantaine de sorts saisis : l'Ostéomancie, le Shamanisme, Le Sacrifice, Le Sang et l'Acier
+  et Adansonia ont désormais leurs sorts, avec leur cible, leur cadence, leur durée et leurs seuils
+  de difficulté.
+- Les quatre sorts de démonstration, nommés « Test », sont retirés du catalogue.
+- « Onde revigorante » figurait dans la liste sans aucun seuil de difficulté, donc sans effet. Le
+  sort porte maintenant son texte complet : il soigne 1D5 ou 1D10 points de vie sur un Safar à cinq
+  toises. Le Guerrier Albinos le connaît toujours d'office, et il devient accessible aux autres
+  lanceurs de shamanisme.
+- La Faux de la damnation était réservée à un trait qui n'existait pas, si bien qu'elle n'était
+  proposée à personne. Elle l'est désormais aux Filles de Nyx de niveau III, comme « Alliés
+  d'outre-tombe ».
+- Le nombre de mains des arbalètes, de la sarbacane et du petit arc d'Euthéria est renseigné.
+
 ## 2026-07-26
 
 ### Administration du catalogue

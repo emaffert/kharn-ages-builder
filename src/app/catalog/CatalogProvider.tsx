@@ -70,8 +70,9 @@ export function CatalogProvider({
         if (!alive || !remote) return;
         writePublishedCatalog(remote, remote.catalog);
         setPublished({ versionId: remote.versionId, publishedAt: remote.publishedAt, version: remote.version });
-        // `loadCatalog` et non `remote.catalog` : un brouillon admin local reste prioritaire à
-        // l'écran, même si le cache vient d'être mis à jour derrière.
+        // `loadCatalog` et non `remote.catalog` : c'est lui qui arbitre. Le cache venant d'être mis à
+        // jour, un brouillon admin bâti sur la version précédente est désormais périmé et sera
+        // abandonné - la version qui vient d'être publiée prend la main, y compris pour l'admin.
         setCatalog(loadCatalog());
       } finally {
         if (alive) setWaiting(false);

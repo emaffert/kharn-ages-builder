@@ -1,9 +1,19 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { catalog, loadCatalog, publishedDivergesFromFile, readPublishedCatalog, writePublishedCatalog } from "@data";
+import {
+  catalog,
+  clearStaleDraftNotice,
+  loadCatalog,
+  publishedDivergesFromFile,
+  readAdminDraft,
+  readPublishedCatalog,
+  staleDraftWasDropped,
+  writeAdminDraft,
+  writePublishedCatalog,
+} from "@data";
 import { createMemoryStorage } from "../testing/memoryStorage";
 
-const ADMIN_KEY = "kharn-admin-catalog-v1";
+const ADMIN_KEY = "kharn-admin-catalog-v2";
 const PUBLISHED_KEY = "kharn-published-catalog-v1";
 
 beforeEach(() => vi.stubGlobal("localStorage", createMemoryStorage()));
@@ -37,9 +47,9 @@ describe("loadCatalog (ordre de priorité)", () => {
     expect(loadCatalog().version).toBe("publiée");
   });
 
-  it("préfère le brouillon admin local à la version publiée", () => {
+  it("préfère le brouillon admin quand il porte sur la version publiée courante", () => {
     writePublishedCatalog({ versionId: 2, publishedAt: null }, { ...catalog, version: "publiée" });
-    localStorage.setItem(ADMIN_KEY, JSON.stringify({ ...catalog, version: "brouillon" }));
+    writeAdminDraft(2, { ...catalog, version: "brouillon" });
     expect(loadCatalog().version).toBe("brouillon");
   });
 
@@ -47,6 +57,39 @@ describe("loadCatalog (ordre de priorité)", () => {
     writePublishedCatalog({ versionId: 2, publishedAt: null }, { ...catalog, version: "publiée" });
     localStorage.setItem(ADMIN_KEY, "{cassé");
     expect(loadCatalog().version).toBe("publiée");
+  });
+});
+
+describe("péremption du brouillon admin", () => {
+  it("abandonne un brouillon bâti sur une version publiée antérieure", () => {
+    writeAdminDraft(2, { ...catalog, version: "brouillon" });
+    writePublishedCatalog({ versionId: 3, publishedAt: null }, { ...catalog, version: "publiée" });
+    expect(loadCatalog().version).toBe("publiée");
+    expect(readAdminDraft()).toBeNull();
+    expect(localStorage.getItem(ADMIN_KEY)).toBeNull();
+  });
+
+  it("annonce l'abandon, jusqu'à ce que l'admin en prenne connaissance", () => {
+    writeAdminDraft(2, catalog);
+    writePublishedCatalog({ versionId: 3, publishedAt: null }, catalog);
+    expect(staleDraftWasDropped()).toBe(false); // rien tant que personne n'a relu le brouillon
+    loadCatalog();
+    expect(staleDraftWasDropped()).toBe(true);
+    clearStaleDraftNotice();
+    expect(staleDraftWasDropped()).toBe(false);
+  });
+
+  it("garde un brouillon local quand aucune version n'a jamais été publiée", () => {
+    writeAdminDraft(null, { ...catalog, version: "brouillon" });
+    expect(loadCatalog().version).toBe("brouillon");
+    expect(staleDraftWasDropped()).toBe(false);
+  });
+
+  it("écarte un brouillon d'avant le versionnage, dont l'origine est inconnue", () => {
+    writePublishedCatalog({ versionId: 3, publishedAt: null }, { ...catalog, version: "publiée" });
+    localStorage.setItem("kharn-admin-catalog-v1", JSON.stringify({ ...catalog, version: "ancien brouillon" }));
+    expect(loadCatalog().version).toBe("publiée");
+    expect(localStorage.getItem("kharn-admin-catalog-v1")).toBeNull();
   });
 });
 

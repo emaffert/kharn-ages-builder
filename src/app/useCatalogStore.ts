@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
 import {
-  parseCatalog,
   type Catalog,
   type CatalogSettings,
   type Equipment,
@@ -21,24 +20,12 @@ import {
   COLLECTION_OF,
   type RefKind,
 } from "@core";
-import { catalog as bundledCatalog } from "@data";
+import { catalog as bundledCatalog, dropAdminDraft, readAdminDraft, writeAdminDraft } from "@data";
 import { freezeIcons } from "../lib/freezeIcons";
 import { useCatalog } from "./catalog/context";
 
-const STORAGE_KEY = "kharn-admin-catalog-v1";
-
 /** Valeur éditable d'un champ de profil. */
 export type FieldValue = number | string | null;
-
-function readStored(): Catalog | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return parseCatalog(JSON.parse(raw));
-  } catch {
-    return null;
-  }
-}
 
 function mapProfile(cat: Catalog, id: string, fn: (p: Profile) => Profile): Catalog {
   return { ...cat, profiles: cat.profiles.map((p) => (p.id === id ? fn(p) : p)) };
@@ -85,25 +72,29 @@ function isModelReferenced(cat: Catalog, modelId: string): boolean {
  * (localStorage) et peuvent être exportées en JSON pour être commitées par un mainteneur.
  */
 export function useCatalogStore() {
-  // Une seule lecture/validation Zod du catalogue stocké au montage (évite un double parse).
-  const stored = useMemo(() => readStored(), []);
+  // Une seule lecture/validation Zod du brouillon au montage (évite un double parse). `readAdminDraft`
+  // écarte de lui-même un brouillon qui ne porte pas sur la version publiée courante.
+  const stored = useMemo(() => readAdminDraft()?.catalog ?? null, []);
   // Sans brouillon local, on édite la version publiée servie par `CatalogProvider`.
-  const { catalog: active, refresh: refreshActive } = useCatalog();
+  const { catalog: active, published, refresh: refreshActive } = useCatalog();
   const [catalog, setCatalog] = useState<Catalog>(() => stored ?? active);
   const [dirty, setDirty] = useState<boolean>(() => stored != null);
 
-  const apply = useCallback((updater: (c: Catalog) => Catalog) => {
-    setCatalog((prev) => {
-      const next = updater(prev);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        /* quota / mode privé : on garde au moins l'état en mémoire */
-      }
-      return next;
-    });
-    setDirty(true);
-  }, []);
+  // La version publiée sur laquelle porte l'édition en cours : elle est écrite avec le brouillon,
+  // pour qu'une publication parue entre-temps le rende caduc au lieu de l'écraser silencieusement.
+  const baseVersionId = published?.versionId ?? null;
+
+  const apply = useCallback(
+    (updater: (c: Catalog) => Catalog) => {
+      setCatalog((prev) => {
+        const next = updater(prev);
+        writeAdminDraft(baseVersionId, next);
+        return next;
+      });
+      setDirty(true);
+    },
+    [baseVersionId],
+  );
 
   const updateField = useCallback(
     (id: string, path: string, value: FieldValue) =>
@@ -485,11 +476,7 @@ export function useCatalogStore() {
 
   /** Abandonne le brouillon local : la source redevient la version publiée (ou le fichier). */
   const dropDraft = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
+    dropAdminDraft();
     setDirty(false);
     refreshActive();
   }, [refreshActive]);

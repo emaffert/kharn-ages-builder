@@ -15,6 +15,7 @@ import { SettingsDetail } from "./admin/SettingsDetail";
 import { AdminDocs } from "./admin/AdminDocs";
 import { WhatsNew } from "./admin/WhatsNew";
 import { PublishAction } from "./admin/PublishAction";
+import { StaleDraftNotice } from "./admin/StaleDraftNotice";
 import { PullPublishedAction } from "./admin/PullPublishedAction";
 import { ResetToFileAction } from "./admin/ResetToFileAction";
 import "./admin/admin.css";
@@ -463,6 +464,7 @@ export function AdminCatalog() {
 
       <main className="flex flex-1 overflow-hidden">
         <div className="adm-scroll flex-1 overflow-y-auto p-8">
+          <StaleDraftNotice />
           {view === "profiles" &&
             (selectedProfile ? (
               <div className="contents">

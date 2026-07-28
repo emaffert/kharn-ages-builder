@@ -2,7 +2,14 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { render, screen, cleanup } from "@testing-library/react";
-import { catalog, readPublishedCatalog, writePublishedCatalog } from "@data";
+import {
+  catalog,
+  readAdminDraft,
+  readPublishedCatalog,
+  staleDraftWasDropped,
+  writeAdminDraft,
+  writePublishedCatalog,
+} from "@data";
 import { CatalogProvider } from "./CatalogProvider";
 import { useCatalog } from "./context";
 import { createMemoryStorage } from "../../testing/memoryStorage";
@@ -114,12 +121,25 @@ describe("CatalogProvider", () => {
     expect(screen.getByTestId("published").textContent).toBe("4");
   });
 
-  it("laisse le brouillon admin local prioritaire sur la version publiée", async () => {
-    localStorage.setItem("kharn-admin-catalog-v1", JSON.stringify({ ...catalog, version: "brouillon" }));
+  it("laisse le brouillon admin prioritaire tant qu'il porte sur la version publiée courante", async () => {
+    writePublishedCatalog({ versionId: 5, publishedAt: null }, { ...catalog, version: "publiée" });
+    writeAdminDraft(5, { ...catalog, version: "brouillon" });
+    const { client } = fakeServer(remote); // le serveur en est toujours à la version 5
+    renderWith(client);
+    expect(await screen.findByText("brouillon")).toBeTruthy();
+  });
+
+  it("abandonne le brouillon admin dès qu'une version plus récente est publiée", async () => {
+    // Brouillon bâti sur la version 4, alors que le serveur en est à la 5 : le publier écraserait
+    // le travail de celui qui a publié entre-temps.
+    writePublishedCatalog({ versionId: 4, publishedAt: null }, { ...catalog, version: "précédente" });
+    writeAdminDraft(4, { ...catalog, version: "brouillon" });
     const { client } = fakeServer(remote);
     renderWith(client);
-    // Le cache est bien alimenté, mais l'écran continue d'afficher le brouillon en cours.
-    expect(await screen.findByText("brouillon")).toBeTruthy();
+    // La version qui vient d'être publiée prend la main, y compris à l'écran de l'admin.
+    expect(await screen.findByText("9.9.9")).toBeTruthy();
     expect(readPublishedCatalog()?.versionId).toBe(5);
+    expect(readAdminDraft()).toBeNull();
+    expect(staleDraftWasDropped()).toBe(true);
   });
 });

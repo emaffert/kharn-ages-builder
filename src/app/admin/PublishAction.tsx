@@ -6,7 +6,7 @@ import { Button, Dialog } from "@ui";
 import { useSession } from "../auth/context";
 import { useCatalog } from "../catalog/context";
 import { CatalogDiffDialog } from "./CatalogDiffDialog";
-import { publishCatalog } from "../../lib/catalogApi";
+import { fetchLatestVersionId, publishCatalog } from "../../lib/catalogApi";
 import { supabase } from "../../lib/supabase";
 
 /** « n° 12 · 24/07/2026 21:15 », ou juste le numéro si la date est inconnue. */
@@ -66,6 +66,18 @@ export function PublishAction({
     if (!name) return;
     setBusy(true);
     setError(null);
+    // Garde-fou : quelqu'un a-t-il publié depuis que cet écran a chargé sa base ? Le rechargement
+    // au démarrage ne protège pas un onglet resté ouvert des heures. Publier par-dessus écraserait
+    // le travail d'autrui sans que personne s'en aperçoive - c'est ce qui est arrivé en juillet 2026.
+    const latest = await fetchLatestVersionId(client);
+    if (latest && latest.versionId !== (published?.versionId ?? null)) {
+      setBusy(false);
+      setError(
+        `La version n° ${latest.versionId} (« ${latest.version} ») a été publiée entre-temps. ` +
+          "Recharge la page pour repartir d'elle : ce qui est édité ici a été bâti sur une base dépassée.",
+      );
+      return;
+    }
     // Le nom saisi devient celui du catalogue publié : la donnée et son étiquette restent
     // cohérentes, y compris dans les listes qui l'enregistrent (`catalogVersion`).
     const toPublish = { ...catalog, version: name };

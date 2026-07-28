@@ -17,11 +17,21 @@ const admin: Partial<SessionValue> = {
   isAdmin: true,
 };
 
-function fakeClient(result: { data: unknown; error?: { code?: string; message: string } | null }) {
+/**
+ * Faux serveur. `latest` est la ligne renvoyée par le contrôle « quelqu'un a-t-il publié depuis ? »
+ * fait juste avant l'insertion ; `null` (le défaut) = aucune version publiée, donc rien à heurter.
+ */
+function fakeClient(
+  result: { data: unknown; error?: { code?: string; message: string } | null },
+  latest: { id: number; version: string; published_at: string | null } | null = null,
+) {
   const insert = vi.fn(() => ({
     select: () => ({ single: async () => ({ data: result.data, error: result.error ?? null }) }),
   }));
-  return { client: { from: () => ({ insert }) } as unknown as SupabaseClient, insert };
+  const select = () => ({
+    order: () => ({ limit: () => ({ maybeSingle: async () => ({ data: latest, error: null }) }) }),
+  });
+  return { client: { from: () => ({ insert, select }) } as unknown as SupabaseClient, insert };
 }
 
 function renderAction(session: Partial<SessionValue>, client: SupabaseClient | null, onPublished = vi.fn()) {
@@ -113,6 +123,23 @@ describe("PublishAction", () => {
     writePublishedCatalog({ versionId: 9, publishedAt: null }, { ...catalog, version: "0.9.9" });
     renderAction(admin, client);
     expect(screen.getByText(/ne correspond plus à la version publiée/i)).toBeTruthy();
+  });
+
+  it("refuse de publier par-dessus une version parue entre-temps", async () => {
+    // L'écran n'a jamais vu de version publiée (published = null), mais le serveur en a une :
+    // publier ici écraserait le travail de celui qui vient de publier.
+    const { client, insert } = fakeClient({ data: { id: 12, version: "x", published_at: null } }, {
+      id: 11,
+      version: "0.4.0",
+      published_at: null,
+    });
+    const { onPublished } = renderAction(admin, client);
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    fireEvent.click(screen.getByRole("button", { name: "Publier maintenant" }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByRole("alert").textContent).toMatch(/publiée entre-temps/i);
+    expect(insert).not.toHaveBeenCalled();
+    expect(onPublished).not.toHaveBeenCalled();
   });
 
   it("détaille l'écart avec la version publiée à la demande", () => {

@@ -42,3 +42,29 @@ describe("mise à niveau d'un catalogue antérieur", () => {
     expect(parseCatalog(catalog)).toEqual(catalog);
   });
 });
+
+describe("noms d'affichage", () => {
+  it("met une capitale initiale, quelle que soit la saisie", () => {
+    const raw = structuredClone(catalog) as { equipment: { name: string }[]; skills: { keyword: string }[] };
+    raw.equipment[0].name = "  épée courte ";
+    raw.skills[0].keyword = "riposte";
+    const parsed = parseCatalog(raw);
+    expect(parsed.equipment[0].name).toBe("Épée courte");
+    expect(parsed.skills[0].keyword).toBe("Riposte");
+  });
+
+  it("ne touche pas au reste du nom", () => {
+    const raw = structuredClone(catalog) as { equipment: { name: string }[] };
+    raw.equipment[0].name = "arc de Baruun-Urt";
+    expect(parseCatalog(raw).equipment[0].name).toBe("Arc de Baruun-Urt");
+  });
+
+  it("laisse intacts les libellés qui vivent en milieu de phrase", () => {
+    // « se recrute via une femelle Fang » : une capitale y serait fautive.
+    const likan = parseCatalog(catalog).profiles.find((p) => p.id === "fangs-likan-1")!;
+    const carrier = (likan.recruitment.find((c) => c.type === "attachment")!.params as {
+      carrier: { label: string };
+    }).carrier;
+    expect(carrier.label).toBe("une femelle Fang");
+  });
+});

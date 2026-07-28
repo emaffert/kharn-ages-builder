@@ -9,6 +9,12 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-28
 
+### Noms toujours présentés de la même façon
+
+- Les noms de profils, d'équipements, de sorts et de compétences s'affichent avec une majuscule
+  initiale, quelle que soit la façon dont ils ont été saisis. Une liste exportée ne montre plus
+  « couteau » ici et « Couteau » là.
+
 ### Mises à jour du site appliquées sans délai
 
 - Le site cherche désormais activement une nouvelle version : au retour sur l'onglet, et une fois

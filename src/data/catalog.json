@@ -10817,7 +10817,7 @@
     },
     {
       "id": "barbute",
-      "name": "barbute",
+      "name": "Barbute",
       "category": "objet",
       "cost": 10,
       "effectsText": "Ajoute la maitrise défensive sur tous les dés. "
@@ -10878,7 +10878,7 @@
     },
     {
       "id": "epee",
-      "name": "epée",
+      "name": "Epée",
       "category": "arme-cac",
       "cost": 10,
       "hands": 1,
@@ -10952,7 +10952,7 @@
     },
     {
       "id": "cimeterre",
-      "name": "cimeterre",
+      "name": "Cimeterre",
       "category": "arme-cac",
       "cost": 22,
       "hands": 1,
@@ -11089,7 +11089,7 @@
     },
     {
       "id": "claymore",
-      "name": "claymore",
+      "name": "Claymore",
       "category": "arme-cac",
       "cost": 35,
       "hands": 2,
@@ -11222,14 +11222,14 @@
     },
     {
       "id": "dose-de-poison",
-      "name": "dose de poison",
+      "name": "Dose de poison",
       "category": "objet",
       "cost": 6,
       "effectsText": "Lors d'une attaque ou d'une défense ajoute l'effet \"poison\". "
     },
     {
       "id": "affutage",
-      "name": "affûtage",
+      "name": "Affûtage",
       "category": "objet",
       "cost": 8,
       "effectsText": "l'arme avec un tranchant fera +1 dgt."
@@ -11264,7 +11264,7 @@
     },
     {
       "id": "ordre-de-mission-royale",
-      "name": "ordre de mission royale",
+      "name": "Ordre de mission royale",
       "category": "objet",
       "cost": 5,
       "effectsText": "gagne 1 domaine de maitrise de son choix. ",
@@ -11636,7 +11636,7 @@
     },
     {
       "id": "confusion",
-      "name": "confusion",
+      "name": "Confusion",
       "kind": "generique",
       "target": "Aura",
       "difficulties": [

@@ -347,3 +347,22 @@
   color: var(--scorch); }
 .adm-banner-text { margin-top: 4px; font-size: 12.5px; line-height: 1.5; color: var(--bone-dim); }
 .adm-banner-text strong { color: var(--bone); font-weight: 600; }
+
+/* Comparaison de deux catalogues (dialogue « Ce qui diffère »). Une entité par ligne, marquée de son
+   sort, avec ses champs modifiés en dessous. Les valeurs restent sur une ligne, tronquées par la vue. */
+.adm-diff-section + .adm-diff-section { margin-top: 14px; }
+.adm-diff-title { font-family: "Cinzel", Georgia, serif; font-size: 14px; font-weight: 700; color: var(--bone);
+  padding-bottom: 4px; border-bottom: 1px solid var(--tint-2); }
+.adm-diff-list { margin-top: 6px; display: flex; flex-direction: column; gap: 5px; }
+.adm-diff-entry { display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+.adm-diff-mark { flex: none; width: 12px; text-align: center; font-weight: 700; color: var(--bone-faint); }
+.adm-diff-entry--added .adm-diff-mark { color: var(--ember-bright); }
+.adm-diff-entry--removed .adm-diff-mark { color: var(--scorch); }
+.adm-diff-entry--removed .adm-diff-label { text-decoration: line-through; color: var(--bone-dim); }
+.adm-diff-label { color: var(--bone); }
+.adm-diff-fields { margin-top: 3px; display: flex; flex-direction: column; gap: 2px; }
+.adm-diff-field { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; font-size: 12px;
+  color: var(--bone-dim); }
+.adm-diff-path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--bone-faint); }
+.adm-diff-before { color: var(--bone-faint); text-decoration: line-through; }
+.adm-diff-after { color: var(--ember-bright); }

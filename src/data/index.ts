@@ -5,7 +5,11 @@
  */
 
 import { parseCatalog, type Catalog } from "@core";
+import { diffCatalogs, type CatalogDiff } from "./diff";
 import catalogJson from "./catalog.json";
+
+export { diffCatalogs } from "./diff";
+export type { CatalogDiff, DiffSection, EntryChange, FieldChange } from "./diff";
 
 /** Catalogue bundlé, chargé depuis le JSON canonique et validé. */
 export const catalog: Catalog = parseCatalog(catalogJson);
@@ -87,6 +91,16 @@ export function publishedDivergesFromFile(): boolean {
   const published = readPublishedCatalog();
   if (!published) return false;
   return JSON.stringify(published.catalog) !== JSON.stringify(catalog);
+}
+
+/**
+ * Le détail de cet écart : ce que la version publiée apporte par rapport au `catalog.json` du dépôt.
+ * Le fichier est donc l'état de départ et la version publiée l'état d'arrivée, dans le sens de la
+ * resynchronisation à faire. `null` si aucune version publiée n'est connue.
+ */
+export function publishedDiffFromFile(): CatalogDiff | null {
+  const published = readPublishedCatalog();
+  return published ? diffCatalogs(catalog, published.catalog) : null;
 }
 
 // Sérialisation du catalogue embarqué, calculée une fois : c'est la partie coûteuse de la

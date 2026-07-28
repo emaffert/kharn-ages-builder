@@ -115,6 +115,18 @@ describe("PublishAction", () => {
     expect(screen.getByText(/ne correspond plus à la version publiée/i)).toBeTruthy();
   });
 
+  it("détaille l'écart avec la version publiée à la demande", () => {
+    const { client } = fakeClient({ data: { id: 1, version: "x", published_at: null } });
+    const published = { ...catalog, version: "0.9.9", equipment: catalog.equipment.slice(1) };
+    writePublishedCatalog({ versionId: 9, publishedAt: null }, published);
+    renderAction(admin, client);
+    fireEvent.click(screen.getByRole("button", { name: "Voir les différences" }));
+    // Le fichier est le point de départ : ce qu'il a en plus est donc *retiré* par la version publiée.
+    expect(screen.getByRole("heading", { name: /Équipement/ })).toBeTruthy();
+    expect(screen.getByText(catalog.equipment[0].name)).toBeTruthy();
+    expect(screen.getByText("0.9.9")).toBeTruthy();
+  });
+
   it("n'alerte pas quand le fichier correspond à la version publiée", () => {
     const { client } = fakeClient({ data: { id: 1, version: "x", published_at: null } });
     writePublishedCatalog({ versionId: 9, publishedAt: null }, catalog);

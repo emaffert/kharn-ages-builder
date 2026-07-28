@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Catalog } from "@core";
-import { publishedDivergesFromFile, writePublishedCatalog } from "@data";
+import { publishedDiffFromFile, publishedDivergesFromFile, writePublishedCatalog, type CatalogDiff } from "@data";
 import { Button, Dialog } from "@ui";
 import { useSession } from "../auth/context";
 import { useCatalog } from "../catalog/context";
+import { CatalogDiffDialog } from "./CatalogDiffDialog";
 import { publishCatalog } from "../../lib/catalogApi";
 import { supabase } from "../../lib/supabase";
 
@@ -43,6 +44,9 @@ export function PublishAction({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  // La comparaison parcourt tout le catalogue : elle n'est calculée qu'à l'ouverture du détail.
+  const [diff, setDiff] = useState<CatalogDiff | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
   // Recalculé quand la version publiée change (publication, ou synchro au démarrage).
   // Rappel de resynchronisation du dépôt : seul le développement peut y donner suite.
   const fileStale = useMemo(() => import.meta.env.DEV && publishedDivergesFromFile(), [published?.versionId]);
@@ -89,11 +93,22 @@ export function PublishAction({
         {dirty && <span className="adm-accent"> · brouillon local non publié</span>}
       </p>
       {fileStale && (
-        <p className="ui-warn w-full">
-          Le <code>catalog.json</code> du dépôt ne correspond plus à la version publiée, alors qu'il sert de repli
-          hors-ligne et à la première visite. Pour le remettre à niveau : « Repartir de la version publiée », puis
-          « Enregistrer », puis committer.
-        </p>
+        <div className="ui-warn flex w-full flex-col items-start gap-2">
+          <p>
+            Le <code>catalog.json</code> du dépôt ne correspond plus à la version publiée, alors qu'il sert de repli
+            hors-ligne et à la première visite. Pour le remettre à niveau : « Repartir de la version publiée », puis
+            « Enregistrer », puis committer.
+          </p>
+          <Button
+            size="sm"
+            onClick={() => {
+              setDiff(publishedDiffFromFile());
+              setShowDiff(true);
+            }}
+          >
+            Voir les différences
+          </Button>
+        </div>
       )}
       <Button variant="primary" size="sm" onClick={open}>
         Publier
@@ -139,6 +154,14 @@ export function PublishAction({
           </div>
         </div>
       </Dialog>
+
+      <CatalogDiffDialog
+        open={showDiff}
+        onOpenChange={setShowDiff}
+        diff={diff}
+        beforeLabel="catalog.json du dépôt"
+        afterLabel={published ? `version publiée « ${published.version} »` : "version publiée"}
+      />
 
       <Dialog open={done !== null} onOpenChange={() => setDone(null)} size="sm" title="Catalogue publié">
         <p className="text-sm">

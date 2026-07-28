@@ -1,5 +1,5 @@
 import type { Catalog, Spell } from "@core";
-import { AddButton, CardImageSection, Combobox, DetailHeader, DetailPage, Field, RemoveButton, Section } from "./primitives";
+import { AddButton, CardImageSection, Combobox, DetailHeader, DetailPage, Field, IdField, RemoveButton, Section } from "./primitives";
 import { INPUT, removeAt, replaceAt } from "./shared";
 import { ProfileMultiSelect } from "./editors";
 
@@ -8,11 +8,14 @@ export function SpellDetail({
   cat,
   onChange,
   onRemove,
+  onRenameId,
 }: {
   spell: Spell;
   cat: Catalog;
   onChange: (patch: Partial<Spell>) => void;
   onRemove: () => void;
+  /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
+  onRenameId: (newId: string) => void;
 }) {
   const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
   const reserved = s.reservedTo ?? {};
@@ -27,7 +30,7 @@ export function SpellDetail({
           costPlaceholder="—"
           onRemove={onRemove}
           removeTitle="Supprimer ce sort"
-          sub={<span className="adm-id">{s.id}</span>}
+          sub={<IdField cat={cat} kind="spell" id={s.id} onRename={onRenameId} />}
         />
       }
       body={

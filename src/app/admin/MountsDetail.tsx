@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Catalog, Mount, MountType } from "@core";
 import { INPUT, SECTION } from "./shared";
-import { ChipMultiSelect, Combobox, DetailHeader, DetailPage, EditableNumber, Field, FieldGroup, RemoveButton, Section } from "./primitives";
+import { ChipMultiSelect, Combobox, DetailHeader, DetailPage, EditableNumber, Field, FieldGroup, IdField, RemoveButton, Section } from "./primitives";
 import { IconSlot } from "./ProfileDetail";
 import { RulesEditor, SkillsEditor } from "./editors";
 import { EffectListEditor } from "../RuleEditors";
@@ -34,6 +34,7 @@ export function MountsDetail({
   onChangeMount,
   onRemoveMount,
   setIcon,
+  onRenameId,
 }: {
   cat: Catalog;
   mountId: string;
@@ -42,6 +43,8 @@ export function MountsDetail({
   onChangeMount: (id: string, patch: Partial<Mount>) => void;
   onRemoveMount: (id: string) => void;
   setIcon: (cardImage: string, dataUrl: string | null) => void;
+  /** Renomme l'identifiant du niveau de monture, en cascade. */
+  onRenameId: (newId: string) => void;
 }) {
   const [editingIcon, setEditingIcon] = useState<"shared" | "own" | null>(null);
   const m = cat.mounts.find((x) => x.id === mountId);
@@ -69,7 +72,7 @@ export function MountsDetail({
           extra={<span className="adm-badge-lvl">{ROMAN[m.level] ?? m.level}</span>}
           sub={
             <>
-              <span className="adm-id">{m.id}</span>
+              <IdField cat={cat} kind="mount" id={m.id} onRename={onRenameId} />
               <span className="dot" />
               <span>
                 Niveau {ROMAN[m.level] ?? m.level}

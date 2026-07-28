@@ -12,7 +12,7 @@ afterEach(cleanup);
  */
 const render1 = (id: string) => {
   const equipment = catalog.equipment.find((e) => e.id === id)!;
-  render(<EquipmentDetail equipment={equipment} cat={catalog} onChange={() => {}} onRemove={() => {}} />);
+  render(<EquipmentDetail equipment={equipment} cat={catalog} onChange={() => {}} onRemove={() => {}} onRenameId={() => {}} />);
   return equipment;
 };
 

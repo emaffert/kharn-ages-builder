@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Tag } from "@ui";
+import { canRenameId, findReferences, idIsFree, type Catalog, type RefKind } from "@core";
 import type { FieldValue } from "../useCatalogStore";
 import { INPUT, SECTION } from "./shared";
 import offensive from "../../assets/maitrise/offensive.png";
@@ -141,6 +142,76 @@ export function SubBlock({ title, note, children }: { title: string; note?: Reac
       {note && <p className="adm-block-note">{note}</p>}
       {children}
     </div>
+  );
+}
+
+/**
+ * Identifiant d'une entité, modifiable à la main. Le renommage est **répercuté en cascade** sur tout
+ * ce qui cite l'identifiant (cf. `renameId` dans `@core`) : c'est justement l'absence de cascade qui
+ * avait laissé 16 profils pointer vers un « couteau » supprimé.
+ *
+ * Le champ annonce ce qui va suivre avant de valider, refuse un identifiant déjà pris, et se montre
+ * en lecture seule pour les types dont l'identifiant est une constante du code.
+ */
+export function IdField({
+  cat,
+  kind,
+  id,
+  onRename,
+}: {
+  cat: Catalog;
+  kind: RefKind;
+  id: string;
+  onRename: (next: string) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const refs = useMemo(() => findReferences(cat, kind, id), [cat, kind, id]);
+
+  if (!canRenameId(kind)) {
+    return (
+      <span className="adm-id" title="Cet identifiant est une constante du moteur : il ne peut pas être renommé.">
+        {id}
+      </span>
+    );
+  }
+
+  const value = draft ?? id;
+  const clean = value.trim();
+  const taken = clean !== id && !idIsFree(cat, kind, clean);
+  const invalid = clean === "" || taken;
+
+  const commit = () => {
+    if (draft == null) return;
+    setDraft(null);
+    if (!invalid && clean !== id) onRename(clean);
+  };
+
+  return (
+    <span className="adm-idfield">
+      <input
+        className={`adm-id adm-id-input ${invalid ? "adm-id-input--bad" : ""}`}
+        value={value}
+        size={Math.max(clean.length, 8)}
+        spellCheck={false}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+          if (e.key === "Escape") setDraft(null);
+        }}
+      />
+      {draft != null && clean !== id && (
+        <span className="adm-id-hint">
+          {taken
+            ? "déjà pris"
+            : clean === ""
+              ? "ne peut pas être vide"
+              : refs.length === 0
+                ? "aucune référence à suivre"
+                : `${refs.length} référence${refs.length > 1 ? "s" : ""} suivront`}
+        </span>
+      )}
+    </span>
   );
 }
 

@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
+import type { RefKind } from "@core";
 import { Button, Dialog } from "@ui";
 import { useCatalogStore } from "./useCatalogStore";
 import { LEVEL_LABEL } from "./admin/shared";
@@ -125,6 +126,12 @@ export function AdminCatalog() {
     () => catalog.spells.filter((s) => !q || s.name.toLowerCase().includes(q)),
     [catalog, q],
   );
+
+  /** Renomme une entité, en cascade, et suit la sélection - faite par identifiant. */
+  const rename = (kind: RefKind, oldId: string, newId: string, select: (id: string) => void) => {
+    store.renameEntityId(kind, oldId, newId);
+    select(newId);
+  };
 
   const selectedProfile = catalog.profiles.find((p) => p.id === selectedProfileId);
   const selectedEquip = catalog.equipment.find((e) => e.id === selectedEquipId);
@@ -425,6 +432,7 @@ export function AdminCatalog() {
             (selectedProfile ? (
               <div className="contents">
                 <ProfileDetail
+                  onRenameId={(newId) => rename("profile", selectedProfile.id, newId, setSelectedProfileId)}
                   profile={selectedProfile}
                   cat={catalog}
                   updateField={store.updateField}
@@ -447,6 +455,7 @@ export function AdminCatalog() {
                   equipment={selectedEquip}
                   cat={catalog}
                   onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
+                  onRenameId={(newId) => rename("equipment", selectedEquip.id, newId, setSelectedEquipId)}
                   onRemove={() =>
                     setPendingDelete({
                       what: `l'équipement « ${selectedEquip.name} »`,
@@ -467,12 +476,9 @@ export function AdminCatalog() {
                 <SkillCatalogDetail
                   key={selectedSkill.id}
                   skill={selectedSkill}
+                  cat={catalog}
                   onChange={(patch) => store.updateSkill(selectedSkill.id, patch)}
-                  onRenameId={(newId) => {
-                    const ok = store.renameSkillId(selectedSkill.id, newId);
-                    if (ok) setSelectedSkillId(newId);
-                    return ok;
-                  }}
+                  onRenameId={(newId) => rename("skill", selectedSkill.id, newId, setSelectedSkillId)}
                   onRemove={() =>
                     setPendingDelete({
                       what: `la compétence « ${selectedSkill.keyword} »`,
@@ -494,6 +500,7 @@ export function AdminCatalog() {
                   card={selectedCard}
                   cat={catalog}
                   onChange={(patch) => store.updateSpecialCard(selectedCard.id, patch)}
+                  onRenameId={(newId) => rename("specialCard", selectedCard.id, newId, setSelectedCardId)}
                   onRemove={() =>
                     setPendingDelete({
                       what: `la carte « ${selectedCard.name} »`,
@@ -515,6 +522,7 @@ export function AdminCatalog() {
                   spell={selectedSpell}
                   cat={catalog}
                   onChange={(patch) => store.updateSpell(selectedSpell.id, patch)}
+                  onRenameId={(newId) => rename("spell", selectedSpell.id, newId, setSelectedSpellId)}
                   onRemove={() =>
                     setPendingDelete({
                       what: `le sort « ${selectedSpell.name} »`,
@@ -547,6 +555,7 @@ export function AdminCatalog() {
                 setSelectedMountId(catalog.mounts.find((m) => m.typeId !== id)?.id ?? "");
               }}
               onChangeMount={store.updateMount}
+              onRenameId={(newId) => rename("mount", selectedMountId, newId, setSelectedMountId)}
               onRemoveMount={(id) => {
                 store.removeMount(id);
                 setSelectedMountId(catalog.mounts.find((m) => m.id !== id)?.id ?? "");

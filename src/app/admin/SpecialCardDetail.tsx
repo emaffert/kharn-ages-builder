@@ -1,7 +1,7 @@
 import type { Catalog, SpecialCard } from "@core";
 import { SegmentedControl } from "@ui";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
-import { CardImageSection, CheckField, ChipMultiSelect, DetailHeader, DetailPage, Field, FieldGroup, NotesSection, Section } from "./primitives";
+import { CardImageSection, CheckField, ChipMultiSelect, DetailHeader, DetailPage, Field, FieldGroup, IdField, NotesSection, Section } from "./primitives";
 import { INPUT, SECTION } from "./shared";
 import { ProfileMultiSelect, TextLinesEditor } from "./editors";
 
@@ -20,11 +20,14 @@ export function SpecialCardDetail({
   cat,
   onChange,
   onRemove,
+  onRenameId,
 }: {
   card: SpecialCard;
   cat: Catalog;
   onChange: (patch: Partial<SpecialCard>) => void;
   onRemove: () => void;
+  /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
+  onRenameId: (newId: string) => void;
 }) {
   const scope = card.scope;
   const cond = Array.isArray(card.activationCondition)
@@ -55,7 +58,7 @@ export function SpecialCardDetail({
           removeTitle="Supprimer cette carte"
           sub={
             <>
-              <span className="adm-id">{card.id}</span>
+              <IdField cat={cat} kind="specialCard" id={card.id} onRename={onRenameId} />
               <span className="dot" />
               <span>{KIND_LABEL[kind]}</span>
             </>

@@ -5,7 +5,7 @@ import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForP
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
-import { AddButton, Badge, CardImageSection, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, NotesSection, RemoveButton, RuleCard, Section } from "./primitives";
+import { AddButton, Badge, CardImageSection, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, IdField, NotesSection, RemoveButton, RuleCard, Section } from "./primitives";
 import { INPUT, LEVEL_LABEL, MASTERY_DOMAINS, SECTION, STATS_COMBAT, STATS_SECONDARY, STAT_LABELS, removeAt, replaceAt } from "./shared";
 import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
 
@@ -22,6 +22,8 @@ interface DetailProps {
   assignProfileToModel: (profileId: string, targetModelId: string) => void;
   setIcon: (cardImage: string, dataUrl: string | null) => void;
   toggleUnverified: (id: string, key: string) => void;
+  /** Renomme l'identifiant du profil, en cascade sur tout ce qui le cite. */
+  onRenameId: (newId: string) => void;
 }
 
 const ROMAN: Record<number, string> = { 1: "I", 2: "II", 3: "III" };
@@ -72,7 +74,7 @@ export function IconSlot({
   );
 }
 
-export function ProfileDetail({ profile, cat, updateField, updateProfile, updateModel, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified }: DetailProps) {
+export function ProfileDetail({ profile, cat, updateField, updateProfile, updateModel, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified, onRenameId }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
   const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
@@ -134,7 +136,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           onCost={(v) => upd("cost", v ?? 0)}
           sub={
             <>
-              <span className="adm-id">{profile.id}</span>
+              <IdField cat={cat} kind="profile" id={profile.id} onRename={onRenameId} />
               <span className="dot" />
               <span>
                 {factionName}

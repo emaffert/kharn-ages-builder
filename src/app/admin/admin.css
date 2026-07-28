@@ -210,6 +210,14 @@
 .adm-entity-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 0 10px; font-size: 11.5px; color: var(--bone-faint); }
 .adm-entity-sub .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--bone-faint); }
 .adm-entity-sub .adm-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+/* Identifiant modifiable : discret au repos, champ franc dès qu'on le touche. */
+.adm-idfield { display: inline-flex; align-items: baseline; gap: 8px; }
+.adm-id-input { background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 1px 5px; color: inherit; font-size: inherit; outline: none; }
+.adm-id-input:hover { border-color: var(--hair-strong); }
+.adm-id-input:focus { background: var(--tint-2); border-color: var(--ember); color: var(--bone); }
+.adm-id-input--bad:focus { border-color: var(--scorch); }
+.adm-id-hint { font-size: 11px; color: var(--ember-bright); }
 
 /* SIGNATURE - sommaire ancré (colle au défilement de .adm-scroll, surligné par scroll-spy).
    Rendu après le détail dans le DOM (ref attaché à temps), replacé à gauche via order. */

@@ -6,6 +6,7 @@
 export * from "./common";
 export * from "./constraints";
 export * from "./effects";
+export * from "./references";
 export * from "./catalog";
 export * from "./list";
 

@@ -9,6 +9,16 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-28
 
+### Administration : identifiants modifiables
+
+- L'identifiant d'un profil, d'un équipement, d'une compétence, d'un sort, d'une carte ou d'une
+  monture se corrige directement dans l'en-tête de sa fiche.
+- Le renommage est répercuté partout : équipements de base, réservations, portées de cartes,
+  sélecteurs d'effet, conditions. Le champ annonce combien de références vont suivre avant de
+  valider, et refuse un identifiant déjà pris.
+- Les grimoires et les factions font exception : leur identifiant est une constante du programme,
+  la fiche l'affiche donc en lecture seule.
+
 ### Catalogue d'équipement enrichi
 
 - 68 nouveaux équipements : boucliers (rondache, broquel, pavois), armures (gambison, armure de

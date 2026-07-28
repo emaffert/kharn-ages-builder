@@ -1,5 +1,5 @@
 import type { Catalog, Equipment, EquipmentUpgrade } from "@core";
-import { CardImageSection, DetailHeader, DetailPage, Field, FieldGroup, NumberField, RemoveButton, Section } from "./primitives";
+import { CardImageSection, DetailHeader, DetailPage, Field, FieldGroup, IdField, NumberField, RemoveButton, Section } from "./primitives";
 import { EQUIPMENT_CATEGORIES, INPUT, SECTION } from "./shared";
 import { ReservedToEditor } from "./editors";
 import { EffectListEditor } from "../RuleEditors";
@@ -17,11 +17,14 @@ export function EquipmentDetail({
   cat,
   onChange,
   onRemove,
+  onRenameId,
 }: {
   equipment: Equipment;
   cat: Catalog;
   onChange: (patch: Partial<Equipment>) => void;
   onRemove: () => void;
+  /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
+  onRenameId: (newId: string) => void;
 }) {
   const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
   const isCac = e.category === "arme-cac";
@@ -62,7 +65,7 @@ export function EquipmentDetail({
           removeTitle="Supprimer cet équipement"
           sub={
             <>
-              <span className="adm-id">{e.id}</span>
+              <IdField cat={cat} kind="equipment" id={e.id} onRename={onRenameId} />
               <span className="dot" />
               <span>{CATEGORY_LABEL[e.category] ?? e.category}</span>
             </>

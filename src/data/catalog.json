@@ -11604,7 +11604,7 @@
       "pages": 2,
       "cost": 10,
       "reservedTo": {
-        "trait": "Nyx "
+        "trait": "fille-de-nyx"
       },
       "target": "2 toises",
       "cadence": "1/tour",
@@ -12666,8 +12666,7 @@
           "kharns-myriam",
           "kharns-syrga",
           "kharns-engueran",
-          "kharns-prince",
-          "kharns-martha"
+          "kharns-prince"
         ],
         "countAtLeast": 4
       },
@@ -12698,7 +12697,10 @@
           "sourceText": "Toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé »."
         }
       ],
-      "cardImage": "cards/Kharns/kharns-myriam.jpg"
+      "cardImage": "cards/Kharns/kharns-myriam.jpg",
+      "notes": [
+        "Le texte de la carte cite Martha parmi les cinq personnages, mais son profil n’est pas encore importé : elle a donc été retirée de la condition d’activation. À y remettre le jour où elle est saisie, sans quoi la règle restera plus stricte que la carte."
+      ]
     },
     {
       "id": "banniere-kheropse",

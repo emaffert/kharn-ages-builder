@@ -293,7 +293,11 @@
 .adm-check-hint { display: block; font-size: 12px; color: var(--bone-faint); line-height: 1.45; margin-top: 3px; }
 
 /* Nouveautés : rendu du journal des modifications, réduit à ses trois formes. */
-.adm-whatsnew { display: flex; flex-direction: column; gap: 18px; }
+.adm-whatsnew { display: flex; flex-direction: column; gap: 22px; }
+.adm-whatsnew article { display: flex; flex-direction: column; gap: 14px; }
+.adm-whatsnew article + article { border-top: 1px solid var(--hair); padding-top: 20px; }
+.adm-whatsnew-date { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+  letter-spacing: .06em; color: var(--ember-bright); margin: 0; }
 .adm-whatsnew h3 { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 14px;
   color: var(--bone); margin: 0 0 7px; }
 .adm-whatsnew ul { display: flex; flex-direction: column; gap: 6px; margin: 0; padding-left: 18px;

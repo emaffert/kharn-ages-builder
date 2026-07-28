@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseLatestEntry } from "./changelog";
+import { entryKey, parseEntries, unseenEntries } from "./changelog";
 
 const JOURNAL = `# Journal des modifications
 
@@ -25,7 +25,7 @@ Texte d'introduction, à ignorer.
 `;
 
 describe("lecture du journal des modifications", () => {
-  const entry = parseLatestEntry(JOURNAL)!;
+  const entry = parseEntries(JOURNAL)[0];
 
   it("retient la première entrée datée, pas les précédentes", () => {
     expect(entry.date).toBe("2026-07-28");
@@ -41,6 +41,58 @@ describe("lecture du journal des modifications", () => {
   });
 
   it("ne renvoie rien pour un journal sans entrée", () => {
-    expect(parseLatestEntry("# Titre seul\n\nRien.\n")).toBeNull();
+    expect(parseEntries("# Titre seul\n\nRien.\n")).toEqual([]);
+  });
+
+  it("découpe toutes les entrées, de la plus récente à la plus ancienne", () => {
+    expect(parseEntries(JOURNAL).map((e) => e.date)).toEqual(["2026-07-28", "2026-07-26"]);
+  });
+});
+
+describe("signature d'une entrée", () => {
+  const entry = parseEntries(JOURNAL)[0];
+
+  it("est stable pour un journal inchangé", () => {
+    expect(entryKey(entry)).toBe(entryKey(parseEntries(JOURNAL)[0]));
+  });
+
+  it("change quand une puce est ajoutée le même jour", () => {
+    // Une date seule laisserait passer les compléments apportés après coup.
+    const complete = JOURNAL.replace("- Encore une.", "- Encore une.\n- Et une de plus.");
+    expect(entryKey(parseEntries(complete)[0])).not.toBe(entryKey(entry));
+  });
+
+  it("change quand une nouvelle entrée datée arrive", () => {
+    const suivante = JOURNAL.replace("## 2026-07-28", "## 2026-07-29\n\n### Neuf\n\n- Une nouveauté.\n\n## 2026-07-28");
+    expect(entryKey(parseEntries(suivante)[0])).not.toBe(entryKey(entry));
+  });
+});
+
+describe("ce qui reste à lire", () => {
+  const entries = parseEntries(JOURNAL);
+
+  it("à la première visite, ne déroule pas tout l'historique", () => {
+    expect(unseenEntries(entries, null).map((e) => e.date)).toEqual(["2026-07-28"]);
+  });
+
+  it("montre les deux versions à qui en a sauté une", () => {
+    const vieux = entryKey(entries[1]); // l'utilisateur en était resté au 26
+    expect(unseenEntries(entries, vieux).map((e) => e.date)).toEqual(["2026-07-28"]);
+  });
+
+  it("ne montre rien quand la dernière entrée est déjà lue", () => {
+    expect(unseenEntries(entries, entryKey(entries[0]))).toEqual([]);
+  });
+
+  it("réannonce une entrée complétée après lecture, sans remonter plus loin", () => {
+    // Signature d'une version antérieure du 28 : seule cette entrée est réannoncée.
+    const avantComplement = "2026-07-28:autrehash";
+    expect(unseenEntries(entries, avantComplement).map((e) => e.date)).toEqual(["2026-07-28"]);
+  });
+
+  it("s'arrête à la dernière entrée lue, même si le journal en compte beaucoup", () => {
+    const long = JOURNAL.replace("## 2026-07-26", "## 2026-07-27\n\n### Intermédiaire\n\n- Une puce.\n\n## 2026-07-26");
+    const toutes = parseEntries(long);
+    expect(unseenEntries(toutes, entryKey(toutes[2])).map((e) => e.date)).toEqual(["2026-07-28", "2026-07-27"]);
   });
 });

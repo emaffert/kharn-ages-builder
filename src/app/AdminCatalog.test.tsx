@@ -1,9 +1,19 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import changelogSource from "../../CHANGELOG.md?raw";
+import { createMemoryStorage } from "../testing/memoryStorage";
 import { AdminCatalog } from "./AdminCatalog";
+import { entryKey, parseEntries } from "./admin/changelog";
 
 afterEach(cleanup);
+
+// Les nouveautés s'ouvrent à la première visite de l'administration : on les marque comme lues, ces
+// tests portent sur la navigation et la suppression, pas sur l'annonce (cf. admin/changelog.test.ts).
+beforeEach(() => {
+  vi.stubGlobal("localStorage", createMemoryStorage());
+  localStorage.setItem("kharn-changelog-vu", entryKey(parseEntries(changelogSource)[0]));
+});
 
 describe("AdminCatalog (rendu)", () => {
   it("rend sans erreur et liste des profils", () => {

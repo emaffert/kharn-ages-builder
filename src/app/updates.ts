@@ -8,9 +8,6 @@
  * même : c'est l'utilisateur qui choisit le moment.
  */
 
-/** Marqueur de session : la page vient d'être rechargée pour appliquer une nouvelle version. */
-const JUST_UPDATED_KEY = "kharn-just-updated";
-
 let updateReady = false;
 const listeners = new Set<() => void>();
 
@@ -30,23 +27,7 @@ export function subscribeUpdateReady(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
-/** Recharge en laissant une trace, pour que l'administration puisse annoncer les nouveautés. */
+/** Applique la nouvelle version. Les nouveautés, elles, s'annoncent sur la signature du journal. */
 export function applyUpdate(): void {
-  try {
-    sessionStorage.setItem(JUST_UPDATED_KEY, "1");
-  } catch {
-    /* mode privé : on rechargera sans annonce, ce n'est pas bloquant */
-  }
   location.reload();
-}
-
-/** La page vient-elle d'être rechargée pour une mise à jour ? Consommé une seule fois. */
-export function consumeJustUpdated(): boolean {
-  try {
-    const flag = sessionStorage.getItem(JUST_UPDATED_KEY);
-    if (flag) sessionStorage.removeItem(JUST_UPDATED_KEY);
-    return Boolean(flag);
-  } catch {
-    return false;
-  }
 }

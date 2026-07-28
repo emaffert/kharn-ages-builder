@@ -31,7 +31,9 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 - Quand une nouvelle version est prête, le site le dit et propose de recharger. Il ne le fait jamais
   de lui-même : une liste en cours de composition n'existe que dans la page tant qu'elle n'est pas
   enregistrée, et un rechargement imposé l'effacerait.
-- Après un rechargement de mise à jour, l'administration ouvre les nouveautés de la version.
+- L'administration ouvre les nouveautés à la première visite qui suit une mise à jour, quelle que
+  soit la façon dont on y est arrivé. Elle montre tout ce qui n'a pas encore été lu : sauter deux
+  versions n'en escamote aucune.
 
 ### Administration : identifiants modifiables
 

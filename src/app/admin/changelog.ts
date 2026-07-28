@@ -10,21 +10,23 @@ export interface ChangelogEntry {
 }
 
 /**
- * Extrait la première entrée datée du journal (la plus récente, le fichier étant antichronologique).
+ * Découpe le journal en entrées datées, de la plus récente à la plus ancienne (l'ordre du fichier).
  * Volontairement minimal : le journal n'emploie que trois formes, un titre de date, des rubriques et
  * des puces, et les puces se poursuivent sur plusieurs lignes.
  */
-export function parseLatestEntry(markdown: string): ChangelogEntry | null {
-  const lines = markdown.split("\n");
-  const start = lines.findIndex((l) => l.startsWith("## "));
-  if (start < 0) return null;
-  const end = lines.findIndex((l, i) => i > start && l.startsWith("## "));
-  const body = lines.slice(start + 1, end < 0 ? undefined : end);
-
-  const entry: ChangelogEntry = { date: lines[start].slice(3).trim(), sections: [] };
+export function parseEntries(markdown: string): ChangelogEntry[] {
+  const entries: ChangelogEntry[] = [];
+  let entry: ChangelogEntry | null = null;
   let section: ChangelogEntry["sections"][number] | null = null;
-  for (const line of body) {
-    if (line.startsWith("### ")) {
+
+  for (const line of markdown.split("\n")) {
+    if (line.startsWith("## ")) {
+      entry = { date: line.slice(3).trim(), sections: [] };
+      section = null;
+      entries.push(entry);
+    } else if (!entry) {
+      continue; // en-tête du fichier, avant la première entrée
+    } else if (line.startsWith("### ")) {
       section = { title: line.slice(4).trim(), items: [] };
       entry.sections.push(section);
     } else if (line.startsWith("- ")) {
@@ -35,5 +37,48 @@ export function parseLatestEntry(markdown: string): ChangelogEntry | null {
       section.items[section.items.length - 1] += ` ${line.trim()}`;
     }
   }
-  return entry;
+  return entries;
+}
+
+/**
+ * Signature d'une entrée : sa date **et** son contenu. Elle sert à savoir si l'utilisateur a déjà
+ * vu ces nouveautés, quel que soit le chemin par lequel il est arrivé sur la nouvelle version -
+ * bouton « Recharger », rafraîchissement spontané du navigateur, ou simple visite ultérieure.
+ *
+ * Le contenu entre dans la signature pour qu'une entrée complétée après coup soit réannoncée : une
+ * date seule laisserait passer les ajouts du même jour.
+ */
+export function entryKey(entry: ChangelogEntry): string {
+  const text = entry.sections.map((s) => s.title + s.items.join("")).join("");
+  // Hachage FNV-1a : suffisant pour distinguer deux rédactions, et sans dépendance.
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `${entry.date}:${hash.toString(36)}`;
+}
+
+/**
+ * Les entrées que cet utilisateur n'a pas encore lues, de la plus récente à la plus ancienne.
+ *
+ * Qui saute deux versions doit voir les deux : on remonte le journal jusqu'à retrouver ce qu'il
+ * avait lu. La date sert de garde-fou, pour qu'une entrée retouchée après lecture n'entraîne pas
+ * l'affichage de tout l'historique - seule celle du jour concerné est réannoncée.
+ *
+ * À la première visite, une seule entrée : dérouler tout le journal à quelqu'un qui découvre le
+ * site n'annonce rien, ça l'assomme.
+ */
+export function unseenEntries(entries: ChangelogEntry[], seen: string | null): ChangelogEntry[] {
+  if (entries.length === 0) return [];
+  if (!seen) return entries.slice(0, 1);
+
+  const seenDate = seen.split(":")[0];
+  const unseen: ChangelogEntry[] = [];
+  for (const entry of entries) {
+    if (entry.date < seenDate) break; // déjà lue, et tout ce qui suit l'est aussi
+    if (entryKey(entry) === seen) break;
+    unseen.push(entry);
+  }
+  return unseen;
 }

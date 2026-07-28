@@ -45,6 +45,33 @@ export type GrantedUpgrade = {
   grantsSkills?: GrantedSkill[];
 };
 
+/** Une amélioration proposée sur un objet, quelle que soit son origine. */
+export interface AvailableUpgrade {
+  id: string;
+  label: string;
+  cost: number;
+}
+
+/**
+ * Améliorations achetables sur un objet donné : les **siennes** (`Equipment.upgrades`, ex. l'Épée
+ * courte et ses « deux effets ») puis celles qu'un **effet lui octroie** (`unlock-upgrade`, ex. Borax).
+ *
+ * Les deux sortes partagent le même espace de noms dans `instance.equipmentUpgrades`, où seuls des
+ * identifiants sont stockés. En cas d'homonymie, l'intrinsèque l'emporte : elle est portée par
+ * l'objet lui-même, elle ne peut pas être comptée deux fois.
+ */
+export function upgradesForEquipment(
+  equipment: { category: string; upgrades?: readonly AvailableUpgrade[] },
+  granted: readonly GrantedUpgrade[],
+): AvailableUpgrade[] {
+  const own = (equipment.upgrades ?? []).map((u) => ({ id: u.id, label: u.label, cost: u.cost }));
+  const ownIds = new Set(own.map((u) => u.id));
+  const fromEffects = granted
+    .filter((g) => g.equipmentCategories.includes(equipment.category) && !ownIds.has(g.upgradeId))
+    .map((g) => ({ id: g.upgradeId, label: g.label, cost: g.cost }));
+  return [...own, ...fromEffects];
+}
+
 export interface Issue {
   severity: "error" | "warning";
   ferDeLanceId?: string;
@@ -1487,19 +1514,23 @@ function collectGrantedUpgrades(
   return out;
 }
 
-/** Surcoût des améliorations d'équipement cochées (opt-in par objet), pour une instance. */
-function upgradeCost(ri: ResolvedInstance, granted: Map<string, GrantedUpgrade>, idx: CatalogIndex): number {
+/**
+ * Surcoût des améliorations d'équipement cochées (opt-in par objet), pour une instance. Compte les
+ * intrinsèques comme les octroyées : c'est `upgradesForEquipment` qui dit ce qui est achetable, et
+ * cette liste doit être la même que celle affichée dans le constructeur.
+ */
+function upgradeCost(ri: ResolvedInstance, granted: Map<string, GrantedUpgrade>, cat: Catalog): number {
   const ups = ri.instance.equipmentUpgrades;
   if (!ups) return 0;
   const worn = new Set(wornEquipmentIds(ri.profile, ri.instance));
+  const grantedList = [...granted.values()];
   let cost = 0;
   for (const [equipId, upIds] of Object.entries(ups)) {
     if (!worn.has(equipId)) continue; // amélioration sur un équipement retiré : ignorée
-    const category = idx.equipmentCategory.get(equipId);
-    for (const upId of upIds) {
-      const g = granted.get(upId);
-      if (g && category && g.equipmentCategories.includes(category)) cost += g.cost;
-    }
+    const equipment = cat.equipment.find((e) => e.id === equipId);
+    if (!equipment) continue;
+    const available = new Map(upgradesForEquipment(equipment, grantedList).map((u) => [u.id, u]));
+    for (const upId of upIds) cost += available.get(upId)?.cost ?? 0;
   }
   return cost;
 }
@@ -1697,7 +1728,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   // 4b : améliorations d'équipement octroyées (unlock-upgrade) + surcoût des options cochées.
   const grantedUp = collectGrantedUpgrades(resolved, occurrences);
   for (const ri of resolved) {
-    const extra = upgradeCost(ri, grantedUp.get(ri.instance.instanceId) ?? new Map(), idx);
+    const extra = upgradeCost(ri, grantedUp.get(ri.instance.instanceId) ?? new Map(), cat);
     if (extra) cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + extra);
   }
   const limitBonuses = collectLimitBonuses(resolved, occurrences); // +1 limite (Lieutenant…)

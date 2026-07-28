@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { Catalog, ListDocument, ProfileInstance } from "../model";
-import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills, slotCapacity } from "./evaluate";
+import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills, slotCapacity, upgradesForEquipment } from "./evaluate";
 import { affinityWays, castableSpells, forbiddenGrimoires, maxPagesInPool, pageAllocation } from "./magic";
 
 let counter = 0;
@@ -1077,5 +1077,47 @@ describe("Montures par origine (Guilde Noire)", () => {
 
   it("Berserker (Sükh) n'a aucune monture malgré son origine khéropse", () => {
     expect(mountTypes("guilde-noire-sukh-2")).toEqual([]);
+  });
+});
+
+describe("améliorations intrinsèques d'un objet", () => {
+  const epee = () => catalog.equipment.find((e) => e.id === "epee-courte")!;
+  const upgrade = () => epee().upgrades![0];
+
+  it("le catalogue porte bien le cas signalé : une arme gratuite avec une option payante", () => {
+    expect(epee().cost).toBe(0);
+    expect(upgrade().cost).toBeGreaterThan(0);
+    expect(epee().mountEquipment).toBeUndefined(); // équipement de figurine, pas de monture
+  });
+
+  it("elle est proposée à l'achat, au même titre qu'une amélioration octroyée", () => {
+    const proposed = upgradesForEquipment(epee(), []);
+    expect(proposed.map((u) => u.id)).toContain(upgrade().id);
+  });
+
+  it("son coût s'ajoute à celui de la figurine une fois cochée", () => {
+    const base = inst("fangs-goulue-1", { addedEquipmentIds: ["epee-courte"] });
+    const avec = inst("fangs-goulue-1", {
+      addedEquipmentIds: ["epee-courte"],
+      equipmentUpgrades: { "epee-courte": [upgrade().id] },
+    });
+    const sansCoche = evalFang([base]).costByInstance[base.instanceId];
+    const avecCoche = evalFang([avec]).costByInstance[avec.instanceId];
+    expect(avecCoche - sansCoche).toBe(upgrade().cost);
+  });
+
+  it("n'est pas facturée si l'objet n'est pas porté", () => {
+    const sansArme = inst("fangs-goulue-1", { equipmentUpgrades: { "epee-courte": [upgrade().id] } });
+    const nu = inst("fangs-goulue-1");
+    expect(evalFang([sansArme]).costByInstance[sansArme.instanceId]).toBe(
+      evalFang([nu]).costByInstance[nu.instanceId],
+    );
+  });
+
+  it("une intrisèque homonyme d'une octroyée n'est comptée qu'une fois", () => {
+    const octroyee = { upgradeId: upgrade().id, label: "Doublon", cost: 99, equipmentCategories: ["arme-cac"] };
+    const proposed = upgradesForEquipment(epee(), [octroyee]);
+    expect(proposed.filter((u) => u.id === upgrade().id)).toHaveLength(1);
+    expect(proposed.find((u) => u.id === upgrade().id)!.cost).toBe(upgrade().cost);
   });
 });

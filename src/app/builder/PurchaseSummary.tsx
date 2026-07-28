@@ -9,6 +9,7 @@ import {
   type EquipmentCostRule,
   type Profile,
   type Spell,
+  upgradesForEquipment,
 } from "@core";
 import { equipInfo, mountOptionLines, type ItemInfo } from "./shared";
 
@@ -66,10 +67,11 @@ export function PurchaseSummary({
   const equipChip = (e: NonNullable<(typeof equip)[number]>): SummaryChip => {
     const munLines = resolveMunitionLines(munitionKindForEquip(cat, e.id), munitions[e.id]);
     const munCost = munLines.reduce((n, l) => n + l.price, 0);
+    const available = upgradesForEquipment(e, grantedUpgrades);
     const upsForE = (equipmentUpgrades[e.id] ?? [])
-      .map((uid) => grantedUpgrades.find((g) => g.upgradeId === uid))
-      .filter((g): g is (typeof grantedUpgrades)[number] => Boolean(g) && g!.equipmentCategories.includes(e.category));
-    const upCost = upsForE.reduce((n, g) => n + g.cost, 0);
+      .map((uid) => available.find((u) => u.id === uid))
+      .filter((u): u is NonNullable<typeof u> => Boolean(u));
+    const upCost = upsForE.reduce((n, u) => n + u.cost, 0);
     // Remise et surcoût Tembo (p.20) : seulement sur l'équipement ACHETÉ (pas l'équipement de base).
     const isBase = p.baseEquipmentIds.includes(e.id);
     const disc = isBase ? 0 : equipmentDiscount(cat, e.id, costRules, removed);

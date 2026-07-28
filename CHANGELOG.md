@@ -9,6 +9,14 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-28
 
+### Correction : améliorations d'objet invisibles
+
+- Une amélioration optionnelle définie sur un objet (l'Épée courte et ses « deux effets », par
+  exemple) n'apparaissait pas à l'achat et n'était pas facturée. Seul l'équipement de monture, comme
+  le Caparaçon et ses « Pointes acérées », en tenait compte.
+- Elles se cochent désormais sur la fiche de la figurine, au même endroit que celles conférées par
+  une carte, et leur prix apparaît dans le récapitulatif.
+
 ### Noms toujours présentés de la même façon
 
 - Les noms de profils, d'équipements, de sorts et de compétences s'affichent avec une majuscule

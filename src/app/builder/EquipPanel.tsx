@@ -7,6 +7,7 @@ import {
   temboEquipmentSurcharge,
   type Catalog,
   type Profile,
+  upgradesForEquipment,
 } from "@core";
 import type { ProfileMods } from "./ProfileStatCard";
 import { SectionTitle, SlotChip } from "./components";
@@ -180,21 +181,23 @@ export function EquipPanel({
   // Munitions achetables (règles p.46) : pour chaque type, choix d'un palier (Aucun / prix → quantité).
   // Améliorations octroyées (opt-in par objet, ex. arme empoisonnée) applicables à cet équipement.
   const upgradeRow = (e: Catalog["equipment"][number]) => {
-    const ups = grantedUpgrades.filter((g) => g.equipmentCategories.includes(e.category));
+    // Les améliorations propres à l'objet et celles qu'un effet lui octroie se cochent de la même
+    // façon : une seule liste, produite par la règle du cœur (cf. `upgradesForEquipment`).
+    const ups = upgradesForEquipment(e, grantedUpgrades);
     if (ups.length === 0) return null;
     const active = equipmentUpgrades[e.id] ?? [];
     return (
       <div className="fe-upgrades">
-        {ups.map((g) => (
-          <label key={g.upgradeId} className="fe-upgrade">
+        {ups.map((u) => (
+          <label key={u.id} className="fe-upgrade">
             <input
               type="checkbox"
               className="ui-check"
-              checked={active.includes(g.upgradeId)}
-              onChange={() => onToggleEquipmentUpgrade(e.id, g.upgradeId)}
+              checked={active.includes(u.id)}
+              onChange={() => onToggleEquipmentUpgrade(e.id, u.id)}
             />
-            <span>{g.label}</span>
-            <span className="fe-upgrade-cost">+{g.cost} Ko</span>
+            <span>{u.label}</span>
+            <span className="fe-upgrade-cost">+{u.cost} Ko</span>
           </label>
         ))}
       </div>

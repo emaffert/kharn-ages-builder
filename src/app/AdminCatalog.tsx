@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
-import type { RefKind } from "@core";
+import { COLLECTION_OF, findReferences, type RefKind, type Reference } from "@core";
 import { Button, Dialog } from "@ui";
 import { useCatalogStore } from "./useCatalogStore";
 import { LEVEL_LABEL } from "./admin/shared";
@@ -63,7 +63,7 @@ export function AdminCatalog() {
   const [selectedMountOptionId, setSelectedMountOptionId] = useState(catalog.mountOptions[0]?.id ?? "");
   const [query, setQuery] = useState("");
   // Suppression d'entité en attente de confirmation (modale au skin de l'app, action irréversible).
-  const [pendingDelete, setPendingDelete] = useState<{ what: string; run: () => void } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ what: string; refs: Reference[]; run: () => void } | null>(null);
   const [factionFilter, setFactionFilter] = useState("all");
   const [zoom, setZoom] = useState<string | null>(null);
   const [showDocs, setShowDocs] = useState(false);
@@ -126,6 +126,21 @@ export function AdminCatalog() {
     () => catalog.spells.filter((s) => !q || s.name.toLowerCase().includes(q)),
     [catalog, q],
   );
+
+  /**
+   * Ouvre la confirmation de suppression d'une entité du graphe : les citations sont relevées
+   * *avant* d'agir, pour être montrées, puis retirées avec elle.
+   */
+  const confirmRemove = (kind: RefKind, id: string, what: string, selectNext: (id: string) => void) =>
+    setPendingDelete({
+      what,
+      refs: findReferences(catalog, kind, id),
+      run: () => {
+        store.removeEntityWithReferences(kind, id);
+        const list = catalog[COLLECTION_OF[kind]] as unknown as { id: string }[];
+        selectNext(list.find((e) => e.id !== id)?.id ?? "");
+      },
+    });
 
   /** Renomme une entité, en cascade, et suit la sélection - faite par identifiant. */
   const rename = (kind: RefKind, oldId: string, newId: string, select: (id: string) => void) => {
@@ -457,13 +472,7 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
                   onRenameId={(newId) => rename("equipment", selectedEquip.id, newId, setSelectedEquipId)}
                   onRemove={() =>
-                    setPendingDelete({
-                      what: `l'équipement « ${selectedEquip.name} »`,
-                      run: () => {
-                        store.removeEquipment(selectedEquip.id);
-                        setSelectedEquipId(catalog.equipment.find((x) => x.id !== selectedEquip.id)?.id ?? "");
-                      },
-                    })
+                    confirmRemove("equipment", selectedEquip.id, `l'équipement « ${selectedEquip.name} »`, setSelectedEquipId)
                   }
                 />
               </div>
@@ -480,13 +489,7 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateSkill(selectedSkill.id, patch)}
                   onRenameId={(newId) => rename("skill", selectedSkill.id, newId, setSelectedSkillId)}
                   onRemove={() =>
-                    setPendingDelete({
-                      what: `la compétence « ${selectedSkill.keyword} »`,
-                      run: () => {
-                        store.removeSkill(selectedSkill.id);
-                        setSelectedSkillId(catalog.skills.find((x) => x.id !== selectedSkill.id)?.id ?? "");
-                      },
-                    })
+                    confirmRemove("skill", selectedSkill.id, `la compétence « ${selectedSkill.keyword} »`, setSelectedSkillId)
                   }
                 />
               </div>
@@ -502,13 +505,7 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateSpecialCard(selectedCard.id, patch)}
                   onRenameId={(newId) => rename("specialCard", selectedCard.id, newId, setSelectedCardId)}
                   onRemove={() =>
-                    setPendingDelete({
-                      what: `la carte « ${selectedCard.name} »`,
-                      run: () => {
-                        store.removeSpecialCard(selectedCard.id);
-                        setSelectedCardId(catalog.specialCards.find((x) => x.id !== selectedCard.id)?.id ?? "");
-                      },
-                    })
+                    confirmRemove("specialCard", selectedCard.id, `la carte « ${selectedCard.name} »`, setSelectedCardId)
                   }
                 />
               </div>
@@ -524,13 +521,7 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateSpell(selectedSpell.id, patch)}
                   onRenameId={(newId) => rename("spell", selectedSpell.id, newId, setSelectedSpellId)}
                   onRemove={() =>
-                    setPendingDelete({
-                      what: `le sort « ${selectedSpell.name} »`,
-                      run: () => {
-                        store.removeSpell(selectedSpell.id);
-                        setSelectedSpellId(catalog.spells.find((x) => x.id !== selectedSpell.id)?.id ?? "");
-                      },
-                    })
+                    confirmRemove("spell", selectedSpell.id, `le sort « ${selectedSpell.name} »`, setSelectedSpellId)
                   }
                 />
               </div>
@@ -647,9 +638,34 @@ export function AdminCatalog() {
           </>
         }
       >
-        <p>
-          Supprimer {pendingDelete?.what} ? Cette action est <b>irréversible</b>.
-        </p>
+        <div className="flex flex-col gap-3">
+          <p>
+            Supprimer {pendingDelete?.what} ? Cette action est <b>irréversible</b>.
+          </p>
+          {pendingDelete && pendingDelete.refs.length > 0 && (
+            <div className="adm-cond">
+              <div className="adm-cond-eyebrow">
+                {pendingDelete.refs.length === 1
+                  ? "1 autre fiche y fait référence"
+                  : `${pendingDelete.refs.length} autres fiches y font référence`}
+              </div>
+              <ul className="adm-reflist">
+                {pendingDelete.refs.slice(0, 8).map((r) => (
+                  <li key={`${r.owner}|${r.where}`}>
+                    {r.owner} <span className="adm-faint">— {r.where}</span>
+                  </li>
+                ))}
+                {pendingDelete.refs.length > 8 && (
+                  <li className="adm-faint">et {pendingDelete.refs.length - 8} autres…</li>
+                )}
+              </ul>
+              <p className="adm-block-note">
+                Ces références seront retirées en même temps. Une fiche qui n'existerait plus sans
+                elle disparaîtra aussi (une compétence de profil, un effet qui ne cite que cet objet).
+              </p>
+            </div>
+          )}
+        </div>
       </Dialog>
     </div>
   );

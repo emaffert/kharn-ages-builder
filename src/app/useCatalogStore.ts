@@ -17,6 +17,8 @@ import {
   type SpecialCard,
   type Spell,
   renameId,
+  removeReferences,
+  COLLECTION_OF,
   type RefKind,
 } from "@core";
 import { catalog as bundledCatalog } from "@data";
@@ -500,6 +502,22 @@ export function useCatalogStore() {
   );
 
   /**
+   * Supprime une entité **et toutes les citations qui la désignent**, en une seule opération.
+   * Sans ça, supprimer laissait des références orphelines - c'est ainsi que 16 profils se sont
+   * retrouvés à pointer vers un « couteau » disparu.
+   */
+  const removeEntityWithReferences = useCallback(
+    (kind: RefKind, id: string) =>
+      apply((c) => {
+        const cleaned = removeReferences(c, kind, id);
+        const collection = COLLECTION_OF[kind];
+        const kept = (cleaned[collection] as unknown as { id: string }[]).filter((e) => e.id !== id);
+        return { ...cleaned, [collection]: kept };
+      }),
+    [apply],
+  );
+
+  /**
    * Repart du `catalog.json` du dépôt : le brouillon est abandonné et le fichier redevient la
    * source éditée. C'est le pendant d'« Enregistrer » pour le développement.
    */
@@ -594,6 +612,7 @@ export function useCatalogStore() {
     setIcon,
     toggleUnverified,
     renameEntityId,
+    removeEntityWithReferences,
     resetToFile,
     saveToProject,
     adoptPublished,

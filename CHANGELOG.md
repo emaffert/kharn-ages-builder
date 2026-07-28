@@ -19,6 +19,14 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 - Les grimoires et les factions font exception : leur identifiant est une constante du programme,
   la fiche l'affiche donc en lecture seule.
 
+### Administration : suppressions sûres
+
+- Supprimer une fiche prévient d'abord de ce qui la cite : la confirmation nomme les fiches
+  concernées et le rôle de chaque citation (équipement de base, réservation, portée de carte…).
+- Les citations sont retirées en même temps que la fiche, au lieu de rester à pointer dans le vide.
+  Une fiche qui n'existerait plus sans elle disparaît aussi : une compétence de profil dont la
+  compétence est supprimée, un effet qui ne cite que cet objet.
+
 ### Catalogue d'équipement enrichi
 
 - 68 nouveaux équipements : boucliers (rondache, broquel, pavois), armures (gambison, armure de

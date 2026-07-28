@@ -292,6 +292,10 @@
 .adm-check-label { display: block; font-size: 13px; font-weight: 600; color: var(--bone); }
 .adm-check-hint { display: block; font-size: 12px; color: var(--bone-faint); line-height: 1.45; margin-top: 3px; }
 
+/* Liste des fiches qui citent l'entité qu'on s'apprête à supprimer. */
+.adm-reflist { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--bone-dim);
+  margin: 0 0 10px; padding: 0; list-style: none; }
+
 /* Encart conditionnel : contenu dépendant d'un choix ci-dessus, contenu DANS le bloc (accent braise). */
 .adm-cond { margin-top: 14px; padding: 14px 15px; border-radius: var(--radius-sm); border-left: 3px solid var(--ember);
   background: color-mix(in srgb, var(--ember) 6%, transparent); }

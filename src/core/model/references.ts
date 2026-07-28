@@ -204,3 +204,82 @@ export function renameId(cat: Catalog, kind: RefKind, oldId: string, newId: stri
   mapRefs(next, kind, (id) => (id === oldId ? newId : id));
   return next as unknown as Catalog;
 }
+
+/**
+ * Références **facultatives** : quand l'entité citée disparaît, on vide le champ et l'objet citant
+ * survit. Indexé par collection, car la même clé peut être structurelle ailleurs - `skillId` est
+ * facultatif sur une voie de magie, mais constitutif d'une compétence de profil.
+ */
+const CLEARABLE_BY_COLLECTION: Record<string, readonly string[]> = {
+  profiles: ["modelId", "factionId"],
+  models: ["factionId"],
+  magicWays: ["skillId"],
+  spells: ["magicWayId"],
+};
+
+/** Références facultatives quel que soit l'endroit (l'opération « pages de sorts » notamment). */
+const CLEARABLE_ANYWHERE = ["magicWayId"];
+
+/**
+ * Sous-objets **constitutifs** de leur parent : s'ils disparaissent, le parent disparaît aussi.
+ * Un effet sans opération, ou une contrainte sans paramètres, ne serait plus un objet valide -
+ * seulement un débris qui ferait échouer la validation du catalogue.
+ */
+const STRUCTURAL_CHILDREN = ["operation", "params", "carrier"];
+
+/** Marque un objet dont la référence était structurelle : il disparaît avec elle. */
+const DROP = Symbol("drop");
+
+function prune(node: unknown, kind: RefKind, id: string): unknown | typeof DROP {
+  if (Array.isArray(node)) {
+    return node.map((n) => prune(n, kind, id)).filter((n) => n !== DROP);
+  }
+  if (!isBag(node)) return node;
+
+  const out: Bag = {};
+  for (const [key, value] of Object.entries(node)) {
+    // Une source d'effet qui pointe vers l'entité supprimée : l'effet entier n'a plus d'émetteur.
+    if (key === "source" && isBag(value) && typeof value.kind === "string"
+      && SOURCE_KIND[value.kind] === kind && value.id === id) return DROP;
+
+    if (key === "costByFaction" && kind === "faction" && isBag(value)) {
+      out[key] = Object.fromEntries(Object.entries(value).filter(([f]) => f !== id));
+      continue;
+    }
+    if (REF_KEYS[kind].includes(key)) {
+      if (Array.isArray(value)) { out[key] = value.filter((v) => v !== id); continue; }
+      if (value === id) {
+        if (CLEARABLE_ANYWHERE.includes(key)) continue; // champ vidé : l'objet survit
+        return DROP;                                    // référence constitutive : l'objet part
+      }
+      out[key] = value;
+      continue;
+    }
+    const pruned = prune(value, kind, id);
+    if (pruned === DROP) {
+      if (STRUCTURAL_CHILDREN.includes(key)) return DROP; // le parent ne survit pas sans lui
+      continue; // sous-objet facultatif (ex. « occupe la place de ») : on le retire, l'objet reste
+    }
+    out[key] = pruned;
+  }
+  return out;
+}
+
+/**
+ * Retire du catalogue **toutes les citations** d'un identifiant, sans supprimer l'entité elle-même.
+ *
+ * Une citation dans une liste disparaît de la liste ; une citation dont l'objet ne peut pas se
+ * passer emporte cet objet (une compétence de profil, un effet « conférer ce sort », une monture
+ * dont le type n'existe plus). Les références facultatives, elles, sont simplement vidées.
+ */
+export function removeReferences(cat: Catalog, kind: RefKind, id: string): Catalog {
+  const clone = structuredClone(cat) as unknown as Bag;
+  // Les références facultatives sont vidées d'abord, là où leur collection dit qu'elles le sont ;
+  // le parcours générique n'a plus alors qu'à traiter les références structurelles.
+  for (const [collection, keys] of Object.entries(CLEARABLE_BY_COLLECTION)) {
+    for (const entity of (clone[collection] as Bag[]) ?? []) {
+      for (const key of keys) if (entity[key] === id && REF_KEYS[kind].includes(key)) delete entity[key];
+    }
+  }
+  return prune(clone, kind, id) as Catalog;
+}

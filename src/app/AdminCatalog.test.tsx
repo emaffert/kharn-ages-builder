@@ -74,3 +74,25 @@ describe("AdminCatalog (rendu)", () => {
     expect(screen.getByRole("heading", { name: /Surcoût Tembo/i })).toBeTruthy();
   });
 });
+
+describe("AdminCatalog (suppression référencée)", () => {
+  /** Ouvre l'onglet Équipement et demande la suppression de l'objet sélectionné. */
+  const askDelete = () => {
+    render(<AdminCatalog />);
+    fireEvent.click(screen.getByRole("button", { name: "Objets" }));
+    fireEvent.click(screen.getByRole("button", { name: "Équipement" }));
+    fireEvent.click(screen.getByTitle(/Supprimer cet équipement/i));
+  };
+
+  it("annonce les fiches qui référencent l'objet avant de supprimer", () => {
+    askDelete();
+    expect(screen.getByText(/fiches? y f(ont|ait) référence/i)).toBeTruthy();
+    expect(screen.getByText(/références seront retirées en même temps/i)).toBeTruthy();
+  });
+
+  it("nomme les fiches concernées, pas seulement leur nombre", () => {
+    askDelete();
+    // Le premier équipement du catalogue est porté par des profils : ils doivent être cités.
+    expect(screen.getAllByText(/profil «/i).length).toBeGreaterThan(0);
+  });
+});

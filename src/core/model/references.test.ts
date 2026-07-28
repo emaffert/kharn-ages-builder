@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { catalog } from "@data";
-import { COLLECTION_OF, canRenameId, findReferences, idIsFree, parseCatalog, renameId, type Catalog, type RefKind } from "./index";
+import { COLLECTION_OF, canRenameId, findReferences, idIsFree, parseCatalog, removeReferences, renameId, type Catalog, type RefKind } from "./index";
 
 /**
  * Champs dont la valeur est une **étiquette libre**, jamais une référence à une entité, même quand
@@ -156,5 +156,54 @@ describe("couverture du graphe", () => {
     const skillRenamed = renameId(catalog, "skill", "osteomancie", "comp-osteomancie");
     expect(skillRenamed.magicWays.some((w) => w.id === "osteomancie")).toBe(true);
     expect(skillRenamed.magicWays.find((w) => w.id === "osteomancie")!.skillId).toBe("comp-osteomancie");
+  });
+});
+
+describe("suppression des citations", () => {
+  it("retire l'objet des équipements de base qui le portaient", () => {
+    const next = removeReferences(catalog, "equipment", "couteau");
+    expect(next.profiles.find((p) => p.id === "fangs-goulue-1")!.baseEquipmentIds).not.toContain("couteau");
+    expect(findReferences(next, "equipment", "couteau")).toEqual([]);
+  });
+
+  it("emporte la compétence de profil, qui n'existe pas sans sa compétence", () => {
+    const porteur = catalog.profiles.find((p) => p.skills.some((s) => s.skillId === "riposte"))!;
+    const next = removeReferences(catalog, "skill", "riposte");
+    const apres = next.profiles.find((p) => p.id === porteur.id)!;
+    expect(apres.skills.some((s) => s.skillId === "riposte")).toBe(false);
+    expect(apres.skills.length).toBe(porteur.skills.length - 1);
+  });
+
+  it("vide une référence facultative au lieu d'emporter son objet", () => {
+    // Le groupe d'un profil est facultatif : le profil survit sans lui.
+    const profil = catalog.profiles.find((p) => p.modelId != null)!;
+    const next = removeReferences(catalog, "model", profil.modelId!);
+    const apres = next.profiles.find((p) => p.id === profil.id)!;
+    expect(apres).toBeDefined();
+    expect(apres.modelId).toBeUndefined();
+  });
+
+  it("emporte l'effet dont l'opération citait le sort supprimé", () => {
+    const next = removeReferences(catalog, "spell", "lien-mental");
+    const alaric = next.profiles.find((p) => p.id === "gouns-alaric-1")!;
+    expect((alaric.effects ?? []).some((e) => e.operation.kind === "grant-spell")).toBe(false);
+  });
+
+  it("n'altère pas le catalogue d'origine", () => {
+    const avant = JSON.stringify(catalog);
+    removeReferences(catalog, "equipment", "couteau");
+    expect(JSON.stringify(catalog)).toBe(avant);
+  });
+
+  it("laisse un catalogue valide et sans citation résiduelle, pour chaque type", () => {
+    for (const kind of Object.keys(COLLECTION_OF) as RefKind[]) {
+      const list = catalog[COLLECTION_OF[kind]] as unknown as { id: string }[];
+      // On choisit une entité réellement citée : c'est le cas qui peut casser.
+      const entity = list.find((e) => findReferences(catalog, kind, e.id).length > 0);
+      if (!entity) continue;
+      const next = removeReferences(catalog, kind, entity.id);
+      expect(findReferences(next, kind, entity.id), `${kind} : citations résiduelles`).toEqual([]);
+      expect(() => parseCatalog(next), `${kind} : catalogue invalide`).not.toThrow();
+    }
   });
 });

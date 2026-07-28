@@ -13,6 +13,7 @@ import { MountsDetail } from "./admin/MountsDetail";
 import { MountOptionDetail } from "./admin/MountOptionDetail";
 import { SettingsDetail } from "./admin/SettingsDetail";
 import { AdminDocs } from "./admin/AdminDocs";
+import { WhatsNew } from "./admin/WhatsNew";
 import { PublishAction } from "./admin/PublishAction";
 import { PullPublishedAction } from "./admin/PullPublishedAction";
 import { ResetToFileAction } from "./admin/ResetToFileAction";
@@ -613,6 +614,8 @@ export function AdminCatalog() {
       )}
 
       {showDocs && <AdminDocs onClose={() => setShowDocs(false)} />}
+
+      <WhatsNew />
 
       <Dialog
         open={pendingDelete !== null}

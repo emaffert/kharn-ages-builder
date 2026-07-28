@@ -1,4 +1,5 @@
 import { registerSW } from "virtual:pwa-register";
+import { markUpdateReady } from "@app/updates";
 
 /**
  * Enregistrement du service worker, avec les deux garanties que l'enregistrement injecté par
@@ -22,25 +23,27 @@ import { registerSW } from "virtual:pwa-register";
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
 /**
- * Faut-il recharger la page quand le worker qui la contrôle change ?
+ * Faut-il **annoncer** une nouvelle version quand le worker qui contrôle la page change ?
  *
  * Deux gardes : à la toute première installation il n'y avait aucun contrôleur, et la page tourne
- * déjà sur le bon code - recharger serait un clignotement gratuit à la première visite. Et un
- * rechargement déjà lancé ne doit pas se relancer.
+ * déjà sur le bon code - l'annoncer serait un faux message à la première visite. Et une annonce
+ * déjà faite ne se répète pas.
  */
-export function shouldReloadOnControllerChange(hadController: boolean, alreadyReloading: boolean): boolean {
-  return hadController && !alreadyReloading;
+export function shouldReloadOnControllerChange(hadController: boolean, alreadyAnnounced: boolean): boolean {
+  return hadController && !alreadyAnnounced;
 }
 
 export function setupServiceWorker(): void {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
 
   const hadController = Boolean(navigator.serviceWorker.controller);
-  let reloading = false;
+  let announced = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!shouldReloadOnControllerChange(hadController, reloading)) return;
-    reloading = true;
-    location.reload();
+    if (!shouldReloadOnControllerChange(hadController, announced)) return;
+    announced = true;
+    // Annoncée, pas appliquée : une liste en cours n'existe que dans la page, et un rechargement
+    // décidé par le site l'effacerait. L'application affiche l'invitation, l'utilisateur décide.
+    markUpdateReady();
   });
 
   registerSW({

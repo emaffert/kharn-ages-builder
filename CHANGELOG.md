@@ -23,13 +23,15 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
   initiale, quelle que soit la façon dont ils ont été saisis. Une liste exportée ne montre plus
   « couteau » ici et « Couteau » là.
 
-### Mises à jour du site appliquées sans délai
+### Mises à jour du site annoncées sans délai
 
 - Le site cherche désormais activement une nouvelle version : au retour sur l'onglet, et une fois
   par heure. Un onglet laissé ouvert, ou l'application installée sur l'écran d'accueil, ne restait
-  sinon sur son ancienne version que jusqu'à une prochaine visite - parfois plusieurs jours.
-- Dès qu'une nouvelle version est prête, la page se recharge pour l'appliquer. Rien n'est perdu :
-  listes et modifications en cours sont enregistrées au fil de l'eau.
+  sinon sur son ancienne version que jusqu'à une prochaine visite, parfois plusieurs jours.
+- Quand une nouvelle version est prête, le site le dit et propose de recharger. Il ne le fait jamais
+  de lui-même : une liste en cours de composition n'existe que dans la page tant qu'elle n'est pas
+  enregistrée, et un rechargement imposé l'effacerait.
+- Après un rechargement de mise à jour, l'administration ouvre les nouveautés de la version.
 
 ### Administration : identifiants modifiables
 
@@ -93,8 +95,8 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 - Un sort connu d'office peut désormais venir d'une carte ou d'un objet porté, et plus seulement de
   la carte de profil. Symétriquement, des pages de sorts peuvent venir directement d'un profil.
   Auparavant, ces effets étaient ignorés en silence selon l'endroit où on les avait placés.
-- « Modifier la limitation » explique ce qu'elle relève réellement — des groupes de recrutement, un
-  modèle à un niveau donné, hors uniques et personnages — et ne propose plus de viser la figurine
+- « Modifier la limitation » explique ce qu'elle relève réellement (des groupes de recrutement, un
+  modèle à un niveau donné, hors uniques et personnages) et ne propose plus de viser la figurine
   qui porte l'effet, ce qui aurait rendu sa propre limitation impossible à dépasser.
 - La cible se choisit entre « cette figurine » et « d'autres figurines », au lieu d'une case cochée
   qui laissait croire qu'il n'y avait rien d'autre à décider.

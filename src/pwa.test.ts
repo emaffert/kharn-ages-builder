@@ -15,3 +15,14 @@ describe("rechargement à la prise de main d'une nouvelle version", () => {
     expect(shouldReloadOnControllerChange(true, true)).toBe(false);
   });
 });
+
+describe("annonce d'une nouvelle version", () => {
+  it("annonce quand une version remplace celle qui contrôlait la page", () => {
+    expect(shouldReloadOnControllerChange(true, false)).toBe(true);
+  });
+
+  it("n'annonce rien à la première installation, ni deux fois", () => {
+    expect(shouldReloadOnControllerChange(false, false)).toBe(false);
+    expect(shouldReloadOnControllerChange(true, true)).toBe(false);
+  });
+});

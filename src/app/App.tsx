@@ -1,5 +1,6 @@
 import { Suspense, lazy, useState } from "react";
 import { localCatalogDivergesFromFile } from "@data";
+import { UpdateNotice } from "./UpdateNotice";
 import { AccountMenu } from "./auth/AccountMenu";
 import { useSession } from "./auth/context";
 import { PasswordRecovery } from "./auth/PasswordRecovery";
@@ -77,6 +78,7 @@ export function AppShell() {
           <ThemeToggle theme={theme} setTheme={setTheme} />
         </span>
       </nav>
+      <UpdateNotice />
       <div className="min-h-0 flex-1">
         {activeView === "admin" ? (
           <Suspense

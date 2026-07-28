@@ -8,6 +8,13 @@ export type CatalogValue = {
   catalog: Catalog;
   /** Repère de la version publiée connue (numéro + date), `null` si aucune. */
   published: PublishedMeta | null;
+  /**
+   * Une version plus récente que celle affichée a été publiée pendant que la page était ouverte.
+   * Rien n'est appliqué : la donnée n'est même pas téléchargée. C'est un signalement, à charge de
+   * l'écran d'inviter au rechargement - remplacer le catalogue sous les doigts de quelqu'un
+   * effacerait son travail en cours sans qu'il ait rien demandé.
+   */
+  update: PublishedMeta | null;
   /** Recharge le catalogue actif depuis le stockage local (après édition admin ou publication). */
   refresh: () => void;
 };
@@ -19,6 +26,7 @@ export type CatalogValue = {
 export const CatalogContext = createContext<CatalogValue>({
   catalog: loadCatalog(),
   published: null,
+  update: null,
   refresh: () => {},
 });
 

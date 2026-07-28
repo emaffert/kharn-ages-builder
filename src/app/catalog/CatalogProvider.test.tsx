@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import {
   catalog,
   readAdminDraft,
@@ -50,21 +50,39 @@ function fakeServer(row: Row | null, options: { hang?: boolean } = {}) {
 }
 
 function Probe() {
-  const { catalog: active, published } = useCatalog();
+  const { catalog: active, published, update } = useCatalog();
   return (
     <div>
       <span data-testid="version">{active.version}</span>
       <span data-testid="published">{published ? String(published.versionId) : "aucune"}</span>
+      <span data-testid="update">{update ? `${update.versionId}:${update.version}` : "aucune"}</span>
     </div>
   );
 }
 
-const renderWith = (client: SupabaseClient | null) =>
+const renderWith = (client: SupabaseClient | null, pollMs?: number) =>
   render(
-    <CatalogProvider client={client}>
+    <CatalogProvider client={client} {...(pollMs === undefined ? {} : { pollMs })}>
       <Probe />
     </CatalogProvider>,
   );
+
+/** Faux serveur dont la dernière version peut changer en cours de test (publication d'autrui). */
+function mutableServer(initial: Row) {
+  const holder = { row: initial };
+  const client = {
+    from: () => {
+      const chain = {
+        select: () => chain,
+        order: () => chain,
+        limit: () => chain,
+        maybeSingle: async () => ({ data: holder.row, error: null }),
+      };
+      return chain;
+    },
+  } as unknown as SupabaseClient;
+  return { client, publish: (row: Row) => (holder.row = row) };
+}
 
 const remote: Row = { id: 5, version: "9.9.9", data: { ...catalog, version: "9.9.9" }, published_at: "2026-07-25T08:00:00Z" };
 
@@ -127,6 +145,24 @@ describe("CatalogProvider", () => {
     const { client } = fakeServer(remote); // le serveur en est toujours à la version 5
     renderWith(client);
     expect(await screen.findByText("brouillon")).toBeTruthy();
+  });
+
+  it("signale une publication survenue pendant que la page est ouverte, sans rien remplacer", async () => {
+    writePublishedCatalog({ versionId: 5, publishedAt: null }, { ...catalog, version: "9.9.9" });
+    writeAdminDraft(5, { ...catalog, version: "brouillon" });
+    const server = mutableServer(remote); // le serveur en est à la version 5, comme le brouillon
+    renderWith(server.client, 5);
+    expect(await screen.findByText("brouillon")).toBeTruthy();
+    expect(screen.getByTestId("update").textContent).toBe("aucune");
+
+    server.publish({ id: 6, version: "0.4.0", data: { ...catalog, version: "0.4.0" }, published_at: null });
+    await waitFor(() => expect(screen.getByTestId("update").textContent).toBe("6:0.4.0"));
+
+    // Le point du mécanisme : prévenir sans rien toucher. Le brouillon est intact, à l'écran comme
+    // en mémoire, et la donnée de la nouvelle version n'a même pas été téléchargée.
+    expect(screen.getByTestId("version").textContent).toBe("brouillon");
+    expect(readAdminDraft()?.catalog.version).toBe("brouillon");
+    expect(readPublishedCatalog()?.versionId).toBe(5);
   });
 
   it("abandonne le brouillon admin dès qu'une version plus récente est publiée", async () => {

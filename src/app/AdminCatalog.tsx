@@ -199,7 +199,16 @@ export function AdminCatalog() {
           <nav className="space-y-1.5">
             <div className="flex flex-wrap gap-1.5">
               {NAV_GROUPS.map((g) => (
-                <button key={g.label} onClick={() => setNavGroup(g.label)} className={tabClass(navGroup === g.label)}>
+                <button
+                  key={g.label}
+                  /* Choisir une grande partie ouvre sa première sous-partie : on ne reste jamais sur
+                     la page de la partie précédente en ayant l'air d'avoir changé de section. */
+                  onClick={() => {
+                    setNavGroup(g.label);
+                    setView(g.items[0][0]);
+                  }}
+                  className={tabClass(navGroup === g.label)}
+                >
                   {g.label}
                 </button>
               ))}

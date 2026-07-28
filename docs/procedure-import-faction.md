@@ -161,8 +161,13 @@ Conséquences, pour ne pas perdre de travail :
 - Éditer via de **petits scripts Node** plutôt qu'à la main : lire, muter, réécrire avec le format
   ci-dessus. Rendre les scripts **idempotents** (tester la présence avant d'ajouter) pour pouvoir les
   rejouer sans doublon.
-- Les **images de carte** sont inlinées en `data:` base64 dans `catalog.json` (`icons`, `profiles`,
-  `mounts`) : c'est le fonctionnement normal du projet, les gros blobs base64 sont attendus.
+- Les **portraits** ne sont pas dans `catalog.json` : les trois emplacements qui en portent un
+  (`icons`, `profiles[].icon`, `mounts[].icon`) ne contiennent qu'une **référence** `<hash>.webp`.
+  Les fichiers vivent dans `src/assets/icons/` (miroir committé, précaché, valable hors-ligne) et
+  dans le bucket Supabase `catalog-icons` (alimenté par l'éditeur d'icône de l'admin).
+- Ne jamais écrire une data-URI à la main dans le catalogue : passer par l'éditeur d'icône, puis
+  par « Enregistrer » en dev, qui matérialise le fichier manquant dans le miroir (cf. `freezeIcons`).
+  Un test verrouille l'invariant « toute référence du catalogue est présente dans le miroir ».
 
 ## Checklist de validation avant commit
 

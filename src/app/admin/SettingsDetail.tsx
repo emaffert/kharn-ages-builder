@@ -60,34 +60,40 @@ export function SettingsDetail({
       {/* ── Factions ─────────────────────────────────────────────── */}
       <Section title="Factions" icon="identity">
         <div className="flex flex-col gap-2">
+          {/* Grille (et non flex) : l'identifiant est de longueur variable, en flex il rognait la
+              colonne Notes d'une quantité différente à chaque ligne. */}
           {cat.factions.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="adm-field-label w-40">Nom</span>
-              <span className="adm-field-label w-48">Logo (chemin)</span>
-              <span className="adm-field-label flex-1">Notes</span>
+            <div className="adm-faction-row adm-field-label">
+              <span>Nom</span>
+              <span>Logo (chemin)</span>
+              <span>Notes</span>
+              <span>Identifiant</span>
+              <span />
             </div>
           )}
           {cat.factions.map((f) => (
-            <div key={f.id} className="flex flex-wrap items-center gap-2">
+            <div key={f.id} className="adm-faction-row">
               <input
                 value={f.name}
                 onChange={(e) => onUpdateFaction(f.id, { name: e.target.value })}
-                className={`${INPUT} w-40`}
+                className={INPUT}
                 placeholder="Nom"
               />
               <input
                 value={f.logo}
                 onChange={(e) => onUpdateFaction(f.id, { logo: e.target.value })}
-                className={`${INPUT} w-48`}
+                className={INPUT}
                 placeholder="factions/…"
               />
               <input
                 value={f.notes ?? ""}
                 onChange={(e) => onUpdateFaction(f.id, { notes: e.target.value || undefined })}
-                className={`${INPUT} flex-1`}
+                className={INPUT}
                 placeholder="notes (optionnel)"
               />
-              <span className="adm-faint font-mono text-[10px]">{f.id}</span>
+              <span className="adm-faint truncate font-mono text-[10px]" title={f.id}>
+                {f.id}
+              </span>
               <RemoveButton onClick={() => confirmDelete(`la faction « ${f.name} »`, () => onRemoveFaction(f.id))} />
             </div>
           ))}
@@ -271,8 +277,10 @@ function MunitionKindEditor({
         <Field label="Sorte" className="w-56">
           <input value={kind.label} onChange={(e) => onChange({ label: e.target.value })} className={INPUT} />
         </Field>
-        <span className="adm-faint font-mono text-[10px]">{kind.id}</span>
-        <button type="button" onClick={onRemove} title="Supprimer la sorte" className="adm-x ml-auto">
+        {/* `adm-rowmeta` cale ces éléments sur la hauteur de l'input, et non sur le bloc
+            label + input, sans quoi ils flottent au-dessus de la saisie. */}
+        <span className="adm-rowmeta adm-faint font-mono text-[10px]">{kind.id}</span>
+        <button type="button" onClick={onRemove} title="Supprimer la sorte" className="adm-rowmeta adm-x ml-auto">
           ✕ sorte
         </button>
       </div>

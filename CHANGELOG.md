@@ -36,6 +36,9 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
   niveau et à sa faction, ce qui évite de le voir proposé à des figurines qui n'y ont pas droit.
 - Le Sabre Khémiste n'est plus une arme de base des Guerrières et de la Prêtresse Émérite tembos :
   il leur reste réservé, mais devient un achat optionnel.
+- Nouvelle arme : la Faux de la damnation. Les munitions en double (flèches, carreaux, flèche hydre)
+  sont retirées de la liste d'équipement, où elles faisaient doublon avec la table des munitions.
+- Trois nouveaux sorts : « Alliés d'outre-tombe », « Blessure arcanique » et « Confusion ».
 
 ## 2026-07-26
 

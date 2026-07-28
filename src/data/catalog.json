@@ -7967,9 +7967,7 @@
           "skillId": "fluet"
         }
       ],
-      "baseEquipmentIds": [
-        "petit-arc-eutheria"
-      ],
+      "baseEquipmentIds": [],
       "masteryDice": [
         [
           "defensive",
@@ -7991,7 +7989,32 @@
         "khemiste"
       ],
       "recruitment": [],
-      "rules": [],
+      "effects": [
+        {
+          "id": "e-1785224580645",
+          "source": {
+            "kind": "profile",
+            "id": "tembos-eclaireuse-3"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true,
+            "equipmentIds": [
+              "petit-arc-eutheria"
+            ]
+          },
+          "operation": {
+            "kind": "cost-delta",
+            "amount": -10
+          },
+          "sourceText": ""
+        }
+      ],
+      "rules": [
+        {
+          "text": "Paye 10 Ko de moins le petit arc d'euthéria."
+        }
+      ],
       "notes": [
         "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
       ],
@@ -10443,6 +10466,12 @@
       "reservedTo": {
         "profileIds": [
           "tembos-nephtys-3"
+        ],
+        "levels": [
+          3
+        ],
+        "factionIds": [
+          "tembos"
         ]
       }
     },
@@ -10695,7 +10724,7 @@
       "id": "armure-de-cuir",
       "name": "Armure de cuir",
       "category": "armure",
-      "cost": 0,
+      "cost": 11,
       "durability": 6,
       "protectionEchec": 0,
       "seuil": 6,
@@ -10758,7 +10787,7 @@
       "id": "armure-de-plate",
       "name": "Armure de plate",
       "category": "armure",
-      "cost": 0,
+      "cost": 25,
       "durability": 10,
       "protectionEchec": -2,
       "seuil": 6,
@@ -10833,8 +10862,8 @@
       "effectsText": "+1 en attaque ou +1 en défense.\nPeut prendre les 2 pour 5 KO",
       "upgrades": [
         {
-          "id": "up-1785185565730",
-          "label": "Peut prendre les 2 effets",
+          "id": "up-1785221996426",
+          "label": "prendre les 2 effets ",
           "cost": 5
         }
       ]
@@ -11164,41 +11193,6 @@
       "effectsText": "7 dgts. \npas de tir éclair."
     },
     {
-      "id": "fleches-flechettes",
-      "name": "Fléches/fléchettes",
-      "category": "objet",
-      "cost": 5,
-      "effectsText": "Choisissez en début de partie:\nsimple 3\nperce armure 2\nenflammée 1 "
-    },
-    {
-      "id": "fleches-flechettes-2",
-      "name": "flèches/fléchettes",
-      "category": "objet",
-      "cost": 15,
-      "effectsText": "Choisissez en début de partie:\nsimple 10\nperce armure 4\nenflammée 2\nempoisonnée 1 "
-    },
-    {
-      "id": "fleche-hydre",
-      "name": "flèche hydre",
-      "category": "objet",
-      "cost": 15,
-      "effectsText": "la victime ne peut pas se déplacer jusqu'à la fin de sa prochaine activation que les dégâts soient protégés ou non. "
-    },
-    {
-      "id": "carreaux",
-      "name": "carreaux",
-      "category": "objet",
-      "cost": 5,
-      "effectsText": "Choisissez en début de partie:\nsimple 3\nperce armure 2\nempoisonnée 1 "
-    },
-    {
-      "id": "carreaux-2",
-      "name": "carreaux",
-      "category": "objet",
-      "cost": 15,
-      "effectsText": "Choisissez en début de partie:\nsimple 6\nperce armure 3\nenflammée 1 \nEmpoisonnée 2"
-    },
-    {
       "id": "l-oeil-de-l-aigle",
       "name": "L'oeil de l'aigle",
       "category": "objet",
@@ -11277,6 +11271,26 @@
       "reservedTo": {
         "factionIds": [
           "kharns"
+        ]
+      }
+    },
+    {
+      "id": "faux-de-la-damnation",
+      "name": "Faux de la damnation",
+      "category": "arme-cac",
+      "cost": 35,
+      "hands": 1,
+      "allonge": 1,
+      "effectsText": "Si un marqueur de carcasse est frappé par la faux, il devient un marqueur \"damné\". Il s'activera au tour suivant et possède le profil d'affamé ou de larbin. il ne gère pas les objo. Il ne possède pas de PV. il est retiré du terrain en infligeant 1D10 dgts à qui le dévore/pille.",
+      "reservedTo": {
+        "traits": [
+          "Nyx"
+        ],
+        "levels": [
+          3
+        ],
+        "factionIds": [
+          "fangs"
         ]
       }
     }
@@ -11561,7 +11575,7 @@
       "name": "Passe-Passe",
       "kind": "generique",
       "magicWayId": "osteomancie",
-      "pages": 3,
+      "pages": 0,
       "cost": 0,
       "reservedTo": {
         "profileIds": [
@@ -11581,6 +11595,62 @@
           "effectText": "Bharbathos échange sa place avec l'un de ses ennemis (à 4 toises max), même s'il est engagé au corps à corps."
         }
       ]
+    },
+    {
+      "id": "allies-d-outre-tombe",
+      "name": "Alliés d'outre-tombe",
+      "kind": "reserve-profil",
+      "magicWayId": "osteomancie",
+      "pages": 2,
+      "cost": 10,
+      "reservedTo": {
+        "trait": "Nyx "
+      },
+      "target": "2 toises",
+      "cadence": "1/tour",
+      "duration": "immédiat.",
+      "difficulties": [
+        {
+          "threshold": 16,
+          "effectText": "1 marqueur de carcasse de 40mm est placé sur le terrain."
+        },
+        {
+          "threshold": 21,
+          "effectText": "1D5 marqueurs de carcasse de 40mm sont placés sur le terrain."
+        }
+      ]
+    },
+    {
+      "id": "blessure-arcanique",
+      "name": "Blessure arcanique",
+      "kind": "generique",
+      "target": "1 cible jusqu'à 5 toises",
+      "difficulties": [
+        {
+          "threshold": 15,
+          "effectText": "4 dgts ignore l'armure"
+        }
+      ],
+      "cadence": "1/tour",
+      "duration": "immédiat."
+    },
+    {
+      "id": "confusion",
+      "name": "confusion",
+      "kind": "generique",
+      "target": "Aura",
+      "difficulties": [
+        {
+          "threshold": 15,
+          "effectText": "Un ennemi déterminé aléatoirement s'activera en dernier à ce tour. "
+        },
+        {
+          "threshold": 20,
+          "effectText": "La cible ennemie s'activera en dernier à ce tour \n"
+        }
+      ],
+      "cadence": "1/2 tours",
+      "duration": "immédiat"
     }
   ],
   "mountTypes": [
@@ -13295,6 +13365,14 @@
         {
           "id": "empoisonne",
           "label": "Empoisonné",
+          "quantities": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "mt-1785224277213",
+          "label": "Hydre",
           "quantities": [
             0,
             1

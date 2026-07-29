@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { Catalog, CatalogSettings, Faction, Grimoire, MunitionKind } from "@core";
+import { findReferences, type Catalog, type CatalogSettings, type Faction, type Grimoire, type MunitionKind, type Reference } from "@core";
 import { Button, Dialog } from "@ui";
 import { IconBucketSection } from "./IconBucketSection";
-import { AddButton, Field, Glyph, PageHeader, RemoveButton, Section } from "./primitives";
+import { AddButton, Field, Glyph, PageHeader, ReferenceList, RemoveButton, Section } from "./primitives";
 import { INPUT } from "./shared";
 
 /** Suppression en attente de confirmation (données de référence : action à répercussion large). */
-type PendingDelete = { what: string; run: () => void };
+type PendingDelete = { what: string; run: () => void; refs?: Reference[] };
 
 /**
  * Page « Réglages » : données de référence du catalogue éditées en tables (peu d'entrées) -
@@ -39,7 +39,8 @@ export function SettingsDetail({
   const setSurcharge = (patch: Partial<NonNullable<CatalogSettings["temboEquipmentSurcharge"]>>) =>
     onUpdateSettings({ temboEquipmentSurcharge: { per: surcharge?.per ?? 10, amount: surcharge?.amount ?? 3, ...patch } });
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
-  const confirmDelete = (what: string, run: () => void) => setPendingDelete({ what, run });
+  const confirmDelete = (what: string, run: () => void, refs?: Reference[]) =>
+    setPendingDelete({ what, run, refs });
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -94,7 +95,15 @@ export function SettingsDetail({
               <span className="adm-faint truncate font-mono text-[10px]" title={f.id}>
                 {f.id}
               </span>
-              <RemoveButton onClick={() => confirmDelete(`la faction « ${f.name} »`, () => onRemoveFaction(f.id))} />
+              <RemoveButton
+                onClick={() =>
+                  confirmDelete(
+                    `la faction « ${f.name} »`,
+                    () => onRemoveFaction(f.id),
+                    findReferences(cat, "faction", f.id),
+                  )
+                }
+              />
             </div>
           ))}
           <AddButton onClick={onAddFaction}>+ faction</AddButton>
@@ -187,7 +196,13 @@ export function SettingsDetail({
               kind={k}
               confirmDelete={confirmDelete}
               onChange={(patch) => onUpdateMunitionKind(k.id, patch)}
-              onRemove={() => confirmDelete(`la sorte de munition « ${k.label} »`, () => onRemoveMunitionKind(k.id))}
+              onRemove={() =>
+                confirmDelete(
+                  `la sorte de munition « ${k.label} »`,
+                  () => onRemoveMunitionKind(k.id),
+                  findReferences(cat, "munitionKind", k.id),
+                )
+              }
             />
           ))}
           <AddButton onClick={onAddMunitionKind}>+ sorte de munition</AddButton>
@@ -221,9 +236,12 @@ export function SettingsDetail({
           </>
         }
       >
-        <p>
-          Supprimer {pendingDelete?.what} ? Cette action touche des données de référence et est <b>irréversible</b>.
-        </p>
+        <div className="flex flex-col gap-3">
+          <p>
+            Supprimer {pendingDelete?.what} ? Cette action touche des données de référence et est <b>irréversible</b>.
+          </p>
+          {pendingDelete?.refs && <ReferenceList refs={pendingDelete.refs} />}
+        </div>
       </Dialog>
     </div>
   );

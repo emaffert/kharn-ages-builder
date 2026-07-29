@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Tag } from "@ui";
-import { canRenameId, findReferences, idIsFree, type Catalog, type RefKind } from "@core";
+import { canRenameId, findReferences, idIsFree, type Catalog, type Reference, type RefKind } from "@core";
 import type { FieldValue } from "../useCatalogStore";
 import { INPUT, SECTION } from "./shared";
 import offensive from "../../assets/maitrise/offensive.png";
@@ -753,6 +753,34 @@ export function Combobox({
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/**
+ * Ce qu'une suppression emportera avec elle : les fiches qui citent l'entité, et le sort qui les
+ * attend. Montré *avant* de valider - une suppression en cascade est irréversible, et son ampleur
+ * n'est pas devinable depuis la fiche ouverte.
+ */
+export function ReferenceList({ refs }: { refs: Reference[] }) {
+  if (refs.length === 0) return null;
+  return (
+    <div className="adm-cond">
+      <div className="adm-cond-eyebrow">
+        {refs.length === 1 ? "1 autre fiche y fait référence" : `${refs.length} autres fiches y font référence`}
+      </div>
+      <ul className="adm-reflist">
+        {refs.slice(0, 8).map((r) => (
+          <li key={`${r.owner}|${r.where}`}>
+            {r.owner} <span className="adm-faint">— {r.where}</span>
+          </li>
+        ))}
+        {refs.length > 8 && <li className="adm-faint">et {refs.length - 8} autres…</li>}
+      </ul>
+      <p className="adm-block-note">
+        Ces références seront retirées en même temps. Une fiche qui n'existerait plus sans elle
+        disparaîtra aussi (une compétence de profil, un effet qui ne cite que cet objet).
+      </p>
     </div>
   );
 }

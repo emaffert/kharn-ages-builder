@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { iconFor } from "@core";
-import type { Catalog, Constraint, Effect, Level, Model, Profile } from "@core";
+import type { Catalog, Constraint, Effect, Level, Profile } from "@core";
+import { Button, Dialog } from "@ui";
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
 import { iconSrc } from "../../lib/icons";
 import type { FieldValue } from "../useCatalogStore";
@@ -17,14 +18,15 @@ interface DetailProps {
   cat: Catalog;
   updateField: (id: string, path: string, value: FieldValue) => void;
   updateProfile: (id: string, patch: Partial<Profile>) => void;
-  updateModel: (id: string, patch: Partial<Model>) => void;
   renameModel: (id: string, name: string) => string;
-  addModel: (factionId?: string) => string;
+  addModel: (factionId?: string, name?: string) => string;
   assignProfileToModel: (profileId: string, targetModelId: string) => void;
   setIcon: (cardImage: string, dataUrl: string | null) => void;
   toggleUnverified: (id: string, key: string) => void;
   /** Renomme l'identifiant du profil, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
+  /** Supprime le profil, après confirmation, avec tout ce qui le cite. */
+  onRemove: () => void;
 }
 
 const ROMAN: Record<number, string> = { 1: "I", 2: "II", 3: "III" };
@@ -36,6 +38,7 @@ export function IconSlot({
   src,
   active,
   createLabel = "Créer l'icône…",
+  disabledReason,
   onEdit,
   onRemove,
 }: {
@@ -44,6 +47,8 @@ export function IconSlot({
   src?: string;
   active: boolean;
   createLabel?: string;
+  /** Non vide = emplacement inutilisable, et pourquoi (remplace l'explication habituelle). */
+  disabledReason?: string;
   onEdit: () => void;
   onRemove: () => void;
 }) {
@@ -59,9 +64,13 @@ export function IconSlot({
           <span className="adm-muted text-[11px] font-semibold">{title}</span>
           {active && <span className="adm-slot-on px-1 text-[9px]">affichée</span>}
         </div>
-        <p className="adm-faint text-[10px] leading-tight">{hint}</p>
+        <p className="adm-faint text-[10px] leading-tight">{disabledReason ?? hint}</p>
         <div className="mt-auto flex gap-1.5">
-          <button onClick={onEdit} className="adm-btn-soft px-2 py-0.5 text-xs">
+          <button
+            onClick={onEdit}
+            disabled={disabledReason != null}
+            className="adm-btn-soft px-2 py-0.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+          >
             {src ? "Modifier…" : createLabel}
           </button>
           {src && (
@@ -75,10 +84,88 @@ export function IconSlot({
   );
 }
 
-export function ProfileDetail({ profile, cat, updateField, updateProfile, updateModel, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified, onRenameId }: DetailProps) {
+/**
+ * Saisie du nom d'un groupe de figurines, à la création comme au renommage.
+ *
+ * Le nom n'est pas une étiquette libre : deux groupes d'une même faction qui le partagent n'en font
+ * qu'un. C'est ainsi qu'on réunit les niveaux d'une même figurine, mais c'est aussi irréversible en
+ * un clic - d'où l'avertissement, affiché pendant la frappe et non après coup.
+ */
+function GroupNameDialog({
+  mode,
+  name,
+  onName,
+  twinName,
+  factionName,
+  onClose,
+  onSubmit,
+}: {
+  mode: null | "create" | "rename";
+  name: string;
+  onName: (v: string) => void;
+  /** Nom du groupe existant que la validation rejoindrait, s'il y en a un. */
+  twinName?: string;
+  factionName: string;
+  onClose: () => void;
+  onSubmit: () => void;
+}) {
+  const creating = mode === "create";
+  return (
+    <Dialog
+      open={mode !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      size="sm"
+      title={creating ? "Nouveau groupe de figurines" : "Renommer le groupe"}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button variant="primary" onClick={onSubmit} disabled={name.trim() === ""}>
+            {creating ? "Créer" : "Renommer"}
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3 text-sm">
+        <label className="ui-field">
+          <span className="ui-field__label">Nom du groupe</span>
+          <input
+            className="ui-input"
+            value={name}
+            autoFocus
+            onChange={(e) => onName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSubmit();
+            }}
+            placeholder="ex. Guerrier"
+          />
+        </label>
+        <p className="adm-faint text-xs">
+          Le groupe réunit les niveaux et variantes d'une même figurine. Son nom est celui que voient
+          les joueurs dans la liste de recrutement de {factionName}.
+        </p>
+        {twinName && (
+          <p className="ui-warn text-xs">
+            « {twinName} » existe déjà dans cette faction : cette figurine le rejoindra, au lieu de
+            former un groupe à part.
+          </p>
+        )}
+      </div>
+    </Dialog>
+  );
+}
+
+export function ProfileDetail({ profile, cat, updateField, updateProfile, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified, onRenameId, onRemove }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
   const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
+  // Le nom du groupe se saisit dans une boîte de dialogue, à la création comme au renommage : c'est
+  // lui qui décide de la fusion avec un groupe existant, et la dialogue l'annonce avant de valider.
+  const [groupDialog, setGroupDialog] = useState<null | "create" | "rename">(null);
+  const [groupName, setGroupName] = useState("");
   // Références (`<hash>.webp`), pas des images : `iconSrc` les résout pour l'affichage.
   const shared = profile.cardImage ? cat.icons?.[profile.cardImage] : undefined;
   const own = profile.icon; // déroge au partage : l'emporte sur la partagée
@@ -104,9 +191,36 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
     .filter((m) => (m.factionId ?? null) === (profile.factionId ?? null) || m.id === profile.modelId)
     .sort((a, b) => a.name.localeCompare(b.name, "fr"));
   const NEW_GROUP = "__new__";
+  const openGroupDialog = (mode: "create" | "rename") => {
+    setGroupName(mode === "rename" ? (model?.name ?? "") : "");
+    setGroupDialog(mode);
+  };
   const onGroupChange = (value: string) => {
-    const target = value === NEW_GROUP ? addModel(profile.factionId) : value;
-    assignProfileToModel(profile.id, target);
+    if (value === NEW_GROUP) openGroupDialog("create");
+    else assignProfileToModel(profile.id, value);
+  };
+  /**
+   * Groupe de la même faction portant déjà le nom en cours de saisie : valider l'y réunira. Le
+   * groupe courant ne compte que pour une création - le renommer en son propre nom ne fusionne rien.
+   */
+  const groupTwin = (() => {
+    const key = groupName.trim().toLowerCase();
+    if (!key) return undefined;
+    return cat.models.find(
+      (m) =>
+        !(groupDialog === "rename" && m.id === model?.id) &&
+        (m.factionId ?? null) === (profile.factionId ?? null) &&
+        m.name.trim().toLowerCase() === key,
+    );
+  })();
+  const submitGroupDialog = () => {
+    const name = groupName.trim();
+    if (!name) return;
+    if (groupDialog === "rename" && model) renameModel(model.id, name);
+    // Créer un groupe qui existe déjà revient à rejoindre celui-ci - inutile d'en faire un jumeau
+    // pour le fusionner dans la foulée.
+    else assignProfileToModel(profile.id, groupTwin?.id ?? addModel(profile.factionId, name));
+    setGroupDialog(null);
   };
   // Voies maîtrisées (dérivées) : le profil possède la compétence liée à la voie.
   const casterWays = cat.magicWays.filter(
@@ -136,6 +250,8 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
           onName={(v) => upd("name", v)}
           cost={profile.cost}
           onCost={(v) => upd("cost", v ?? 0)}
+          onRemove={onRemove}
+          removeTitle="Supprimer ce profil"
           sub={
             <>
               <IdField cat={cat} kind="profile" id={profile.id} onRename={onRenameId} />
@@ -173,6 +289,13 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
                   hint="Commune à tous les niveaux de ce modèle."
                   src={iconSrc(shared)}
                   active={shared != null && own == null}
+                  /* Le partage se fait par image de carte : sans elle, il n'y a rien à partager
+                     - et toutes les fiches sans carte se retrouveraient avec la même icône. */
+                  disabledReason={
+                    profile.cardImage
+                      ? undefined
+                      : "Renseignez d'abord l'image de carte, en bas de la fiche."
+                  }
                   onEdit={() => setEditingIcon("shared")}
                   onRemove={() => setIcon(profile.cardImage, null)}
                 />
@@ -217,18 +340,13 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
                   </select>
                 </Field>
                 {model && (
-                  <Field
-                    label="Nom du groupe"
-                    hint="partagé par toutes ses figurines ; nom déjà pris = fusion"
-                    className="w-48"
+                  <button
+                    onClick={() => openGroupDialog("rename")}
+                    className="adm-btn-soft mb-0.5 px-2 py-1 text-xs"
+                    title="Change le nom du groupe pour toutes ses figurines"
                   >
-                    <input
-                      value={model.name}
-                      onChange={(e) => updateModel(model.id, { name: e.target.value })}
-                      onBlur={(e) => renameModel(model.id, e.target.value)}
-                      className={INPUT}
-                    />
-                  </Field>
+                    Renommer le groupe…
+                  </button>
                 )}
                 {model && siblings.length > 1 && (
                   <span className="pb-1 text-xs adm-faint">
@@ -239,6 +357,15 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, update
                   </span>
                 )}
               </div>
+              <GroupNameDialog
+                mode={groupDialog}
+                name={groupName}
+                onName={setGroupName}
+                twinName={groupTwin?.name}
+                factionName={factionName}
+                onClose={() => setGroupDialog(null)}
+                onSubmit={submitGroupDialog}
+              />
               <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
                 <Field label="Niveau" className="w-20">
                   <select

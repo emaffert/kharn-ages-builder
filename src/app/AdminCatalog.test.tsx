@@ -45,11 +45,32 @@ describe("AdminCatalog (rendu)", () => {
   it("ouvre les onglets Cartes spéciales et Sorts", () => {
     render(<AdminCatalog />);
     fireEvent.click(screen.getByRole("button", { name: "Cartes spé." }));
-    expect(screen.getByText(/\+ carte spéciale/i)).toBeTruthy();
+    expect(screen.getByTitle(/Créer une carte spéciale/i)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Magie" }));
     fireEvent.click(screen.getByRole("button", { name: "Sorts" }));
     expect(screen.getByRole("heading", { name: /Difficultés/i })).toBeTruthy();
     expect(screen.getByText(/\+ sort/i)).toBeTruthy();
+  });
+
+  it("crée un profil depuis l'en-tête de la liste, sans avoir à la dérouler", () => {
+    render(<AdminCatalog />);
+    const before = Number(screen.getByText(/profil\(s\)/).textContent!.match(/^\d+/)![0]);
+    fireEvent.click(screen.getByTitle(/Créer un profil dans la faction/i));
+    expect(screen.getByText(new RegExp(`^${before + 1} profil\\(s\\)`))).toBeTruthy();
+    // La fiche créée s'ouvre, prête à être remplie.
+    expect(screen.getByDisplayValue("Nouveau profil")).toBeTruthy();
+  });
+
+  it("nomme le nouveau groupe dans une dialogue, et le signale s'il existe déjà", () => {
+    render(<AdminCatalog />);
+    fireEvent.change(screen.getByLabelText(/Groupe de figurines/), { target: { value: "__new__" } });
+    const input = screen.getByLabelText("Nom du groupe");
+    // Un nom déjà porté dans la faction réunit les deux groupes : c'est annoncé avant de valider.
+    fireEvent.change(input, { target: { value: "larbin" } });
+    expect(screen.getByText(/existe déjà dans cette faction/i)).toBeTruthy();
+    fireEvent.change(input, { target: { value: "Éclaireur" } });
+    fireEvent.click(screen.getByRole("button", { name: "Créer" }));
+    expect(screen.getByText(/Groupe « Éclaireur »/)).toBeTruthy();
   });
 
   it("ouvre l'onglet Voies de magie", () => {
@@ -82,6 +103,22 @@ describe("AdminCatalog (rendu)", () => {
     clickSubtab("Réglages");
     expect(screen.getByRole("heading", { name: /Grimoires/i })).toBeTruthy();
     expect(screen.getByRole("heading", { name: /Surcoût Tembo/i })).toBeTruthy();
+  });
+});
+
+describe("AdminCatalog (suppression d'un profil)", () => {
+  it("annonce les fiches qui citent le profil, puis le retire de la liste", () => {
+    render(<AdminCatalog />);
+    const before = Number(screen.getByText(/profil\(s\)/).textContent!.match(/^\d+/)![0]);
+    expect(screen.getByDisplayValue("Larbin")).toBeTruthy();
+    fireEvent.click(screen.getByTitle(/Supprimer ce profil/i));
+    expect(screen.getByText(/Supprimer le profil « Larbin »/)).toBeTruthy();
+    // Le Larbin est l'équipement de base de personne, mais des cartes et des règles le citent.
+    expect(screen.getByText(/fiches? y f(ont|ait) référence/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
+    expect(screen.getByText(new RegExp(`^${before - 1} profil\\(s\\)`))).toBeTruthy();
+    // La fiche ouverte est celle du voisin, plus celle du profil supprimé.
+    expect(screen.queryByDisplayValue("Larbin")).toBeNull();
   });
 });
 

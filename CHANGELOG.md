@@ -7,6 +7,54 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-07-29
+
+### Créer un profil depuis l'administration
+
+- La liste des profils reçoit un bouton « + profil », comme les équipements ou les sorts. La
+  nouvelle fiche est créée dans la faction affichée, puis s'ouvre pour être remplie.
+- Elle naît avec son propre groupe de figurines ; sans groupe, elle n'aurait été proposée à
+  personne dans le constructeur.
+- Ses caractéristiques sont vides plutôt qu'à zéro, pour distinguer ce qui reste à saisir d'une
+  valeur réellement nulle, et sa limitation de recrutement démarre à 1 exemplaire.
+- L'icône partagée n'est proposée qu'une fois l'image de carte renseignée : c'est elle qui décide
+  avec quels autres niveaux l'icône est partagée.
+
+### Supprimer un profil
+
+- La fiche de profil reçoit le bouton de suppression qu'ont déjà les autres fiches. La confirmation
+  annonce les fiches qui citent le profil, et ce qui leur arrivera.
+- Le groupe de figurines part avec sa dernière figurine, au lieu de rester en liste vide.
+- Après suppression, c'est la fiche voisine qui s'ouvre, pas la première du catalogue.
+
+### Aucune suppression ne laisse plus de référence en l'air
+
+- Supprimer une faction, une voie de magie, une monture, une option de monture ou une sorte de
+  munition passe maintenant par le même chemin que les autres suppressions : ce qui citait
+  l'élément supprimé est nettoyé en même temps. Ces cinq-là se contentaient de retirer la ligne, en
+  laissant derrière elles des renvois vers un élément disparu.
+- La cascade se poursuit d'elle-même : supprimer une faction emporte ses voies de magie, et plus
+  aucun sort ne renvoie alors à une voie qui n'existe plus. Supprimer un type de monture emporte
+  ses niveaux et leurs citations.
+- Une arme de tir dont on supprime la sorte de munition reste une arme : elle cesse simplement de
+  proposer des munitions.
+- Les confirmations de l'écran Réglages annoncent elles aussi les fiches concernées.
+
+### Boutons de création en tête de liste
+
+- « + profil », « + carte », « + sort »… se trouvent désormais en haut de la barre latérale, à côté
+  du compte d'éléments. Il fallait dérouler la liste entière pour les atteindre.
+- Une création efface la recherche en cours, sans quoi la nouvelle fiche naissait hors du filtre et
+  semblait perdue.
+
+### Nommer un groupe de figurines au moment de le créer
+
+- Le champ « Nom du groupe » disparaît de la fiche de profil : « Nouveau groupe » demande maintenant
+  le nom dans une petite fenêtre, et un bouton « Renommer le groupe… » sert au renommage. Les deux
+  champs faisaient à peu près la même chose, côte à côte.
+- La fusion est annoncée pendant la saisie : si le nom est déjà porté par un groupe de la faction,
+  la fenêtre prévient que la figurine le rejoindra au lieu de former un groupe à part.
+
 ## 2026-07-28
 
 ### Chargement et mises à jour nettement plus rapides

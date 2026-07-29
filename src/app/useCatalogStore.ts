@@ -6,7 +6,6 @@ import {
   type Faction,
   type Grimoire,
   type MagicWay,
-  type Model,
   type Mount,
   type MountOption,
   type MountType,
@@ -16,8 +15,7 @@ import {
   type SpecialCard,
   type Spell,
   renameId,
-  removeReferences,
-  COLLECTION_OF,
+  removeEntity as coreRemoveEntity,
   type RefKind,
 } from "@core";
 import { catalog as bundledCatalog, dropAdminDraft, readAdminDraft, writeAdminDraft } from "@data";
@@ -96,6 +94,17 @@ export function useCatalogStore() {
     [baseVersionId],
   );
 
+  /**
+   * **Le** chemin de suppression du catalogue : l'entité s'en va avec tout ce qui la cite
+   * (cf. `removeEntity`). Toute suppression de l'admin passe par ici, sans quoi il resterait des
+   * références orphelines - c'est ainsi que 16 profils se sont retrouvés à pointer vers un
+   * « couteau » disparu.
+   */
+  const removeEntity = useCallback(
+    (kind: RefKind, id: string) => apply((c) => coreRemoveEntity(c, kind, id)),
+    [apply],
+  );
+
   const updateField = useCallback(
     (id: string, path: string, value: FieldValue) =>
       apply((c) => mapProfile(c, id, (p) => setField(p, path, value))),
@@ -109,19 +118,58 @@ export function useCatalogStore() {
     [apply],
   );
 
-  /** Modifie un modèle (groupe de figurines partageant un socle, ex. « du Sacrifice » = Prêtre + Bourreau). */
-  const updateModel = useCallback(
-    (id: string, patch: Partial<Model>) =>
-      apply((c) => ({ ...c, models: c.models.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
+  /**
+   * Crée une figurine vierge, **avec son propre groupe**. Le groupe n'est pas un détail de forme :
+   * le constructeur parcourt les groupes pour dresser son roster, une figurine qui n'en a pas
+   * resterait invisible aux joueurs même une fois publiée. Choisir ensuite le vrai groupe depuis la
+   * fiche déplace la figurine et supprime celui-ci, vidé (cf. `assignProfileToModel`).
+   *
+   * Les caractéristiques naissent vides plutôt qu'à zéro : « - » se voit et se corrige, un 0 se lit
+   * comme une valeur saisie. La limitation par défaut est la plus restrictive (X 1) pour qu'une
+   * fiche oubliée en l'état ne se recrute pas en nombre.
+   */
+  const addProfile = useCallback(
+    (factionId?: string): string => {
+      const id = `profile-${Date.now()}`;
+      const modelId = `model-${id}`;
+      apply((c) => ({
+        ...c,
+        models: [...c.models, { id: modelId, name: "Nouveau profil", factionId, profileIds: [id] }],
+        profiles: [
+          ...c.profiles,
+          {
+            id,
+            modelId,
+            name: "Nouveau profil",
+            level: 1,
+            factionId,
+            cost: 0,
+            limitation: { kind: "X", value: 1 },
+            stats: { v: null, p: null, a: null, c: null, t: null, i: null },
+            stature: 0,
+            pa: 0,
+            pv: 0,
+            skills: [],
+            baseEquipmentIds: [],
+            masteryDice: [],
+            traits: [],
+            recruitment: [],
+            rules: [],
+            cardImage: "",
+          },
+        ],
+      }));
+      return id;
+    },
     [apply],
   );
 
-  /** Crée un nouveau modèle (groupe) vide et renvoie son id. */
-  const addModel = useCallback((factionId?: string): string => {
+  /** Crée un nouveau modèle (groupe de figurines) vide et renvoie son id. */
+  const addModel = useCallback((factionId?: string, name = "Nouveau groupe"): string => {
     const id = `model-${Date.now()}`;
     apply((c) => ({
       ...c,
-      models: [...c.models, { id, name: "Nouveau groupe", factionId, profileIds: [] }],
+      models: [...c.models, { id, name, factionId, profileIds: [] }],
     }));
     return id;
   }, [apply]);
@@ -221,10 +269,7 @@ export function useCatalogStore() {
     [apply],
   );
 
-  const removeMagicWay = useCallback(
-    (id: string) => apply((c) => ({ ...c, magicWays: c.magicWays.filter((w) => w.id !== id) })),
-    [apply],
-  );
+  const removeMagicWay = useCallback((id: string) => removeEntity("magicWay", id), [removeEntity]);
 
   // ── Réglages : factions, grimoires, munitions (données de référence) ──
   const addFaction = useCallback((): string => {
@@ -237,10 +282,7 @@ export function useCatalogStore() {
       apply((c) => ({ ...c, factions: c.factions.map((f) => (f.id === id ? { ...f, ...patch } : f)) })),
     [apply],
   );
-  const removeFaction = useCallback(
-    (id: string) => apply((c) => ({ ...c, factions: c.factions.filter((f) => f.id !== id) })),
-    [apply],
-  );
+  const removeFaction = useCallback((id: string) => removeEntity("faction", id), [removeEntity]);
 
   // Ensemble fixe (ids « petit » / « grand ») : édition seule, pas d'ajout/suppression.
   const updateGrimoire = useCallback(
@@ -265,11 +307,7 @@ export function useCatalogStore() {
       })),
     [apply],
   );
-  const removeMunitionKind = useCallback(
-    (id: string) =>
-      apply((c) => ({ ...c, munitionKinds: (c.munitionKinds ?? []).filter((k) => k.id !== id) })),
-    [apply],
-  );
+  const removeMunitionKind = useCallback((id: string) => removeEntity("munitionKind", id), [removeEntity]);
 
   // Réglages transverses (ex. surcoût d'équipement Tembo).
   const updateSettings = useCallback(
@@ -300,15 +338,8 @@ export function useCatalogStore() {
     [apply],
   );
 
-  const removeMountType = useCallback(
-    (id: string) =>
-      apply((c) => ({
-        ...c,
-        mountTypes: c.mountTypes.filter((t) => t.id !== id),
-        mounts: c.mounts.filter((m) => m.typeId !== id), // retire aussi les niveaux rattachés
-      })),
-    [apply],
-  );
+  // Emporte les niveaux rattachés, et leurs citations (cf. `removeEntity`).
+  const removeMountType = useCallback((id: string) => removeEntity("mountType", id), [removeEntity]);
 
   const addMount = useCallback(
     (typeId: string): string => {
@@ -329,10 +360,7 @@ export function useCatalogStore() {
     [apply],
   );
 
-  const removeMount = useCallback(
-    (id: string) => apply((c) => ({ ...c, mounts: c.mounts.filter((m) => m.id !== id) })),
-    [apply],
-  );
+  const removeMount = useCallback((id: string) => removeEntity("mount", id), [removeEntity]);
 
   const addMountOption = useCallback((): string => {
     const id = `opt-${Date.now()}`;
@@ -349,10 +377,7 @@ export function useCatalogStore() {
     [apply],
   );
 
-  const removeMountOption = useCallback(
-    (id: string) => apply((c) => ({ ...c, mountOptions: c.mountOptions.filter((o) => o.id !== id) })),
-    [apply],
-  );
+  const removeMountOption = useCallback((id: string) => removeEntity("mountOption", id), [removeEntity]);
 
   const updateEquipment = useCallback(
     (id: string, patch: Partial<Equipment>) =>
@@ -375,11 +400,6 @@ export function useCatalogStore() {
     return id;
   }, [apply]);
 
-  const removeEquipment = useCallback(
-    (id: string) => apply((c) => ({ ...c, equipment: c.equipment.filter((e) => e.id !== id) })),
-    [apply],
-  );
-
   const updateSkill = useCallback(
     (id: string, patch: Partial<Skill>) =>
       apply((c) => ({ ...c, skills: c.skills.map((s) => (s.id === id ? { ...s, ...patch } : s)) })),
@@ -394,11 +414,6 @@ export function useCatalogStore() {
     }));
     return id;
   }, [apply]);
-
-  const removeSkill = useCallback(
-    (id: string) => apply((c) => ({ ...c, skills: c.skills.filter((s) => s.id !== id) })),
-    [apply],
-  );
 
   /**
    * Renomme l'id d'une compétence et met à jour toutes les références en cascade
@@ -427,11 +442,6 @@ export function useCatalogStore() {
     return id;
   }, [apply]);
 
-  const removeSpecialCard = useCallback(
-    (id: string) => apply((c) => ({ ...c, specialCards: c.specialCards.filter((s) => s.id !== id) })),
-    [apply],
-  );
-
   const updateSpell = useCallback(
     (id: string, patch: Partial<Spell>) =>
       apply((c) => ({ ...c, spells: c.spells.map((s) => (s.id === id ? { ...s, ...patch } : s)) })),
@@ -448,11 +458,6 @@ export function useCatalogStore() {
     }));
     return id;
   }, [apply]);
-
-  const removeSpell = useCallback(
-    (id: string) => apply((c) => ({ ...c, spells: c.spells.filter((s) => s.id !== id) })),
-    [apply],
-  );
 
   /** Définit (ou retire, si `dataUrl` est nul) l'icône partagée indexée par `cardImage`. */
   const setIcon = useCallback(
@@ -488,22 +493,6 @@ export function useCatalogStore() {
    */
   const renameEntityId = useCallback(
     (kind: RefKind, oldId: string, newId: string) => apply((c) => renameId(c, kind, oldId, newId)),
-    [apply],
-  );
-
-  /**
-   * Supprime une entité **et toutes les citations qui la désignent**, en une seule opération.
-   * Sans ça, supprimer laissait des références orphelines - c'est ainsi que 16 profils se sont
-   * retrouvés à pointer vers un « couteau » disparu.
-   */
-  const removeEntityWithReferences = useCallback(
-    (kind: RefKind, id: string) =>
-      apply((c) => {
-        const cleaned = removeReferences(c, kind, id);
-        const collection = COLLECTION_OF[kind];
-        const kept = (cleaned[collection] as unknown as { id: string }[]).filter((e) => e.id !== id);
-        return { ...cleaned, [collection]: kept };
-      }),
     [apply],
   );
 
@@ -572,8 +561,8 @@ export function useCatalogStore() {
     dirty,
     unverifiedCount,
     updateField,
+    addProfile,
     updateProfile,
-    updateModel,
     renameModel,
     addModel,
     assignProfileToModel,
@@ -599,20 +588,16 @@ export function useCatalogStore() {
     removeMountOption,
     updateEquipment,
     addEquipment,
-    removeEquipment,
     updateSkill,
     addSkill,
-    removeSkill,
     updateSpecialCard,
     addSpecialCard,
-    removeSpecialCard,
     updateSpell,
     addSpell,
-    removeSpell,
     setIcon,
     toggleUnverified,
     renameEntityId,
-    removeEntityWithReferences,
+    removeEntity,
     resetToFile,
     saveToProject,
     adoptPublished,

@@ -1,8 +1,9 @@
 import { Fragment, useMemo, useState } from "react";
-import { COLLECTION_OF, findReferences, type RefKind, type Reference } from "@core";
+import { findReferences, type RefKind, type Reference } from "@core";
 import { Button, Dialog } from "@ui";
 import { useCatalogStore } from "./useCatalogStore";
 import { LEVEL_LABEL, listLabel } from "./admin/shared";
+import { ReferenceList } from "./admin/primitives";
 import { ProfileDetail } from "./admin/ProfileDetail";
 import { EquipmentDetail } from "./admin/EquipmentDetail";
 import { SkillCatalogDetail } from "./admin/SkillCatalogDetail";
@@ -142,18 +143,25 @@ export function AdminCatalog() {
 
   /**
    * Ouvre la confirmation de suppression d'une entité du graphe : les citations sont relevées
-   * *avant* d'agir, pour être montrées, puis retirées avec elle.
+   * *avant* d'agir, pour être montrées, puis retirées avec elle (cf. `removeEntity`). Toute
+   * suppression de l'écran passe par ici - une suppression sèche laisserait des références
+   * orphelines. `resettle` replace la sélection, que l'entité supprimée emporte.
    */
-  const confirmRemove = (kind: RefKind, id: string, what: string, selectNext: (id: string) => void) =>
+  const confirmRemove = (kind: RefKind, id: string, what: string, resettle: () => void) =>
     setPendingDelete({
       what,
       refs: findReferences(catalog, kind, id),
       run: () => {
-        store.removeEntityWithReferences(kind, id);
-        const list = catalog[COLLECTION_OF[kind]] as unknown as { id: string }[];
-        selectNext(list.find((e) => e.id !== id)?.id ?? "");
+        store.removeEntity(kind, id);
+        resettle();
       },
     });
+
+  /** Voisin de `id` dans la liste affichée : supprimer ne doit pas renvoyer à l'autre bout du catalogue. */
+  const neighbourOf = (shown: readonly { id: string }[], id: string): string => {
+    const i = shown.findIndex((e) => e.id === id);
+    return (shown[i + 1] ?? shown[i - 1])?.id ?? "";
+  };
 
   /** Renomme une entité, en cascade, et suit la sélection - faite par identifiant. */
   const rename = (kind: RefKind, oldId: string, newId: string, select: (id: string) => void) => {
@@ -162,6 +170,12 @@ export function AdminCatalog() {
   };
 
   const selectedProfile = catalog.profiles.find((p) => p.id === selectedProfileId);
+  // Faction d'une figurine créée depuis la liste : celle qu'on est en train de regarder (filtre,
+  // sinon fiche ouverte). Une figurine sans faction n'est recrutable nulle part, donc on n'en
+  // propose jamais : à défaut, la première du catalogue, que la fiche permet de changer.
+  const newProfileFaction =
+    (factionFilter !== "all" ? factionFilter : selectedProfile?.factionId) ?? catalog.factions[0]?.id;
+  const newProfileFactionName = catalog.factions.find((f) => f.id === newProfileFaction)?.name;
   const selectedEquip = catalog.equipment.find((e) => e.id === selectedEquipId);
   const selectedSkill = catalog.skills.find((s) => s.id === selectedSkillId);
   const selectedCard = catalog.specialCards.find((s) => s.id === selectedCardId);
@@ -187,6 +201,31 @@ export function AdminCatalog() {
 
   const tabClass = (active: boolean) => `adm-tab ${active ? "adm-tab--on" : ""}`;
   const itemClass = (active: boolean) => `adm-item ${active ? "adm-item--on" : ""}`;
+
+  /**
+   * Création d'une entrée de la partie affichée. Le bouton vit en tête de la barre latérale, avec
+   * le compte et la recherche : en pied de liste, il fallait dérouler 113 profils pour l'atteindre.
+   * La recherche est effacée au passage, sans quoi la nouvelle entrée naîtrait hors du filtre et
+   * paraîtrait perdue.
+   */
+  const addActions: Partial<Record<AdminView, { label: string; title: string; run: () => void }>> = {
+    profiles: {
+      label: "+ profil",
+      title: `Créer un profil dans la faction ${newProfileFactionName ?? "-"}`,
+      run: () => setSelectedProfileId(store.addProfile(newProfileFaction)),
+    },
+    equipment: { label: "+ équipement", title: "Créer un équipement", run: () => setSelectedEquipId(store.addEquipment()) },
+    skills: { label: "+ compétence", title: "Créer une compétence", run: () => setSelectedSkillId(store.addSkill()) },
+    "special-cards": { label: "+ carte", title: "Créer une carte spéciale", run: () => setSelectedCardId(store.addSpecialCard()) },
+    spells: { label: "+ sort", title: "Créer un sort", run: () => setSelectedSpellId(store.addSpell()) },
+    mounts: {
+      label: "+ monture",
+      title: "Créer un type de monture, avec son premier niveau",
+      run: () => setSelectedMountId(store.addMount(store.addMountType())),
+    },
+    "mount-options": { label: "+ option", title: "Créer une option de monture", run: () => setSelectedMountOptionId(store.addMountOption()) },
+  };
+  const addAction = addActions[view];
 
   return (
     <div className="adm-shell flex h-full">
@@ -250,24 +289,38 @@ export function AdminCatalog() {
               ))}
             </select>
           )}
-          <p className="adm-faint text-xs">
-            {view === "profiles" &&
-              `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`}
-            {view === "equipment" && `${filteredEquipment.length} équipement(s)`}
-            {view === "skills" && `${filteredSkills.length} compétence(s)`}
-            {view === "special-cards" && `${filteredCards.length} carte(s) spéciale(s)`}
-            {view === "spells" && `${filteredSpells.length} sort(s)`}
-            {view === "magic-ways" && `${catalog.magicWays.length} voie(s) de magie`}
-            {view === "mounts" && `${catalog.mountTypes.length} type(s) · ${catalog.mounts.length} niveau(x)`}
-            {view === "mount-options" && `${catalog.mountOptions.length} option(s)`}
-            {view === "settings" &&
-              `${catalog.factions.length} faction(s) · ${catalog.grimoires.length} grimoire(s) · ${(catalog.munitionKinds ?? []).length} munition(s)`}
-            {store.dirty && <span className="adm-accent"> · modifié</span>}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="adm-faint text-xs">
+              {view === "profiles" &&
+                `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`}
+              {view === "equipment" && `${filteredEquipment.length} équipement(s)`}
+              {view === "skills" && `${filteredSkills.length} compétence(s)`}
+              {view === "special-cards" && `${filteredCards.length} carte(s) spéciale(s)`}
+              {view === "spells" && `${filteredSpells.length} sort(s)`}
+              {view === "magic-ways" && `${catalog.magicWays.length} voie(s) de magie`}
+              {view === "mounts" && `${catalog.mountTypes.length} type(s) · ${catalog.mounts.length} niveau(x)`}
+              {view === "mount-options" && `${catalog.mountOptions.length} option(s)`}
+              {view === "settings" &&
+                `${catalog.factions.length} faction(s) · ${catalog.grimoires.length} grimoire(s) · ${(catalog.munitionKinds ?? []).length} munition(s)`}
+              {store.dirty && <span className="adm-accent"> · modifié</span>}
+            </p>
+            {addAction && (
+              <button
+                onClick={() => {
+                  setQuery("");
+                  addAction.run();
+                }}
+                title={addAction.title}
+                className="adm-add shrink-0"
+              >
+                {addAction.label}
+              </button>
+            )}
+          </div>
         </div>
 
         <ul className="flex-1 overflow-y-auto p-2">
-          {view === "profiles" &&
+          {view === "profiles" && (
             filteredProfiles.map((p, i) => {
               const showHeader = i === 0 || filteredProfiles[i - 1].factionId !== p.factionId;
               const factionName =
@@ -293,157 +346,98 @@ export function AdminCatalog() {
                   </li>
                 </Fragment>
               );
-            })}
+            })
+          )}
           {view === "equipment" && (
-            <>
-              {filteredEquipment.map((e, i) => {
-                const showHeader = i === 0 || filteredEquipment[i - 1].category !== e.category;
-                return (
-                  <Fragment key={e.id}>
-                    {showHeader && (
-                      <li className="mt-3 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider adm-faint">
-                        {EQUIP_CAT_LABEL[e.category] ?? e.category}
-                      </li>
-                    )}
-                    <li>
-                      <button
-                        onClick={() => setSelectedEquipId(e.id)}
-                        className={itemClass(e.id === selectedEquipId)}
-                      >
-                        <span>{listLabel(e.name)}</span>
-                        <span className="text-xs adm-faint">{e.cost}</span>
-                      </button>
+            filteredEquipment.map((e, i) => {
+              const showHeader = i === 0 || filteredEquipment[i - 1].category !== e.category;
+              return (
+                <Fragment key={e.id}>
+                  {showHeader && (
+                    <li className="mt-3 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider adm-faint">
+                      {EQUIP_CAT_LABEL[e.category] ?? e.category}
                     </li>
-                  </Fragment>
-                );
-              })}
-              <li className="mt-2">
-                <button
-                  onClick={() => setSelectedEquipId(store.addEquipment())}
-                  className="adm-add w-full py-1.5"
-                >
-                  + équipement
-                </button>
-              </li>
-            </>
-          )}
-          {view === "skills" && (
-            <>
-              {filteredSkills.map((s) => (
-                <li key={s.id}>
-                  <button onClick={() => setSelectedSkillId(s.id)} className={itemClass(s.id === selectedSkillId)}>
-                    <span>{s.keyword}</span>
-                    {s.hasValue && <span className="text-xs adm-faint">X</span>}
-                  </button>
-                </li>
-              ))}
-              <li className="mt-2">
-                <button
-                  onClick={() => setSelectedSkillId(store.addSkill())}
-                  className="adm-add w-full py-1.5"
-                >
-                  + compétence
-                </button>
-              </li>
-            </>
-          )}
-          {view === "special-cards" && (
-            <>
-              {filteredCards.map((s) => (
-                <li key={s.id}>
-                  <button onClick={() => setSelectedCardId(s.id)} className={itemClass(s.id === selectedCardId)}>
-                    <span>{listLabel(s.name)}</span>
-                    <span className="text-xs adm-faint">{s.cost > 0 ? s.cost : "auto"}</span>
-                  </button>
-                </li>
-              ))}
-              <li className="mt-2">
-                <button
-                  onClick={() => setSelectedCardId(store.addSpecialCard())}
-                  className="adm-add w-full py-1.5"
-                >
-                  + carte spéciale
-                </button>
-              </li>
-            </>
-          )}
-          {view === "spells" && (
-            <>
-              {filteredSpells.map((s) => (
-                <li key={s.id}>
-                  <button onClick={() => setSelectedSpellId(s.id)} className={itemClass(s.id === selectedSpellId)}>
-                    <span>{listLabel(s.name)}</span>
-                    {s.cost != null && <span className="text-xs adm-faint">{s.cost}</span>}
-                  </button>
-                </li>
-              ))}
-              <li className="mt-2">
-                <button
-                  onClick={() => setSelectedSpellId(store.addSpell())}
-                  className="adm-add w-full py-1.5"
-                >
-                  + sort
-                </button>
-              </li>
-            </>
-          )}
-          {view === "mounts" && (
-            <>
-              {catalog.mountTypes.map((t) => (
-                <Fragment key={t.id}>
-                  <li className="mt-3 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider adm-faint">
-                    {t.name}
-                  </li>
-                  {catalog.mounts
-                    .filter((m) => m.typeId === t.id)
-                    .sort((a, b) => a.level - b.level)
-                    .map((m) => (
-                      <li key={m.id}>
-                        <button onClick={() => setSelectedMountId(m.id)} className={itemClass(m.id === selectedMountId)}>
-                          <span>Niveau {LEVEL_LABEL[m.level]}</span>
-                          <span className="text-xs adm-faint">{m.cost}</span>
-                        </button>
-                      </li>
-                    ))}
+                  )}
                   <li>
-                    <button onClick={() => setSelectedMountId(store.addMount(t.id))} className="adm-add w-full py-1 text-xs">
-                      + niveau
+                    <button
+                      onClick={() => setSelectedEquipId(e.id)}
+                      className={itemClass(e.id === selectedEquipId)}
+                    >
+                      <span>{listLabel(e.name)}</span>
+                      <span className="text-xs adm-faint">{e.cost}</span>
                     </button>
                   </li>
                 </Fragment>
-              ))}
-              <li className="mt-2">
-                <button
-                  onClick={() => {
-                    const tid = store.addMountType();
-                    setSelectedMountId(store.addMount(tid));
-                  }}
-                  className="adm-add w-full py-1.5"
-                >
-                  + type de monture
+              );
+            })
+          )}
+          {view === "skills" && (
+            filteredSkills.map((s) => (
+              <li key={s.id}>
+                <button onClick={() => setSelectedSkillId(s.id)} className={itemClass(s.id === selectedSkillId)}>
+                  <span>{s.keyword}</span>
+                  {s.hasValue && <span className="text-xs adm-faint">X</span>}
                 </button>
               </li>
-            </>
+            ))
           )}
-          {view === "mount-options" && (
-            <>
-              {catalog.mountOptions.map((o) => (
-                <li key={o.id}>
-                  <button
-                    onClick={() => setSelectedMountOptionId(o.id)}
-                    className={itemClass(o.id === selectedMountOptionId)}
-                  >
-                    <span>{listLabel(o.name)}</span>
-                    <span className="text-xs adm-faint">{o.bucket}</span>
+          {view === "special-cards" && (
+            filteredCards.map((s) => (
+              <li key={s.id}>
+                <button onClick={() => setSelectedCardId(s.id)} className={itemClass(s.id === selectedCardId)}>
+                  <span>{listLabel(s.name)}</span>
+                  <span className="text-xs adm-faint">{s.cost > 0 ? s.cost : "auto"}</span>
+                </button>
+              </li>
+            ))
+          )}
+          {view === "spells" && (
+            filteredSpells.map((s) => (
+              <li key={s.id}>
+                <button onClick={() => setSelectedSpellId(s.id)} className={itemClass(s.id === selectedSpellId)}>
+                  <span>{listLabel(s.name)}</span>
+                  {s.cost != null && <span className="text-xs adm-faint">{s.cost}</span>}
+                </button>
+              </li>
+            ))
+          )}
+          {view === "mounts" && (
+            catalog.mountTypes.map((t) => (
+              <Fragment key={t.id}>
+                <li className="mt-3 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider adm-faint">
+                  {t.name}
+                </li>
+                {catalog.mounts
+                  .filter((m) => m.typeId === t.id)
+                  .sort((a, b) => a.level - b.level)
+                  .map((m) => (
+                    <li key={m.id}>
+                      <button onClick={() => setSelectedMountId(m.id)} className={itemClass(m.id === selectedMountId)}>
+                        <span>Niveau {LEVEL_LABEL[m.level]}</span>
+                        <span className="text-xs adm-faint">{m.cost}</span>
+                      </button>
+                    </li>
+                  ))}
+                <li>
+                  <button onClick={() => setSelectedMountId(store.addMount(t.id))} className="adm-add w-full py-1 text-xs">
+                    + niveau
                   </button>
                 </li>
-              ))}
-              <li className="mt-2">
-                <button onClick={() => setSelectedMountOptionId(store.addMountOption())} className="adm-add w-full py-1.5">
-                  + option de monture
+              </Fragment>
+            ))
+          )}
+          {view === "mount-options" && (
+            catalog.mountOptions.map((o) => (
+              <li key={o.id}>
+                <button
+                  onClick={() => setSelectedMountOptionId(o.id)}
+                  className={itemClass(o.id === selectedMountOptionId)}
+                >
+                  <span>{listLabel(o.name)}</span>
+                  <span className="text-xs adm-faint">{o.bucket}</span>
                 </button>
               </li>
-            </>
+            ))
           )}
         </ul>
 
@@ -472,11 +466,15 @@ export function AdminCatalog() {
               <div className="contents">
                 <ProfileDetail
                   onRenameId={(newId) => rename("profile", selectedProfile.id, newId, setSelectedProfileId)}
+                  onRemove={() =>
+                    confirmRemove("profile", selectedProfile.id, `le profil « ${selectedProfile.name} »`, () =>
+                      setSelectedProfileId(neighbourOf(filteredProfiles, selectedProfile.id)),
+                    )
+                  }
                   profile={selectedProfile}
                   cat={catalog}
                   updateField={store.updateField}
                   updateProfile={store.updateProfile}
-                  updateModel={store.updateModel}
                   renameModel={store.renameModel}
                   addModel={store.addModel}
                   assignProfileToModel={store.assignProfileToModel}
@@ -496,7 +494,9 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
                   onRenameId={(newId) => rename("equipment", selectedEquip.id, newId, setSelectedEquipId)}
                   onRemove={() =>
-                    confirmRemove("equipment", selectedEquip.id, `l'équipement « ${selectedEquip.name} »`, setSelectedEquipId)
+                    confirmRemove("equipment", selectedEquip.id, `l'équipement « ${selectedEquip.name} »`, () =>
+                      setSelectedEquipId(neighbourOf(filteredEquipment, selectedEquip.id)),
+                    )
                   }
                 />
               </div>
@@ -513,7 +513,9 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateSkill(selectedSkill.id, patch)}
                   onRenameId={(newId) => rename("skill", selectedSkill.id, newId, setSelectedSkillId)}
                   onRemove={() =>
-                    confirmRemove("skill", selectedSkill.id, `la compétence « ${selectedSkill.keyword} »`, setSelectedSkillId)
+                    confirmRemove("skill", selectedSkill.id, `la compétence « ${selectedSkill.keyword} »`, () =>
+                      setSelectedSkillId(neighbourOf(filteredSkills, selectedSkill.id)),
+                    )
                   }
                 />
               </div>
@@ -529,7 +531,9 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateSpecialCard(selectedCard.id, patch)}
                   onRenameId={(newId) => rename("specialCard", selectedCard.id, newId, setSelectedCardId)}
                   onRemove={() =>
-                    confirmRemove("specialCard", selectedCard.id, `la carte « ${selectedCard.name} »`, setSelectedCardId)
+                    confirmRemove("specialCard", selectedCard.id, `la carte « ${selectedCard.name} »`, () =>
+                      setSelectedCardId(neighbourOf(filteredCards, selectedCard.id)),
+                    )
                   }
                 />
               </div>
@@ -545,7 +549,9 @@ export function AdminCatalog() {
                   onChange={(patch) => store.updateSpell(selectedSpell.id, patch)}
                   onRenameId={(newId) => rename("spell", selectedSpell.id, newId, setSelectedSpellId)}
                   onRemove={() =>
-                    confirmRemove("spell", selectedSpell.id, `le sort « ${selectedSpell.name} »`, setSelectedSpellId)
+                    confirmRemove("spell", selectedSpell.id, `le sort « ${selectedSpell.name} »`, () =>
+                      setSelectedSpellId(neighbourOf(filteredSpells, selectedSpell.id)),
+                    )
                   }
                 />
               </div>
@@ -557,7 +563,14 @@ export function AdminCatalog() {
               cat={catalog}
               onAdd={store.addMagicWay}
               onChange={store.updateMagicWay}
-              onRemove={store.removeMagicWay}
+              onRemove={(id) =>
+                confirmRemove(
+                  "magicWay",
+                  id,
+                  `la voie « ${catalog.magicWays.find((w) => w.id === id)?.name ?? id} »`,
+                  () => {},
+                )
+              }
             />
           )}
           {view === "mounts" && (
@@ -565,16 +578,21 @@ export function AdminCatalog() {
               cat={catalog}
               mountId={selectedMountId}
               onChangeType={store.updateMountType}
-              onRemoveType={(id) => {
-                store.removeMountType(id);
-                setSelectedMountId(catalog.mounts.find((m) => m.typeId !== id)?.id ?? "");
-              }}
+              onRemoveType={(id) =>
+                confirmRemove(
+                  "mountType",
+                  id,
+                  `le type de monture « ${catalog.mountTypes.find((t) => t.id === id)?.name ?? id} » et ses niveaux`,
+                  () => setSelectedMountId(catalog.mounts.find((m) => m.typeId !== id)?.id ?? ""),
+                )
+              }
               onChangeMount={store.updateMount}
               onRenameId={(newId) => rename("mount", selectedMountId, newId, setSelectedMountId)}
-              onRemoveMount={(id) => {
-                store.removeMount(id);
-                setSelectedMountId(catalog.mounts.find((m) => m.id !== id)?.id ?? "");
-              }}
+              onRemoveMount={(id) =>
+                confirmRemove("mount", id, "ce niveau de monture", () =>
+                  setSelectedMountId(neighbourOf(catalog.mounts, id)),
+                )
+              }
               setIcon={store.setIcon}
             />
           )}
@@ -586,8 +604,9 @@ export function AdminCatalog() {
                 onChange={(patch) => store.updateMountOption(selectedMountOption.id, patch)}
                 onRemove={() => {
                   const id = selectedMountOption.id;
-                  store.removeMountOption(id);
-                  setSelectedMountOptionId(catalog.mountOptions.find((o) => o.id !== id)?.id ?? "");
+                  confirmRemove("mountOption", id, `l'option « ${selectedMountOption.name} »`, () =>
+                    setSelectedMountOptionId(neighbourOf(catalog.mountOptions, id)),
+                  );
                 }}
               />
             ) : (
@@ -668,29 +687,7 @@ export function AdminCatalog() {
           <p>
             Supprimer {pendingDelete?.what} ? Cette action est <b>irréversible</b>.
           </p>
-          {pendingDelete && pendingDelete.refs.length > 0 && (
-            <div className="adm-cond">
-              <div className="adm-cond-eyebrow">
-                {pendingDelete.refs.length === 1
-                  ? "1 autre fiche y fait référence"
-                  : `${pendingDelete.refs.length} autres fiches y font référence`}
-              </div>
-              <ul className="adm-reflist">
-                {pendingDelete.refs.slice(0, 8).map((r) => (
-                  <li key={`${r.owner}|${r.where}`}>
-                    {r.owner} <span className="adm-faint">— {r.where}</span>
-                  </li>
-                ))}
-                {pendingDelete.refs.length > 8 && (
-                  <li className="adm-faint">et {pendingDelete.refs.length - 8} autres…</li>
-                )}
-              </ul>
-              <p className="adm-block-note">
-                Ces références seront retirées en même temps. Une fiche qui n'existerait plus sans
-                elle disparaîtra aussi (une compétence de profil, un effet qui ne cite que cet objet).
-              </p>
-            </div>
-          )}
+          {pendingDelete && <ReferenceList refs={pendingDelete.refs} />}
         </div>
       </Dialog>
     </div>

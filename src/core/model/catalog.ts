@@ -454,7 +454,9 @@ export type Catalog = z.infer<typeof CatalogSchema>;
  * sinon aucune. À passer à `iconSrc` pour obtenir une URL affichable.
  */
 export function iconFor(cat: Catalog, p: Profile): string | undefined {
-  return p.icon ?? cat.icons?.[p.cardImage];
+  // `cardImage` vide = pas de carte scannée (fiche en cours de saisie) : aucune icône partagée à
+  // aller chercher, sinon la clé « » les ferait toutes se partager la même image.
+  return p.icon ?? (p.cardImage ? cat.icons?.[p.cardImage] : undefined);
 }
 
 /**

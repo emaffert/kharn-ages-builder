@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { catalog } from "@data";
-import { COLLECTION_OF, canRenameId, findReferences, idIsFree, parseCatalog, removeReferences, renameId, type Catalog, type RefKind } from "./index";
+import { COLLECTION_OF, canRenameId, findReferences, idIsFree, parseCatalog, removeEntity, removeReferences, renameId, type Catalog, type RefKind } from "./index";
 
 /**
  * Champs dont la valeur est une **étiquette libre**, jamais une référence à une entité, même quand
@@ -9,12 +9,13 @@ import { COLLECTION_OF, canRenameId, findReferences, idIsFree, parseCatalog, rem
  * - `traits` / `trait` : des tags posés à la main (« fille-de-nyx » est un trait porté par quatre
  *   profils *et* l'identifiant d'une carte - renommer la carte ne doit pas toucher au trait) ;
  * - `logo` : un nom d'illustration que rien ne lit encore, égal par hasard à l'identifiant ;
- * - `kind` / `mountKinds` / les clés de `costByMountKind` : des valeurs d'énumération fixées par le
- *   schéma (« quagga » est la nature d'une monture *et* l'identifiant d'un type de monture).
+ * - `kind` / `mountKinds` / `tier` / les clés de `costByMountKind` : des valeurs d'énumération fixées
+ *   par le schéma (« quagga » est la nature d'une monture *et* l'identifiant d'un type de monture ;
+ *   « grand » est un palier de grimoire *et* l'identifiant du grimoire correspondant).
  *
  * À l'inverse, les clés de `costByFaction` **sont** des références, et le renommage les suit.
  */
-const FREE_LABELS = ["trait", "traits", "logo", "kind", "mountKinds", "costByMountKind"];
+const FREE_LABELS = ["trait", "traits", "logo", "kind", "mountKinds", "tier", "costByMountKind"];
 
 /**
  * Toute chaîne du catalogue égale à `id`, étiquettes libres mises à part - filet volontairement
@@ -195,7 +196,7 @@ describe("suppression des citations", () => {
     expect(JSON.stringify(catalog)).toBe(avant);
   });
 
-  it("laisse un catalogue valide et sans citation résiduelle, pour chaque type", () => {
+  it("laisse un catalogue valide et sans citation résiduelle, pour chaque type (citations seules)", () => {
     for (const kind of Object.keys(COLLECTION_OF) as RefKind[]) {
       const list = catalog[COLLECTION_OF[kind]] as unknown as { id: string }[];
       // On choisit une entité réellement citée : c'est le cas qui peut casser.
@@ -205,5 +206,83 @@ describe("suppression des citations", () => {
       expect(findReferences(next, kind, entity.id), `${kind} : citations résiduelles`).toEqual([]);
       expect(() => parseCatalog(next), `${kind} : catalogue invalide`).not.toThrow();
     }
+  });
+});
+
+describe("suppression en cascade", () => {
+  it("retire l'entité et toutes ses citations", () => {
+    const next = removeEntity(catalog, "equipment", "couteau");
+    expect(next.equipment.some((e) => e.id === "couteau")).toBe(false);
+    expect(occurrences(next, "couteau")).toBe(0);
+  });
+
+  it("emporte le groupe que sa dernière figurine quitte, garde celui qui en a d'autres", () => {
+    // « larbin » n'a qu'une figurine : le groupe part avec elle.
+    const solo = catalog.profiles.find((p) => p.modelId === "larbin")!;
+    const sansSolo = removeEntity(catalog, "profile", solo.id);
+    expect(sansSolo.models.some((m) => m.id === "larbin")).toBe(false);
+    expect(occurrences(sansSolo, "larbin")).toBe(0);
+
+    // « likan » en regroupe plusieurs : il survit à la perte de l'une d'elles.
+    const membre = catalog.profiles.find((p) => p.modelId === "likan")!;
+    const sansMembre = removeEntity(catalog, "profile", membre.id);
+    const groupe = sansMembre.models.find((m) => m.id === "likan");
+    expect(groupe).toBeDefined();
+    expect(groupe!.profileIds).not.toContain(membre.id);
+    expect(occurrences(sansMembre, membre.id)).toBe(0);
+  });
+
+  it("emporte les niveaux d'un type de monture supprimé, et leurs citations", () => {
+    const niveaux = catalog.mounts.filter((m) => m.typeId === "quagga").map((m) => m.id);
+    expect(niveaux.length).toBeGreaterThan(0);
+    const next = removeEntity(catalog, "mountType", "quagga");
+    expect(next.mountTypes.some((t) => t.id === "quagga")).toBe(false);
+    expect(next.mounts.some((m) => niveaux.includes(m.id))).toBe(false);
+    for (const id of niveaux) expect(occurrences(next, id), `niveau ${id} encore cité`).toBe(0);
+  });
+
+  it("poursuit la cascade sur ce qu'elle emporte : une faction, ses voies, puis leurs sorts", () => {
+    // La voie ne peut exister sans faction : elle disparaît, donc plus aucun sort ne doit la citer.
+    const voies = catalog.magicWays.filter((w) => w.factionId === "fangs").map((w) => w.id);
+    expect(voies.length).toBeGreaterThan(0);
+    expect(catalog.spells.some((s) => s.magicWayId != null && voies.includes(s.magicWayId))).toBe(true);
+    const next = removeEntity(catalog, "faction", "fangs");
+    expect(next.magicWays.some((w) => voies.includes(w.id))).toBe(false);
+    expect(next.spells.some((s) => s.magicWayId != null && voies.includes(s.magicWayId))).toBe(false);
+    expect(() => parseCatalog(next)).not.toThrow();
+  });
+
+  it("laisse l'arme sans sorte de munition plutôt que de la supprimer", () => {
+    const next = removeEntity(catalog, "munitionKind", "fleches");
+    const arc = next.equipment.find((e) => e.id === "arc");
+    expect(arc).toBeDefined();
+    expect(arc!.munitionKind).toBeUndefined();
+    expect(occurrences(next, "fleches")).toBe(0);
+  });
+
+  it("laisse un catalogue valide et sans trace, quel que soit le type supprimé", () => {
+    // Identifiants portés par une seule collection : un homonyme d'une autre fausserait le comptage
+    // (« osteomancie » est à la fois une compétence et une voie).
+    const seen = new Map<string, number>();
+    for (const list of Object.values(catalog)) {
+      if (!Array.isArray(list)) continue;
+      for (const e of list as { id?: string }[]) if (e?.id) seen.set(e.id, (seen.get(e.id) ?? 0) + 1);
+    }
+    for (const kind of Object.keys(COLLECTION_OF) as RefKind[]) {
+      const list = ((catalog[COLLECTION_OF[kind]] as unknown as { id: string }[] | undefined) ?? [])
+        .filter((e) => seen.get(e.id) === 1);
+      // Une entité réellement citée : c'est le cas qui peut laisser des débris.
+      const entity = list.find((e) => findReferences(catalog, kind, e.id).length > 0) ?? list[0];
+      if (!entity) continue;
+      const next = removeEntity(catalog, kind, entity.id);
+      expect(occurrences(next, entity.id), `${kind} : ${entity.id} subsiste`).toBe(0);
+      expect(() => parseCatalog(next), `${kind} : catalogue invalide`).not.toThrow();
+    }
+  });
+
+  it("n'altère pas le catalogue d'origine", () => {
+    const avant = JSON.stringify(catalog);
+    removeEntity(catalog, "profile", "fangs-larbin-1");
+    expect(JSON.stringify(catalog)).toBe(avant);
   });
 });

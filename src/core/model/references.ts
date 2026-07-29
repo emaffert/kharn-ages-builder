@@ -14,7 +14,8 @@ import type { Catalog } from "./catalog";
 
 export type RefKind =
   | "profile" | "model" | "equipment" | "faction" | "skill"
-  | "spell" | "magicWay" | "specialCard" | "mount" | "mountType" | "grimoire";
+  | "spell" | "magicWay" | "specialCard" | "mount" | "mountType" | "grimoire"
+  | "munitionKind" | "mountOption";
 
 /**
  * Clés dont la valeur (chaîne, ou tableau de chaînes) désigne une entité de ce type.
@@ -34,6 +35,10 @@ const REF_KEYS: Record<RefKind, readonly string[]> = {
   mount: ["mountId"],
   mountType: ["typeId"],
   grimoire: ["forbidGrimoires", "grimoireId"],
+  munitionKind: ["munitionKind"],
+  // Les options de monture ne sont citées que par les listes des joueurs (`mountOptionIds`), jamais
+  // par le catalogue : la clé est déclarée pour l'uniformité du traitement, elle ne trouve rien ici.
+  mountOption: ["mountOptionIds"],
 };
 
 /** Libellé lisible d'une clé de référence, pour dire à l'utilisateur *où* l'identifiant est employé. */
@@ -62,6 +67,8 @@ const KEY_LABEL: Record<string, string> = {
   typeId: "type de monture",
   forbidGrimoires: "grimoires interdits",
   grimoireId: "grimoire",
+  munitionKind: "sorte de munition",
+  mountOptionIds: "options de monture",
   costByFaction: "coût par faction",
   source: "source de l'effet",
 };
@@ -87,6 +94,8 @@ export const COLLECTION_OF: Record<RefKind, keyof Catalog> = {
   mount: "mounts",
   mountType: "mountTypes",
   grimoire: "grimoires",
+  munitionKind: "munitionKinds",
+  mountOption: "mountOptions",
 };
 
 /**
@@ -156,6 +165,7 @@ function ownerLabel(collection: string, entity: Bag): string {
       grimoires: "grimoire", munitionKinds: "munition" }[collection] ?? collection;
   const name = typeof entity.name === "string" ? entity.name
     : typeof entity.keyword === "string" ? entity.keyword
+    : typeof entity.label === "string" ? entity.label // sortes de munition
     : String(entity.id ?? "?");
   return `${kind} « ${name} »`;
 }
@@ -212,6 +222,9 @@ export function renameId(cat: Catalog, kind: RefKind, oldId: string, newId: stri
  */
 const CLEARABLE_BY_COLLECTION: Record<string, readonly string[]> = {
   profiles: ["modelId", "factionId"],
+  // Une arme de tir dont la sorte de munition disparaît reste une arme : elle cesse seulement
+  // d'ouvrir l'achat de munitions.
+  equipment: ["munitionKind"],
   models: ["factionId"],
   magicWays: ["skillId"],
   spells: ["magicWayId"],
@@ -282,4 +295,46 @@ export function removeReferences(cat: Catalog, kind: RefKind, id: string): Catal
     }
   }
   return prune(clone, kind, id) as Catalog;
+}
+
+/** Entités présentes dans `before` et absentes de `after`, tous types confondus. */
+function vanished(before: Catalog, after: Catalog): { kind: RefKind; id: string }[] {
+  const gone: { kind: RefKind; id: string }[] = [];
+  for (const [kind, collection] of Object.entries(COLLECTION_OF) as [RefKind, keyof Catalog][]) {
+    const was = (before[collection] as unknown as { id: string }[] | undefined) ?? [];
+    const still = new Set(((after[collection] as unknown as { id: string }[] | undefined) ?? []).map((e) => e.id));
+    for (const e of was) if (!still.has(e.id)) gone.push({ kind, id: e.id });
+  }
+  return gone;
+}
+
+/**
+ * Supprime une entité **et tout ce qui la cite**, en une seule opération. C'est le seul chemin de
+ * suppression du catalogue : supprimer d'un simple filtre laissait des références orphelines,
+ * invisibles jusqu'à ce qu'un joueur ouvre la fiche concernée - c'est ainsi que 16 profils se sont
+ * retrouvés à pointer vers un « couteau » disparu.
+ *
+ * La cascade se poursuit d'elle-même. Une citation constitutive emporte l'objet qui la porte, et cet
+ * objet peut être une entité à part entière : un niveau de monture s'en va avec son type, une voie
+ * de magie avec sa faction. Ces entités-là sont reprises par le même chemin, sans quoi la suppression
+ * réparerait une référence orpheline en en créant d'autres. S'y ajoute une dépendance que le graphe
+ * ne voit pas : un groupe de figurines que sa dernière figurine quitte n'a plus de raison d'être.
+ */
+export function removeEntity(cat: Catalog, kind: RefKind, id: string): Catalog {
+  let next = removeReferences(cat, kind, id);
+  const collection = COLLECTION_OF[kind];
+  const list = next[collection] as unknown as { id: string }[] | undefined;
+  if (list) next = { ...next, [collection]: list.filter((e) => e.id !== id) };
+
+  const handled = new Set([`${kind}:${id}`]);
+  const emptied = kind === "profile" ? cat.profiles.find((p) => p.id === id)?.modelId : undefined;
+  if (emptied != null && !next.profiles.some((p) => p.modelId === emptied)) {
+    handled.add(`model:${emptied}`);
+    next = removeEntity(next, "model", emptied);
+  }
+  // Chaque passe retire au moins une entité d'un catalogue fini : la descente s'arrête d'elle-même.
+  for (const v of vanished(cat, next)) {
+    if (!handled.has(`${v.kind}:${v.id}`)) next = removeEntity(next, v.kind, v.id);
+  }
+  return next;
 }

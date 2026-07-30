@@ -1,5 +1,5 @@
 {
-  "version": "0.3.7",
+  "version": "0.3.8",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -68,7 +68,7 @@
       "id": "ambidextre",
       "keyword": "Ambidextre",
       "hasValue": false,
-      "sourceText": "un Safar maniant une arme dans\nchaque main peut, lors d’une attaque à 3 PA, à la place de\nsa résolution classique, faire deux attaques à 2 PA succes-\nsives. Chaque arme sera, alors utilisée, une fois.\nUn Safar ambidextre qui possède une arme pou-\nvant être maniée à 1 ET 2 mains gagne la compétence\n« riposte » quand il la manie à 2 mains."
+      "sourceText": "Un Safar maniant une arme dans chaque main peut, lors d’une attaque à 3 PA, à la place de\nsa résolution classique, faire deux attaques à 2 PA successives. Chaque arme sera, alors utilisée, une fois.\nUn Safar ambidextre qui possède une arme pouvant être maniée à 1 ET 2 mains gagne la compétence « riposte » quand il la manie à 2 mains."
     },
     {
       "id": "archimage",
@@ -10353,6 +10353,11 @@
         "ruse-du-guerrier",
         "dague"
       ],
+      "fixedBaseEquipmentIds": [
+        "guilde-noire-cape-ombre",
+        "guilde-noire-rossignol",
+        "ruse-du-guerrier"
+      ],
       "masteryDice": [
         [
           "offensive",
@@ -10401,6 +10406,11 @@
         "guilde-noire-rossignol",
         "ruse-du-guerrier",
         "dague"
+      ],
+      "fixedBaseEquipmentIds": [
+        "ruse-du-guerrier",
+        "guilde-noire-rossignol",
+        "guilde-noire-cape-ombre"
       ],
       "masteryDice": [
         [
@@ -10456,6 +10466,11 @@
         "guilde-noire-rossignol",
         "guilde-noire-ruse-du-pleutre",
         "dague"
+      ],
+      "fixedBaseEquipmentIds": [
+        "guilde-noire-cape-ombre",
+        "guilde-noire-rossignol",
+        "guilde-noire-ruse-du-pleutre"
       ],
       "masteryDice": [
         [
@@ -10517,8 +10532,12 @@
         }
       ],
       "baseEquipmentIds": [
-        "dose-de-poison",
-        "dose-de-poison",
+        "dose-de-poison"
+      ],
+      "baseEquipmentCounts": {
+        "dose-de-poison": 3
+      },
+      "fixedBaseEquipmentIds": [
         "dose-de-poison"
       ],
       "masteryDice": [
@@ -12640,6 +12659,7 @@
       "name": "Dose de poison",
       "category": "objet",
       "cost": 6,
+      "stackable": true,
       "effectsText": "Lors d'une attaque ou d'une défense ajoute l'effet \"poison\". "
     },
     {

@@ -199,8 +199,17 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
         members.splice(to < 0 ? members.length : to, 0, moved);
         return { ...f, members };
       }),
+    // Objet empilable déjà acheté : on ajoute un exemplaire plutôt qu'une seconde ligne.
     addEquip: (instanceId, equipId) =>
-      patchMember(instanceId, (m) => ({ ...m, addedEquipmentIds: [...m.addedEquipmentIds, equipId] })),
+      patchMember(instanceId, (m) => {
+        const stackable = catalog.equipment.find((e) => e.id === equipId)?.stackable;
+        if (!m.addedEquipmentIds.includes(equipId)) {
+          return { ...m, addedEquipmentIds: [...m.addedEquipmentIds, equipId] };
+        }
+        if (!stackable) return m;
+        const counts = m.addedEquipmentCounts ?? {};
+        return { ...m, addedEquipmentCounts: { ...counts, [equipId]: (counts[equipId] ?? 1) + 1 } };
+      }),
     removeEquip: (instanceId, equipId) =>
       patchFdl((f) => ({
         ...f,
@@ -209,11 +218,28 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
           // Le sceau imposé au recrutement n'est pas retirable : sans lui la figurine serait illégale.
           const profile = catalog.profiles.find((p) => p.id === m.profileId);
           if (profile && sealRequiredFor(catalog, profile, f.factionId)?.id === equipId) return m;
-          return { ...m, addedEquipmentIds: m.addedEquipmentIds.filter((id) => id !== equipId) };
+          // Empilé : on rend un exemplaire à la fois, la ligne ne part qu'au dernier.
+          const qty = m.addedEquipmentCounts?.[equipId] ?? 1;
+          if (qty > 1) {
+            return { ...m, addedEquipmentCounts: { ...m.addedEquipmentCounts, [equipId]: qty - 1 } };
+          }
+          const counts = Object.fromEntries(
+            Object.entries(m.addedEquipmentCounts ?? {}).filter(([id]) => id !== equipId),
+          );
+          return {
+            ...m,
+            addedEquipmentIds: m.addedEquipmentIds.filter((id) => id !== equipId),
+            addedEquipmentCounts: Object.keys(counts).length ? counts : undefined,
+          };
         }),
       })),
     toggleBase: (instanceId, equipId) =>
-      patchMember(instanceId, (m) => ({ ...m, removedBaseEquipmentIds: toggle(m.removedBaseEquipmentIds, equipId) })),
+      patchMember(instanceId, (m) => {
+        // Équipement de base soudé à la figurine : ni rendu, ni remboursé.
+        const profile = catalog.profiles.find((p) => p.id === m.profileId);
+        if (profile?.fixedBaseEquipmentIds?.includes(equipId)) return m;
+        return { ...m, removedBaseEquipmentIds: toggle(m.removedBaseEquipmentIds, equipId) };
+      }),
     setMount: (instanceId, mountId) =>
       patchMember(instanceId, (m) => {
         if (mountId) return { ...m, mount: { ...m.mount, mountId } };

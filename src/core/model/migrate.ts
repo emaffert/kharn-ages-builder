@@ -61,10 +61,39 @@ export function displayName(raw: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
+/**
+ * Équipement de base en plusieurs exemplaires : il s'écrivait en répétant l'identifiant (trois
+ * « Dose de poison » pour la Camériste). La répétition ne se voyait qu'au coût - l'affichage, le
+ * retrait et le marquage « non retirable » raisonnaient par objet, pas par exemplaire. On la replie
+ * donc sur `baseEquipmentCounts`, seule forme comptée partout.
+ */
+function migrateBaseEquipmentCounts(p: Bag): string[] {
+  const ids = Array.isArray(p.baseEquipmentIds) ? p.baseEquipmentIds.filter((v) => typeof v === "string") : [];
+  if (ids.length === 0) return [];
+  const counts: Bag = isBag(p.baseEquipmentCounts) ? { ...p.baseEquipmentCounts } : {};
+  const unique: string[] = [];
+  const repeated: string[] = [];
+  for (const id of ids as string[]) {
+    if (!unique.includes(id)) unique.push(id);
+    else {
+      counts[id] = (typeof counts[id] === "number" ? counts[id] : 1) + 1;
+      repeated.push(id);
+    }
+  }
+  p.baseEquipmentIds = unique;
+  if (Object.keys(counts).length > 0) p.baseEquipmentCounts = counts;
+  return repeated;
+}
+
 /** Applique les rattrapages à une donnée brute de catalogue (non mutante pour l'appelant). */
 export function migrateCatalog(data: unknown): unknown {
   if (!isBag(data)) return data;
   const cat = structuredClone(data) as Bag;
+  // Un objet qu'une figurine portait en plusieurs exemplaires est empilable par constat.
+  const stacked = new Set(bags(cat.profiles).flatMap(migrateBaseEquipmentCounts));
+  for (const e of bags(cat.equipment)) {
+    if (typeof e.id === "string" && stacked.has(e.id)) e.stackable = true;
+  }
   for (const p of bags(cat.profiles)) migrateConstraintHolder(p, "recruitment");
   for (const c of bags(cat.specialCards)) migrateConstraintHolder(c, "constraints");
   for (const [collection, field] of NAMED_COLLECTIONS) {

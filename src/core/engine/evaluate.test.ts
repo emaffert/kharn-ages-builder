@@ -1178,6 +1178,78 @@ describe("Frères d'Armes (grant-trait + apatride conditionnel)", () => {
   });
 });
 
+describe("Équipement de base non retirable", () => {
+  // Une figurine dont deux objets de base au moins sont distincts : le premier est soudé à elle.
+  const base = catalog.profiles.find(
+    (p) => new Set(p.baseEquipmentIds).size >= 2 && p.baseEquipmentIds.length >= 2,
+  )!;
+  const [fixedId, freeId] = [...new Set(base.baseEquipmentIds)];
+  const withFixed: Catalog = {
+    ...catalog,
+    profiles: catalog.profiles.map((p) =>
+      p.id === base.id ? { ...p, fixedBaseEquipmentIds: [fixedId] } : p,
+    ),
+  };
+  const faction = base.factionId ?? "fangs";
+
+  it("rendre un objet de base ordinaire reste permis, et rembourse", () => {
+    const a = inst(base.id, { removedBaseEquipmentIds: [freeId] });
+    const res = evaluateList(withFixed, makeList([a], faction));
+    expect(res.issues.filter((i) => i.ruleId?.startsWith("fixed-base-"))).toHaveLength(0);
+    const refund = catalog.equipment.find((e) => e.id === freeId)!.cost;
+    expect(res.costByInstance[a.instanceId]).toBe(base.cost - refund);
+  });
+
+  it("rendre un objet de base soudé à la figurine est signalé", () => {
+    const a = inst(base.id, { removedBaseEquipmentIds: [fixedId] });
+    const res = evaluateList(withFixed, makeList([a], faction));
+    expect(res.issues.filter((i) => i.ruleId === `fixed-base-${fixedId}`)).toHaveLength(1);
+  });
+
+  it("sans marquage, aucun objet de base n'est soudé", () => {
+    const a = inst(base.id, { removedBaseEquipmentIds: [fixedId] });
+    const res = evaluateList(catalog, makeList([a], faction));
+    expect(res.issues.filter((i) => i.ruleId?.startsWith("fixed-base-"))).toHaveLength(0);
+  });
+});
+
+describe("Objets empilables (plusieurs exemplaires)", () => {
+  // La Camériste porte trois doses de poison : le catalogue les replie en un objet ×3.
+  const porteuse = catalog.profiles.find((p) => p.baseEquipmentCounts != null)!;
+  const [stackedId] = Object.keys(porteuse.baseEquipmentCounts!);
+  const qty = porteuse.baseEquipmentCounts![stackedId];
+  const unitCost = catalog.equipment.find((e) => e.id === stackedId)!.cost;
+  const faction = porteuse.factionId ?? "fangs";
+
+  it("le catalogue porte bien le cas signalé : un objet de base en plusieurs exemplaires", () => {
+    expect(qty).toBeGreaterThan(1);
+    expect(catalog.equipment.find((e) => e.id === stackedId)?.stackable).toBe(true);
+  });
+
+  it("rendre l'objet de base rembourse tous les exemplaires", () => {
+    const a = inst(porteuse.id, { removedBaseEquipmentIds: [stackedId] });
+    const res = evaluateList(catalog, makeList([a], faction));
+    expect(res.costByInstance[a.instanceId]).toBe(porteuse.cost - unitCost * qty);
+  });
+
+  it("l'achat facture autant d'exemplaires que la quantité demandée", () => {
+    const un = inst(porteuse.id, { addedEquipmentIds: [stackedId] });
+    const trois = inst(porteuse.id, {
+      addedEquipmentIds: [stackedId],
+      addedEquipmentCounts: { [stackedId]: 3 },
+    });
+    const res = evaluateList(catalog, makeList([un, trois], faction));
+    expect(res.costByInstance[un.instanceId]).toBe(porteuse.cost + unitCost);
+    expect(res.costByInstance[trois.instanceId]).toBe(porteuse.cost + unitCost * 3);
+  });
+
+  it("une liste ancienne, qui répétait l'identifiant, coûte toujours pareil", () => {
+    const a = inst(porteuse.id, { addedEquipmentIds: [stackedId, stackedId] });
+    const res = evaluateList(catalog, makeList([a], faction));
+    expect(res.costByInstance[a.instanceId]).toBe(porteuse.cost + unitCost * 2);
+  });
+});
+
 describe("Sceau de la guilde noire (recrutement inter-factions payant)", () => {
   const SEAL = "sceau-de-la-guilde-noire";
   const sealCost = catalog.equipment.find((e) => e.id === SEAL)!.cost;

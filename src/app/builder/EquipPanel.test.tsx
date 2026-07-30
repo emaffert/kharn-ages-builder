@@ -88,6 +88,50 @@ describe("EquipPanel (vue)", () => {
     expect(screen.queryByText(SEAL.name)).toBeNull();
   });
 
+  it("verrouille un équipement de base marqué non retirable, pas les autres", () => {
+    const p = catalog.profiles.find((x) => new Set(x.baseEquipmentIds).size >= 2)!;
+    const [fixedId, freeId] = [...new Set(p.baseEquipmentIds)];
+    const props = { ...baseProps(p.id), profile: { ...p, fixedBaseEquipmentIds: [fixedId] } };
+    const { container } = render(<EquipPanel {...props} />);
+    const rowOf = (id: string) => {
+      const name = catalog.equipment.find((e) => e.id === id)!.name;
+      return [...container.querySelectorAll(".fe-item")].find((el) => el.textContent?.includes(name))!;
+    };
+    expect(rowOf(fixedId).querySelector(".fe-move.is-locked")).toBeTruthy();
+    expect(rowOf(fixedId).querySelector(".fe-move.rem")).toBeNull();
+    expect(rowOf(freeId).querySelector(".fe-move.rem")).toBeTruthy();
+  });
+
+  // Depuis la suppression de la déduction « porté par un seul profil », seule la réservation
+  // inscrite sur l'objet restreint l'achat.
+  it("propose un objet sans réservation, même s'il n'est porté que par une figurine", () => {
+    const solo = catalog.equipment.find(
+      (e) =>
+        e.category === "arme-cac" &&
+        e.reservedTo == null &&
+        catalog.profiles.filter((p) => p.baseEquipmentIds.includes(e.id)).length === 1,
+    )!;
+    // Une Goulue : d'une autre faction que le porteur, et libre d'acheter des armes.
+    render(<EquipPanel {...baseProps("fangs-goulue-1")} />);
+    expect(screen.getAllByText(solo.name).length).toBeGreaterThan(0);
+  });
+
+  it("ne propose pas un objet réservé à un autre personnage", () => {
+    const reserve = catalog.equipment.find((e) => (e.reservedTo?.profileIds?.length ?? 0) > 0)!;
+    const autre = catalog.profiles.find(
+      (p) => !reserve.reservedTo!.profileIds!.includes(p.id) && !p.baseEquipmentIds.includes(reserve.id),
+    )!;
+    render(<EquipPanel {...baseProps(autre.id)} />);
+    expect(screen.queryByText(reserve.name)).toBeNull();
+  });
+
+  it("annonce le prix d'un objet empilable à l'unité", () => {
+    const stacked = catalog.equipment.find((e) => e.stackable && e.cost > 0)!;
+    render(<EquipPanel {...baseProps("fangs-goulue-1")} />);
+    const row = [...screen.getAllByText(stacked.name)][0].closest(".fe-item")!;
+    expect(row.textContent).toContain(`${stacked.cost} Ko / unité`);
+  });
+
   it("ouvre la fiche d'un objet équipé au clic (onInfo)", () => {
     const props = baseProps(armed.id);
     const { container } = render(<EquipPanel {...props} />);

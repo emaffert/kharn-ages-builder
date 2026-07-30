@@ -92,8 +92,20 @@ export const ProfileSchema = z.object({
   pv: z.number(),
   armor: ArmorSchema.optional(),
   skills: z.array(SkillRefSchema),
-  /** Équipement de base (coût déjà inclus dans `cost`). */
+  /** Équipement de base (coût déjà inclus dans `cost`), **un identifiant par objet distinct**. */
   baseEquipmentIds: z.array(z.string()),
+  /**
+   * Nombre d'exemplaires d'un objet de base, quand la figurine en porte plusieurs (ex. Camériste :
+   * 3 doses de poison). Absent ou 1 = un seul. Les catalogues antérieurs répétaient l'identifiant :
+   * `migrateCatalog` les replie sur ce champ.
+   */
+  baseEquipmentCounts: z.record(z.string(), z.number().int().min(1)).optional(),
+  /**
+   * Sous-ensemble de `baseEquipmentIds` **soudé à la figurine** : elle ne peut pas le rendre pour
+   * en récupérer le coût (ex. les doses de poison de la Camériste, l'outillage de l'Agent sombre).
+   * Le constructeur en interdit le retrait ; le reste de l'équipement de base reste rendable.
+   */
+  fixedBaseEquipmentIds: z.array(z.string()).optional(),
   /** Un tableau de dés de maîtrise ; chaque dé porte 1 à 5 domaines. */
   masteryDice: z.array(z.array(MasteryDomainSchema)),
   /** Vocabulaire ouvert (ex. "apatride", "tembo", "femelle-fang", "frere-d-armes"…). */
@@ -136,6 +148,12 @@ export const EquipmentSchema = z.object({
   baseMunitions: z.number().optional(),
   /** Durée de vie (DV) - boucliers et armures. */
   durability: z.number().optional(),
+  /**
+   * **Empilable** : une même figurine peut en porter plusieurs exemplaires (ex. doses de poison,
+   * fioles). Seuls ces objets acceptent une quantité dans l'équipement de base et peuvent être
+   * achetés plusieurs fois ; les autres restent en un seul exemplaire.
+   */
+  stackable: z.boolean().optional(),
   /**
    * Armure **cumulable** : elle ne consomme pas l'unique emplacement d'armure et peut donc être portée
    * en plus d'une armure ordinaire (ex. Gambison, « 1 seule armure par Safar en plus d'un gambison »).
@@ -447,6 +465,12 @@ export const CatalogSchema = z.object({
   icons: z.record(z.string(), z.string()).optional(),
 });
 export type Catalog = z.infer<typeof CatalogSchema>;
+
+/** Nombre d'exemplaires d'un objet dans l'équipement de base d'un profil (1 par défaut). */
+export function baseEquipmentCount(p: Profile, equipmentId: string): number {
+  if (!p.baseEquipmentIds.includes(equipmentId)) return 0;
+  return p.baseEquipmentCounts?.[equipmentId] ?? 1;
+}
 
 /**
  * Référence d'icône d'un profil : celle *propre au profil* (`p.icon`) si définie - elle déroge au

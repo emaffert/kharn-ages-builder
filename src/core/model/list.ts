@@ -9,6 +9,11 @@ export const ProfileInstanceSchema = z.object({
   instanceId: z.string(),
   profileId: z.string(),
   addedEquipmentIds: z.array(z.string()),
+  /**
+   * Exemplaires achetés d'un objet **empilable** (`equipment.stackable`) : id → quantité (absent = 1).
+   * L'identifiant reste unique dans `addedEquipmentIds` ; c'est ce champ qui porte le nombre.
+   */
+  addedEquipmentCounts: z.record(z.string(), z.number().int().min(1)).optional(),
   removedBaseEquipmentIds: z.array(z.string()),
   spellIds: z.array(z.string()),
   grimoireId: z.enum(["petit", "grand"]).optional(),
@@ -93,3 +98,24 @@ export const ListDocumentSchema = z.object({
   snapshot: ListSnapshotSchema,
 });
 export type ListDocument = z.infer<typeof ListDocumentSchema>;
+
+/**
+ * Exemplaires achetés d'un objet (0 s'il n'est pas acheté, 1 par défaut).
+ *
+ * La quantité vit dans `addedEquipmentCounts`, l'identifiant restant unique dans la liste. Une liste
+ * écrite avant ce champ pouvait répéter l'identifiant : cette forme est encore comptée telle quelle.
+ */
+export function addedEquipmentCount(inst: ProfileInstance, equipmentId: string): number {
+  const repeats = inst.addedEquipmentIds.filter((id) => id === equipmentId).length;
+  if (repeats === 0) return 0;
+  return repeats > 1 ? repeats : (inst.addedEquipmentCounts?.[equipmentId] ?? 1);
+}
+
+/** Équipement acheté dédoublonné, avec ses exemplaires : id → quantité. */
+export function addedEquipmentTally(inst: ProfileInstance): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const id of inst.addedEquipmentIds) {
+    if (!out.has(id)) out.set(id, addedEquipmentCount(inst, id));
+  }
+  return out;
+}

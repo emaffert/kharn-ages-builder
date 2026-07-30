@@ -829,6 +829,8 @@ body {
 .fe-item-cost--disc { color: var(--ember); }
 /* Prix majoré par le surcoût Tembo (p.20) : braise profonde, avec le prix d'origine barré. */
 .fe-item-cost--surcharge { color: var(--ember-deep); }
+/* « / unité » d'un objet empilable : moins appuyé que le prix lui-même. */
+.fe-item-unit { color: var(--bone-faint); font-weight: 500; }
 .fe-item-cost-was { color: var(--bone-faint); font-weight: 500; margin-right: 2px; }
 .fe-move { flex: none; width: 26px; height: 24px; border-radius: 7px; display: grid; place-items: center; cursor: pointer;
   border: 0; font-size: 14px; transition: .16s var(--ease); }
@@ -837,6 +839,8 @@ body {
 .fe-move.add:disabled { opacity: .35; cursor: not-allowed; filter: none; }
 .fe-move.rem { color: var(--bone-faint); background: transparent; box-shadow: inset 0 0 0 1px var(--hair-strong); }
 .fe-move.rem:hover { color: var(--scorch); background: color-mix(in srgb, var(--scorch) 12%, transparent); }
+/* Exemplaires d'un objet empilable (3 doses de poison) : « ×3 » à côté du nom. */
+.fe-item-qty { margin-left: 6px; font-size: 12px; font-weight: 600; color: var(--ember); }
 /* Objet imposé par le recrutement (Sceau de la guilde noire) : présent, non retirable. */
 .fe-move.is-locked { color: var(--bone-faint); background: transparent; cursor: default; font-size: 12px; }
 .fe-mun { margin-left: 18px; display: flex; align-items: center; gap: 8px; padding: 5px 9px; border-radius: 7px;

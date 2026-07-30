@@ -4,6 +4,7 @@ import {
   equipmentMatchesEquipFilter,
   munitionKindForEquip,
   resolveMunitionLines,
+  baseEquipmentCount,
   temboEquipmentSurcharge,
   type Catalog,
   type EquipmentCostRule,
@@ -20,6 +21,7 @@ export function PurchaseSummary({
   p,
   cat,
   added,
+  addedCounts,
   removed,
   grimoireId,
   spellIds,
@@ -37,6 +39,8 @@ export function PurchaseSummary({
   p: Profile;
   cat: Catalog;
   added: string[];
+  /** Exemplaires achetés des objets empilables (id → quantité). */
+  addedCounts?: Record<string, number>;
   removed: string[];
   /** Monture équipée (id de niveau) : active la colonne « Monture » (options payées par le cavalier). */
   mountId?: string;
@@ -62,6 +66,11 @@ export function PurchaseSummary({
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
+  // Exemplaires : ceux de la carte pour l'équipement de base, ceux achetés sinon (objets empilables).
+  const qtyOf = (e: NonNullable<(typeof equip)[number]>) =>
+    p.baseEquipmentIds.includes(e.id) ? baseEquipmentCount(p, e.id) : (addedCounts?.[e.id] ?? 1);
+  const label = (e: NonNullable<(typeof equip)[number]>) =>
+    qtyOf(e) > 1 ? `${e.name} ×${qtyOf(e)}` : e.name;
   // Coût affiché d'un équipement = objet + ses munitions (p.46) + ses améliorations (ex. Empoisonner, Borax)
   // + une éventuelle remise (Ogodeï, Commandant…) ; le détail est listé dans la fiche de l'objet.
   const equipChip = (e: NonNullable<(typeof equip)[number]>): SummaryChip => {
@@ -87,13 +96,15 @@ export function PurchaseSummary({
           .map((r) => r.label),
       ),
     ];
+    const qty = qtyOf(e);
     const base = equipInfo(e);
-    if (munCost === 0 && upCost === 0 && disc === 0 && surcharge === 0) return chip(e.name, base);
-    return chip(e.name, {
+    if (munCost === 0 && upCost === 0 && disc === 0 && surcharge === 0 && qty === 1) return chip(label(e), base);
+    return chip(label(e), {
       ...base,
-      price: `${e.cost + munCost + upCost + disc + surcharge} Ko`,
+      price: `${e.cost * qty + munCost + upCost + (disc + surcharge) * qty} Ko`,
       lines: [
         ...base.lines,
+        ...(qty > 1 ? [`${qty} exemplaires (${e.cost} Ko l'unité)`] : []),
         ...(munCost > 0
           ? [`Munitions (+${munCost} Ko) : ${munLines.map((l) => `${l.qty} ${l.label}`).join(", ")}`]
           : []),

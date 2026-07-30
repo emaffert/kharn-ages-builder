@@ -18,6 +18,7 @@ export function FigureEditor({
   profile: p,
   cat,
   added,
+  addedCounts,
   removed,
   upgrades,
   grimoire,
@@ -44,6 +45,8 @@ export function FigureEditor({
   profile: Profile;
   cat: Catalog;
   added: string[];
+  /** Exemplaires achetés des objets empilables (id → quantité). */
+  addedCounts?: Record<string, number>;
   removed: string[];
   upgrades: string[];
   grimoire: "none" | "petit" | "grand";
@@ -115,6 +118,7 @@ export function FigureEditor({
           profile={p}
           cat={cat}
           added={added}
+          addedCounts={addedCounts}
           removed={removed}
           onAdd={onAdd}
           onRemove={onRemove}

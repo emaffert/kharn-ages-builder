@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  baseEquipmentCount,
   equipmentDiscount,
   equipmentMatchesEquipFilter,
   munitionKindForEquip,
@@ -29,6 +30,7 @@ export function EquipPanel({
   profile: p,
   cat,
   added,
+  addedCounts,
   removed,
   onAdd,
   onRemove,
@@ -46,6 +48,8 @@ export function EquipPanel({
   profile: Profile;
   cat: Catalog;
   added: string[];
+  /** Exemplaires achetés des objets empilables (id → quantité, absent = 1). */
+  addedCounts?: Record<string, number>;
   removed: string[];
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
@@ -73,7 +77,18 @@ export function EquipPanel({
   const sealOffered = sealOfferedFor(cat, p, factionId);
   const sealLockedId = sealRequiredFor(cat, p, factionId)?.id;
   const isHiddenSeal = (e: Catalog["equipment"][number]) => sealFor(cat, p)?.id === e.id && !sealOffered;
+  // Équipement de base soudé à la figurine (doses de poison, outillage…) : présent, non rendable.
+  const fixedBase = p.fixedBaseEquipmentIds ?? [];
+  /** Un objet équipé est-il verrouillé, et pourquoi ? (sceau imposé, ou base indissociable) */
+  const lockReason = (id: string, isBase: boolean): string | null => {
+    if (id === sealLockedId) return "Nécessaire au recrutement dans ce Fer de Lance";
+    if (isBase && fixedBase.includes(id)) return "Équipement de base indissociable de la figurine";
+    return null;
+  };
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
+  // Exemplaires : ceux de la carte pour l'équipement de base, ceux achetés pour le reste.
+  const qtyOf = (id: string, isBase: boolean) =>
+    isBase ? baseEquipmentCount(p, id) : (addedCounts?.[id] ?? 1);
 
   const worn = [...activeBase, ...added].map(eq).filter((e): e is NonNullable<typeof e> => Boolean(e));
   // La limitation de mains ne s'applique qu'en jeu : on peut acheter autant d'armes que voulu.
@@ -101,9 +116,6 @@ export function EquipPanel({
     const hay = `${e.name} ${CAT_LABEL[e.category] ?? ""} ${e.category}`.toLowerCase();
     return hay.includes(q) || (CAT_LABEL[e.category] ?? "").toLowerCase().includes(q);
   };
-  const ownerCount = (id: string) => cat.profiles.filter((pr) => pr.baseEquipmentIds.includes(id)).length;
-  const isUnique = (e: Catalog["equipment"][number]) => ownerCount(e.id) === 1;
-
   // Pool disponible avant filtres de catégorie/facettes (sert aussi à compter les puces, comptes stables).
   const availAll = cat.equipment.filter(
     (e) =>
@@ -114,9 +126,8 @@ export function EquipPanel({
       !forbidden.has(e.category) &&
       equipReservedOk(e, p) &&
       !isHiddenSeal(e) &&
-      !(isUnique(e) && !p.baseEquipmentIds.includes(e.id)) &&
-      (!p.baseEquipmentIds.includes(e.id) || removed.includes(e.id)) &&
-      !added.includes(e.id) &&
+      (!p.baseEquipmentIds.includes(e.id) || removed.includes(e.id) || Boolean(e.stackable)) &&
+      (!added.includes(e.id) || Boolean(e.stackable)) &&
       matches(e),
   );
 
@@ -160,11 +171,11 @@ export function EquipPanel({
     });
   const UNIQUE = "__unique";
   const BASE_REMOVED = "__base_removed";
-  // Spécifique au personnage : réservé à ce profil/modèle (ex. Marteau Tonnerre d'Ogodeï) ou base unique.
+  // Spécifique au personnage : réservé à ce profil ou à ce modèle (ex. Marteau Tonnerre d'Ogodeï).
+  // Seule la réservation portée par l'objet compte : ce qui n'est pas réservé est achetable par tous.
   const isCharSpecific = (e: Catalog["equipment"][number]) =>
     (e.reservedTo?.profileIds?.includes(p.id) ?? false) ||
-    (p.modelId != null && (e.reservedTo?.modelIds?.includes(p.modelId) ?? false)) ||
-    isUnique(e);
+    (p.modelId != null && (e.reservedTo?.modelIds?.includes(p.modelId) ?? false));
   // Catégories de tête : l'équipement de base RETIRÉ (pour identifier/remettre l'arme d'origine,
   // ex. swap d'arme des Guerriers via le Commandant), puis le spécifique au personnage.
   const groupOf = (e: Catalog["equipment"][number]) =>
@@ -177,8 +188,8 @@ export function EquipPanel({
   const byCat = [BASE_REMOVED, UNIQUE, ...PURCHASE_CATS]
     .map((g) => [g, avail.filter((e) => groupOf(e) === g)] as [string, typeof avail])
     .filter(([, v]) => v.length > 0);
-  const addedCost = added.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
-  const removedCost = removed.reduce((n, id) => n + (eq(id)?.cost ?? 0), 0);
+  const addedCost = added.reduce((n, id) => n + (eq(id)?.cost ?? 0) * qtyOf(id, false), 0);
+  const removedCost = removed.reduce((n, id) => n + (eq(id)?.cost ?? 0) * baseEquipmentCount(p, id), 0);
   const munTotal = worn.reduce(
     (n, e) =>
       n +
@@ -292,6 +303,8 @@ export function EquipPanel({
   // Prix d'un objet, remise ET surcoût Tembo inclus. Remise (Ogodeï, Commandant…) et surcoût Tembo
   // (p.20) ne s'appliquent qu'aux objets ACHETÉS (pas l'équipement de base) : neutralisés pour `isBase`.
   const priceCell = (e: Catalog["equipment"][number], isBase: boolean) => {
+    // Objet empilable : le prix affiché est celui d'UN exemplaire, puisqu'on peut en prendre plusieurs.
+    const unit = e.stackable ? <span className="fe-item-unit"> / unité</span> : null;
     const disc = isBase ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
     const surcharge = isBase ? 0 : temboEquipmentSurcharge(cat, p.traits, e.id);
     const adj = disc + surcharge;
@@ -315,11 +328,16 @@ export function EquipPanel({
       const variant = adj > 0 ? "fe-item-cost--surcharge" : "fe-item-cost--disc";
       return (
         <span className={`fe-item-cost ${variant}`} title={notes.join(" · ")}>
-          <s className="fe-item-cost-was">{e.cost}</s> {Math.max(0, e.cost + adj)} Ko
+          <s className="fe-item-cost-was">{e.cost}</s> {Math.max(0, e.cost + adj)} Ko{unit}
         </span>
       );
     }
-    return <span className="fe-item-cost">{e.cost > 0 ? `${e.cost} Ko` : "gratuit"}</span>;
+    return (
+      <span className="fe-item-cost">
+        {e.cost > 0 ? `${e.cost} Ko` : "gratuit"}
+        {e.cost > 0 && unit}
+      </span>
+    );
   };
 
   const equipWarning =
@@ -358,11 +376,12 @@ export function EquipPanel({
                       <div className="fe-item is-clickable" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
                         <span className="fe-item-main">
                           <span className="fe-item-name">{e.name}</span>
+                          {qtyOf(id, isBase) > 1 && <span className="fe-item-qty">×{qtyOf(id, isBase)}</span>}
                           {isBase && <span className="fe-badge-base">base</span>}
                         </span>
                         {priceCell(e, isBase)}
-                        {id === sealLockedId ? (
-                          <span className="fe-move is-locked" title="Nécessaire au recrutement dans ce Fer de Lance">
+                        {lockReason(id, isBase) ? (
+                          <span className="fe-move is-locked" title={lockReason(id, isBase)!}>
                             🔒
                           </span>
                         ) : (

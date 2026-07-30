@@ -68,3 +68,36 @@ describe("noms d'affichage", () => {
     expect(carrier.label).toBe("une femelle Fang");
   });
 });
+
+describe("équipement de base en plusieurs exemplaires", () => {
+  /** Catalogue valide où un profil porte trois fois le même objet, à l'ancienne. */
+  function repeated() {
+    const raw = structuredClone(catalog) as {
+      profiles: { baseEquipmentIds: string[] }[];
+      equipment: { id: string; stackable?: boolean }[];
+    };
+    const id = raw.equipment[0].id;
+    raw.profiles[0].baseEquipmentIds = [id, id, id];
+    delete raw.equipment[0].stackable;
+    return { raw, id };
+  }
+
+  it("replie les identifiants répétés en un objet et son nombre d'exemplaires", () => {
+    const { raw, id } = repeated();
+    const parsed = parseCatalog(raw);
+    expect(parsed.profiles[0].baseEquipmentIds).toEqual([id]);
+    expect(parsed.profiles[0].baseEquipmentCounts).toEqual({ [id]: 3 });
+  });
+
+  it("en déduit que l'objet est empilable", () => {
+    const { raw, id } = repeated();
+    const parsed = parseCatalog(raw);
+    expect(parsed.equipment.find((e) => e.id === id)?.stackable).toBe(true);
+  });
+
+  it("ne touche pas à un équipement de base déjà normalisé", () => {
+    const parsed = parseCatalog(structuredClone(catalog));
+    const camériste = parsed.profiles.find((p) => p.baseEquipmentCounts != null);
+    expect(new Set(camériste?.baseEquipmentIds).size).toBe(camériste?.baseEquipmentIds.length);
+  });
+});

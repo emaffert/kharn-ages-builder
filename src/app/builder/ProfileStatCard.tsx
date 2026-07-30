@@ -1,6 +1,14 @@
 import { specialCardsForProfile } from "@ui/explain";
 import { Tag, STAT_FULL } from "@ui";
-import { iconFor, type Armor, type Catalog, type EquipmentCostRule, type MasteryDomain, type Profile } from "@core";
+import {
+  baseEquipmentCount,
+  iconFor,
+  type Armor,
+  type Catalog,
+  type EquipmentCostRule,
+  type MasteryDomain,
+  type Profile,
+} from "@core";
 import { iconSrc } from "../../lib/icons";
 import { SectionTitle } from "./components";
 import { ArmorBlock, RulesBlock, SheetHeader, SkillChips, StatCell, type ArmorDisplay } from "./StatSheet";
@@ -406,7 +414,10 @@ export function ProfileStatCard({
             <div className="fe-eqrow">
               {baseEq.map((e) => (
                 <button key={e.id} className="fe-eq" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
-                  <span className="nm">{e.name}</span>
+                  <span className="nm">
+                    {e.name}
+                    {baseEquipmentCount(p, e.id) > 1 && ` ×${baseEquipmentCount(p, e.id)}`}
+                  </span>
                   {equipBits(e) && <span className="bits">{equipBits(e)}</span>}
                 </button>
               ))}

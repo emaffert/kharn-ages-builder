@@ -9,6 +9,33 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-30
 
+### Un objet n'est réservé que s'il le dit
+
+- L'écran d'équipement masquait tout objet porté par une seule figurine, en le tenant pour sa
+  propriété. C'était une déduction, pas une règle : elle cachait à tout le monde des armes
+  ordinaires comme la Pertuisane, la Fronde, le Gourdin ou l'Arc de guerre, simplement parce
+  qu'une seule carte les mentionne.
+- Désormais, seule la réservation inscrite sur l'objet compte. Les armes signatures (Marteau
+  Tonnerre d'Ogodeï, Vaillante d'Engueran...) restent réservées à leur porteur ; le reste est
+  achetable par qui peut le porter.
+
+### Objets en plusieurs exemplaires
+
+- Un objet peut être déclaré **empilable** : une figurine en porte alors plusieurs exemplaires,
+  affichés « Dose de poison ×3 » au lieu de trois lignes identiques. Les trois doses de la
+  Camériste sont reprises automatiquement sous cette forme.
+- Ces objets-là, et eux seuls, peuvent être **achetés en plusieurs exemplaires** : chaque achat
+  ajoute un exemplaire, chaque retrait en rend un. Leur prix est annoncé « 6 Ko / unité », pour
+  dire d'emblée qu'on peut en prendre plusieurs.
+- Rendre un équipement de base en plusieurs exemplaires les rend tous, et rembourse le total.
+
+### Équipement de base que la figurine ne peut pas rendre
+
+- Certaines figurines portent un équipement qui fait corps avec elles : les doses de poison de la
+  Camériste, l'outillage de l'Agent sombre. Ces objets s'affichent désormais avec un cadenas dans
+  l'onglet Équipement, au lieu du bouton qui permettait de les rendre pour en récupérer le coût.
+- Le reste de leur équipement de base, l'arme notamment, se rend toujours normalement.
+
 ### Budgets proposés à la création d'une liste
 
 - Les deux budgets prédéfinis sont désormais **300 et 500 Ko** (au lieu de 300 et 400). « Autre »

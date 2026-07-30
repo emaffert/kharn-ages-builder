@@ -62,4 +62,30 @@ describe("export/import texte", () => {
     const { unresolved } = importText(catalog, "Ma liste\nFangs · Escarmouche · 300 Ko\n\n• Profil Inexistant — 10 Ko");
     expect(unresolved.length).toBeGreaterThan(0);
   });
+
+  it("l'export note les exemplaires d'un objet empilable, et l'import les retrouve", () => {
+    const stacked = catalog.equipment.find((e) => e.stackable)!;
+    const porteuse = catalog.profiles.find((p) => p.baseEquipmentCounts?.[stacked.id] != null)!;
+    const doc = makeDoc();
+    doc.fersDeLance[0] = {
+      ...doc.fersDeLance[0],
+      factionId: porteuse.factionId ?? "fangs",
+      leaderInstanceId: "s",
+      members: [
+        {
+          instanceId: "s",
+          profileId: porteuse.id,
+          addedEquipmentIds: [stacked.id],
+          addedEquipmentCounts: { [stacked.id]: 2 },
+          removedBaseEquipmentIds: [],
+          spellIds: [],
+        },
+      ],
+    };
+    const txt = exportText(catalog, doc);
+    expect(txt).toContain(`${stacked.name} ×2`); // acheté
+    expect(txt).toContain(`${stacked.name} ×${porteuse.baseEquipmentCounts![stacked.id]}`); // de base
+    const back = importText(catalog, txt).doc.fersDeLance[0].members[0];
+    expect(back.addedEquipmentCounts).toEqual({ [stacked.id]: 2 });
+  });
 });

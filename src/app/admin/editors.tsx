@@ -274,10 +274,20 @@ export function EquipmentEditor({
   ids,
   cat,
   onChange,
+  fixedIds,
+  onToggleFixed,
+  counts,
+  onCount,
 }: {
   ids: string[];
   cat: Catalog;
   onChange: (ids: string[]) => void;
+  /** Équipements que la figurine ne peut pas rendre (affiche la case « non retirable »). */
+  fixedIds?: string[];
+  onToggleFixed?: (id: string) => void;
+  /** Exemplaires portés, pour les objets empilables (id → quantité, absent = 1). */
+  counts?: Record<string, number>;
+  onCount?: (id: string, qty: number) => void;
 }) {
   return (
     <div className="space-y-1.5">
@@ -287,6 +297,28 @@ export function EquipmentEditor({
           <div key={i} className="flex items-center gap-2">
             <EquipmentCombobox value={id} cat={cat} onSelect={(newId) => onChange(replaceAt(ids, i, newId))} />
             <span className="w-16 text-right text-xs adm-faint">{e ? `${e.cost} Ko` : "?"}</span>
+            {onCount && e?.stackable && (
+              <label className="flex items-center gap-1 text-xs adm-muted" title="Nombre d'exemplaires portés.">
+                ×
+                <input
+                  type="number"
+                  min={1}
+                  value={counts?.[id] ?? 1}
+                  onChange={(ev) => onCount(id, Math.max(1, Math.floor(Number(ev.target.value) || 1)))}
+                  className={`${INPUT} w-14`}
+                />
+              </label>
+            )}
+            {onToggleFixed && (
+              <label className="flex items-center gap-1 text-xs adm-muted" title="La figurine garde cet équipement : le joueur ne peut pas le rendre pour en récupérer le coût.">
+                <input
+                  type="checkbox"
+                  checked={fixedIds?.includes(id) ?? false}
+                  onChange={() => onToggleFixed(id)}
+                />
+                non retirable
+              </label>
+            )}
             <RemoveButton onClick={() => onChange(removeAt(ids, i))} />
           </div>
         );

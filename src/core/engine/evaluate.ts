@@ -14,6 +14,7 @@ import type {
   Selector,
   SpecialCard,
 } from "../model";
+import { addedEquipmentTally, baseEquipmentCount } from "../model";
 import {
   armorsWorn,
   castWays,
@@ -556,10 +557,13 @@ function resolveTargets(occ: EffectOccurrence, resolved: ResolvedInstance[]): Re
 function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog): number {
   const inst = ri.instance;
   let cost = ri.profile.cost;
-  for (const id of inst.removedBaseEquipmentIds) cost -= idx.equipmentCost.get(id) ?? 0;
-  for (const id of inst.addedEquipmentIds) {
-    cost += idx.equipmentCost.get(id) ?? 0;
-    cost += temboEquipmentSurcharge(cat, ri.traits, id); // surcoût Tembo (p.20), équipement ajouté uniquement
+  // Rendre un objet de base le rend en entier : la Camériste qui se sépare de ses doses rend les trois.
+  for (const id of inst.removedBaseEquipmentIds) {
+    cost -= (idx.equipmentCost.get(id) ?? 0) * baseEquipmentCount(ri.profile, id);
+  }
+  for (const [id, qty] of addedEquipmentTally(inst)) {
+    cost += (idx.equipmentCost.get(id) ?? 0) * qty;
+    cost += temboEquipmentSurcharge(cat, ri.traits, id) * qty; // surcoût Tembo (p.20), équipement ajouté uniquement
   }
   if (inst.grimoireId) cost += idx.grimoireCost.get(inst.grimoireId) ?? 0;
   for (const id of inst.spellIds) cost += idx.spellCost.get(id) ?? 0;
@@ -695,8 +699,10 @@ function computeCosts(
       if (hasFilter) {
         // Gate « changement d'arme de base » : au moins un équipement de base retiré correspond au filtre.
         if (op.requiresBaseSwap && !ri.instance.removedBaseEquipmentIds.some(matches)) continue;
-        // Appliqué une fois par équipement ajouté ciblé (catégorie / id / mains).
-        delta = op.amount * ri.instance.addedEquipmentIds.filter(matches).length;
+        // Appliqué une fois par exemplaire acheté correspondant au filtre (catégorie / id / mains).
+        delta = op.amount * [...addedEquipmentTally(ri.instance)]
+          .filter(([id]) => matches(id))
+          .reduce((n, [, qty]) => n + qty, 0);
       }
       cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + delta);
     }
@@ -772,6 +778,7 @@ function validate(
   validateMountOptions(cat, resolved, issues);
   validateForbiddenEquipment(cat, resolved, idx, issues);
   validateReservedEquipment(cat, resolved, issues);
+  validateFixedBaseEquipment(cat, resolved, issues);
   validateRequiresPresent(cat, resolved, issues);
   validateAttachments(cat, list, resolved, issues);
   validateSpecialCardScope(idx, resolved, issues);
@@ -1165,6 +1172,29 @@ function validateReservedEquipment(cat: Catalog, resolved: ResolvedInstance[], i
           sourceText: "Équipement réservé.",
         });
       }
+    }
+  }
+}
+
+/**
+ * Même défense en profondeur pour l'équipement de base **soudé à la figurine**
+ * (`fixedBaseEquipmentIds`) : le constructeur n'en propose pas le retrait, mais une liste importée
+ * pourrait l'avoir rendu - ce qui reviendrait à en récupérer le coût indûment.
+ */
+function validateFixedBaseEquipment(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
+  for (const ri of resolved) {
+    const fixed = ri.profile.fixedBaseEquipmentIds ?? [];
+    for (const id of ri.instance.removedBaseEquipmentIds) {
+      if (!fixed.includes(id)) continue;
+      const name = cat.equipment.find((e) => e.id === id)?.name ?? id;
+      issues.push({
+        severity: "error",
+        ferDeLanceId: ri.ferDeLanceId,
+        instanceId: ri.instance.instanceId,
+        ruleId: `fixed-base-${id}`,
+        message: `« ${ri.profile.name} » ne peut pas se séparer de « ${name} ».`,
+        sourceText: "Équipement de base indissociable de la figurine.",
+      });
     }
   }
 }

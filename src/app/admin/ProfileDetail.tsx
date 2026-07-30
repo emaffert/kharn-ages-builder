@@ -84,6 +84,21 @@ export function IconSlot({
   );
 }
 
+/** Marques « non retirable » restreintes à l'équipement de base encore présent. */
+function keepFixed(fixed: string[] | undefined, baseIds: string[]): string[] | undefined {
+  const kept = (fixed ?? []).filter((id) => baseIds.includes(id));
+  return kept.length ? kept : undefined;
+}
+
+/** Quantités restreintes à l'équipement de base encore présent. */
+function keepCounts(
+  counts: Record<string, number> | undefined,
+  baseIds: string[],
+): Record<string, number> | undefined {
+  const kept = Object.fromEntries(Object.entries(counts ?? {}).filter(([id]) => baseIds.includes(id)));
+  return Object.keys(kept).length ? kept : undefined;
+}
+
 /**
  * Saisie du nom d'un groupe de figurines, à la création comme au renommage.
  *
@@ -537,7 +552,26 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
             <EquipmentEditor
               ids={profile.baseEquipmentIds}
               cat={cat}
-              onChange={(ids) => patch({ baseEquipmentIds: ids })}
+              onChange={(ids) =>
+                // Un équipement retiré de la liste n'a plus ni marque « non retirable » ni quantité.
+                patch({
+                  baseEquipmentIds: ids,
+                  fixedBaseEquipmentIds: keepFixed(profile.fixedBaseEquipmentIds, ids),
+                  baseEquipmentCounts: keepCounts(profile.baseEquipmentCounts, ids),
+                })
+              }
+              counts={profile.baseEquipmentCounts}
+              onCount={(id, qty) => {
+                const next = { ...profile.baseEquipmentCounts, [id]: qty };
+                if (qty <= 1) delete next[id];
+                patch({ baseEquipmentCounts: Object.keys(next).length ? next : undefined });
+              }}
+              fixedIds={profile.fixedBaseEquipmentIds}
+              onToggleFixed={(id) => {
+                const cur = profile.fixedBaseEquipmentIds ?? [];
+                const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+                patch({ fixedBaseEquipmentIds: next.length ? next : undefined });
+              }}
             />
             <div className="mt-2">
               <FlagButton active={uv("baseEquipmentIds")} onClick={() => flag("baseEquipmentIds")} />

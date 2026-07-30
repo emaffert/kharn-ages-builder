@@ -1,5 +1,9 @@
+import type { ReactNode } from "react";
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { catalog } from "@data";
+import type { Catalog } from "@core";
+import { CatalogContext } from "./catalog/context";
 import { useListStore } from "./useListStore";
 
 /**
@@ -7,6 +11,15 @@ import { useListStore } from "./useListStore";
  * l'évaluation (coût dérivé du moteur). Dexie est inactif sous jsdom (pas d'IndexedDB), on ne
  * teste donc pas la persistance ici.
  */
+/** Rend le store avec un catalogue de banc d'essai (le provider n'est pas monté dans ces tests). */
+function withCatalog(cat: Catalog) {
+  return ({ children }: { children: ReactNode }) => (
+    <CatalogContext.Provider value={{ catalog: cat, published: null, update: null, refresh: () => {} }}>
+      {children}
+    </CatalogContext.Provider>
+  );
+}
+
 describe("useListStore", () => {
   it("addMember ajoute une figurine et la désigne meneur", () => {
     const { result } = renderHook(() => useListStore("fangs"));
@@ -103,6 +116,55 @@ describe("useListStore", () => {
     expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([SEAL]);
     act(() => result.current.removeEquip(id, SEAL));
     expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([]);
+  });
+
+  it("toggleBase refuse de rendre un équipement de base soudé à la figurine", () => {
+    const base = catalog.profiles.find((p) => new Set(p.baseEquipmentIds).size >= 2)!;
+    const [fixedId, freeId] = [...new Set(base.baseEquipmentIds)];
+    const cat: Catalog = {
+      ...catalog,
+      profiles: catalog.profiles.map((p) => (p.id === base.id ? { ...p, fixedBaseEquipmentIds: [fixedId] } : p)),
+    };
+    const { result } = renderHook(() => useListStore(base.factionId ?? "fangs"), { wrapper: withCatalog(cat) });
+    act(() => result.current.addMember(base.id));
+    const id = result.current.fdl.members[0].instanceId;
+    act(() => result.current.toggleBase(id, fixedId));
+    expect(result.current.fdl.members[0].removedBaseEquipmentIds).toEqual([]);
+    // ... alors que le reste de l'équipement de base se rend normalement.
+    act(() => result.current.toggleBase(id, freeId));
+    expect(result.current.fdl.members[0].removedBaseEquipmentIds).toEqual([freeId]);
+  });
+
+  it("acheter deux fois un objet empilable empile les exemplaires au lieu de doubler la ligne", () => {
+    const stacked = catalog.equipment.find((e) => e.stackable)!;
+    const porteuse = catalog.profiles.find((p) => p.baseEquipmentCounts?.[stacked.id] != null)!;
+    const { result } = renderHook(() => useListStore(porteuse.factionId ?? "fangs"));
+    act(() => result.current.addMember(porteuse.id));
+    const id = result.current.fdl.members[0].instanceId;
+    const before = result.current.evaluation.totalCost;
+    act(() => result.current.addEquip(id, stacked.id));
+    act(() => result.current.addEquip(id, stacked.id));
+    const m = result.current.fdl.members[0];
+    expect(m.addedEquipmentIds).toEqual([stacked.id]);
+    expect(m.addedEquipmentCounts).toEqual({ [stacked.id]: 2 });
+    expect(result.current.evaluation.totalCost).toBe(before + stacked.cost * 2);
+    // Le retrait rend un exemplaire à la fois, la ligne ne part qu'au dernier.
+    act(() => result.current.removeEquip(id, stacked.id));
+    expect(result.current.fdl.members[0].addedEquipmentCounts).toEqual({ [stacked.id]: 1 });
+    act(() => result.current.removeEquip(id, stacked.id));
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([]);
+    expect(result.current.evaluation.totalCost).toBe(before);
+  });
+
+  it("un objet non empilable ne s'achète qu'une fois", () => {
+    const plain = catalog.equipment.find((e) => !e.stackable && e.cost > 0 && e.category === "objet")!;
+    const { result } = renderHook(() => useListStore("fangs"));
+    act(() => result.current.addMember("fangs-goulue-1"));
+    const id = result.current.fdl.members[0].instanceId;
+    act(() => result.current.addEquip(id, plain.id));
+    act(() => result.current.addEquip(id, plain.id));
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([plain.id]);
+    expect(result.current.fdl.members[0].addedEquipmentCounts).toBeUndefined();
   });
 
   it("toggleUpgrade impose un choix exclusif au sein d'un même choiceGroup", () => {

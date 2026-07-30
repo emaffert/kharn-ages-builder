@@ -109,6 +109,15 @@ export function EquipmentDetail({
               </Field>
               {isBouclier && <span className="pb-2 text-xs adm-faint">Occupe 1 main.</span>}
             </div>
+            {/* « Empilable » ≠ « cumulable avec une autre armure » (emplacement) : ici, plusieurs exemplaires. */}
+            <label className="mt-3 flex items-center gap-2 text-xs adm-muted">
+              <input
+                type="checkbox"
+                checked={e.stackable ?? false}
+                onChange={(ev) => onChange({ stackable: ev.target.checked || undefined })}
+              />
+              Empilable : une figurine peut en porter plusieurs exemplaires (ex. doses de poison)
+            </label>
           </Section>
 
           {/* Armes de corps à corps : mains, allonge, perce-armure. */}

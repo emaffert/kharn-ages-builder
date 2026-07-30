@@ -117,6 +117,8 @@ interface Profile {
 
   skills: SkillRef[];         // mots-clés + valeur éventuelle
   baseEquipmentIds: string[]; // équipement de base (coût déjà inclus dans `cost`)
+  fixedBaseEquipmentIds?: string[]; // sous-ensemble du précédent que la figurine ne peut pas rendre
+  baseEquipmentCounts?: Record<string, number>; // exemplaires d'un objet empilable (3 doses de poison)
   masteryDice: MasteryDomain[][]; // un dé par entrée ; chaque dé porte 1 à 5 domaines
 
   magic?: {
@@ -321,6 +323,11 @@ type ConstraintType =
   | "mutual-exclusion"
   | "custom";                 // repli : texte affiché, non auto-vérifié
 ```
+
+La **réservation d'un équipement** (`reservedTo`) est la seule chose qui en restreint l'achat :
+un objet sans réservation est proposé à toute figurine qui peut porter sa catégorie. Le
+constructeur ne déduit plus rien du nombre de porteurs (une arme citée par une seule carte n'est
+pas pour autant personnelle).
 
 Le **Sceau de la Guilde Noire** (+10 Ko pour rejoindre une autre faction) n'est pas une contrainte :
 c'est un **équipement** dont l'effet `grant-trait` octroie `apatride` à son porteur, réservé

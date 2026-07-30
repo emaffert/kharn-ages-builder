@@ -1,4 +1,6 @@
 import {
+  addedEquipmentCount,
+  baseEquipmentCount,
   evaluateList,
   munitionKindForEquip,
   munitionLinesFor,
@@ -39,7 +41,11 @@ export function exportText(cat: Catalog, doc: ListDocument): string {
     for (const id of base) if (!active.has(id)) out.push(equipItem(m, id, "de base"));
     // Base retirée : listée explicitement pour un round-trip fidèle (sinon réimportée par défaut).
     for (const id of base) if (active.has(id)) out.push(equipItem(m, id, "retiré"));
-    for (const id of m.addedEquipmentIds) out.push(equipItem(m, id));
+    // Un objet empilable peut être à la fois porté d'office et acheté : la ligne achetée est
+    // marquée, sinon la relecture la prendrait pour l'équipement de base et l'oublierait.
+    for (const id of new Set(m.addedEquipmentIds)) {
+      out.push(equipItem(m, id, base.includes(id) ? "acheté" : undefined));
+    }
     if (m.grimoireId) out.push(`    grimoire · ${cat.grimoires.find((g) => g.id === m.grimoireId)?.name ?? m.grimoireId}`);
     for (const id of m.spellIds) out.push(`    sort · ${cat.spells.find((s) => s.id === id)?.name ?? id}`);
     for (const id of m.specialCardIds ?? []) out.push(`    amélioration · ${cat.specialCards.find((c) => c.id === id)?.name ?? id}`);
@@ -48,7 +54,10 @@ export function exportText(cat: Catalog, doc: ListDocument): string {
   const equipItem = (m: ProfileInstance, id: string, suffix?: string) => {
     const lines = munitionLinesFor(cat, m, id);
     const mun = lines.length ? ` (munitions: ${lines.map((l) => `${l.qty} ${l.label}`).join(", ")})` : "";
-    return `    équip. · ${equipName(id)}${mun}${suffix ? ` [${suffix}]` : ""}`;
+    // Exemplaires d'un objet empilable : « ×3 » après le nom, relu tel quel à l'import.
+    const p = profile(m.profileId);
+    const qty = suffix === "acheté" || suffix == null ? addedEquipmentCount(m, id) : p ? baseEquipmentCount(p, id) : 1;
+    return `    équip. · ${equipName(id)}${qty > 1 ? ` ×${qty}` : ""}${mun}${suffix ? ` [${suffix}]` : ""}`;
   };
 
   const fac = cat.factions.find((f) => f.id === doc.fersDeLance[0]?.factionId)?.name ?? "?";
@@ -149,14 +158,21 @@ export function importText(cat: Catalog, text: string): TextImportResult {
         const munText = val.match(/\(munitions?:\s*([^)]*)\)/i)?.[1];
         const tag = norm(val.match(/\[([^\]]*)\]\s*$/)?.[1] ?? ""); // "de base" | "retire" | ""
         val = val.replace(/\s*\(munitions?:[^)]*\)\s*/i, "").replace(/\s*\[.*\]\s*$/, "").trim();
+        // Exemplaires : « Dose de poison ×3 ». L'équipement de base tient sa quantité de la carte.
+        const qty = Number(val.match(/[×x]\s*(\d+)\s*$/)?.[1] ?? 1);
+        val = val.replace(/\s*[×x]\s*\d+\s*$/, "").trim();
         const e = byName(cat.equipment, val);
-        const isBase = e != null && cat.profiles.find((p) => p.id === current!.profileId)?.baseEquipmentIds.includes(e.id);
+        const isBase =
+          tag !== "achete" &&
+          e != null &&
+          cat.profiles.find((p) => p.id === current!.profileId)?.baseEquipmentIds.includes(e.id);
         if (!e) unresolved.push(raw);
         else if (isBase) {
           // Base explicitement retirée → on la marque comme telle (round-trip du coût).
           if (tag === "retire") current.removedBaseEquipmentIds.push(e.id);
         } else {
           current.addedEquipmentIds.push(e.id);
+          if (qty > 1) current.addedEquipmentCounts = { ...current.addedEquipmentCounts, [e.id]: qty };
           // Munitions best-effort : chaque « quantité Libellé » → type + palier correspondant.
           const kindDef = munText ? munitionKindForEquip(cat, e.id) : undefined;
           if (munText && kindDef) {

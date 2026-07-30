@@ -49,6 +49,14 @@ describe("FactionSelect (vue)", () => {
     expect(points).toBe(300);
   });
 
+  it("propose 500 Ko comme second budget prédéfini", () => {
+    const onStart = vi.fn();
+    render(<FactionSelect store={makeStore()} onStart={onStart} onLoad={() => {}} />);
+    fireEvent.click(screen.getByRole("radio", { name: "500 Ko" }));
+    fireEvent.click(screen.getByRole("button", { name: "Nouvelle liste" }));
+    expect(onStart.mock.calls[0][2]).toBe(500);
+  });
+
   it("affiche « Aucune liste sauvegardée » quand la bibliothèque est vide", () => {
     render(<FactionSelect store={makeStore({ savedLists: [] })} onStart={() => {}} onLoad={() => {}} />);
     expect(screen.getByText(/Aucune liste sauvegardée/i)).toBeTruthy();

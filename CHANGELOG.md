@@ -9,6 +9,11 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-07-30
 
+### Budgets proposés à la création d'une liste
+
+- Les deux budgets prédéfinis sont désormais **300 et 500 Ko** (au lieu de 300 et 400). « Autre »
+  reste là pour n'importe quelle autre valeur.
+
 ### Recruter un membre de la Guilde Noire dans une autre faction
 
 - Le Sceau de la Guilde Noire entre en jeu : tous les membres de la Guilde Noire apparaissent

@@ -12,7 +12,7 @@ représenté dans le moteur `evaluateList`.
 ## 1. Cadre de la liste [v1]
 
 - **Format** : escarmouche (1 Fer de Lance) ou bataille (Ost = 3 à 5 FdL).
-- **Format de points** : 300 / 400 / libre (escarmouche) ; 900–3000 (Ost), un FdL ≤ moitié de l'Ost.
+- **Format de points** : 300 / 500 / libre (escarmouche) ; 900–3000 (Ost), un FdL ≤ moitié de l'Ost.
 - **Nom** de la liste.
 - Validation : coût total ≤ format de points (avertissement ou blocage selon réglage).
 

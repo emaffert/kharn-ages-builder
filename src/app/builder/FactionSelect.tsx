@@ -43,7 +43,7 @@ export function FactionSelect({
   const selected = FACTIONS.find((f) => f.id === selectedId) ?? firstAvailable;
 
   const [format, setFormat] = useState<ListDocument["format"]>("escarmouche");
-  const [budget, setBudget] = useState<"300" | "400" | "custom">("300");
+  const [budget, setBudget] = useState<"300" | "500" | "custom">("300");
   const [customPoints, setCustomPoints] = useState("300"); // chaîne : autorise le champ vide en cours de saisie
   const points = budget === "custom" ? Number(customPoints) || 0 : Number(budget);
 
@@ -119,7 +119,7 @@ export function FactionSelect({
                 onChange={setBudget}
                 options={[
                   { value: "300", label: "300 Ko" },
-                  { value: "400", label: "400 Ko" },
+                  { value: "500", label: "500 Ko" },
                   { value: "custom", label: "Autre" },
                 ]}
               />

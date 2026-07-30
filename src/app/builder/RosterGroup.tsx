@@ -1,3 +1,4 @@
+import type { Profile } from "@core";
 import { LEVEL, type ModelEntry } from "./shared";
 
 /** Groupe du roster (Personnages / Troupes / Recrutement conditionnel) : liste de modèles cliquables. */
@@ -9,6 +10,7 @@ export function RosterGroup({
   conditional,
   maxed,
   onQuickAdd,
+  costOf = (p) => p.cost,
 }: {
   label: string;
   hint?: string;
@@ -17,6 +19,8 @@ export function RosterGroup({
   conditional?: boolean;
   maxed?: (m: ModelEntry) => boolean;
   onQuickAdd?: (m: ModelEntry) => void;
+  /** Coût de recrutement affiché (défaut : le coût de la carte ; le Sceau y est intégré, cf. `recruitCost`). */
+  costOf?: (p: Profile) => number;
 }) {
   if (items.length === 0) return null;
   return (
@@ -29,7 +33,7 @@ export function RosterGroup({
         const first = m.profiles[0];
         const last = m.profiles[m.profiles.length - 1];
         const multi = m.profiles.length > 1;
-        const minCost = Math.min(...m.profiles.map((p) => p.cost));
+        const minCost = Math.min(...m.profiles.map(costOf));
         const isMax = maxed?.(m) ?? false;
         return (
           <div key={m.id} className={`bld-ritem${conditional ? " is-cond" : ""}${isMax ? " is-max" : ""}`}>
@@ -52,7 +56,7 @@ export function RosterGroup({
                 )}
                 {isMax && <span className="max">max</span>}
               </span>
-              <span className="bld-rcost">{multi ? `${minCost}+` : `${first.cost}`}</span>
+              <span className="bld-rcost">{multi ? `${minCost}+` : `${costOf(first)}`}</span>
             </button>
             {onQuickAdd && !conditional && (
               <button

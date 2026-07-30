@@ -24,11 +24,13 @@ function props(over: Partial<React.ComponentProps<typeof RosterSidebar>> = {}) {
     conditionnels: [] as ModelEntry[],
     horsFaction: [] as ModelEntry[],
     freresDArmes: [] as ModelEntry[],
+    sceau: [] as ModelEntry[],
     mountTypes: [] as RosterMountEntry[],
     modelMaxed: () => false,
     onQuickAdd: vi.fn(),
     onPreview: vi.fn(),
     onMountPreview: vi.fn(),
+    costOf: (p: { cost: number }) => p.cost + 10,
     ...over,
   };
 }
@@ -49,6 +51,16 @@ describe("RosterSidebar (vue)", () => {
   it("affiche le message d'attente de faction quand vide sans recherche", () => {
     render(<RosterSidebar {...props({ models: [], query: "" })} />);
     expect(screen.getByText(/Aucune figurine à recruter pour Fangs/i)).toBeTruthy();
+  });
+
+  it("affiche la section Guilde Noire avec le coût sceau compris", () => {
+    const raimbert = modelOf("guilde-noire-raimbert-2");
+    render(
+      <RosterSidebar {...props({ models: [raimbert], sceau: [raimbert], sceauHint: "sceau compris, +10 Ko" })} />,
+    );
+    expect(screen.getByText("Guilde Noire")).toBeTruthy();
+    expect(screen.getByText(/sceau compris, \+10 Ko/)).toBeTruthy();
+    expect(screen.getByText(String(raimbert.profiles[0].cost + 10))).toBeTruthy();
   });
 
   it("liste les montures et remonte le clic d'aperçu", () => {

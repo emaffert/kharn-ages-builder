@@ -1,5 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
-import { evaluateList, type Catalog, type EvaluationResult, type ListDocument, type ProfileInstance } from "@core";
+import {
+  evaluateList,
+  sealRequiredFor,
+  type Catalog,
+  type EvaluationResult,
+  type ListDocument,
+  type ProfileInstance,
+} from "@core";
 import { useCatalog } from "./catalog/context";
 import { useSavedLists, type SyncState } from "./lists/useSavedLists";
 import { newInstanceId, newListId } from "./io/ids";
@@ -10,11 +17,18 @@ import { newInstanceId, newListId } from "./io/ids";
  * Local-first : la persistance (Dexie) et l'import/export viendront se brancher par-dessus.
  */
 
-function newInstance(profileId: string): ProfileInstance {
+/**
+ * Nouvelle figurine. Le sceau imposé par le recrutement (ex. « Sceau de la guilde noire » pour un
+ * membre GN dans un Fer de Lance étranger) est porté d'office : sans lui la recrue serait illégale,
+ * et le constructeur en interdit le retrait.
+ */
+function newInstance(cat: Catalog, profileId: string, factionId: string): ProfileInstance {
+  const profile = cat.profiles.find((p) => p.id === profileId);
+  const seal = profile ? sealRequiredFor(cat, profile, factionId) : undefined;
   return {
     instanceId: newInstanceId(profileId),
     profileId,
-    addedEquipmentIds: [],
+    addedEquipmentIds: seal ? [seal.id] : [],
     removedBaseEquipmentIds: [],
     spellIds: [],
   };
@@ -137,12 +151,12 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
       }),
     addMember: (profileId) =>
       patchFdl((f) => {
-        const m = newInstance(profileId);
+        const m = newInstance(catalog, profileId, f.factionId);
         return { ...f, members: [...f.members, m], leaderInstanceId: f.leaderInstanceId || m.instanceId };
       }),
     addAttached: (carrierInstanceId, profileId) =>
       patchFdl((f) => {
-        const m = newInstance(profileId);
+        const m = newInstance(catalog, profileId, f.factionId);
         return {
           ...f,
           members: [
@@ -188,9 +202,15 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
     addEquip: (instanceId, equipId) =>
       patchMember(instanceId, (m) => ({ ...m, addedEquipmentIds: [...m.addedEquipmentIds, equipId] })),
     removeEquip: (instanceId, equipId) =>
-      patchMember(instanceId, (m) => ({
-        ...m,
-        addedEquipmentIds: m.addedEquipmentIds.filter((id) => id !== equipId),
+      patchFdl((f) => ({
+        ...f,
+        members: f.members.map((m) => {
+          if (m.instanceId !== instanceId) return m;
+          // Le sceau imposé au recrutement n'est pas retirable : sans lui la figurine serait illégale.
+          const profile = catalog.profiles.find((p) => p.id === m.profileId);
+          if (profile && sealRequiredFor(catalog, profile, f.factionId)?.id === equipId) return m;
+          return { ...m, addedEquipmentIds: m.addedEquipmentIds.filter((id) => id !== equipId) };
+        }),
       })),
     toggleBase: (instanceId, equipId) =>
       patchMember(instanceId, (m) => ({ ...m, removedBaseEquipmentIds: toggle(m.removedBaseEquipmentIds, equipId) })),

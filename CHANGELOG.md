@@ -7,6 +7,23 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-07-30
+
+### Recruter un membre de la Guilde Noire dans une autre faction
+
+- Le Sceau de la Guilde Noire entre en jeu : tous les membres de la Guilde Noire apparaissent
+  désormais dans le roster de n'importe quelle faction, dans une section « Guilde Noire » à part.
+- Le prix affiché dans cette section comprend déjà le sceau (+10 Ko) : c'est bien ce que la
+  figurine coûtera. Le sceau est équipé d'office au recrutement et ne peut pas être retiré, puisque
+  c'est lui qui autorise la recrue.
+- Un membre de la Guilde Noire qui est déjà « allié » de la faction d'accueil (le Négociateur chez
+  les Khârns, le Mongo sombre chez les Goûns...) continue d'entrer sans surcoût, comme avant.
+- Les Frères d'armes ne changent pas : toujours leur propre section, toujours recrutables par deux
+  ou plus, sans surcoût. Nouveauté pour eux : un frère seul peut maintenant acheter le sceau dans
+  son onglet Équipement pour tenir un Fer de Lance sans son frère.
+- Quand une figurine ne peut pas être recrutée, le message dit désormais ce qui lui manque : un
+  second frère d'armes, ou le sceau.
+
 ## 2026-07-29
 
 ### Créer un profil depuis l'administration

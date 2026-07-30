@@ -315,12 +315,19 @@ type ConstraintType =
   | "forbids-equipment"       // interdit une catégorie/un type d'équipement (ex. Éprouvé)
   | "equipment-reserved"      // équipement réservé à faction/profil/niveau (ex. arc court -> niv I)
   | "count-relative"          // plafond relatif (ex. arme gratuite <= moitié du FdL)
-  | "faction-membership"      // apatride / allié des X / sans-logo / Sceau GN (+coût)
+  | "faction-membership"      // apatride / allié des X / sans-logo
   | "mount-eligibility"       // monture niveau ±1, exclusions (berserk, etc.)
   | "pact-composition"        // prédicats de composition d'un pacte
   | "mutual-exclusion"
   | "custom";                 // repli : texte affiché, non auto-vérifié
 ```
+
+Le **Sceau de la Guilde Noire** (+10 Ko pour rejoindre une autre faction) n'est pas une contrainte :
+c'est un **équipement** dont l'effet `grant-trait` octroie `apatride` à son porteur, réservé
+(`reservedTo.factionIds`) à la Guilde Noire. La validation d'appartenance le lit donc sans rien
+savoir de lui, et son coût s'ajoute comme celui de n'importe quel objet acheté. Les règles
+d'accès partagées entre moteur et constructeur (sceau imposé, proposé ou sans objet) vivent dans
+`src/core/engine/recruitment.ts`.
 
 ### Exemples encodés
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { catalog } from "@data";
+import { recruitCost, sealFor, sealOfferedFor, sealRequiredFor } from "@core";
 import { availableMountTypeIds, recruitableRosterModels, rosterSectionOf, type RosterSection } from "./shared";
 
 /**
@@ -16,6 +17,7 @@ function sections(factionId: string): Record<RosterSection, string[]> {
     conditionnel: [],
     "hors-faction": [],
     "freres-d-armes": [],
+    sceau: [],
   };
   for (const m of recruitableRosterModels(catalog, factionId)) {
     out[rosterSectionOf(catalog, factionId, m.profiles[0])].push(m.name);
@@ -51,6 +53,46 @@ describe("sidebar - sections du roster", () => {
     for (const s of ["personnage", "troupe", "conditionnel"] as const) {
       expect(kharns[s]).not.toContain("Mathys");
     }
+  });
+});
+
+describe("sidebar - Guilde Noire (Sceau)", () => {
+  const gnProfile = (id: string) => catalog.profiles.find((p) => p.id === id)!;
+
+  it("un membre GN sans dérogation est recrutable partout, dans sa propre section", () => {
+    const kharns = sections("kharns");
+    expect(kharns.sceau).toContain("Raimbert");
+    expect(kharns["hors-faction"]).not.toContain("Raimbert");
+  });
+
+  it("le coût affiché intègre le sceau hors de la Guilde Noire, pas chez elle", () => {
+    const raimbert = gnProfile("guilde-noire-raimbert-2");
+    expect(recruitCost(catalog, raimbert, "kharns")).toBe(raimbert.cost + 10);
+    expect(recruitCost(catalog, raimbert, "guilde-noire")).toBe(raimbert.cost);
+  });
+
+  it("un GN allié d'une faction y entre sans sceau, mais le paye ailleurs", () => {
+    // Le Négociateur de la Guilde est « Allié des Khârns ».
+    const negociateur = gnProfile("guilde-noire-negociateur-2");
+    expect(sealRequiredFor(catalog, negociateur, "kharns")).toBeUndefined();
+    expect(sections("kharns")["hors-faction"]).toContain("Négociateur de la Guilde");
+    expect(sealRequiredFor(catalog, negociateur, "fangs")?.id).toBe("sceau-de-la-guilde-noire");
+    expect(sections("fangs").sceau).toContain("Négociateur de la Guilde");
+  });
+
+  it("les frères d'armes gardent leur section et leur coût (sceau facultatif)", () => {
+    const mathys = gnProfile("guilde-noire-mathys-3");
+    expect(sections("kharns")["freres-d-armes"]).toContain("Mathys");
+    expect(sections("kharns").sceau).not.toContain("Mathys");
+    expect(sealRequiredFor(catalog, mathys, "kharns")).toBeUndefined();
+    expect(recruitCost(catalog, mathys, "kharns")).toBe(mathys.cost);
+    // ... mais le sceau leur reste proposé à l'achat pour tenir seuls.
+    expect(sealOfferedFor(catalog, mathys, "kharns")?.id).toBe("sceau-de-la-guilde-noire");
+  });
+
+  it("le sceau n'est proposé à personne d'autre que la Guilde Noire", () => {
+    const larbin = catalog.profiles.find((p) => p.factionId === "fangs")!;
+    expect(sealFor(catalog, larbin)).toBeUndefined();
   });
 });
 

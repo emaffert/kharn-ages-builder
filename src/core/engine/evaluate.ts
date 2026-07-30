@@ -23,6 +23,7 @@ import {
   wornEquipmentIds,
 } from "./magic";
 import { totalMunitionCost } from "./munitions";
+import { APATRIDE, FRERE_D_ARMES, alliedFactions, equipmentReservedOk, sealFor } from "./recruitment";
 
 /**
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
@@ -763,7 +764,7 @@ function validate(
     const inFdl = resolved.filter((ri) => ri.ferDeLanceId === fdl.id);
     validateLimitations(fdl, inFdl, issues, limitBonuses);
     validateConsumesSlot(cat, fdl, inFdl, issues);
-    validateFactionMembership(fdl, inFdl, issues);
+    validateFactionMembership(cat, fdl, inFdl, issues);
     validateLeader(fdl, inFdl, issues);
   }
 
@@ -1004,6 +1005,7 @@ function validateConsumesSlot(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInst
 }
 
 function validateFactionMembership(
+  cat: Catalog,
   fdl: FerDeLance,
   inFdl: ResolvedInstance[],
   issues: Issue[],
@@ -1011,23 +1013,25 @@ function validateFactionMembership(
   for (const ri of inFdl) {
     const pf = ri.profile.factionId;
     if (!pf || pf === fdl.factionId) continue; // sans logo ou même faction
-    if (ri.traits.has("apatride")) continue;
-    const allowed = (ri.profile.recruitment ?? []).some(
-      (c) =>
-        c.type === "faction-membership" &&
-        Array.isArray((c.params as { allowedFactions?: unknown }).allowedFactions) &&
-        ((c.params as { allowedFactions: string[] }).allowedFactions).includes(fdl.factionId),
-    );
-    if (!allowed) {
-      issues.push({
-        severity: "error",
-        ferDeLanceId: fdl.id,
-        instanceId: ri.instance.instanceId,
-        ruleId: `faction:${ri.profile.id}`,
-        message: `« ${ri.profile.name} » (${pf}) ne peut pas être recruté dans un Fer de Lance ${fdl.factionId}.`,
-        sourceText: "Vous devez composer votre Fer de Lance en choisissant parmi une unique faction.",
-      });
-    }
+    // `traits` porte déjà les octrois : `apatride` peut venir de la carte, de la carte « Frères
+    // d'Armes » (2+ réunis) ou du sceau que la figurine porte.
+    if (ri.traits.has(APATRIDE)) continue;
+    if (alliedFactions(ri.profile).includes(fdl.factionId)) continue; // « Allié des X »
+    // Voie de sortie encore ouverte : réunir un second frère d'armes, ou payer le sceau.
+    const seal = sealFor(cat, ri.profile);
+    const remedy = ri.profile.traits.includes(FRERE_D_ARMES)
+      ? ` Il lui faut un second « frère d'armes »${seal ? `, ou « ${seal.name} » (+${seal.cost} Ko)` : ""}.`
+      : seal
+        ? ` Il lui faut « ${seal.name} » (+${seal.cost} Ko).`
+        : "";
+    issues.push({
+      severity: "error",
+      ferDeLanceId: fdl.id,
+      instanceId: ri.instance.instanceId,
+      ruleId: `faction:${ri.profile.id}`,
+      message: `« ${ri.profile.name} » (${pf}) ne peut pas être recruté dans un Fer de Lance ${fdl.factionId}.${remedy}`,
+      sourceText: "Vous devez composer votre Fer de Lance en choisissant parmi une unique faction.",
+    });
   }
 }
 
@@ -1076,18 +1080,6 @@ function validateForbiddenEquipment(
       }
     }
   }
-}
-
-/** Une figurine valide-t-elle la réservation d'un équipement ? (toutes les dimensions fournies). */
-function reservedOk(eq: Catalog["equipment"][number], p: Profile): boolean {
-  const r = eq.reservedTo;
-  if (!r) return true;
-  if (r.profileIds && !r.profileIds.includes(p.id)) return false;
-  if (r.modelIds && !(p.modelId != null && r.modelIds.includes(p.modelId))) return false;
-  if (r.traits && !r.traits.some((t) => p.traits.includes(t))) return false;
-  if (r.levels && !(p.level != null && r.levels.includes(p.level))) return false;
-  if (r.factionIds && !(p.factionId != null && r.factionIds.includes(p.factionId))) return false;
-  return true;
 }
 
 /**
@@ -1163,7 +1155,7 @@ function validateReservedEquipment(cat: Catalog, resolved: ResolvedInstance[], i
   for (const ri of resolved) {
     for (const id of ri.instance.addedEquipmentIds) {
       const eq = eqById.get(id);
-      if (eq && !reservedOk(eq, ri.profile)) {
+      if (eq && !equipmentReservedOk(eq, ri.profile)) {
         issues.push({
           severity: "error",
           ferDeLanceId: ri.ferDeLanceId,

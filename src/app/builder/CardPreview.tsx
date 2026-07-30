@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, SegmentedControl, Dialog } from "@ui";
-import type { Catalog, Profile } from "@core";
+import { recruitCost, sealRequiredFor, type Catalog, type Profile } from "@core";
 import { ProfileStatCard } from "./ProfileStatCard";
 import { LEVEL, carrierLabel, isDependent, wornArmorsFrom, type ItemInfo } from "./shared";
 
@@ -17,6 +17,7 @@ export function CardPreview({
   onAdd,
   isAtLimit,
   onInfo,
+  factionId,
 }: {
   profiles: Profile[];
   cat: Catalog;
@@ -26,12 +27,16 @@ export function CardPreview({
   onAdd: (profileId: string) => void;
   isAtLimit: (profileId: string) => boolean;
   onInfo: (info: ItemInfo) => void;
+  /** Faction du Fer de Lance d'accueil : détermine le sceau imposé et donc le coût de recrutement. */
+  factionId: string;
 }) {
   const [id, setId] = useState(profiles[0].id);
   const p = profiles.find((pf) => pf.id === id) ?? profiles[0];
   const dependent = isDependent(p, cat);
   const carrier = carrierLabel(p, cat);
   const atLimit = isAtLimit(p.id);
+  // La carte affiche son coût imprimé ; le pied annonce ce que la figurine coûtera réellement ici.
+  const seal = sealRequiredFor(cat, p, factionId);
   return (
     <Dialog
       open={open}
@@ -48,6 +53,11 @@ export function CardPreview({
           </>
         ) : (
           <>
+            {seal && (
+              <span className="fe-preview-note">
+                Recruté avec « {seal.name} » (+{seal.cost} Ko), soit {recruitCost(cat, p, factionId)} Ko.
+              </span>
+            )}
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Fermer
             </Button>
@@ -72,7 +82,10 @@ export function CardPreview({
             ariaLabel="Niveau"
             value={id}
             onChange={setId}
-            options={profiles.map((pf) => ({ value: pf.id, label: `${LEVEL[pf.level ?? 0]} · ${pf.cost}` }))}
+            options={profiles.map((pf) => ({
+              value: pf.id,
+              label: `${LEVEL[pf.level ?? 0]} · ${recruitCost(cat, pf, factionId)}`,
+            }))}
           />
         </div>
       )}

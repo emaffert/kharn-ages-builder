@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { eligibleMountsFor, iconFor, mountIconFor, mountLabel, slotCapacity, type Profile } from "@core";
+import {
+  eligibleMountsFor,
+  iconFor,
+  mountIconFor,
+  mountLabel,
+  recruitCost,
+  sealRequiredFor,
+  slotCapacity,
+  type Profile,
+} from "@core";
 import { iconSrc } from "../../lib/icons";
 import type { ListStore } from "../useListStore";
 import {
@@ -96,13 +105,20 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     .filter((m) => rosterQuery.trim() === "" || m.name.toLowerCase().includes(rosterQuery.trim().toLowerCase()));
   const byName = (a: ModelEntry, b: ModelEntry) => a.name.localeCompare(b.name);
   // Catégorisation en sections de sidebar (logique pure dans shared.ts) : natifs répartis en
-  // Personnages/Troupes/Conditionnel ; recrues inter-factions en Frères d'armes ou Hors Faction.
+  // Personnages/Troupes/Conditionnel ; recrues inter-factions en Frères d'armes, Guilde Noire
+  // (sceau imposé) ou Hors Faction.
   const inSection = (s: string) => models.filter((m) => rosterSectionOf(cat, factionId, m.profiles[0]) === s).sort(byName);
   const personnages = inSection("personnage");
   const troupes = inSection("troupe");
   const conditionnels = inSection("conditionnel");
   const horsFaction = inSection("hors-faction");
   const freresDArmes = inSection("freres-d-armes");
+  const sceau = inSection("sceau");
+  // Coût de recrutement montré avant l'ajout : le sceau imposé y est déjà intégré (il sera équipé
+  // d'office et non retirable), pour qu'aucune ligne du roster n'annonce un prix trop bas.
+  const recruitCostOf = (p: Profile) => recruitCost(cat, p, factionId);
+  const sceauCost = sceau[0] ? sealRequiredFor(cat, sceau[0].profiles[0], factionId)?.cost : undefined;
+  const sceauHint = sceauCost != null ? `sceau compris, +${sceauCost} Ko` : undefined;
   // Montures consultables (fiche) depuis le roster : toutes celles accessibles à AU MOINS un profil
   // recrutable ici (faction courante OU recrue inter-factions via son origine), pas seulement la faction.
   const q = rosterQuery.trim().toLowerCase();
@@ -299,6 +315,9 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       conditionnels={conditionnels}
       horsFaction={horsFaction}
       freresDArmes={freresDArmes}
+      sceau={sceau}
+      sceauHint={sceauHint}
+      costOf={recruitCostOf}
       mountTypes={mountTypesForFaction}
       modelMaxed={modelMaxed}
       onQuickAdd={onQuickAdd}
@@ -647,6 +666,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           onOpenChange={(o) => !o && setModal(null)}
           onAdd={(profileId) => store.addMember(profileId)}
           onInfo={setItemInfo}
+          factionId={factionId}
           isAtLimit={(profileId) => {
             const p = cat.profiles.find((x) => x.id === profileId);
             return p ? atLimit(p) : false;
@@ -672,6 +692,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           <FigureEditor
             profile={editItem.p}
             cat={cat}
+            factionId={factionId}
             added={editItem.inst.addedEquipmentIds}
             removed={editItem.inst.removedBaseEquipmentIds}
             upgrades={[...new Set([...(editItem.inst.specialCardIds ?? []), ...sharedActiveCardIds])]}
@@ -834,7 +855,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                         {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
                         {max && <span className="max">max</span>}
                       </span>
-                      <span className="cost">{p.cost} Ko</span>
+                      <span className="cost">{recruitCostOf(p)} Ko</span>
                     </button>
                   );
                 })}

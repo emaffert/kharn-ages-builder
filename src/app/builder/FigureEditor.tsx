@@ -39,6 +39,7 @@ export function FigureEditor({
   mountId,
   mountOptionIds,
   onSetMountOption,
+  factionId,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -65,6 +66,8 @@ export function FigureEditor({
   mountId?: string;
   mountOptionIds?: Record<string, number>;
   onSetMountOption?: (optionId: string, value: number | null) => void;
+  /** Faction du Fer de Lance d'accueil : dit si le sceau de la figurine est proposé, imposé ou sans objet. */
+  factionId: string;
 }) {
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
   const ways = castWays(p, cat, upgrades, [...activeBase, ...added], (mods?.grantedSkills ?? []).map((g) => g.skillId));
@@ -124,6 +127,7 @@ export function FigureEditor({
           equipmentUpgrades={equipmentUpgrades}
           onToggleEquipmentUpgrade={onToggleEquipmentUpgrade}
           hasMount={mountId != null}
+          factionId={factionId}
         />
       )}
       {active === "magie" && (

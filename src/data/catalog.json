@@ -12668,7 +12668,46 @@
       "name": "Sceau de la guilde noire",
       "category": "objet",
       "cost": 10,
-      "effectsText": "Permet de recruter n'importe quel membre de la guilde noire pour la partie. "
+      "effectsText": "Permet de recruter n'importe quel membre de la guilde noire pour la partie. ",
+      "effects": [
+        {
+          "id": "e-1785444558380",
+          "source": {
+            "kind": "equipment",
+            "id": "sceau-de-la-guilde-noire"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "apatride"
+          },
+          "sourceText": ""
+        },
+        {
+          "id": "e-1785444908417",
+          "source": {
+            "kind": "equipment",
+            "id": "sceau-de-la-guilde-noire"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-trait",
+            "trait": "apatride"
+          },
+          "sourceText": ""
+        }
+      ],
+      "reservedTo": {
+        "factionIds": [
+          "guilde-noire"
+        ]
+      }
     },
     {
       "id": "orbe-de-mimetisme",

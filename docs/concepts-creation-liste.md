@@ -23,14 +23,20 @@ représenté dans le moteur `evaluateList`.
   - **apatride** : recrutable par toutes les factions ;
   - **allié des X** : recrutable par X ou sa faction d'origine ;
   - profils **sans logo** : recrutables partout ;
-  - **Sceau de la Guilde Noire** (source : FAQ + carte des règles de base) : une figurine **Guilde
-    Noire** peut rejoindre un FdL d'une autre faction pour **+10 Ko**. *(Concept Guilde Noire, hors Fangs.)*
+  - **Sceau de la Guilde Noire** [+] (source : FAQ Janv. 2026 + carte p. 79) : une figurine **Guilde
+    Noire** peut rejoindre un FdL d'une autre faction pour **+10 Ko**. Encodé en donnée : l'objet
+    octroie `apatride` à son porteur (`grant-trait`, cible `self`) et est réservé à la faction
+    Guilde Noire. Le constructeur en déduit tout le reste - section « Guilde Noire » du roster, coût
+    annoncé sceau compris, sceau équipé d'office au recrutement et non retirable.
   - **Frères d'armes** (carte de Mathys, Guilde Noire) : dès qu'il y a **≥ 2** figurines « frère
     d'armes » dans un même FdL, elles deviennent **apatrides**. Conséquence pour le builder : on
     doit pouvoir les **ajouter dans n'importe quel FdL** (comme apatrides), mais la liste n'est
     **valide que s'il y en a au moins 2** (sinon erreur tant que la condition n'est pas remplie).
+    Ils gardent leur section propre et leur coût nu : le sceau ne leur est pas imposé, seulement
+    proposé, pour le cas du frère isolé.
 - Le moteur valide l'appartenance (`faction-membership`, + `grant-trait` conditionnel pour les
-  frères d'armes).
+  frères d'armes ou porté par le sceau). Voies d'accès partagées moteur/UI dans
+  `src/core/engine/recruitment.ts`.
 
 ## 3. Recrutement des unités (profils) [v1] [+]
 

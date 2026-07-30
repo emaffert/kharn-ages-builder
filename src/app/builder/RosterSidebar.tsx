@@ -1,4 +1,4 @@
-import type { MountType } from "@core";
+import type { MountType, Profile } from "@core";
 import { SearchIcon } from "./icons";
 import { RosterGroup } from "./RosterGroup";
 import type { ModelEntry } from "./shared";
@@ -8,8 +8,9 @@ export type RosterMountEntry = { type: MountType; minCost: number; icon?: string
 
 /**
  * Barre latérale du constructeur : recherche + sections de recrutement (Personnages, Troupes,
- * Recrutement conditionnel, Hors Faction, Frères d'armes, Montures). Purement présentationnelle :
- * les sections déjà catégorisées et les callbacks lui sont fournis par `BuilderScreen`.
+ * Recrutement conditionnel, Hors Faction, Frères d'armes, Guilde Noire, Montures). Purement
+ * présentationnelle : les sections déjà catégorisées et les callbacks lui sont fournis par
+ * `BuilderScreen`.
  */
 export function RosterSidebar({
   query,
@@ -21,11 +22,14 @@ export function RosterSidebar({
   conditionnels,
   horsFaction,
   freresDArmes,
+  sceau,
+  sceauHint,
   mountTypes,
   modelMaxed,
   onQuickAdd,
   onPreview,
   onMountPreview,
+  costOf,
 }: {
   query: string;
   onQueryChange: (q: string) => void;
@@ -37,11 +41,17 @@ export function RosterSidebar({
   conditionnels: ModelEntry[];
   horsFaction: ModelEntry[];
   freresDArmes: ModelEntry[];
+  /** Recrues qui n'entrent qu'en payant leur sceau (Guilde Noire) : coût affiché sceau compris. */
+  sceau: ModelEntry[];
+  /** Rappel du surcoût affiché en tête de la section (ex. « sceau compris, +10 Ko »). */
+  sceauHint?: string;
   mountTypes: RosterMountEntry[];
   modelMaxed: (m: ModelEntry) => boolean;
   onQuickAdd: (m: ModelEntry) => void;
   onPreview: (modelId: string) => void;
   onMountPreview: (typeId: string) => void;
+  /** Coût de recrutement affiché (sceau compris là où il est imposé). */
+  costOf: (p: Profile) => number;
 }) {
   return (
     <>
@@ -74,6 +84,15 @@ export function RosterSidebar({
             <RosterGroup label="Recrutement conditionnel" items={conditionnels} onOpen={onPreview} conditional />
             <RosterGroup label="Hors Faction" items={horsFaction} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={onPreview} />
             <RosterGroup label="Frères d'armes" items={freresDArmes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={onPreview} />
+            <RosterGroup
+              label="Guilde Noire"
+              hint={sceauHint}
+              items={sceau}
+              maxed={modelMaxed}
+              onQuickAdd={onQuickAdd}
+              onOpen={onPreview}
+              costOf={costOf}
+            />
             {mountTypes.length > 0 && (
               <div>
                 <div className="bld-grp-label">

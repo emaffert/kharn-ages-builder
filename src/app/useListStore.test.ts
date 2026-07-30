@@ -67,6 +67,44 @@ describe("useListStore", () => {
     expect(result.current.evaluation.totalCost).toBe(60);
   });
 
+  // Sceau de la guilde noire : posé d'office sur une recrue GN étrangère, et non retirable.
+  const SEAL = "sceau-de-la-guilde-noire";
+
+  it("recruter un membre GN ailleurs l'équipe du sceau et facture le surcoût", () => {
+    const { result } = renderHook(() => useListStore("kharns"));
+    act(() => result.current.addMember("guilde-noire-raimbert-2")); // 118
+    const membre = result.current.fdl.members[0];
+    expect(membre.addedEquipmentIds).toEqual([SEAL]);
+    expect(result.current.evaluation.totalCost).toBe(128);
+    expect(result.current.evaluation.issues.filter((i) => i.ruleId?.startsWith("faction:"))).toHaveLength(0);
+  });
+
+  it("le sceau imposé ne peut pas être retiré", () => {
+    const { result } = renderHook(() => useListStore("kharns"));
+    act(() => result.current.addMember("guilde-noire-raimbert-2"));
+    const id = result.current.fdl.members[0].instanceId;
+    act(() => result.current.removeEquip(id, SEAL));
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([SEAL]);
+  });
+
+  it("dans un Fer de Lance Guilde Noire, aucun sceau n'est imposé", () => {
+    const { result } = renderHook(() => useListStore("guilde-noire"));
+    act(() => result.current.addMember("guilde-noire-raimbert-2"));
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([]);
+    expect(result.current.evaluation.totalCost).toBe(118);
+  });
+
+  it("un frère d'armes se recrute sans sceau, et peut l'acheter puis le rendre", () => {
+    const { result } = renderHook(() => useListStore("kharns"));
+    act(() => result.current.addMember("guilde-noire-mathys-3"));
+    const id = result.current.fdl.members[0].instanceId;
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([]);
+    act(() => result.current.addEquip(id, SEAL));
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([SEAL]);
+    act(() => result.current.removeEquip(id, SEAL));
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([]);
+  });
+
   it("toggleUpgrade impose un choix exclusif au sein d'un même choiceGroup", () => {
     const { result } = renderHook(() => useListStore("gouns"));
     act(() => result.current.addMember("gouns-artisane-dogon-1"));

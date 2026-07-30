@@ -1178,6 +1178,48 @@ describe("Frères d'Armes (grant-trait + apatride conditionnel)", () => {
   });
 });
 
+describe("Sceau de la guilde noire (recrutement inter-factions payant)", () => {
+  const SEAL = "sceau-de-la-guilde-noire";
+  const sealCost = catalog.equipment.find((e) => e.id === SEAL)!.cost;
+  const factionIssues = (res: ReturnType<typeof evaluateList>) =>
+    res.issues.filter((i) => i.ruleId?.startsWith("faction:"));
+  const raimbert = () => catalog.profiles.find((p) => p.id === "guilde-noire-raimbert-2")!;
+
+  it("sans sceau, un membre GN ne peut pas rejoindre un Fer de Lance étranger", () => {
+    const a = inst("guilde-noire-raimbert-2");
+    const res = evaluateList(catalog, makeList([a], "kharns"));
+    expect(factionIssues(res)).toHaveLength(1);
+    expect(factionIssues(res)[0].message).toContain("Sceau de la guilde noire");
+  });
+
+  it("avec le sceau, il est recruté pour son coût majoré du sceau", () => {
+    const a = inst("guilde-noire-raimbert-2", { addedEquipmentIds: [SEAL] });
+    const res = evaluateList(catalog, makeList([a], "kharns"));
+    expect(factionIssues(res)).toHaveLength(0);
+    expect(res.grantedTraits[a.instanceId] ?? []).toContain("apatride");
+    expect(res.costByInstance[a.instanceId]).toBe(raimbert().cost + sealCost);
+  });
+
+  it("un frère d'armes isolé devient recrutable grâce au sceau", () => {
+    const seul = inst("guilde-noire-mathys-3");
+    expect(factionIssues(evaluateList(catalog, makeList([seul], "kharns")))).toHaveLength(1);
+    const scelle = inst("guilde-noire-mathys-3", { addedEquipmentIds: [SEAL] });
+    expect(factionIssues(evaluateList(catalog, makeList([scelle], "kharns")))).toHaveLength(0);
+  });
+
+  it("le message d'un frère isolé rappelle ses deux issues", () => {
+    const res = evaluateList(catalog, makeList([inst("guilde-noire-mathys-3")], "kharns"));
+    expect(factionIssues(res)[0].message).toContain("frère d'armes");
+    expect(factionIssues(res)[0].message).toContain("Sceau de la guilde noire");
+  });
+
+  it("le sceau est réservé à la Guilde Noire : porté par un autre, il est signalé", () => {
+    const kharn = inst("kharns-guerrier-1", { addedEquipmentIds: [SEAL] });
+    const res = evaluateList(catalog, makeList([kharn], "kharns"));
+    expect(res.issues.some((i) => i.ruleId === `reserved-${SEAL}`)).toBe(true);
+  });
+});
+
 describe("Montures par origine (Guilde Noire)", () => {
   const mountTypes = (profileId: string) => {
     const p = catalog.profiles.find((x) => x.id === profileId)!;

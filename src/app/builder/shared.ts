@@ -8,8 +8,12 @@ import {
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
   eligibleMountsFor as coreEligibleMountsFor,
+  equipmentReservedOk,
+  isRecruitableIn,
   mountKindOf,
   mountOptionCostOf,
+  sealRequiredFor,
+  FRERE_D_ARMES,
 } from "@core";
 import type {
   Catalog,
@@ -335,36 +339,8 @@ export function canBuy(p: Profile, cat: Catalog): boolean {
   return PURCHASE_CATS.some((c) => !forbidden.has(c));
 }
 
-/**
- * Une figurine est-elle recrutable dans un Fer de Lance de faction `factionId` ?
- * Même logique que le moteur (`validateFactionMembership`) : même faction, sans logo,
- * trait `apatride`, ou contrainte `faction-membership` listant la faction d'accueil (« Allié des X »).
- */
-export function isRecruitableIn(p: Profile, factionId: string): boolean {
-  if (!p.factionId || p.factionId === factionId) return true;
-  if (p.traits.includes("apatride")) return true;
-  // Les « frères d'armes » deviennent apatrides dès qu'ils sont 2+ dans le Fer de Lance (carte
-  // « Frères d'Armes ») : ils doivent donc apparaître dans le roster de toute faction pour qu'on
-  // puisse en réunir plusieurs. La validation (`validateFactionMembership`) refuse un frère isolé.
-  if (p.traits.includes("frere-d-armes")) return true;
-  return (p.recruitment ?? []).some(
-    (c) =>
-      c.type === "faction-membership" &&
-      ((c.params as { allowedFactions?: string[] }).allowedFactions ?? []).includes(factionId),
-  );
-}
-
 /** Une figurine correspond-elle à la réservation d'un équipement ? (toutes les dimensions fournies). */
-export function equipReservedOk(e: Catalog["equipment"][number], p: Profile): boolean {
-  const r = e.reservedTo;
-  if (!r) return true;
-  if (r.profileIds && !r.profileIds.includes(p.id)) return false;
-  if (r.modelIds && !(p.modelId != null && r.modelIds.includes(p.modelId))) return false;
-  if (r.traits && !r.traits.some((t) => p.traits.includes(t))) return false;
-  if (r.levels && !(p.level != null && r.levels.includes(p.level))) return false;
-  if (r.factionIds && !(p.factionId != null && r.factionIds.includes(p.factionId))) return false;
-  return true;
-}
+export const equipReservedOk = equipmentReservedOk;
 
 // ── Magie ── Adaptateurs minces vers `src/core/engine/magic.ts` (logique unique côté cœur).
 // Les panneaux travaillent avec (profil, listes) ; on synthétise une `ProfileInstance` pour appeler le cœur.
@@ -489,8 +465,15 @@ export type ModelEntry = { id: string; name: string; profiles: Profile[]; icon?:
 // ── Roster (sidebar du constructeur) ── logique pure de catégorisation, testable hors composant.
 
 /** Sections de la sidebar. `personnage`/`troupe`/`conditionnel` = natifs de la faction ; les recrues
- *  inter-factions vont en `freres-d-armes` (trait `frere-d-armes`, ni allié ni apatride) ou `hors-faction`. */
-export type RosterSection = "personnage" | "troupe" | "conditionnel" | "hors-faction" | "freres-d-armes";
+ *  inter-factions vont en `freres-d-armes` (trait `frere-d-armes`, ni allié ni apatride), `sceau`
+ *  (recrutable seulement en payant son sceau, ex. Guilde Noire) ou `hors-faction` (alliés). */
+export type RosterSection =
+  | "personnage"
+  | "troupe"
+  | "conditionnel"
+  | "hors-faction"
+  | "freres-d-armes"
+  | "sceau";
 
 /** Modèles recrutables dans une faction (faction courante + recrues inter-factions), niveaux triés.
  *  N'ajoute pas l'icône ni le filtre de recherche (laissés au composant). */
@@ -504,7 +487,7 @@ export function recruitableRosterModels(cat: Catalog, factionId: string): ModelE
         .filter((p): p is Profile => Boolean(p))
         .sort((a, b) => (a.level ?? 0) - (b.level ?? 0)),
     }))
-    .filter((m) => m.profiles.length > 0 && m.profiles.some((p) => isRecruitableIn(p, factionId)));
+    .filter((m) => m.profiles.length > 0 && m.profiles.some((p) => isRecruitableIn(cat, p, factionId)));
 }
 
 /** Section de sidebar d'un modèle, déterminée par son premier profil. */
@@ -515,10 +498,11 @@ export function rosterSectionOf(cat: Catalog, factionId: string, profile: Profil
     return "troupe";
   }
   const frere =
-    profile.traits.includes("frere-d-armes") &&
+    profile.traits.includes(FRERE_D_ARMES) &&
     !profile.traits.includes("apatride") &&
     !(profile.recruitment ?? []).some((c) => c.type === "faction-membership");
-  return frere ? "freres-d-armes" : "hors-faction";
+  if (frere) return "freres-d-armes";
+  return sealRequiredFor(cat, profile, factionId) ? "sceau" : "hors-faction";
 }
 
 /** Ids des types de monture accessibles à au moins un profil recrutable dans la faction (faction
@@ -526,7 +510,7 @@ export function rosterSectionOf(cat: Catalog, factionId: string, profile: Profil
 export function availableMountTypeIds(cat: Catalog, factionId: string): Set<string> {
   return new Set(
     cat.profiles
-      .filter((p) => isRecruitableIn(p, factionId))
+      .filter((p) => isRecruitableIn(cat, p, factionId))
       .flatMap((p) => coreEligibleMountsFor(cat, p).map((m) => m.typeId)),
   );
 }

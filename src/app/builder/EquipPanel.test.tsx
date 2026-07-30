@@ -8,11 +8,12 @@ afterEach(cleanup);
 
 const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier"];
 
-function baseProps(profileId: string) {
+function baseProps(profileId: string, factionId = "fangs") {
   const p = catalog.profiles.find((x) => x.id === profileId)!;
   return {
     profile: p,
     cat: catalog,
+    factionId,
     added: [] as string[],
     removed: [] as string[],
     onAdd: vi.fn(),
@@ -60,6 +61,31 @@ describe("EquipPanel (vue)", () => {
     if (!addBtn) return; // catalogue sans équipement disponible pour ce profil
     fireEvent.click(addBtn);
     expect(props.onAdd).toHaveBeenCalledTimes(1);
+  });
+
+  // Sceau de la guilde noire : imposé (donc verrouillé) aux membres GN recrutés ailleurs,
+  // facultatif pour un frère d'armes, sans objet dans un Fer de Lance Guilde Noire.
+  const SEAL = catalog.equipment.find((e) => e.id === "sceau-de-la-guilde-noire")!;
+
+  it("verrouille le sceau imposé : pas de bouton « retirer » sur cet objet", () => {
+    const props = { ...baseProps("guilde-noire-raimbert-2", "kharns"), added: [SEAL.id] };
+    const { container } = render(<EquipPanel {...props} />);
+    const locked = container.querySelector(".fe-move.is-locked");
+    expect(locked).toBeTruthy();
+    // La ligne du sceau n'offre aucun bouton de retrait.
+    const row = locked!.closest(".fe-item")!;
+    expect(within(row as HTMLElement).queryByText(SEAL.name)).toBeTruthy();
+    expect(row.querySelector(".fe-move.rem")).toBeNull();
+  });
+
+  it("propose le sceau à l'achat pour un frère d'armes hors de sa faction", () => {
+    render(<EquipPanel {...baseProps("guilde-noire-mathys-3", "kharns")} />);
+    expect(screen.getAllByText(SEAL.name).length).toBeGreaterThan(0);
+  });
+
+  it("ne propose pas le sceau dans un Fer de Lance Guilde Noire", () => {
+    render(<EquipPanel {...baseProps("guilde-noire-raimbert-2", "guilde-noire")} />);
+    expect(screen.queryByText(SEAL.name)).toBeNull();
   });
 
   it("ouvre la fiche d'un objet équipé au clic (onInfo)", () => {

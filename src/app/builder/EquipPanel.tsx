@@ -4,6 +4,9 @@ import {
   equipmentMatchesEquipFilter,
   munitionKindForEquip,
   resolveMunitionLines,
+  sealFor,
+  sealOfferedFor,
+  sealRequiredFor,
   temboEquipmentSurcharge,
   type Catalog,
   type Profile,
@@ -38,6 +41,7 @@ export function EquipPanel({
   equipmentUpgrades,
   onToggleEquipmentUpgrade,
   hasMount,
+  factionId,
 }: {
   profile: Profile;
   cat: Catalog;
@@ -55,6 +59,8 @@ export function EquipPanel({
   onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
   /** La figurine a-t-elle une monture ? Débloque l'équipement de cavalier monté (Lance de cavalerie). */
   hasMount: boolean;
+  /** Faction du Fer de Lance d'accueil : dit si le sceau est proposé, imposé (non retirable) ou sans objet. */
+  factionId: string;
 }) {
   const [query, setQuery] = useState("");
   const [openMun, setOpenMun] = useState<Record<string, boolean>>({}); // blocs de munitions dépliés, par arme
@@ -62,6 +68,11 @@ export function EquipPanel({
   const [facets, setFacets] = useState<Set<string>>(new Set()); // facettes d'armes actives (multi) : h1 / h2 / free
   const eq = (id: string) => cat.equipment.find((e) => e.id === id);
   const forbidden = forbiddenCats(p, cat);
+  // Sceau (« Sceau de la guilde noire ») : proposé seulement là où il ouvre le recrutement, et
+  // verrouillé quand il en est la condition (un frère d'armes garde le sien facultatif).
+  const sealOffered = sealOfferedFor(cat, p, factionId);
+  const sealLockedId = sealRequiredFor(cat, p, factionId)?.id;
+  const isHiddenSeal = (e: Catalog["equipment"][number]) => sealFor(cat, p)?.id === e.id && !sealOffered;
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
 
   const worn = [...activeBase, ...added].map(eq).filter((e): e is NonNullable<typeof e> => Boolean(e));
@@ -102,6 +113,7 @@ export function EquipPanel({
       PURCHASE_CATS.includes(e.category) &&
       !forbidden.has(e.category) &&
       equipReservedOk(e, p) &&
+      !isHiddenSeal(e) &&
       !(isUnique(e) && !p.baseEquipmentIds.includes(e.id)) &&
       (!p.baseEquipmentIds.includes(e.id) || removed.includes(e.id)) &&
       !added.includes(e.id) &&
@@ -349,17 +361,23 @@ export function EquipPanel({
                           {isBase && <span className="fe-badge-base">base</span>}
                         </span>
                         {priceCell(e, isBase)}
-                        <button
-                          className="fe-move rem"
-                          onClick={(ev) => {
-                            ev.stopPropagation();
-                            if (isBase) onToggleBase(id);
-                            else onRemove(id);
-                          }}
-                          title={isBase ? "Retirer (libère l'emplacement)" : "Retirer"}
-                        >
-                          →
-                        </button>
+                        {id === sealLockedId ? (
+                          <span className="fe-move is-locked" title="Nécessaire au recrutement dans ce Fer de Lance">
+                            🔒
+                          </span>
+                        ) : (
+                          <button
+                            className="fe-move rem"
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              if (isBase) onToggleBase(id);
+                              else onRemove(id);
+                            }}
+                            title={isBase ? "Retirer (libère l'emplacement)" : "Retirer"}
+                          >
+                            →
+                          </button>
+                        )}
                       </div>
                       {munitionRow(e)}
                       {upgradeRow(e)}

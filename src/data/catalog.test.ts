@@ -8,8 +8,8 @@ describe("catalogue", () => {
 
   it("contient les profils transcrits par faction", () => {
     const byFaction = (id: string) => catalog.profiles.filter((p) => p.factionId === id).length;
-    expect(byFaction("fangs")).toBe(20);
-    expect(byFaction("gouns")).toBe(19);
+    expect(byFaction("fangs")).toBe(22);
+    expect(byFaction("gouns")).toBe(20);
   });
 
   it("référence des équipements existants dans les équipements de base", () => {

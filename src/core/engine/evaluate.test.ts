@@ -1192,8 +1192,11 @@ describe("Montures par origine (Guilde Noire)", () => {
     expect(mountTypes("guilde-noire-brute-2")).toEqual(["koelod"]);
   });
 
-  it("un GN d'origine goûne accède au Mochère", () => {
-    expect(mountTypes("guilde-noire-gakere-2")).toEqual(["mochere"]);
+  it("un GN d'origine goûne accède aux montures goûnes (Mochères)", () => {
+    // Le catalogue en compte plusieurs (Mochère, Mochère de combat) : c'est l'origine qui compte.
+    const types = mountTypes("guilde-noire-gakere-2").map((id) => catalog.mountTypes.find((t) => t.id === id)!);
+    expect(types.length).toBeGreaterThan(0);
+    expect(types.every((t) => t.factionEligibility?.includes("gouns"))).toBe(true);
   });
 
   it("un GN d'origine fang n'a aucune monture (les Fangs n'en ont pas)", () => {

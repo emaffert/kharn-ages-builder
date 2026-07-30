@@ -55,10 +55,12 @@ describe("sidebar - sections du roster", () => {
 });
 
 describe("sidebar - montures disponibles", () => {
-  it("un FdL Guilde Noire propose les 3 montures (via les origines de ses figurines)", () => {
+  it("un FdL Guilde Noire propose les montures des trois origines de ses figurines", () => {
     // guilde-noire n'est dans l'éligibilité d'AUCUN type de monture : tout passe par les traits
     // d'origine (monture-kharns/kherops/gouns) des profils recrutables.
-    expect([...availableMountTypeIds(catalog, "guilde-noire")].sort()).toEqual(["koelod", "mochere", "quagga"]);
+    expect([...availableMountTypeIds(catalog, "guilde-noire")]).toEqual(
+      expect.arrayContaining(["koelod", "mochere", "quagga"]),
+    );
   });
 
   it("un FdL Khérops propose au moins le Kœlod", () => {

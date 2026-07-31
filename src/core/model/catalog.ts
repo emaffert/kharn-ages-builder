@@ -108,7 +108,7 @@ export const ProfileSchema = z.object({
   fixedBaseEquipmentIds: z.array(z.string()).optional(),
   /** Un tableau de dés de maîtrise ; chaque dé porte 1 à 5 domaines. */
   masteryDice: z.array(z.array(MasteryDomainSchema)),
-  /** Vocabulaire ouvert (ex. "apatride", "tembo", "femelle-fang", "frere-d-armes"…). */
+  /** Vocabulaire ouvert (ex. "tembo", "femelle-fang", "frere-d-armes", "khemiste"…). */
   traits: z.array(z.string()),
   recruitment: z.array(ConstraintSchema),
   effects: z.array(EffectSchema).optional(),

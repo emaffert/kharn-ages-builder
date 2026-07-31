@@ -5,12 +5,14 @@ import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, m
 import {
   affinityWays,
   armorsWorn,
+  castWays,
   castableSpells,
   forbiddenGrimoires,
   genericSpellAllocation,
   maxPagesInPool,
   pageAllocation,
 } from "./magic";
+import { recruitableWithoutSeal } from "./recruitment";
 
 /** L'identifiant de la voie Adansonia dans le catalogue (créée avec un id technique). */
 const ADANSONIA = "way-1783500043343";
@@ -977,6 +979,17 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
     expect(affinityWays(catalog, g)).toEqual([]);
   });
 
+  it("une Affinité octroyée par effet compte autant qu'une Affinité imprimée", () => {
+    const g = catalog.profiles.find((p) => p.id === "tembos-guerriere-1")!;
+    expect(affinityWays(catalog, g, [{ skillId: "affinite", value: "Shamanisme" }])).toEqual(["shamanisme"]);
+  });
+
+  it("une Affinité sans école (valeur vide) n'ouvre rien", () => {
+    const g = catalog.profiles.find((p) => p.id === "tembos-guerriere-1")!;
+    expect(affinityWays(catalog, { ...g, skills: [{ skillId: "affinite" }] })).toEqual([]);
+    expect(affinityWays(catalog, g, [{ skillId: "affinite" }])).toEqual([]);
+  });
+
   it("l'affinité OUVRE la voie pour la sélection de sorts (voie non maîtrisée sinon)", () => {
     // Profil synthétique : aucune voie maîtrisée (ways=[]), Affinité « Ostéomancie », trait fille-de-nyx
     // (pour passer la réserve de trait du sort). Le sort ostéomancien devient sélectionnable via l'affinité.
@@ -1003,6 +1016,58 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
     const spells = castableSpells(benched, nephtys, new Set(nephtys.traits), [ADANSONIA]).map((s) => s.id);
     expect(spells).toContain("banc-shamanisme"); // école ouverte par l'Affinité
     expect(spells).toContain("banc-adansonia"); // sa voie maîtrisée
+  });
+});
+
+describe("Archimage (maîtrise de toutes les voies)", () => {
+  const balthus = catalog.profiles.find((p) => p.id === "profile-1785427326487")!;
+  /** L'objet qui octroie « Archimage » à son porteur (réservé à Balthus). */
+  const GRIMOIRE_JOSEVE = "equip-1785427673889";
+  const allWays = catalog.magicWays.map((w) => w.id);
+
+  it("la compétence se suffit à elle-même : toutes les voies, sans compétence d'école", () => {
+    const p = { ...balthus, skills: [{ skillId: "archimage" }] };
+    expect(castWays(catalog, p, inst(p.id), new Set(p.traits))).toEqual(allWays);
+  });
+
+  it("un archimage voit les sorts de toutes les voies, mais les réservations tiennent", () => {
+    const p = { ...balthus, skills: [{ skillId: "archimage" }], traits: [] };
+    const ways = castWays(benched, p, inst(p.id), new Set(p.traits));
+    const spells = castableSpells(benched, p, new Set(p.traits), ways).map((s) => s.id);
+    expect(spells).toContain("banc-shamanisme"); // voie goûne
+    expect(spells).toContain("banc-adansonia"); // voie tembo
+    expect(spells).not.toContain("banc-shamanisme-reserve"); // réservée à un trait qu'il n'a pas
+  });
+
+  it("le Grimoire de Josève fait de Balthus un archimage (compétence octroyée par l'objet)", () => {
+    const b = inst(balthus.id, { addedEquipmentIds: [GRIMOIRE_JOSEVE] });
+    const res = evaluateList(catalog, makeList([b], "kharns"));
+    const granted = (res.grantedSkills[b.instanceId] ?? []).map((s) => s.skillId);
+    expect(granted).toContain("archimage");
+    expect(castWays(catalog, balthus, b, new Set(balthus.traits), granted)).toEqual(allWays);
+  });
+
+  it("sans le grimoire, Balthus reste cantonné à sa seule voie", () => {
+    const b = inst(balthus.id);
+    expect(castWays(catalog, balthus, b, new Set(balthus.traits))).toEqual(["sang-et-acier"]);
+  });
+
+  it("retirer le grimoire rend illégaux les sorts qu'il avait ouverts", () => {
+    const POIGNE = "spell-1785238451420"; // Ostéomancie, 1 page, sans réservation
+    const armed = inst(balthus.id, {
+      addedEquipmentIds: [GRIMOIRE_JOSEVE],
+      grimoireId: "grand",
+      spellIds: [POIGNE],
+    });
+    const ok = evaluateList(catalog, makeList([armed], "kharns"));
+    expect(ok.issues.map((i) => i.ruleId)).not.toContain("spell-not-castable");
+
+    // Même figurine, objet revendu : la voie ostéomancienne se referme sur un sort déjà choisi.
+    const disarmed = inst(balthus.id, { grimoireId: "grand", spellIds: [POIGNE] });
+    const ko = evaluateList(catalog, makeList([disarmed], "kharns"));
+    const issue = ko.issues.find((i) => i.ruleId === "spell-not-castable");
+    expect(issue?.severity).toBe("error");
+    expect(issue?.message).toContain("Poigne spectrale");
   });
 });
 
@@ -1122,9 +1187,41 @@ describe("attribution atomique d'un sort dans un pool (maxPagesInPool)", () => {
   });
 });
 
-describe("Frères d'Armes (grant-trait + apatride conditionnel)", () => {
+describe("Apatride : la compétence de la carte, et rien d'autre", () => {
+  const factionIssues = (res: ReturnType<typeof evaluateList>) =>
+    res.issues.filter((i) => i.ruleId?.startsWith("faction:"));
+  const gaal = catalog.profiles.find((p) => p.id === "tembos-gaal-3")!;
+  /** Le même profil dépouillé de sa compétence : un trait homonyme ne doit plus rien racheter. */
+  const sansCompetence: Catalog = {
+    ...catalog,
+    profiles: catalog.profiles.map((p) =>
+      p.id === "tembos-gaal-3"
+        ? { ...p, skills: p.skills.filter((s) => s.skillId !== "apatride"), traits: [...p.traits, "apatride"] }
+        : p,
+    ),
+  };
+
+  it("la compétence ouvre le roster de toutes les factions", () => {
+    expect(recruitableWithoutSeal(gaal, "fangs")).toBe(true);
+    expect(recruitableWithoutSeal(gaal, "tembos")).toBe(true);
+  });
+
+  it("la compétence suffit au recrutement hors de sa faction", () => {
+    const res = evaluateList(catalog, makeList([inst("tembos-gaal-3")], "fangs"));
+    expect(factionIssues(res)).toHaveLength(0);
+  });
+
+  it("le trait seul ne recrute plus personne hors de sa faction", () => {
+    const sansSkill = sansCompetence.profiles.find((p) => p.id === "tembos-gaal-3")!;
+    expect(recruitableWithoutSeal(sansSkill, "fangs")).toBe(false);
+    const res = evaluateList(sansCompetence, makeList([inst("tembos-gaal-3")], "fangs"));
+    expect(factionIssues(res)).toHaveLength(1);
+  });
+});
+
+describe("Frères d'Armes (apatride conditionnel)", () => {
   const hasApatride = (res: ReturnType<typeof evaluateList>, id: string) =>
-    (res.grantedTraits[id] ?? []).includes("apatride");
+    (res.grantedSkills[id] ?? []).some((s) => s.skillId === "apatride");
   const factionIssues = (res: ReturnType<typeof evaluateList>) =>
     res.issues.filter((i) => i.ruleId?.startsWith("faction:"));
 
@@ -1268,7 +1365,7 @@ describe("Sceau de la guilde noire (recrutement inter-factions payant)", () => {
     const a = inst("guilde-noire-raimbert-2", { addedEquipmentIds: [SEAL] });
     const res = evaluateList(catalog, makeList([a], "kharns"));
     expect(factionIssues(res)).toHaveLength(0);
-    expect(res.grantedTraits[a.instanceId] ?? []).toContain("apatride");
+    expect((res.grantedSkills[a.instanceId] ?? []).map((s) => s.skillId)).toContain("apatride");
     expect(res.costByInstance[a.instanceId]).toBe(raimbert().cost + sealCost);
   });
 

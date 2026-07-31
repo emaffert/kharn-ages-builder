@@ -9,6 +9,7 @@ import {
   castableSpells as coreCastableSpells,
   eligibleMountsFor as coreEligibleMountsFor,
   equipmentReservedOk,
+  isApatride,
   isRecruitableIn,
   mountKindOf,
   mountOptionCostOf,
@@ -18,6 +19,7 @@ import {
 import type {
   Catalog,
   GenericSpellAllocation,
+  GrantedSkillRef,
   MountOption,
   PageAllocation,
   PageSource,
@@ -413,8 +415,14 @@ export function genericSpellAllocation(p: Profile, cat: Catalog, spellIds: strin
   return coreGenericSpellAllocation(cat, p, { ...synthInstance(p, [], p.baseEquipmentIds), spellIds });
 }
 
-export function spellsFor(p: Profile, cat: Catalog, ways: string[]): Spell[] {
-  return coreCastableSpells(cat, p, new Set(p.traits), ways);
+/** Sorts sélectionnables. `grantedSkills` porte les compétences octroyées (ex. une Affinité conférée par un objet). */
+export function spellsFor(
+  p: Profile,
+  cat: Catalog,
+  ways: string[],
+  grantedSkills: readonly GrantedSkillRef[] = [],
+): Spell[] {
+  return coreCastableSpells(cat, p, new Set(p.traits), ways, grantedSkills);
 }
 
 /** Ce que coûte un sort dans son propre budget : des niveaux pour un générique, des pages sinon. */
@@ -465,7 +473,7 @@ export type ModelEntry = { id: string; name: string; profiles: Profile[]; icon?:
 // ── Roster (sidebar du constructeur) ── logique pure de catégorisation, testable hors composant.
 
 /** Sections de la sidebar. `personnage`/`troupe`/`conditionnel` = natifs de la faction ; les recrues
- *  inter-factions vont en `freres-d-armes` (trait `frere-d-armes`, ni allié ni apatride), `sceau`
+ *  inter-factions vont en `freres-d-armes` (trait `frere-d-armes`, ni allié ni apatride de carte), `sceau`
  *  (recrutable seulement en payant son sceau, ex. Guilde Noire) ou `hors-faction` (alliés). */
 export type RosterSection =
   | "personnage"
@@ -499,7 +507,7 @@ export function rosterSectionOf(cat: Catalog, factionId: string, profile: Profil
   }
   const frere =
     profile.traits.includes(FRERE_D_ARMES) &&
-    !profile.traits.includes("apatride") &&
+    !isApatride(profile) &&
     !(profile.recruitment ?? []).some((c) => c.type === "faction-membership");
   if (frere) return "freres-d-armes";
   return sealRequiredFor(cat, profile, factionId) ? "sceau" : "hors-faction";

@@ -119,7 +119,8 @@ Types de contraintes à prévoir : exclusion d'équipement, dépendance de prés
   - grand grimoire : 40 Ko, pages illimitées.
 - **Sorts de grimoire** : coût en Ko + occupent un nombre de **pages** ; réservés à la **voie de magie** maîtrisée.
 - **Voies de magie** par faction : Ostéomancie (Fangs), Shamanisme (Goûns), Le Sang et l'Acier (Khârns), Sacrifice (Khérops), Adansonia (Tembos/Khémistes).
-- Compétences liées : **Affinité (voie X)**, **Archimage** (toutes les voies).
+- Compétences liées : **Affinité (voie X)**, **Archimage** (toutes les voies ; se suffit à elle-même,
+  sans compétence d'école).
 
 ## Montures et Cavaliers (Bataille)
 

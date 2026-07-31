@@ -25,10 +25,18 @@ function cardApplies(card: SpecialCard, profile: Profile, traits: ReadonlySet<st
 }
 
 /**
+ * Compétence « Archimage » : maîtrise **toutes** les voies de magie, sans compétence d'école. Elle se
+ * suffit à elle-même et s'octroie comme n'importe quelle compétence (ex. « Grimoire de Josève » →
+ * `grant-skill` sur son porteur). Pas de trait jumeau à tenir à jour, contrairement à `apatride`.
+ */
+export const ARCHIMAGE_SKILL_ID = "archimage";
+
+/**
  * Voies de magie lançables : la figurine possède la compétence qui maîtrise cette voie
  * (MagicWay.skillId), qu'elle soit native ou octroyée par effet (`grantedSkillIds`, ex. Apprentie
  * de Nyx → ostéomancie via `grant-skill`). Cartes comme équipement confèrent désormais le lancement
  * par cette voie (octroi de la compétence), plus par un flag `grantsCasting` dédié.
+ * « Archimage » ouvre d'un coup toutes les voies du catalogue (cf. `ARCHIMAGE_SKILL_ID`).
  */
 export function castWays(
   cat: Catalog,
@@ -38,6 +46,7 @@ export function castWays(
   grantedSkillIds: readonly string[] = [],
 ): string[] {
   const skillIds = new Set<string>([...profile.skills.map((s) => s.skillId), ...grantedSkillIds]);
+  if (skillIds.has(ARCHIMAGE_SKILL_ID)) return cat.magicWays.map((w) => w.id);
   return cat.magicWays
     .filter((w) => w.skillId != null && skillIds.has(w.skillId))
     .map((w) => w.id);
@@ -274,16 +283,25 @@ function normLabel(s: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
+/** Une compétence octroyée par effet, avec sa valeur éventuelle (ex. Affinité « Shamanisme »). */
+export type GrantedSkillRef = { skillId: string; value?: string | number };
+
 /**
  * Voies accessibles via la compétence « Affinité X » : le mage peut mettre dans son grimoire les sorts
  * normalement réservés à la voie/faction X, EN PLUS de la sienne (ex. Néphtys : Affinité « Shamanisme »).
  * `X` (valeur de la compétence, ex. « Shamanisme ») est résolu contre l'id, le nom de la voie, ou le
- * mot-clé de sa compétence de maîtrise. N'accorde PAS le lancement natif de la voie (pas de bonus
- * d'incantation) : sert uniquement à élargir la sélection de sorts de grimoire (réservations profil/trait
- * plus fines toujours appliquées, cf. `castableSpells`).
+ * mot-clé de sa compétence de maîtrise. La compétence peut être native ou octroyée par effet
+ * (`grantedSkills`, ex. un objet qui confère une affinité) ; une Affinité sans valeur n'ouvre rien.
+ * N'accorde PAS le lancement natif de la voie (pas de bonus d'incantation) : sert uniquement à élargir
+ * la sélection de sorts de grimoire (réservations profil/trait plus fines toujours appliquées,
+ * cf. `castableSpells`).
  */
-export function affinityWays(cat: Catalog, profile: Profile): string[] {
-  const values = profile.skills
+export function affinityWays(
+  cat: Catalog,
+  profile: Profile,
+  grantedSkills: readonly GrantedSkillRef[] = [],
+): string[] {
+  const values = [...profile.skills, ...grantedSkills]
     .filter((s) => s.skillId === AFFINITY_SKILL_ID && s.value != null)
     .map((s) => normLabel(String(s.value)));
   if (values.length === 0) return [];
@@ -312,6 +330,7 @@ function spellReservationOk(spell: Spell, profile: Profile, traits: ReadonlySet<
 
 /**
  * Sorts lançables : génériques (ouverts à tout lanceur) + sorts des voies maîtrisées ou d'affinité.
+ * `ways` porte déjà les voies de l'Archimage (toutes), qui voit donc tous les sorts de grimoire.
  * Une figurine qui ne maîtrise aucune voie ne lance rien du tout, pas même un générique.
  * La réservation s'applique dans tous les cas, y compris aux génériques : un générique réservé à un
  * personnage ou à une faction ne doit apparaître que là (ex. « Passe-Passe » → Bharbathos).
@@ -323,8 +342,9 @@ export function castableSpells(
   profile: Profile,
   traits: ReadonlySet<string>,
   ways: string[],
+  grantedSkills: readonly GrantedSkillRef[] = [],
 ): Spell[] {
-  const allWays = new Set([...ways, ...affinityWays(cat, profile)]);
+  const allWays = new Set([...ways, ...affinityWays(cat, profile, grantedSkills)]);
   if (allWays.size === 0) return [];
   return cat.spells.filter((s) => {
     if (!spellReservationOk(s, profile, traits)) return false;

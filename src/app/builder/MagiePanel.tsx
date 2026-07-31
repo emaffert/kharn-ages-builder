@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SegmentedControl } from "@ui";
-import type { Catalog, GenericSpellAllocation, PageAllocation, Profile, Spell } from "@core";
+import type { Catalog, GenericSpellAllocation, GrantedSkillRef, PageAllocation, Profile, Spell } from "@core";
 import { SectionTitle, SlotChip } from "./components";
 import {
   forbiddenGrimoires,
@@ -28,6 +28,7 @@ export function MagiePanel({
   grimoire,
   spells,
   ways,
+  grantedSkills,
   wornEquipIds,
   onGrimoire,
   onToggleSpell,
@@ -42,6 +43,8 @@ export function MagiePanel({
   grimoire: "none" | "petit" | "grand";
   spells: string[];
   ways: string[];
+  /** Compétences octroyées par effet : une Affinité conférée par un objet ouvre elle aussi son école. */
+  grantedSkills?: readonly GrantedSkillRef[];
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
@@ -123,6 +126,7 @@ export function MagiePanel({
         cat={cat}
         pane={pane}
         ways={ways}
+        grantedSkills={grantedSkills}
         alloc={alloc}
         gen={gen}
         selected={spells}
@@ -144,6 +148,7 @@ function SpellPanel({
   cat,
   pane,
   ways,
+  grantedSkills,
   alloc,
   gen,
   selected,
@@ -155,6 +160,7 @@ function SpellPanel({
   cat: Catalog;
   pane: SpellPane;
   ways: string[];
+  grantedSkills?: readonly GrantedSkillRef[];
   alloc: PageAllocation;
   gen: GenericSpellAllocation;
   selected: string[];
@@ -174,7 +180,7 @@ function SpellPanel({
   const groupOf = (s: Spell) => (pane === "generique" ? "" : wayName(s.magicWayId));
   // On ne filtre PAS les sorts connus d'office : l'éligibilité est gérée par `spell.reservedTo`,
   // et un sort générique connu d'office doit rester ajoutable.
-  const avail = spellsFor(p, cat, ways).filter(
+  const avail = spellsFor(p, cat, ways, grantedSkills).filter(
     (s) => inPane(s) && !selected.includes(s.id) && (q === "" || s.name.toLowerCase().includes(q)),
   );
   const groupsOf = (list: Spell[]) => [...new Set(list.map(groupOf))].sort((a, b) => a.localeCompare(b));

@@ -56,8 +56,9 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   // Ex. Alaric connaît « Lien Mental ». Affiché sur la fiche même pour un non-lanceur.
   z.object({ kind: z.literal("grant-spell"), spellId: z.string() }),
   // Octroie un trait (tag mécanique) aux cibles, jusqu'au point fixe, AVANT la validation - donc lu
-  // par les règles qui inspectent les traits (ex. `validateFactionMembership` pour « apatride »).
-  // Ex. carte « Frères d'Armes » : ≥ 2 frères d'armes dans un Fer de Lance → tous « apatride ».
+  // par les règles et les sélecteurs qui inspectent les traits. À réserver aux tags sans compétence
+  // correspondante : quand la carte affiche une compétence (« Apatride »), c'est `grant-skill` qui
+  // l'octroie, pour que profil et effet parlent la même langue.
   z.object({ kind: z.literal("grant-trait"), trait: z.string() }),
   z.object({
     kind: z.literal("stat-modifier"),

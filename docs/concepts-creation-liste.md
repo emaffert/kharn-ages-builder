@@ -20,12 +20,14 @@ représenté dans le moteur `evaluateList`.
 
 - Une **unique faction** par Fer de Lance → filtre les profils disponibles.
 - Exceptions de recrutement :
-  - **apatride** : recrutable par toutes les factions ;
+  - **apatride** : recrutable par toutes les factions. C'est la **compétence** de la carte qui le
+    dit, et elle seule - les octrois (sceau, « Frères d'Armes ») l'octroient donc eux aussi comme
+    compétence (`grant-skill`) ;
   - **allié des X** : recrutable par X ou sa faction d'origine ;
   - profils **sans logo** : recrutables partout ;
   - **Sceau de la Guilde Noire** [+] (source : FAQ Janv. 2026 + carte p. 79) : une figurine **Guilde
     Noire** peut rejoindre un FdL d'une autre faction pour **+10 Ko**. Encodé en donnée : l'objet
-    octroie `apatride` à son porteur (`grant-trait`, cible `self`) et est réservé à la faction
+    octroie `apatride` à son porteur (`grant-skill`, cible `self`) et est réservé à la faction
     Guilde Noire. Le constructeur en déduit tout le reste - section « Guilde Noire » du roster, coût
     annoncé sceau compris, sceau équipé d'office au recrutement et non retirable.
   - **Frères d'armes** (carte de Mathys, Guilde Noire) : dès qu'il y a **≥ 2** figurines « frère
@@ -94,6 +96,9 @@ représenté dans le moteur `evaluateList`.
   ≤ budget de pages + bonne voie) ; coût.
 - Moteur : le **budget de pages** est appliqué (`spell-pages` → capacité, dépassement signalé par
   `pages-over-capacity`), de même que grimoire interdit, mains/armure et absence de lanceur.
+- Moteur : chaque sort choisi est revérifié contre les voies accessibles et sa réservation
+  (`spell-not-castable`) - une voie peut se refermer après coup, quand l'objet ou l'amélioration qui
+  l'ouvrait est retiré (ex. Grimoire de Josève → Archimage).
 
 ## 8. Montures & cavaliers [Bataille]
 

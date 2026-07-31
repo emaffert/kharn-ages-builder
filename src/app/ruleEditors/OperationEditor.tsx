@@ -241,7 +241,7 @@ export function OperationEditor({
       {op.kind === "grant-trait" && (
         <TxtField
           label="Trait"
-          hint="tag interne, ex. apatride"
+          hint="tag interne, ex. frere-d-armes (une compétence de carte s'octroie en « compétence »)"
           w="w-56"
           value={op.trait}
           onChange={(v) => onChange({ ...op, trait: v })}

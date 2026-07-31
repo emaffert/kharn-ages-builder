@@ -7,6 +7,36 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-07-31
+
+### La compétence « Archimage » fonctionne
+
+- « Archimage » ne faisait rien du tout. Elle donne désormais accès aux sorts de **toutes les
+  voies de magie** dans le même grimoire, comme le dit la carte.
+- Elle se suffit à elle-même : une figurine qui n'a qu'« Archimage », sans compétence d'école,
+  est bien reconnue comme mage (onglet « Magie » et pastille « Mage » sur sa fiche).
+- Concrètement, Balthus qui achète le **Grimoire de Josève** choisit maintenant ses sorts parmi
+  les cinq voies, et plus seulement dans « Le Sang et l'Acier ».
+- Les sorts réservés à un personnage ou à une faction précise le restent : un archimage ne pioche
+  pas dans les sorts signatures des autres.
+
+### « Apatride » et « Affinité » se lisent sur la carte
+
+- « Apatride » demandait, en plus de la compétence, une étiquette interne invisible sur la fiche :
+  sans elle, la compétence ne faisait rien. Seule la compétence inscrite sur la carte compte
+  désormais, et l'étiquette a disparu. Les cas où « Apatride » est *gagné* en cours de liste
+  (Sceau de la Guilde Noire, ≥ 2 Frères d'Armes) fonctionnent comme avant, à ceci près que la
+  figurine l'affiche maintenant parmi ses compétences.
+- « Affinité (école X) » n'était prise en compte que si elle était imprimée sur le profil. Une
+  Affinité conférée par un objet ou une carte ouvre maintenant son école, elle aussi.
+
+### Un sort devenu inaccessible est signalé
+
+- Si ce qui ouvrait une voie de magie disparaît après coup (objet revendu, amélioration décochée),
+  les sorts déjà choisis dans cette voie restaient en place sans un mot. La liste est maintenant
+  invalide, avec le nom des sorts en cause : « Balthus ne peut pas connaître ce sort : Poigne
+  spectrale. »
+
 ## 2026-07-30
 
 ### Un objet n'est réservé que s'il le dit

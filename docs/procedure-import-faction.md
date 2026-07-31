@@ -79,8 +79,6 @@ l'admin affiche « tag interne, non référencé par une règle » alors qu'ils 
 
 Traits hardcodés connus à ce jour :
 
-- `apatride` : recrutable dans le fer-de-lance de n'importe quelle faction
-  (`evaluate.ts` `validateFactionMembership`, `shared.ts`, `BuilderScreen.tsx`).
 - `tembo` : surcoût d'équipement Tembo (`evaluate.ts` `temboEquipmentSurcharge`).
 - `monture-<faction>` : **origine « montures uniquement »**. Les figurines des factions
   « creuset » (Guilde Noire, Affranchis) gardent l'accès à la **monture de leur peuple d'origine**
@@ -95,6 +93,18 @@ Traits hardcodés connus à ce jour :
 
 Si un nouvel import introduit un comportement moteur attaché à un trait, ajouter une ligne dans
 `BUILTIN_TRAIT_USAGE` en même temps que le code moteur.
+
+## Compétences lues « en dur » par le moteur
+
+Quand la carte **affiche** une compétence, c'est elle que le moteur lit : pas de trait jumeau à
+poser en plus, et les effets qui l'octroient emploient `grant-skill`.
+
+- `apatride` : recrutable dans n'importe quelle faction (`recruitment.ts` `isApatride`, utilisé par
+  `validateFactionMembership` et par le roster du constructeur). Octroyée par le Sceau de la Guilde
+  Noire et par la carte « Frères d'Armes » (≥ 2 réunis).
+- `affinite` (à valeur, ex. « Shamanisme ») : ouvre au grimoire les sorts d'une école
+  supplémentaire (`magic.ts` `affinityWays`). Sans valeur, elle n'ouvre rien.
+- `archimage` : maîtrise toutes les écoles et suffit à faire un lanceur (`magic.ts` `castWays`).
 
 ## Surcoût d'équipement et `reservedTo`
 
@@ -138,6 +148,9 @@ qu'aucun `unverifiedFields` ne contient un token hors de cette liste.
   dédiés, **de façon atomique** (les pages d'un sort ne se scindent jamais entre un pool et le grimoire
   général : voir `maxPagesInPool` / `pageAllocation` dans `magic.ts`).
 - Affinité X ouvre au grimoire les sorts d'une école supplémentaire (`affinityWays`).
+- **Archimage** ouvre **toutes** les écoles (`castWays`) : la compétence se suffit à elle-même, un
+  archimage est lanceur même sans compétence d'école. Elle s'octroie comme n'importe quelle
+  compétence (`grant-skill`, ex. « Grimoire de Josève ») ; pas de trait à poser en plus.
 
 ## Workflow admin : le piège du localStorage
 

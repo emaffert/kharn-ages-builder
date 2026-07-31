@@ -1,6 +1,7 @@
 import { specialCardsForProfile } from "@ui/explain";
 import { Tag, STAT_FULL } from "@ui";
 import {
+  ARCHIMAGE_SKILL_ID,
   baseEquipmentCount,
   iconFor,
   type Armor,
@@ -167,13 +168,12 @@ export function ProfileStatCard({
   const limIsFx = limBonus > 0 && p.limitation.value != null;
   const limValue = p.limitation.kind === "X" ? (p.limitation.value ?? 0) + limBonus : null;
   // Lanceur = possède la compétence d'une voie de magie (source de vérité : MagicWay.skillId),
-  // qu'elle soit native ou octroyée par effet (ex. Apprentie de Nyx → ostéomancie).
-  const isCaster = cat.magicWays.some(
-    (w) =>
-      w.skillId != null &&
-      (p.skills.some((s) => s.skillId === w.skillId) ||
-        (mods?.grantedSkills ?? []).some((g) => g.skillId === w.skillId)),
-  );
+  // qu'elle soit native ou octroyée par effet (ex. Apprentie de Nyx → ostéomancie). « Archimage »
+  // les maîtrise toutes et se passe donc de compétence d'école (ex. Grimoire de Josève).
+  const hasSkill = (id: string) =>
+    p.skills.some((s) => s.skillId === id) || (mods?.grantedSkills ?? []).some((g) => g.skillId === id);
+  const isCaster =
+    hasSkill(ARCHIMAGE_SKILL_ID) || cat.magicWays.some((w) => w.skillId != null && hasSkill(w.skillId));
   const limLabel =
     p.limitation.kind === "special"
       ? "Limitation •"

@@ -142,6 +142,7 @@ export function FigureEditor({
           grimoire={grimoire}
           spells={spells}
           ways={ways}
+          grantedSkills={mods?.grantedSkills}
           wornEquipIds={[...activeBase, ...added]}
           onGrimoire={onGrimoire}
           onToggleSpell={onToggleSpell}

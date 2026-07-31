@@ -96,7 +96,7 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
             <li>
               <strong><code>faction-membership</code></strong> - autorise une figurine d'une autre faction à être
               recrutée dans les Fers de Lance des factions listées (ex. « Allié des X »). <em>Champ :</em>{" "}
-              <strong>factions autorisées</strong> (le trait <code>apatride</code> outrepasse tout).
+              <strong>factions autorisées</strong> (la compétence <code>Apatride</code> outrepasse tout).
             </li>
             <li>
               <strong><code>equipment-reserved</code></strong> - interdit à la figurine d'acquérir certains
@@ -123,8 +123,8 @@ export function AdminDocs({ onClose }: { onClose: () => void }) {
           <Code>{`{ "note": "décrivez la règle ici ; ce contenu n'est pas lu par le moteur" }`}</Code>
           <p>
             <strong>Bon à savoir.</strong> « <strong>Allié des X</strong> » n'est <em>pas</em> automatique : il faut
-            une contrainte <code>faction-membership</code> listant la faction d'accueil (ou le trait{" "}
-            <code>apatride</code> pour « recrutable partout »). L'unicité d'un{" "}
+            une contrainte <code>faction-membership</code> listant la faction d'accueil (ou la compétence{" "}
+            <code>Apatride</code> sur la carte, pour « recrutable partout »). L'unicité d'un{" "}
             <strong>personnage (LIM P)</strong> est automatique via le champ <strong>« Limitation » = P</strong> du
             profil ; s'il occupe <em>en plus</em> la place d'un profil générique, renseignez{" "}
             <strong>« occupe la place de »</strong> directement sur la limitation (modèle + niveau).

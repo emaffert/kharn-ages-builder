@@ -8796,8 +8796,7 @@
         ]
       ],
       "traits": [
-        "tembo",
-        "apatride"
+        "tembo"
       ],
       "recruitment": [],
       "rules": [
@@ -9445,9 +9444,6 @@
         {
           "skillId": "maitre",
           "value": "objectif"
-        },
-        {
-          "skillId": "affinite"
         }
       ],
       "baseEquipmentIds": [
@@ -12705,22 +12701,6 @@
             "skillId": "apatride"
           },
           "sourceText": ""
-        },
-        {
-          "id": "e-1785444908417",
-          "source": {
-            "kind": "equipment",
-            "id": "sceau-de-la-guilde-noire"
-          },
-          "scope": "fer-de-lance",
-          "target": {
-            "self": true
-          },
-          "operation": {
-            "kind": "grant-trait",
-            "trait": "apatride"
-          },
-          "sourceText": ""
         }
       ],
       "reservedTo": {
@@ -15412,8 +15392,8 @@
             ]
           },
           "operation": {
-            "kind": "grant-trait",
-            "trait": "apatride"
+            "kind": "grant-skill",
+            "skillId": "apatride"
           },
           "sourceText": "≥ 2 frères d'armes → tous apatrides."
         },

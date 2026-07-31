@@ -18,13 +18,15 @@ import { addedEquipmentTally, baseEquipmentCount } from "../model";
 import {
   armorsWorn,
   castWays,
+  castableSpells,
   forbiddenGrimoires,
   genericSpellAllocation,
+  innateSpellIds,
   pageAllocation,
   wornEquipmentIds,
 } from "./magic";
 import { totalMunitionCost } from "./munitions";
-import { APATRIDE, FRERE_D_ARMES, alliedFactions, equipmentReservedOk, sealFor } from "./recruitment";
+import { FRERE_D_ARMES, alliedFactions, equipmentReservedOk, isApatride, sealFor } from "./recruitment";
 
 /**
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
@@ -517,7 +519,7 @@ function applyGrants(resolved: ResolvedInstance[], occurrences: EffectOccurrence
       if (!conditionHolds(effect.condition, effect.scope, occ.ferDeLanceId, resolved)) continue;
 
       if (op.kind === "grant-trait") {
-        // Octroi de trait (ex. « apatride ») : ajouté à l'ensemble des traits résolus, jusqu'au point
+        // Octroi de trait : ajouté à l'ensemble des traits résolus, jusqu'au point
         // fixe. Comme `applyGrants` précède `validate`, ce trait est vu par les règles (recrutement…).
         for (const ri of resolveTargets(occ, resolved)) {
           if (!ri.traits.has(op.trait)) {
@@ -826,9 +828,27 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
     }
 
     if (inst.spellIds.length > 0) {
-      if (castWays(cat, p, inst, traits, [...ri.grantedSkills.keys()]).length === 0) {
+      const granted = [...ri.grantedSkills].map(([skillId, g]) => ({ skillId, value: g.value }));
+      const ways = castWays(cat, p, inst, traits, [...ri.grantedSkills.keys()]);
+      if (ways.length === 0) {
         push("spells-no-caster", `« ${p.name} » a des sorts alors qu'elle ne peut pas en lancer.`);
       } else {
+        // Sorts hors de portée : voie non maîtrisée ou réservation non satisfaite. Le cas se produit
+        // quand ce qui ouvrait la voie disparaît APRÈS le choix des sorts (objet retiré, amélioration
+        // décochée) - ex. le Grimoire de Josève, qui rend Balthus archimage, revendu après coup.
+        // Les sorts connus d'office échappent à cette vérification : ils ne sont pas choisis.
+        const allowed = new Set([
+          ...castableSpells(cat, p, traits, ways, granted).map((s) => s.id),
+          ...innateSpellIds(cat, p, inst, traits),
+        ]);
+        const strays = inst.spellIds.filter((id) => !allowed.has(id));
+        if (strays.length > 0) {
+          const names = strays.map((id) => cat.spells.find((s) => s.id === id)?.name ?? id);
+          push(
+            "spell-not-castable",
+            `« ${p.name} » ne peut pas connaître ${names.length > 1 ? "ces sorts" : "ce sort"} : ${names.join(", ")}.`,
+          );
+        }
         // Sorts génériques : budget en niveaux (autant de niveaux de sorts que le niveau du profil).
         const gen = genericSpellAllocation(cat, p, inst);
         if (gen.over) {
@@ -1020,9 +1040,9 @@ function validateFactionMembership(
   for (const ri of inFdl) {
     const pf = ri.profile.factionId;
     if (!pf || pf === fdl.factionId) continue; // sans logo ou même faction
-    // `traits` porte déjà les octrois : `apatride` peut venir de la carte, de la carte « Frères
-    // d'Armes » (2+ réunis) ou du sceau que la figurine porte.
-    if (ri.traits.has(APATRIDE)) continue;
+    // `apatride` peut être la compétence inscrite sur la carte, ou un octroi résolu : carte « Frères
+    // d'Armes » (2+ réunis) ou sceau que la figurine porte.
+    if (isApatride(ri.profile, [...ri.grantedSkills.keys()])) continue;
     if (alliedFactions(ri.profile).includes(fdl.factionId)) continue; // « Allié des X »
     // Voie de sortie encore ouverte : réunir un second frère d'armes, ou payer le sceau.
     const seal = sealFor(cat, ri.profile);

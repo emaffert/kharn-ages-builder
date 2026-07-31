@@ -172,7 +172,6 @@ export function describeEffect(e: Effect, cat: Catalog): string {
  * contrainte/effet dans le catalogue). À garder en phase avec le code moteur.
  */
 const BUILTIN_TRAIT_USAGE: Record<string, string> = {
-  apatride: "moteur - recrutable dans le fer-de-lance de n’importe quelle faction (règle intégrée)",
   tembo: "moteur - surcoût d’équipement Tembo appliqué aux objets ajoutés (règle intégrée)",
 };
 

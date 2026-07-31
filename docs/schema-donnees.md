@@ -127,7 +127,7 @@ interface Profile {
     knownReservedSpellIds?: string[];
   };
 
-  traits: Trait[];            // "apatride", "allie-des", "carnivore", "tembo", "khemiste",
+  traits: Trait[];            // "allie-des", "carnivore", "tembo", "khemiste",
                               // "affranchi", "aliene", "femelle-fang", ...
   recruitment: Constraint[];  // contraintes de recrutement (voir couche 2)
   effects?: Effect[];         // effets dynamiques émis dans la liste (coût, octroi, déblocage)
@@ -285,7 +285,7 @@ interface SpecialCard {
   grantsCasting?: { magicWayIds: string[] };          // ex. Apprentie de Nyx → ostéomancie
   rulesText: RuleText[];                              // verbatim, fait foi
   constraints: Constraint[];                          // ex. Muskh requires-present Xayìn
-  effects: Effect[];                                  // ex. Forgeronne déverrouille « Borax », Mathys octroie « apatride »
+  effects: Effect[];                                  // ex. Forgeronne déverrouille « Borax », Mathys octroie « Apatride »
   cardImage: string;
 }
 ```
@@ -330,7 +330,7 @@ constructeur ne déduit plus rien du nombre de porteurs (une arme citée par une
 pas pour autant personnelle).
 
 Le **Sceau de la Guilde Noire** (+10 Ko pour rejoindre une autre faction) n'est pas une contrainte :
-c'est un **équipement** dont l'effet `grant-trait` octroie `apatride` à son porteur, réservé
+c'est un **équipement** dont l'effet `grant-skill` octroie la compétence `apatride` à son porteur, réservé
 (`reservedTo.factionIds`) à la Guilde Noire. La validation d'appartenance le lit donc sans rien
 savoir de lui, et son coût s'ajoute comme celui de n'importe quel objet acheté. Les règles
 d'accès partagées entre moteur et constructeur (sceau imposé, proposé ou sans objet) vivent dans
@@ -430,7 +430,7 @@ type EffectOperation =
   | { kind: "unlock-upgrade"; upgradeId: string; label: string; cost: number; equipmentCategories: Equipment["category"][]; grantsSkills?: SkillRef[] } // Borax
   | { kind: "grant-skill"; skillId: string; value?: string | number; precision?: string; incrementIfPresent?: number } // +N si déjà connue
   | { kind: "grant-spell"; spellId: string }                           // sort de signature (Alaric : Lien Mental)
-  | { kind: "grant-trait"; trait: string }                             // Frères d'Armes : « apatride »
+  | { kind: "grant-trait"; trait: string }                             // tag sans compétence (voir ci-dessous)
   | { kind: "grant-mastery-die"; domains: MasteryDomain[] }            // affichage (Bannière Khéropse)
   | { kind: "stat-modifier"; stat: StatKey; amount: number | "level" } // Apprentie de Nyx : +niveau en I
   | { kind: "stat-count"; stat: StatKey; of: Selector; per?: number }  // carac = comptage de figurines
@@ -465,11 +465,11 @@ Exemples (le `sourceText` porte le wording verbatim) :
 - **Apathée / Fille de Nyx** - « recruter 1 Larbin sans en payer le coût (maximum 2 gratuits, sans dépasser la limitation totale de 5) » → `cost-set 0` **par Fille de Nyx présente** (1 chacune), `maxCount 2` comme plafond, cible `fangs-larbin-1`, en interaction avec sa LIM 5.
 - **Forgeronne / Borax** - « 5 [Ko]/arme … 10 [Ko]/armure … confèrent … aux guerriers équipés » → `unlock-upgrade`, débloqué si Forgeronne présente, ciblant les « guerriers ».
 - **Commandant** - « les guerriers khérops paient moins cher leurs armes » → `cost-delta`, cible `traits: ["guerrier-kherops"]` (wording à confirmer, carte non fournie).
-- **Mathys / Frères d'Armes** - « Dès lors qu'ils sont au moins 2 frères d'armes dans un Fer de Lance, ils gagnent tous le trait apatride » → `grant-trait "apatride"`, `condition.countAtLeast 2` sur `traits: ["frere-d-armes"]`.
+- **Mathys / Frères d'Armes** - « Dès lors qu'ils sont au moins 2 frères d'armes dans un Fer de Lance, ils gagnent tous le trait apatride » → `grant-skill "apatride"`, `condition.countAtLeast 2` sur `traits: ["frere-d-armes"]`.
 
 #### Ordre de résolution (moteur)
 
-L'octroi d'un trait peut débloquer une autre règle (« apatride » change la validation de faction). Le moteur résout donc en phases, **jusqu'à un point fixe** (avec garde anti-cycle) :
+L'octroi d'une compétence ou d'un trait peut débloquer une autre règle (« Apatride » change la validation de faction). Le moteur résout donc en phases, **jusqu'à un point fixe** (avec garde anti-cycle) :
 
 1. collecte des effets actifs (source présente + condition remplie) ;
 2. application des `grant-trait` / `grant-skill` (peut réactiver l'étape 1) ;

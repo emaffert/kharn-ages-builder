@@ -11,6 +11,7 @@ import {
   equipmentReservedOk,
   isApatride,
   isRecruitableIn,
+  isSlaveIn,
   mountKindOf,
   mountOptionCostOf,
   sealRequiredFor,
@@ -159,8 +160,14 @@ function carrierSpec(p: Profile, cat: Catalog): CarrierSpec | null {
   return null;
 }
 
-/** Une figurine recrutée uniquement via un porteur (ex. Likan, Muskh) - pas d'achat propre. */
-export const isDependent = (p: Profile, cat: Catalog): boolean => carrierSpec(p, cat) != null;
+/**
+ * Une figurine recrutée uniquement via un porteur (ex. Likan, Muskh) - pas d'achat propre. Les
+ * esclaves en font partie, mais **selon le Fer de Lance d'accueil** : la Porteuse d'eau se recrute
+ * normalement chez les Goûns et les Tembos, et par un Seigneur de guerre partout ailleurs. D'où la
+ * faction en paramètre : sans elle, on ne juge que les dépendances inconditionnelles.
+ */
+export const isDependent = (p: Profile, cat: Catalog, factionId?: string): boolean =>
+  carrierSpec(p, cat) != null || (factionId != null && isSlaveIn(p, factionId));
 
 /** Le dépendant occupe-t-il la capacité de rattachement du porteur (contrainte `attachment`) ? */
 export const isAttachmentDependent = (p: Profile): boolean =>
@@ -282,7 +289,8 @@ export function profileMatchesAnySelector(p: Profile, sels: Selector[]): boolean
 }
 
 /** Modèle/figurine exact via lequel se recrute un profil dépendant (Likan → femelle Fang, Muskh → Xayìn). */
-export function carrierLabel(p: Profile, cat: Catalog): string | null {
+export function carrierLabel(p: Profile, cat: Catalog, factionId?: string): string | null {
+  if (factionId != null && isSlaveIn(p, factionId)) return "un Seigneur de guerre";
   const name = (id?: string) =>
     cat.profiles.find((x) => x.id === id)?.name ?? cat.models.find((m) => m.id === id)?.name;
   // Attachment : porteur désigné par trait ou par identifiants. `label` = libellé lisible optionnel.
@@ -500,6 +508,8 @@ export function recruitableRosterModels(cat: Catalog, factionId: string): ModelE
 
 /** Section de sidebar d'un modèle, déterminée par son premier profil. */
 export function rosterSectionOf(cat: Catalog, factionId: string, profile: Profile): RosterSection {
+  // Une esclave se recrute par un Seigneur de guerre : elle est conditionnelle même venue d'ailleurs.
+  if (isSlaveIn(profile, factionId)) return "conditionnel";
   if (profile.factionId === factionId) {
     if (isDependent(profile, cat)) return "conditionnel";
     if (profile.limitation.kind === "U" || profile.limitation.kind === "P") return "personnage";
@@ -529,6 +539,7 @@ export type Modal =
   | { kind: "edit"; instanceId: string }
   | { kind: "guard"; instanceId: string }
   | { kind: "recruit-attached"; carrierInstanceId: string; modelId: string }
+  | { kind: "recruit-slave"; carrierInstanceId: string }
   | { kind: "recruit-level"; modelId: string }
   | { kind: "mount"; instanceId: string }
   | { kind: "mount-sheet"; instanceId: string }

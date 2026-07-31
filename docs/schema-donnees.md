@@ -314,6 +314,7 @@ type ConstraintType =
   | "consumes-slot"           // LIM P : occupe un emplacement (modèle, niveau)
   | "requires-present"        // recrutable seulement si {profil|modèle|trait} présent
   | "attachment"              // rattachement à un porteur + capacité (ex. Likan -> Fang)
+  | "slave"                   // esclave : possédée par un « SDG X » du FdL (LDR S2 p. 10)
   | "forbids-equipment"       // interdit une catégorie/un type d'équipement (ex. Éprouvé)
   | "equipment-reserved"      // équipement réservé à faction/profil/niveau (ex. arc court -> niv I)
   | "count-relative"          // plafond relatif (ex. arme gratuite <= moitié du FdL)

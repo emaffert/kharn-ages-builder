@@ -7,6 +7,22 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-07-31 (2)
+
+### Les esclaves
+
+- Un combattant qui possède « Seigneur de guerre » affiche un bouton **« + Esclave »**, comme les
+  femelles Fangs affichent « + Likan ». L'esclave se range sous son maître dans la liste.
+- Le constructeur applique les quatre règles de la page 10 : un esclave appartient à un Seigneur de
+  guerre du Fer de Lance, qui n'en possède pas plus que sa valeur de SDG ; les esclaves ne peuvent
+  pas être plus nombreux que les autres combattants ; ils ne s'équipent que d'une arme de corps à
+  corps gratuite ; et un esclave ne mène jamais un Fer de Lance.
+- Un esclave ne prend **aucune amélioration payante**. Certaines visent tout un peuple - « Lien de
+  la Terre » vise les Dogons, donc la Porteuse d'eau - mais personne n'investit sur une captive.
+- Une carte peut être esclave **seulement dans certaines factions**. La Porteuse d'eau reste une
+  recrue ordinaire chez les Goûns et chez les Tembos, avec tout son équipement ; ailleurs, elle
+  arrive par un Seigneur de guerre, à raison d'une seule par maître.
+
 ## 2026-07-31
 
 ### La compétence « Archimage » fonctionne

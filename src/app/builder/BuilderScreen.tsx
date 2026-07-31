@@ -4,8 +4,12 @@ import {
   iconFor,
   mountIconFor,
   mountLabel,
+  isSlaveIn,
   recruitCost,
+  sdgValue,
   sealRequiredFor,
+  slaveProfilesFor,
+  slavePerCarrierMax,
   slotCapacity,
   type Profile,
 } from "@core";
@@ -157,7 +161,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     //    contrainte est la capacité de rattachement du porteur, vérifiée à part (`groupDisabled`,
     //    modale de recrutement). Sans ce court-circuit, un modèle à limitation `special` retomberait
     //    sur le plafond d'emplacement (1) et bloquerait le 2e Likan de même niveau.
-    if (isDependent(p, cat)) return false;
+    if (isDependent(p, cat, factionId)) return false;
     // 1) Limitation propre du profil (par groupe modèle#niveau) : U/P → 1, X → valeur (+ bonus
     //    `limit-modifier`, ex. Lieutenant khérops : +1 aux Khérops « X »).
     const own =
@@ -257,9 +261,35 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const dirty = savedCopy ? savedCopy.updatedAt !== store.list.updatedAt : items.length > 0;
   const onBack = () => (dirty ? setConfirmBack(true) : onNew());
 
-  // Leader : personnage OU l'une des deux figurines les plus chères.
+  // Leader : personnage OU l'une des deux figurines les plus chères. Jamais un esclave, quel que
+  // soit son coût : il combat malgré lui.
   const topTwo = new Set([...items].sort((a, b) => b.p.cost - a.p.cost).slice(0, 2).map((x) => x.inst.instanceId));
-  const canLead = (p: Profile, id: string) => isChar(p) || topTwo.has(id);
+  const canLead = (p: Profile, id: string) => !isSlaveIn(p, factionId) && (isChar(p) || topTwo.has(id));
+
+  // ── Esclaves (LDR p. 10) ── possédés par un Seigneur de guerre, jamais plus nombreux que les autres.
+  const slaveChoices = slaveProfilesFor(cat, factionId);
+  const slaveItems = items.filter((x) => isSlaveIn(x.p, factionId));
+  /** Places restantes avant que les esclaves ne dépassent en nombre les autres combattants du FdL. */
+  const slaveHeadroom = items.length - slaveItems.length - slaveItems.length;
+  /** Esclaves déjà possédés par ce porteur, et ce que sa valeur de SDG lui permet d'en posséder. */
+  const slavesOwnedBy = (carrierId: string) =>
+    (memberOf(carrierId)?.inst.attachedInstanceIds ?? [])
+      .map((aid) => memberOf(aid))
+      .filter((x): x is Item => Boolean(x) && isSlaveIn(x!.p, factionId));
+  const sdgOf = (id: string, p: Profile) => sdgValue(p, evaluation.grantedSkills[id] ?? []);
+  /** Pourquoi ce porteur ne peut pas prendre cette esclave de plus (null = il le peut). */
+  const slaveBlockReason = (carrierId: string, carrierP: Profile, slave: Profile): string | null => {
+    if (slaveHeadroom <= 0) return "Les esclaves ne peuvent pas dépasser en nombre les autres combattants.";
+    const owned = slavesOwnedBy(carrierId);
+    // Le plafond du porteur, resserré par ce que tolère la carte de chaque esclave concernée.
+    const cap = Math.min(
+      sdgOf(carrierId, carrierP),
+      slavePerCarrierMax(slave),
+      ...owned.map((o) => slavePerCarrierMax(o.p)),
+    );
+    if (owned.length >= cap) return `« ${carrierP.name} » possède déjà ${owned.length} esclave(s) sur ${cap}.`;
+    return null;
+  };
 
   // Garde du corps (désignation) : dérivé des effets `designation` du catalogue. Chaque protégé n'offre
   // qu'une place → on retire dynamiquement ceux déjà gardés. La gratuité/remise vient du moteur.
@@ -359,9 +389,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       if (free.length === 0) return true;
       return g.capacityLimited && !free.some((p) => (p.level ?? 0) <= remainingCapacity);
     };
+    // Esclaves : proposés à tout Seigneur de guerre du Fer de Lance (LDR p. 10).
+    const canOwnSlaves = !attached && slaveChoices.length > 0 && sdgOf(id, x.p) > 0;
+    // La pastille ne se ferme que si AUCUNE esclave n'est recrutable ; le motif du premier refus
+    // sert alors d'explication.
+    const slaveBlocked =
+      canOwnSlaves && !slaveChoices.some((s) => slaveBlockReason(id, x.p, s) == null)
+        ? (slaveBlockReason(id, x.p, slaveChoices[0]) ?? "Aucun esclave disponible")
+        : null;
     // Monture : proposée sur une figurine éligible non montée (et pas sur une sous-ligne).
     const canAddMount = !attached && !x.inst.mount && eligibleMountsFor(cat, x.p).length > 0;
-    const hasActions = depGroups.length > 0 || eligible || canAddMount;
+    const hasActions = depGroups.length > 0 || eligible || canAddMount || canOwnSlaves;
     return (
       <div
         key={id}
@@ -459,6 +497,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               >
                 {guarded ? `✓ ${linkLabelCap} de ${guardOf}` : linkLabelCap}
               </button>
+            )}
+            {canOwnSlaves && (
+              <RecruitPill
+                label="+ Esclave"
+                disabled={slaveBlocked != null}
+                title={slaveBlocked ?? undefined}
+                onClick={() => {
+                  if (slaveBlocked != null) return;
+                  setModal({ kind: "recruit-slave", carrierInstanceId: id });
+                }}
+              />
             )}
             {canAddMount && (
               <RecruitPill label="+ Monture" onClick={() => setModal({ kind: "mount", instanceId: id })} />
@@ -858,6 +907,43 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                         {max && <span className="max">max</span>}
                       </span>
                       <span className="cost">{recruitCostOf(p)} Ko</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Dialog>
+          );
+        })()}
+      {modal?.kind === "recruit-slave" &&
+        (() => {
+          const carrier = memberOf(modal.carrierInstanceId);
+          if (!carrier) return null;
+          const owned = slavesOwnedBy(modal.carrierInstanceId);
+          const sdg = sdgOf(modal.carrierInstanceId, carrier.p);
+          return (
+            <Dialog open onOpenChange={(o) => !o && setModal(null)} title="Recruter - esclave" size="sm">
+              <p className="mdl-note">
+                Esclaves de {carrier.p.name} : {owned.length} sur {sdg} (sa valeur de SDG). Ils ne peuvent pas
+                dépasser en nombre les autres combattants du Fer de Lance.
+              </p>
+              <div className="mdl-list">
+                {slaveChoices.map((p) => {
+                  const blocked = slaveBlockReason(modal.carrierInstanceId, carrier.p, p);
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={blocked != null}
+                      title={blocked ?? undefined}
+                      className="mdl-choice"
+                      onClick={() => {
+                        store.addAttached(modal.carrierInstanceId, p.id);
+                        setModal(null);
+                      }}
+                    >
+                      <span>
+                        {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
+                      </span>
+                      <span className="cost">{p.cost} Ko</span>
                     </button>
                   );
                 })}

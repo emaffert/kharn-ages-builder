@@ -73,6 +73,16 @@ export function describeConstraint(c: Constraint, cat: Catalog): string {
       const f = (c.params as { allowedFactions?: string[] }).allowedFactions ?? [];
       return `Recrutable dans les factions : ${f.join(", ")}.`;
     }
+    case "slave": {
+      const p = c.params as { exceptFactions?: string[]; perCarrierMax?: number };
+      const factionName = (id: string) => cat.factions.find((f) => f.id === id)?.name ?? id;
+      const sauf = (p.exceptFactions ?? []).map(factionName);
+      const parts = [sauf.length > 0 ? `Esclave sauf pour : ${sauf.join(", ")}.` : "Esclave."];
+      if (typeof p.perCarrierMax === "number") {
+        parts.push(`Maximum ${p.perCarrierMax} par Seigneur de guerre.`);
+      }
+      return parts.join(" ");
+    }
     default:
       return c.sourceText;
   }

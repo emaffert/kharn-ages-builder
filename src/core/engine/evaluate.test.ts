@@ -13,6 +13,7 @@ import {
   pageAllocation,
 } from "./magic";
 import { recruitableWithoutSeal } from "./recruitment";
+import { isSlaveIn } from "./slavery";
 
 /** L'identifiant de la voie Adansonia dans le catalogue (créée avec un id technique). */
 const ADANSONIA = "way-1783500043343";
@@ -1458,5 +1459,141 @@ describe("améliorations intrinsèques d'un objet", () => {
     const proposed = upgradesForEquipment(epee(), [octroyee]);
     expect(proposed.filter((u) => u.id === upgrade().id)).toHaveLength(1);
     expect(proposed.find((u) => u.id === upgrade().id)!.cost).toBe(upgrade().cost);
+  });
+});
+
+describe("Esclaves (LDR Saison 2, p. 10)", () => {
+  const PORTEUSE = "profile-1785418323892"; // Porteuse d'eau, goûne, 40 Ko, seule esclave du catalogue
+  const GOURDIN = "gourdin"; // arme de corps à corps gratuite
+  /**
+   * Le catalogue livré ne porte pas encore la contrainte (elle se pose dans l'admin). On l'y greffe
+   * ici, telle qu'elle doit être saisie : esclave partout sauf chez les Goûns et les Tembos, une
+   * seule par Seigneur de guerre.
+   */
+  const withSlaveRule = (params: Record<string, unknown>): Catalog => ({
+    ...catalog,
+    profiles: catalog.profiles.map((p) =>
+      p.id === PORTEUSE
+        ? {
+            ...p,
+            recruitment: [
+              {
+                id: "c-slave",
+                type: "slave" as const,
+                params,
+                scope: "fer-de-lance" as const,
+                sourceText: "Esclave, hors Goûns et Tembos. Limitée à 1 par allié possédant « SDG ».",
+              },
+            ],
+          }
+        : p,
+    ),
+  });
+  const carte = withSlaveRule({ exceptFactions: ["gouns", "tembos"], perCarrierMax: 1 });
+  /** La même sans plafond de carte : sert à éprouver la règle générale (≤ valeur de SDG). */
+  const sansPlafond = withSlaveRule({ exceptFactions: ["gouns", "tembos"] });
+  const porteuse = carte.profiles.find((p) => p.id === PORTEUSE)!;
+  const slaveIssues = (res: ReturnType<typeof evaluateList>) =>
+    res.issues.filter((i) => i.ruleId?.startsWith("slave-"));
+
+  it("la condition dépend du Fer de Lance d'accueil", () => {
+    expect(isSlaveIn(porteuse, "kharns")).toBe(true);
+    expect(isSlaveIn(porteuse, "gouns")).toBe(false);
+    expect(isSlaveIn(porteuse, "tembos")).toBe(false);
+  });
+
+  it("possédée par un Seigneur de guerre, elle est recrutée sans faute", () => {
+    const esclave = inst(PORTEUSE);
+    const sdg = inst("fangs-broutcha-2", { attachedInstanceIds: [esclave.instanceId] });
+    const res = evaluateList(carte, makeList([sdg, esclave, inst("fangs-goulue-1")], "fangs"));
+    expect(slaveIssues(res)).toEqual([]);
+  });
+
+  it("sans Seigneur de guerre, elle est refusée", () => {
+    const esclave = inst(PORTEUSE);
+    const res = evaluateList(carte, makeList([inst("fangs-goulue-1"), esclave, inst("fangs-goulue-1")], "fangs"));
+    expect(slaveIssues(res).map((i) => i.ruleId)).toEqual(["slave-no-warlord"]);
+  });
+
+  it("rattachée à une figurine sans SDG, elle est refusée aussi", () => {
+    const esclave = inst(PORTEUSE);
+    const porteur = inst("fangs-goulue-1", { attachedInstanceIds: [esclave.instanceId] });
+    const res = evaluateList(carte, makeList([porteur, esclave, inst("fangs-goulue-1")], "fangs"));
+    expect(slaveIssues(res).map((i) => i.ruleId)).toEqual(["slave-no-warlord"]);
+  });
+
+  it("la carte peut resserrer le plafond du porteur (1 par SDG)", () => {
+    const a = inst(PORTEUSE);
+    const b = inst(PORTEUSE);
+    // Balthus a SDG 5 : la règle générale l'autoriserait, mais sa carte à elle n'en tolère qu'une.
+    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [a.instanceId, b.instanceId] });
+    const others = [inst("kharns-syrga"), inst("kharns-syrga")];
+    const res = evaluateList(carte, makeList([balthus, a, b, ...others], "kharns"));
+    expect(slaveIssues(res).map((i) => i.ruleId)).toContain("slave-over-warlord-capacity");
+  });
+
+  it("sans plafond de carte, le porteur en possède autant que sa valeur de SDG", () => {
+    const a = inst(PORTEUSE);
+    const b = inst(PORTEUSE);
+    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [a.instanceId, b.instanceId] });
+    const others = [inst("kharns-syrga"), inst("kharns-syrga")];
+    expect(slaveIssues(evaluateList(sansPlafond, makeList([balthus, a, b, ...others], "kharns")))).toEqual([]);
+
+    // Syrga n'a que SDG 1 : deux esclaves, c'est une de trop.
+    const c = inst(PORTEUSE);
+    const d = inst(PORTEUSE);
+    const syrga = inst("kharns-syrga", { attachedInstanceIds: [c.instanceId, d.instanceId] });
+    const res = evaluateList(sansPlafond, makeList([syrga, c, d, inst("kharns-syrga"), inst("kharns-syrga")], "kharns"));
+    expect(slaveIssues(res).map((i) => i.ruleId)).toEqual(["slave-over-warlord-capacity"]);
+  });
+
+  it("les esclaves ne dépassent jamais en nombre les autres combattants", () => {
+    const a = inst(PORTEUSE);
+    const b = inst(PORTEUSE);
+    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [a.instanceId, b.instanceId] });
+    // 2 esclaves pour 1 autre combattant → refusé ; en ajoutant un second Khârn, 2 pour 2 → accepté.
+    const trop = evaluateList(sansPlafond, makeList([balthus, a, b], "kharns"));
+    expect(slaveIssues(trop).map((i) => i.ruleId)).toContain("slave-outnumber");
+    const ok = evaluateList(sansPlafond, makeList([balthus, a, b, inst("kharns-syrga")], "kharns"));
+    expect(slaveIssues(ok)).toEqual([]);
+  });
+
+  it("elle n'achète qu'une arme de corps à corps gratuite", () => {
+    const armee = (equip: string[]) => {
+      const esclave = inst(PORTEUSE, { addedEquipmentIds: equip });
+      const sdg = inst("fangs-broutcha-2", { attachedInstanceIds: [esclave.instanceId] });
+      return evaluateList(carte, makeList([sdg, esclave, inst("fangs-goulue-1")], "fangs"));
+    };
+    expect(slaveIssues(armee([GOURDIN]))).toEqual([]);
+    expect(slaveIssues(armee(["epee-longue"])).map((i) => i.ruleId)).toEqual(["slave-equipment"]);
+  });
+
+  it("un esclave ne mène pas un Fer de Lance", () => {
+    const esclave = inst(PORTEUSE);
+    const sdg = inst("fangs-broutcha-2", { attachedInstanceIds: [esclave.instanceId] });
+    // `makeList` désigne le premier membre comme meneur : on met l'esclave en tête.
+    const res = evaluateList(carte, makeList([esclave, sdg, inst("fangs-goulue-1")], "fangs"));
+    expect(res.issues.filter((i) => i.ruleId === "leader-eligibility")).toHaveLength(1);
+  });
+
+  it("sa condition lui tient lieu de laissez-passer inter-factions", () => {
+    const esclave = inst(PORTEUSE); // goûne, dans un Fer de Lance khârn
+    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [esclave.instanceId] });
+    const res = evaluateList(carte, makeList([balthus, esclave, inst("kharns-syrga")], "kharns"));
+    expect(res.issues.filter((i) => i.ruleId?.startsWith("faction:"))).toEqual([]);
+  });
+
+  it("elle ne prend aucune amélioration payante", () => {
+    // « Lien de la Terre » vise tous les Dogons, dont elle : sa carte la propose, sa condition non.
+    const esclave = inst(PORTEUSE, { specialCardIds: ["lien-de-la-terre"] });
+    const sdg = inst("fangs-broutcha-2", { attachedInstanceIds: [esclave.instanceId] });
+    const res = evaluateList(carte, makeList([sdg, esclave, inst("fangs-goulue-1")], "fangs"));
+    expect(slaveIssues(res).map((i) => i.ruleId)).toEqual(["slave-upgrade"]);
+  });
+
+  it("chez les Goûns, ce n'est plus une esclave : ni porteur, ni restriction d'équipement", () => {
+    const libre = inst(PORTEUSE, { addedEquipmentIds: ["epee-longue"], specialCardIds: ["lien-de-la-terre"] });
+    const res = evaluateList(carte, makeList([inst("gouns-shaman-2"), libre], "gouns"));
+    expect(slaveIssues(res)).toEqual([]);
   });
 });

@@ -8,6 +8,8 @@ import {
   sealFor,
   sealOfferedFor,
   sealRequiredFor,
+  isSlaveIn,
+  slaveMayBuy,
   temboEquipmentSurcharge,
   type Catalog,
   type Profile,
@@ -110,6 +112,8 @@ export function EquipPanel({
     return armorUsed >= armorCap ? "Emplacement d'armure déjà occupé" : null;
   };
 
+  // Esclave dans ce Fer de Lance : rien d'autre qu'une arme de mêlée gratuite ne lui est proposé.
+  const asSlave = isSlaveIn(p, factionId);
   const q = query.trim().toLowerCase();
   const matches = (e: Catalog["equipment"][number]) => {
     if (q === "") return true;
@@ -124,6 +128,7 @@ export function EquipPanel({
       (e.mountEquipment == null || (e.mountEquipment === "rider" && hasMount)) &&
       PURCHASE_CATS.includes(e.category) &&
       !forbidden.has(e.category) &&
+      (!asSlave || slaveMayBuy(e)) &&
       equipReservedOk(e, p) &&
       !isHiddenSeal(e) &&
       (!p.baseEquipmentIds.includes(e.id) || removed.includes(e.id) || Boolean(e.stackable)) &&
@@ -412,6 +417,11 @@ export function EquipPanel({
         {/* Volet disponible - à droite. */}
         <div>
           <SectionTitle>Disponible</SectionTitle>
+          {asSlave && (
+            <p className="fe-mag-bonus">
+              Esclave : seules les armes de corps à corps gratuites lui sont accessibles.
+            </p>
+          )}
           <input
             className="fe-input"
             value={query}

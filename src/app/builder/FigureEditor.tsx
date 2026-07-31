@@ -111,6 +111,7 @@ export function FigureEditor({
           mods={mods}
           wornArmors={wornArmorsFrom(cat, [...activeBase, ...added], undefined, p.armor)}
           wornEquipIds={[...activeBase, ...added]}
+          factionId={factionId}
         />
       )}
       {active === "equip" && (

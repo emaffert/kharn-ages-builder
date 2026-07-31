@@ -133,6 +133,21 @@ Types de contraintes à prévoir : exclusion d'équipement, dépendance de prés
 - Options achetables : caparaçon, lance de cavalerie, compétences (Brutalité, Autorité, Endurance, etc.) avec restrictions de faction.
 - Restrictions : Berserk → pas de monture ; Embuscade / Endurance inutilisables montés ; etc.
 
+## Esclaves
+
+- **Condition** inscrite sur la carte, pas une compétence. Jouables en escarmouche **et** en Bataille.
+- Recrutés dans un Fer de Lance comptant au moins un combattant à **« SDG X »** ; ce Seigneur de
+  guerre ne possède pas plus d'esclaves que sa valeur de X. La carte de l'esclave peut resserrer ce
+  plafond (Porteuse d'eau : **1 par allié possédant SDG**).
+- Les esclaves ne peuvent pas **dépasser en nombre** les autres combattants du Fer de Lance.
+- Équipement : **armes de corps à corps gratuites** uniquement, ou mains nues. Aucune **amélioration**
+  payante non plus : une carte peut viser l'esclave par son peuple d'origine (« Lien de la Terre »
+  vise tous les Dogons), mais personne n'investit sur une captive.
+- La carte peut exempter des factions : la **Porteuse d'eau** n'est pas une esclave chez les Goûns
+  ni chez les Tembos, où elle se recrute normalement (LIM 2).
+- Hors construction de liste : activation simultanée par maître, initiative comptée pour 1, test
+  d'insoumission au début de chaque activation.
+
 ## Aliénés (Bataille)
 
 - **Likans** recrutés par les femelles Fangs ; somme des niveaux des Likans ≤ niveau de la Fang.

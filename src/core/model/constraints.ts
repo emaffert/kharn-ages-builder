@@ -14,6 +14,7 @@ import { ConstraintScopeSchema, type ConstraintScope } from "./common";
 export const ConstraintTypeSchema = z.enum([
   "requires-present",
   "attachment",
+  "slave",
   "forbids-equipment",
   "forbids-grimoire",
   "faction-membership",
@@ -33,6 +34,8 @@ export const CONSTRAINT_SCOPES: Record<ConstraintType, readonly ConstraintScope[
   "requires-present": ["fer-de-lance", "ost"],
   // Porteur et rattachés appartiennent au même Fer de Lance par construction.
   attachment: ["fer-de-lance"],
+  // Le Seigneur de guerre qui possède l'esclave, et le plafond de tête, s'apprécient dans le Fer de Lance.
+  slave: ["fer-de-lance"],
   // Ne regarde que l'équipement de la figurine elle-même.
   "forbids-equipment": ["profil"],
   // Ne regarde que les acquisitions de la figurine elle-même.

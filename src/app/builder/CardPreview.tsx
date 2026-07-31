@@ -32,8 +32,8 @@ export function CardPreview({
 }) {
   const [id, setId] = useState(profiles[0].id);
   const p = profiles.find((pf) => pf.id === id) ?? profiles[0];
-  const dependent = isDependent(p, cat);
-  const carrier = carrierLabel(p, cat);
+  const dependent = isDependent(p, cat, factionId);
+  const carrier = carrierLabel(p, cat, factionId);
   const atLimit = isAtLimit(p.id);
   // La carte affiche son coût imprimé ; le pied annonce ce que la figurine coûtera réellement ici.
   const seal = sealRequiredFor(cat, p, factionId);
@@ -95,6 +95,7 @@ export function CardPreview({
         onInfo={onInfo}
         showEquipment
         wornArmors={wornArmorsFrom(cat, p.baseEquipmentIds, undefined, p.armor)}
+        factionId={factionId}
       />
     </Dialog>
   );

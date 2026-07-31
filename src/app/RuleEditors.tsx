@@ -26,6 +26,7 @@ const CONSTRAINT_TYPES: ConstraintType[] = [
   "faction-membership",
   "forbids-grimoire",
   "attachment",
+  "slave",
 ];
 
 // Libellés français des types de contrainte proposés (fallback sur l'identifiant brut).
@@ -35,6 +36,7 @@ const CONSTRAINT_LABELS: Record<ConstraintType, string> = {
   "faction-membership": "Appartenance de faction",
   "forbids-grimoire": "Interdit d'acquérir un grimoire",
   attachment: "Rattachement (garde / porteur)",
+  slave: "Esclave (possédée par un Seigneur de guerre)",
 };
 
 // Où le moteur cherche, dit du point de vue de l'utilisateur.
@@ -50,6 +52,7 @@ const SCOPE_FIXED_REASON: Record<ConstraintType, string> = {
   "forbids-grimoire": "La règle ne regarde que les acquisitions de cette figurine.",
   "faction-membership": "La faction de la figurine est comparée à celle du Fer de Lance qui l'accueille.",
   attachment: "Le porteur et ses rattachés appartiennent au même Fer de Lance.",
+  slave: "Le Seigneur de guerre qui la possède, et le nombre d'esclaves tolérés, s'apprécient dans le Fer de Lance.",
   "requires-present": "",
 };
 
@@ -142,6 +145,31 @@ function ParamsEditor({
           cat={cat}
           onChange={(v) => set({ carrier: v })}
         />
+      );
+    case "slave":
+      return (
+        <div className="space-y-2">
+          <p className="text-xs adm-faint">
+            La figurine se recrute depuis un combattant du Fer de Lance qui possède « Seigneur de guerre », dans la
+            limite de sa valeur. Les esclaves ne peuvent pas dépasser en nombre les autres combattants, et n'achètent
+            qu'une arme de corps à corps gratuite.
+          </p>
+          <ChipsField
+            label="Sauf dans ces factions (elle s'y recrute normalement)"
+            options={cat.factions.map((f): Option => ({ value: f.id, label: f.name }))}
+            selected={arr("exceptFactions")}
+            onChange={(v) => set({ exceptFactions: v })}
+          />
+          <Field label="Maximum par Seigneur de guerre" className="w-56" hint="vide = la valeur de SDG suffit">
+            <input
+              className="adm-input"
+              type="number"
+              min={1}
+              value={typeof params.perCarrierMax === "number" ? params.perCarrierMax : ""}
+              onChange={(e) => set({ perCarrierMax: e.target.value === "" ? undefined : Number(e.target.value) })}
+            />
+          </Field>
+        </div>
       );
     default:
       return null;

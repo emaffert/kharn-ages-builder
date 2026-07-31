@@ -1,5 +1,5 @@
 {
-  "version": "0.3.8",
+  "version": "0.3.10",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -9905,8 +9905,7 @@
         ]
       ],
       "traits": [
-        "dogon",
-        ""
+        "dogon"
       ],
       "recruitment": [
         {
@@ -9914,14 +9913,21 @@
           "type": "faction-membership",
           "params": {
             "allowedFactions": [
-              "gouns",
-              "tembos",
-              "fangs",
-              "kharns",
-              "kherops",
-              "affranchis",
-              "guilde-noire"
+              "tembos"
             ]
+          },
+          "scope": "fer-de-lance",
+          "sourceText": ""
+        },
+        {
+          "id": "c-1785527857066",
+          "type": "slave",
+          "params": {
+            "exceptFactions": [
+              "tembos",
+              "gouns"
+            ],
+            "perCarrierMax": 1
           },
           "scope": "fer-de-lance",
           "sourceText": ""

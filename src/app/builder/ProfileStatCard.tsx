@@ -4,6 +4,7 @@ import {
   ARCHIMAGE_SKILL_ID,
   baseEquipmentCount,
   iconFor,
+  isSlaveIn,
   type Armor,
   type Catalog,
   type EquipmentCostRule,
@@ -73,6 +74,7 @@ export function ProfileStatCard({
   mods,
   wornArmors,
   wornEquipIds,
+  factionId,
 }: {
   p: Profile;
   cat: Catalog;
@@ -90,6 +92,8 @@ export function ProfileStatCard({
   wornArmors?: ArmorDisplay[];
   /** Équipement réellement porté ; défaut = l'équipement de base (aperçu d'une fiche hors liste). */
   wornEquipIds?: string[];
+  /** Faction du Fer de Lance d'accueil : une esclave n'a droit à aucune amélioration. */
+  factionId?: string;
 }) {
   // Effets responsables d'une modification affichée (clé « stat:… » / « skill:… »).
   const sourceRefs = (key: string) => mods?.effectSources?.[key] ?? [];
@@ -143,7 +147,10 @@ export function ProfileStatCard({
     .filter((s): s is NonNullable<typeof s> => Boolean(s));
   const cards = specialCardsForProfile(p, cat);
   const autoCards = cards.filter((c) => !c.amelioration); // appliquées d'office
-  const ameliorations = cards.filter((c) => c.amelioration); // achetables
+  // Esclave dans ce Fer de Lance : personne n'investit sur elle, aucune amélioration ne lui est
+  // proposée - « Lien de la Terre » vise tous les Dogons, mais elle est asservie, pas soutenue.
+  const asSlave = factionId != null && isSlaveIn(p, factionId);
+  const ameliorations = asSlave ? [] : cards.filter((c) => c.amelioration); // achetables
   const canEditUpgrades = Boolean(onToggleUpgrade);
   const precisions = p.skills.filter((s) => s.precision);
   // Précisions issues de compétences octroyées par effet (ex. « Spécialiste : hache »).

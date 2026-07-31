@@ -36,6 +36,11 @@ représenté dans le moteur `evaluateList`.
     **valide que s'il y en a au moins 2** (sinon erreur tant que la condition n'est pas remplie).
     Ils gardent leur section propre et leur coût nu : le sceau ne leur est pas imposé, seulement
     proposé, pour le cas du frère isolé.
+  - **esclave** (LDR S2 p. 10) : condition inscrite sur la carte, contrainte `slave`. La figurine
+    se recrute depuis un combattant à « SDG X » du Fer de Lance, sans jamais dépasser sa valeur de
+    X (ni le plafond que fixe sa propre carte), les esclaves ne dépassent pas en nombre les autres
+    combattants, et ils n'achètent qu'une arme de mêlée gratuite. La condition peut exempter des
+    factions (`exceptFactions`) : la Porteuse d'eau y est alors une recrue ordinaire.
 - Le moteur valide l'appartenance (`faction-membership`, + `grant-trait` conditionnel pour les
   frères d'armes ou porté par le sceau). Voies d'accès partagées moteur/UI dans
   `src/core/engine/recruitment.ts`.

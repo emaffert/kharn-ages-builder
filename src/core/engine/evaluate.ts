@@ -27,6 +27,7 @@ import {
 } from "./magic";
 import { totalMunitionCost } from "./munitions";
 import { FRERE_D_ARMES, alliedFactions, equipmentReservedOk, isApatride, sealFor } from "./recruitment";
+import { isSlaveIn, sdgValue, slaveMayBuy, slavePerCarrierMax } from "./slavery";
 
 /**
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
@@ -774,6 +775,7 @@ function validate(
     validateConsumesSlot(cat, fdl, inFdl, issues);
     validateFactionMembership(cat, fdl, inFdl, issues);
     validateLeader(fdl, inFdl, issues);
+    validateSlaves(cat, fdl, inFdl, issues);
   }
 
   validateMounts(cat, resolved, issues);
@@ -801,11 +803,122 @@ function validateLeader(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issu
     return;
   }
   const isChar = (p: Profile) => p.limitation.kind === "P";
+  // Un esclave ne mène personne, quel que soit son coût : il combat malgré lui.
+  if (isSlaveIn(leader.profile, fdl.factionId)) {
+    push(`« ${leader.profile.name} » ne peut pas être meneur : un esclave ne mène pas un Fer de Lance.`);
+    return;
+  }
   const topTwo = new Set(
     [...inFdl].sort((a, b) => b.profile.cost - a.profile.cost).slice(0, 2).map((ri) => ri.instance.instanceId),
   );
   if (!isChar(leader.profile) && !topTwo.has(leader.instance.instanceId)) {
     push(`« ${leader.profile.name} » ne peut pas être meneur (ni personnage, ni parmi les deux plus chères).`);
+  }
+}
+
+/**
+ * Les esclaves (LDR Saison 2, p. 10) : possédés par un Seigneur de guerre du Fer de Lance, jamais
+ * plus nombreux que les autres combattants, et équipés au mieux d'une arme de mêlée gratuite.
+ * Tout se juge dans le Fer de Lance d'accueil : ailleurs, la même figurine est une recrue ordinaire.
+ */
+function validateSlaves(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issue[]): void {
+  const slaves = inFdl.filter((ri) => isSlaveIn(ri.profile, fdl.factionId));
+  if (slaves.length === 0) return;
+  const push = (ri: ResolvedInstance | null, ruleId: string, message: string, sourceText: string) =>
+    issues.push({
+      severity: "error",
+      ferDeLanceId: fdl.id,
+      instanceId: ri?.instance.instanceId,
+      ruleId,
+      message,
+      sourceText,
+    });
+
+  // Le porteur : celui dont la liste de rattachés contient l'esclave (même mécanique que les Likans).
+  const carrierOf = new Map<string, ResolvedInstance>();
+  for (const ri of inFdl) {
+    for (const attachedId of ri.instance.attachedInstanceIds ?? []) {
+      const slave = slaves.find((s) => s.instance.instanceId === attachedId);
+      if (slave) carrierOf.set(attachedId, ri);
+    }
+  }
+
+  for (const slave of slaves) {
+    const carrier = carrierOf.get(slave.instance.instanceId);
+    const carrierSdg = carrier
+      ? sdgValue(carrier.profile, [...carrier.grantedSkills].map(([skillId, g]) => ({ skillId, value: g.value })))
+      : 0;
+    if (!carrier || carrierSdg === 0) {
+      push(
+        slave,
+        "slave-no-warlord",
+        `« ${slave.profile.name} » est une esclave : elle doit appartenir à un Seigneur de guerre du Fer de Lance.`,
+        "Les « esclaves » peuvent être recrutés dans un Fer de Lance dont au moins un combattant possède la compétence « SDG X ».",
+      );
+    }
+    // Améliorations payantes : personne n'investit sur un esclave. Sa carte peut le viser (« Lien
+    // de la Terre » vise tous les Dogons), mais elle est asservie, pas soutenue par les siens.
+    const upgrades = (slave.instance.specialCardIds ?? []).filter(
+      (id) => cat.specialCards.find((c) => c.id === id)?.amelioration,
+    );
+    if (upgrades.length > 0) {
+      const names = upgrades.map((id) => cat.specialCards.find((c) => c.id === id)?.name ?? id);
+      push(
+        slave,
+        "slave-upgrade",
+        `« ${slave.profile.name} » est une esclave : elle ne bénéficie d'aucune amélioration (${names.join(", ")}).`,
+        "Les esclaves combattent malgré eux ; aucun peuple ne se risque à les équiper plus richement.",
+      );
+    }
+    // Achats interdits : seule une arme de corps à corps gratuite est tolérée (l'équipement imprimé
+    // sur la carte reste le sien, il n'est pas acheté).
+    const bought = slave.instance.addedEquipmentIds;
+    if (bought.length > 0) {
+      const offending = bought.filter((id) => {
+        const eq = cat.equipment.find((e) => e.id === id);
+        return eq == null || !slaveMayBuy(eq);
+      });
+      if (offending.length > 0) {
+        push(
+          slave,
+          "slave-equipment",
+          `« ${slave.profile.name} » est une esclave : elle ne peut porter qu'une arme de corps à corps gratuite.`,
+          "Les esclaves ne peuvent être équipés que d'armes de corps à corps gratuites ou combattre à mains nues.",
+        );
+      }
+    }
+  }
+
+  // Plafond par porteur : jamais plus d'esclaves que sa valeur de SDG, et pas plus que ce
+  // qu'autorise la carte de l'esclave elle-même (ex. « 1 par allié possédant SDG »).
+  for (const carrier of inFdl) {
+    const owned = slaves.filter((s) => carrierOf.get(s.instance.instanceId) === carrier);
+    if (owned.length === 0) continue;
+    const granted = [...carrier.grantedSkills].map(([skillId, g]) => ({ skillId, value: g.value }));
+    const sdg = sdgValue(carrier.profile, granted);
+    // Un porteur sans « SDG » n'est pas un porteur : chaque esclave s'est déjà vu reprocher
+    // l'absence de Seigneur de guerre, inutile de doubler le reproche par un plafond à zéro.
+    if (sdg === 0) continue;
+    const cap = Math.min(sdg, ...owned.map((s) => slavePerCarrierMax(s.profile)));
+    if (owned.length > cap) {
+      push(
+        carrier,
+        "slave-over-warlord-capacity",
+        `« ${carrier.profile.name} » possède ${owned.length} esclave(s) pour un maximum de ${cap}.`,
+        "Ce Seigneur de guerre ne peut pas posséder plus d'esclaves que sa valeur de SDG.",
+      );
+    }
+  }
+
+  // Plafond de tête : les esclaves ne dépassent jamais en nombre les autres combattants.
+  const others = inFdl.length - slaves.length;
+  if (slaves.length > others) {
+    push(
+      null,
+      "slave-outnumber",
+      `${slaves.length} esclave(s) pour ${others} autre(s) combattant(s) : les esclaves ne peuvent pas être les plus nombreux.`,
+      "Ils ne peuvent pas dépasser en nombre le total des autres combattants du Fer de Lance qui les accueille.",
+    );
   }
 }
 
@@ -1043,6 +1156,9 @@ function validateFactionMembership(
     // `apatride` peut être la compétence inscrite sur la carte, ou un octroi résolu : carte « Frères
     // d'Armes » (2+ réunis) ou sceau que la figurine porte.
     if (isApatride(ri.profile, [...ri.grantedSkills.keys()])) continue;
+    // Une esclave entre par la porte de service : sa condition l'autorise dans ce Fer de Lance, et
+    // c'est `validateSlaves` qui lui réclame son Seigneur de guerre.
+    if (isSlaveIn(ri.profile, fdl.factionId)) continue;
     if (alliedFactions(ri.profile).includes(fdl.factionId)) continue; // « Allié des X »
     // Voie de sortie encore ouverte : réunir un second frère d'armes, ou payer le sceau.
     const seal = sealFor(cat, ri.profile);

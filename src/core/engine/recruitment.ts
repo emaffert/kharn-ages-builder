@@ -1,12 +1,14 @@
 import type { Catalog, Equipment, Profile } from "../model";
+import { isSlaveIn } from "./slavery";
 
 /**
  * Voies d'accès d'un profil à un Fer de Lance d'une autre faction, partagées par le moteur
  * (validation) et le constructeur (roster, coûts, verrouillage du sceau).
  *
- * Trois voies existent : la compétence `apatride` (recrutable partout), la contrainte
- * `faction-membership` (« Allié des X »), et le **sceau** - un objet qui octroie `apatride` à son
- * porteur (« Sceau de la guilde noire », +10 Ko, FAQ Janv. 2026 + carte p. 79).
+ * Quatre voies existent : la compétence `apatride` (recrutable partout), la contrainte
+ * `faction-membership` (« Allié des X »), le **sceau** - un objet qui octroie `apatride` à son
+ * porteur (« Sceau de la guilde noire », +10 Ko, FAQ Janv. 2026 + carte p. 79) - et la condition
+ * d'**esclave**, qui fait entrer la figurine par un Seigneur de guerre (cf. `slavery.ts`).
  */
 
 /**
@@ -93,6 +95,9 @@ export function sealRequiredFor(cat: Catalog, p: Profile, factionId: string): Eq
 /** Le profil peut-il figurer au roster de cette faction ? (une voie d'accès existe, même payante) */
 export function isRecruitableIn(cat: Catalog, p: Profile, factionId: string): boolean {
   if (recruitableWithoutSeal(p, factionId)) return true;
+  // Une esclave figure au roster de la faction qui peut l'asservir, en « recrutement conditionnel » :
+  // elle ne s'y achète pas directement, elle se recrute depuis un Seigneur de guerre.
+  if (isSlaveIn(p, factionId)) return true;
   // Les frères d'armes deviennent apatrides dès qu'ils sont 2+ dans le Fer de Lance : ils doivent
   // apparaître partout pour qu'on puisse en réunir plusieurs (un frère isolé reste invalide).
   if (p.traits.includes(FRERE_D_ARMES)) return true;

@@ -1,5 +1,6 @@
-import type { Catalog, Equipment, EquipmentUpgrade } from "@core";
-import { CardImageSection, DetailHeader, DetailPage, Field, FieldGroup, IdField, NumberField, RemoveButton, Section } from "./primitives";
+import { useState } from "react";
+import { protects, type Catalog, type Equipment, type EquipmentUpgrade } from "@core";
+import { AddButton, CardImageSection, DetailHeader, DetailPage, Field, FieldGroup, IdField, NumberField, RemoveButton, Section } from "./primitives";
 import { EQUIPMENT_CATEGORIES, INPUT, SECTION } from "./shared";
 import { ReservedToEditor } from "./editors";
 import { EffectListEditor } from "../RuleEditors";
@@ -26,11 +27,17 @@ export function EquipmentDetail({
   /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
 }) {
+  const [protectionAsked, setProtectionAsked] = useState(false);
   const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
   const isCac = e.category === "arme-cac";
   const isTir = e.category === "arme-tir";
   const isBouclier = e.category === "bouclier";
   const isArmure = e.category === "armure";
+  // Une arme ou un objet peut protéger (Vouge de Moringa). Les champs d'armure ne s'affichent alors
+  // que si l'objet en porte déjà, ou si on vient de les demander - sinon ils encombreraient toutes
+  // les armes du catalogue pour un cas isolé.
+  const showProtectionValues = isArmure || protects(e) || protectionAsked;
+  const showProtection = showProtectionValues || isBouclier;
   const num = (label: string, value: number | undefined, key: keyof Equipment, className = "w-24") => (
     <NumberField
       label={label}
@@ -214,20 +221,28 @@ export function EquipmentDetail({
             </Section>
           )}
 
-          {/* Bouclier / Armure : durée de vie (DV) et, pour l'armure, ses valeurs. */}
-          {(isBouclier || isArmure) && (
+          {/* Bouclier / Armure : durée de vie (DV) et, pour l'armure, ses valeurs. Un objet d'une
+              autre catégorie peut lui aussi protéger (Vouge de Moringa) : les mêmes champs sont alors
+              proposés, mais seulement à la demande - ils n'ont rien à faire sur toutes les armes. */}
+          {showProtection && (
             <Section
-              title={isArmure ? "Armure" : "Bouclier"}
+              title={isArmure ? "Armure" : isBouclier ? "Bouclier" : "Protection"}
               icon="armor"
-              note={isArmure ? "protection échec / seuil / réussite · DV" : "durée de vie"}
+              note={
+                isArmure
+                  ? "protection échec / seuil / réussite · DV"
+                  : showProtectionValues
+                    ? "protection échec / seuil / réussite · DV - s'ajoute à l'armure du porteur, sans occuper son emplacement"
+                    : "durée de vie"
+              }
             >
               <div className="flex flex-wrap items-end gap-3">
-                {isArmure && (
+                {showProtectionValues && (
                   <>
                     {num("prot. échec", e.protectionEchec, "protectionEchec")}
                     {num("seuil", e.seuil, "seuil")}
                     {num("prot. réussite", e.protectionReussite, "protectionReussite")}
-                    {num("seuil si déjà protégé", e.heavySeuil, "heavySeuil", "w-24")}
+                    {isArmure && num("seuil si déjà protégé", e.heavySeuil, "heavySeuil", "w-24")}
                   </>
                 )}
                 {num("durée de vie (DV)", e.durability, "durability")}
@@ -243,6 +258,13 @@ export function EquipmentDetail({
                 </label>
               )}
             </Section>
+          )}
+
+          {/* Le cas est rare : une seule ligne discrète, jamais un bloc de champs vides. */}
+          {!isArmure && !showProtectionValues && (
+            <AddButton onClick={() => setProtectionAsked(true)}>
+              Cet objet protège aussi (valeurs d'armure)
+            </AddButton>
           )}
 
           <Section title={SECTION.verbatim} icon="verbatim">

@@ -93,8 +93,15 @@ describe("MagiePanel - séparation des deux budgets", () => {
   });
 });
 
+const DEMI_SOEUR_CARD = "card-1785410528373";
+/** L'identifiant de l'effet est généré par l'admin : on le relit plutôt que de le figer ici. */
+const grantEffectId = (): string =>
+  catalog.specialCards
+    .find((c) => c.id === DEMI_SOEUR_CARD)!
+    .effects.find((e) => e.operation.kind === "grant-spell-choice")!.id;
+
 describe("MagiePanel - sorts offerts", () => {
-  const GRANT = "demi-soeur-sort-osteomancie";
+  const GRANT = grantEffectId();
   const ORDRE_SEPULCRAL = "spell-1785239128129";
   const demiSoeur = catalog.profiles.find((p) => p.id === "profile-1785410170666")!;
   const offerte = (over: Partial<React.ComponentProps<typeof MagiePanel>> = {}) =>

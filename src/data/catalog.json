@@ -1,5 +1,5 @@
 {
-  "version": "0.3.12",
+  "version": "0.3.13",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -12909,6 +12909,10 @@
       "cost": 35,
       "hands": 2,
       "allonge": 2,
+      "durability": 10,
+      "protectionEchec": -1,
+      "seuil": 5,
+      "protectionReussite": -2,
       "effectsText": "Compte comme un bouclier -1/5/-2. DV10 la rouge n'est pas détruite même si elle ne possède plus de case de DV. ",
       "effects": [
         {
@@ -12932,6 +12936,9 @@
       "reservedTo": {
         "profileIds": [
           "profile-1785421140855"
+        ],
+        "traits": [
+          "tembo"
         ]
       }
     }
@@ -15707,7 +15714,7 @@
       "cardImage": "cards/Guilde Noire/mathys-fr.jpg"
     },
     {
-      "id": "card-1784105755372",
+      "id": "khalsa-lombre-lune",
       "name": "Khalsa l'Ombre Lune",
       "cost": 0,
       "scope": {
@@ -15717,7 +15724,16 @@
       },
       "rulesText": [
         {
-          "text": "Khalsa est une voleuse de la Guilde qui a rejoint les Affrenchis pour le temps des conflits.\nElle n'a pas décidé si elle quittait définitivement la confrérie.\nElle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction.\nSinon elle est Affranchie.\nAu  sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol ».\nChez les Affranchis, elle possède la compétence « Furtivité 3 »."
+          "text": "Khalsa est une voleuse de la Guilde qui a rejoint les Affrenchis pour le temps des conflits.\nElle n'a pas décidé si elle quittait définitivement la confrérie."
+        },
+        {
+          "text": "Elle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction.\nSinon elle est Affranchie."
+        },
+        {
+          "text": "Au  sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol »."
+        },
+        {
+          "text": "Chez les Affranchis, elle possède la compétence « Furtivité 3 »."
         }
       ],
       "constraints": [],
@@ -15725,7 +15741,7 @@
       "cardImage": "cards/Guilde Noire/affranchis-khalsa-2.jpg"
     },
     {
-      "id": "card-1785410528373",
+      "id": "demi-soeur",
       "name": "Demi-soeur",
       "cost": 0,
       "scope": {
@@ -15744,7 +15760,7 @@
           "id": "e-1785779843666",
           "source": {
             "kind": "special-card",
-            "id": "card-1785410528373"
+            "id": "demi-soeur"
           },
           "scope": "fer-de-lance",
           "target": {
@@ -15761,7 +15777,7 @@
       "cardImage": ""
     },
     {
-      "id": "card-1785411049756",
+      "id": "mere-des-esprits",
       "name": "Mère des esprits",
       "cost": 0,
       "scope": {
@@ -15780,7 +15796,7 @@
           "id": "e-1785411233526",
           "source": {
             "kind": "special-card",
-            "id": "card-1785411049756"
+            "id": "mere-des-esprits"
           },
           "scope": "fer-de-lance",
           "target": {

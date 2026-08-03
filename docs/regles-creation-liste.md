@@ -108,7 +108,13 @@ Types de contraintes à prévoir : exclusion d'équipement, dépendance de prés
 - **Arc court** : réservé au niveau I (ou aux profils qui l'ont d'office).
 - **Munitions** (arcs/arbalètes sans recharge) : quantités achetables (coût additionnel).
 - **Armes à recharge** : munitions illimitées.
-- **Tembos** : surcoût d'équipement de +3 Ko par tranche complète de 10 Ko (déjà compté sur les cartes au logo Tembo).
+- **Armure** : une seule par Safar, plus une armure **cumulable** (Gambison) sur son emplacement propre.
+  Un objet d'une autre catégorie peut porter des valeurs de protection (Vouge de Moringa, « compte comme
+  un bouclier -1/5/-2, DV10 ») : il s'**ajoute** aux armures sans occuper d'emplacement - ce sont les
+  mains qu'il mobilise qui le limitent. L'armure ordinaire achetée remplace l'armure innée ; tout le
+  reste s'y ajoute, d'où plusieurs lignes de protection possibles sur une même fiche.
+- **Tembos** : surcoût d'équipement de +3 Ko par tranche complète de 10 Ko (déjà compté sur les cartes au
+  logo Tembo, c'est-à-dire ceux réservés au trait `tembo`).
 - **Affranchis** : pas d'accès aux équipements/compétences réservés à la faction d'origine.
 
 ## Magie

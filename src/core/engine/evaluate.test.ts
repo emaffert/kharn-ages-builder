@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { catalog } from "@data";
 import type { Catalog, ListDocument, ProfileInstance, Spell } from "../model";
-import { eligibleMountsFor, equipmentDiscount, evaluateList, mountSheetSkills, mountOptionSkills, slotCapacity, upgradesForEquipment } from "./evaluate";
+import { eligibleMountsFor, equipmentDiscount, evaluateList, temboEquipmentSurcharge, mountSheetSkills, mountOptionSkills, slotCapacity, upgradesForEquipment } from "./evaluate";
 import {
   affinityWays,
+  armorRole,
   armorsWorn,
+  protects,
   castWays,
   castableSpells,
   forbiddenGrimoires,
@@ -1599,9 +1601,16 @@ describe("Esclaves (LDR Saison 2, p. 10)", () => {
   });
 });
 
+const DEMI_SOEUR_CARD = "card-1785410528373";
+/** L'identifiant de l'effet est généré par l'admin : on le relit plutôt que de le figer ici. */
+const grantEffectId = (): string =>
+  catalog.specialCards
+    .find((c) => c.id === DEMI_SOEUR_CARD)!
+    .effects.find((e) => e.operation.kind === "grant-spell-choice")!.id;
+
 describe("sorts offerts au choix (grant-spell-choice)", () => {
   const DEMI_SOEUR = "profile-1785410170666";
-  const GRANT = "demi-soeur-sort-osteomancie";
+  const GRANT = grantEffectId();
   const demiSoeur = catalog.profiles.find((p) => p.id === DEMI_SOEUR)!;
   const grantOf = (cat: Catalog = catalog) =>
     spellGrants(cat, demiSoeur, inst(DEMI_SOEUR), new Set(demiSoeur.traits))[0];
@@ -1684,5 +1693,37 @@ describe("sorts offerts au choix (grant-spell-choice)", () => {
   it("une figurine sans offre n'en reçoit aucune", () => {
     const goulue = catalog.profiles.find((p) => p.id === "fangs-goulue-1")!;
     expect(spellGrants(catalog, goulue, inst(goulue.id), new Set(goulue.traits))).toEqual([]);
+  });
+});
+
+describe("un objet qui protège sans être une armure (Vouge de Moringa)", () => {
+  const VOUGE = "equip-1785436448046";
+  const PATRIARCHE = "profile-1785421140855";
+  const eq = (id: string) => catalog.equipment.find((e) => e.id === id)!;
+
+  it("le rôle défensif se lit sur l'objet, pas sur sa catégorie", () => {
+    expect(armorRole(eq(VOUGE))).toBe("extra"); // arme de corps à corps qui protège
+    expect(armorRole(eq("gambison"))).toBe("stackable");
+    expect(armorRole(eq("armure-de-cuir"))).toBe("standard");
+    expect(armorRole(eq("ecu"))).toBeNull(); // bouclier : une DV, aucune protection chiffrée
+  });
+
+  it("protéger ne dépend que du seuil renseigné", () => {
+    expect(protects(eq(VOUGE))).toBe(true);
+    expect(protects(eq("faucille-os"))).toBe(false);
+  });
+
+  it("elle n'occupe pas l'emplacement d'armure : on peut porter une armure en plus", () => {
+    const x = inst(PATRIARCHE, { addedEquipmentIds: [VOUGE, "armure-de-cuir"] });
+    const res = evaluateList(catalog, makeList([x], "tembos"));
+    expect(res.issues.filter((i) => i.ruleId === "multiple-armor")).toEqual([]);
+  });
+
+  it("arme au logo Tembo : son prix inclut déjà le tarif Tembo, pas de surcoût", () => {
+    expect(temboEquipmentSurcharge(catalog, ["tembo"], VOUGE)).toBe(0);
+    const x = inst(PATRIARCHE, { addedEquipmentIds: [VOUGE] });
+    const res = evaluateList(catalog, makeList([x], "tembos"));
+    const patriarche = catalog.profiles.find((p) => p.id === PATRIARCHE)!;
+    expect(res.costByInstance[x.instanceId]).toBe(patriarche.cost + eq(VOUGE).cost);
   });
 });

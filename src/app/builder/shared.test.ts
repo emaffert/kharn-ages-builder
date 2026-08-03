@@ -90,3 +90,42 @@ describe("effets portés par une figurine (hors contexte de liste)", () => {
     expect(general.some((s) => s.name === "Fille de Nyx" && s.amount === 3)).toBe(true);
   });
 });
+
+/**
+ * Une armure ordinaire achetée remplace l'armure innée ; le Gambison et les objets qui protègent sans
+ * être des armures (Vouge de Moringa) s'y ajoutent. La fiche peut donc porter plusieurs lignes.
+ */
+describe("wornArmorsFrom - cumul des protections", () => {
+  const VOUGE = "equip-1785436448046";
+  const innate = { protectionEchec: 0, seuil: 6, protectionReussite: -1, durability: 6 };
+  const labels = (ids: string[]) => wornArmorsFrom(catalog, ids, undefined, innate).map((a) => a.label);
+
+  it("sans rien de porté, l'armure innée est la seule ligne", () => {
+    expect(labels([])).toEqual(["🛡 Armure"]);
+  });
+
+  it("une armure ordinaire remplace l'innée", () => {
+    expect(labels(["cotte-de-maille"])).toEqual(["🛡 Cotte de maille"]);
+  });
+
+  it("un gambison s'ajoute à l'armure innée", () => {
+    expect(labels(["gambison"])).toEqual(["🛡 Armure", "🛡 Gambison"]);
+  });
+
+  it("armure + gambison + vouge : trois lignes, dans cet ordre", () => {
+    expect(labels(["cotte-de-maille", "gambison", VOUGE])).toEqual([
+      "🛡 Cotte de maille",
+      "🛡 Gambison",
+      "🛡 Vouge de Moringa",
+    ]);
+  });
+
+  it("la vouge porte bien ses valeurs de protection", () => {
+    const vouge = wornArmorsFrom(catalog, [VOUGE])[0];
+    expect(vouge).toMatchObject({ protectionEchec: -1, seuil: 5, protectionReussite: -2, durability: 10 });
+  });
+
+  it("un objet sans valeurs de protection n'ajoute aucune ligne", () => {
+    expect(labels(["faucille-os"])).toEqual(["🛡 Armure"]);
+  });
+});

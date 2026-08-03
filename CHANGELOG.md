@@ -7,6 +7,20 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-03 (2)
+
+### Une arme peut protéger
+
+- La **Vouge de Moringa** compte comme un bouclier -1/5/-2 avec 10 de DV. Le constructeur ignorait
+  cette protection : elle est désormais saisie et affichée.
+- Une protection qui n'est pas une armure **s'ajoute** : elle n'occupe pas l'emplacement d'armure du
+  porteur, qui peut donc garder son armure. Ce sont les mains qu'elle mobilise qui la limitent.
+- La fiche affiche maintenant **une ligne par protection**. Un combattant avec son armure et un
+  gambison en voit deux, et trois s'il porte en plus la Vouge - avant, le gambison faisait disparaître
+  l'armure de la fiche.
+- La Vouge est une arme au logo Tembo : son prix inclut déjà le tarif Tembo, elle ne subit plus le
+  surcoût de +3 Ko par tranche de 10 (soit 9 Ko de trop jusqu'ici).
+
 ## 2026-08-03
 
 ### Les sorts offerts

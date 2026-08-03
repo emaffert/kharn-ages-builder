@@ -4,7 +4,7 @@
  * et à la validation de l'emplacement d'armure - cf. docs/regles-creation-liste.md.
  * La limitation de mains ne s'applique qu'en jeu : elle n'est pas validée au recrutement.
  */
-import type { Catalog, Effect, Profile, SpecialCard, Spell } from "../model";
+import type { Catalog, Effect, Equipment, Profile, SpecialCard, Spell } from "../model";
 import type { ProfileInstance } from "../model";
 
 /** Équipement effectivement porté : équipement de base non retiré + équipement acheté. */
@@ -400,8 +400,37 @@ export function castableSpells(
 }
 
 /**
+ * L'objet **protège-t-il** ? Le `seuil` suffit à le dire : c'est le chiffre central du jet de
+ * protection, et sans lui les deux autres valeurs ne veulent rien dire.
+ *
+ * Volontairement indifférent à la CATÉGORIE : une arme peut protéger (Vouge de Moringa, « compte
+ * comme un bouclier -1/5/-2, DV10 »). Ce qui dépend de la catégorie, c'est l'**emplacement** -
+ * cf. `armorRole`.
+ */
+export function protects(e: Equipment): boolean {
+  return e.seuil != null;
+}
+
+/**
+ * Rôle défensif d'un objet porté, du point de vue des emplacements :
+ * - `standard` : l'armure du Safar, une seule, qui remplace l'armure innée ;
+ * - `stackable` : une armure à emplacement propre, qui s'ajoute (Gambison) ;
+ * - `extra` : une protection qui n'est pas une armure et n'occupe donc aucun emplacement d'armure -
+ *   elle s'ajoute elle aussi (Vouge de Moringa, limitée par les mains qu'elle occupe, pas par un
+ *   emplacement d'armure) ;
+ * - `null` : l'objet ne protège pas.
+ */
+export function armorRole(e: Equipment): "standard" | "stackable" | "extra" | null {
+  if (!protects(e)) return null;
+  if (e.category !== "armure") return "extra";
+  return e.stacksWithArmor ? "stackable" : "standard";
+}
+
+/**
  * Armures portées, réparties selon les deux emplacements : `standard` (une seule par Safar) et
  * `stackable` (une armure cumulable en plus, ex. le Gambison - cf. `Equipment.stacksWithArmor`).
+ * Compte les objets de catégorie « armure », valeurs renseignées ou non : c'est la catégorie qui
+ * occupe l'emplacement, et une armure sans chiffres saisis reste une armure sur le dos du porteur.
  */
 export function armorsWorn(
   cat: Catalog,

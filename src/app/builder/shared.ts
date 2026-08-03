@@ -3,6 +3,7 @@ import {
   pageBonusSources as corePageBonusSources,
   innateSpellIds as coreInnateSpellIds,
   spellGrants as coreSpellGrants,
+  armorRole,
   pageAllocation as corePageAllocation,
   genericSpellAllocation as coreGenericSpellAllocation,
   spellLevelCost as coreSpellLevelCost,
@@ -19,6 +20,7 @@ import {
   FRERE_D_ARMES,
 } from "@core";
 import type {
+  Armor,
   Catalog,
   GenericSpellAllocation,
   GrantedSkillRef,
@@ -69,17 +71,23 @@ export function mountOptionLines(
 }
 
 /**
- * Armures portées, dérivées d'une liste d'équipements (catégorie « armure ») : Brigandine, Caparaçon…
- * Une armure achetée remplace l'innée (une seule armure) : cet appel produit l'armure *effective* affichée.
+ * **Toutes** les protections à afficher pour un porteur : une ligne par protection, dans l'ordre où
+ * elles se lisent sur la fiche.
+ *
+ * Une armure ordinaire achetée **remplace** l'armure innée - on n'en porte qu'une. Tout le reste
+ * s'**ajoute** : le Gambison, qui a son emplacement propre, et les objets qui protègent sans être
+ * des armures (Vouge de Moringa). D'où plusieurs lignes possibles : armure + gambison + vouge.
+ *
  * `upgradesByEquip` (optionnel) suffixe le libellé avec les améliorations actives (ex. « Pointes acérées »).
- * `innateArmor` (optionnel) : armure innée du porteur, pour le `heavySeuil` conditionnel (ex. Armure de
- * Combat Khârne : seuil abaissé si le porteur est déjà au moins aussi protégé).
+ * `innateArmor` (optionnel) : armure innée du porteur - affichée si rien ne la remplace, et lue pour
+ * le `heavySeuil` conditionnel (Armure de Combat Khârne : seuil abaissé si le porteur est déjà au
+ * moins aussi protégé).
  */
 export function wornArmorsFrom(
   cat: Catalog,
   equipmentIds: string[],
   upgradesByEquip?: Record<string, string[]>,
-  innateArmor?: { protectionEchec?: number; protectionReussite?: number },
+  innateArmor?: Armor,
 ): ArmorDisplay[] {
   const alreadyProtected = (e: Catalog["equipment"][number]) =>
     innateArmor?.protectionEchec != null &&
@@ -88,22 +96,40 @@ export function wornArmorsFrom(
     e.protectionReussite != null &&
     innateArmor.protectionEchec <= e.protectionEchec &&
     innateArmor.protectionReussite <= e.protectionReussite;
-  return equipmentIds
+  const line = (e: Catalog["equipment"][number]): ArmorDisplay => {
+    const upIds = upgradesByEquip?.[e.id] ?? [];
+    const upNames = (e.upgrades ?? []).filter((u) => upIds.includes(u.id)).map((u) => u.label);
+    // « Possède déjà ces caractéristiques » → seuil de réussite amélioré (heavySeuil).
+    const seuil = e.heavySeuil != null && alreadyProtected(e) ? e.heavySeuil : e.seuil;
+    return {
+      label: `🛡 ${e.name}${upNames.length ? ` (${upNames.join(", ")})` : ""}`,
+      protectionEchec: e.protectionEchec,
+      seuil,
+      protectionReussite: e.protectionReussite,
+      durability: e.durability,
+    };
+  };
+  const worn = equipmentIds
     .map((id) => cat.equipment.find((e) => e.id === id))
-    .filter((e): e is NonNullable<typeof e> => e?.category === "armure")
-    .map((e) => {
-      const upIds = upgradesByEquip?.[e.id] ?? [];
-      const upNames = (e.upgrades ?? []).filter((u) => upIds.includes(u.id)).map((u) => u.label);
-      // « Possède déjà ces caractéristiques » → seuil de réussite amélioré (heavySeuil).
-      const seuil = e.heavySeuil != null && alreadyProtected(e) ? e.heavySeuil : e.seuil;
-      return {
-        label: `🛡 ${e.name}${upNames.length ? ` (${upNames.join(", ")})` : ""}`,
-        protectionEchec: e.protectionEchec,
-        seuil,
-        protectionReussite: e.protectionReussite,
-        durability: e.durability,
-      };
-    });
+    .filter((e): e is NonNullable<typeof e> => Boolean(e) && armorRole(e!) != null);
+  const roled = (role: ReturnType<typeof armorRole>) => worn.filter((e) => armorRole(e) === role);
+  const standard = roled("standard");
+  const innateLine: ArmorDisplay[] = innateArmor
+    ? [
+        {
+          label: "🛡 Armure",
+          protectionEchec: innateArmor.protectionEchec,
+          seuil: innateArmor.seuil,
+          protectionReussite: innateArmor.protectionReussite,
+          durability: innateArmor.durability,
+        },
+      ]
+    : [];
+  return [
+    ...(standard.length > 0 ? standard.map(line) : innateLine),
+    ...roled("stackable").map(line),
+    ...roled("extra").map(line),
+  ];
 }
 
 // Groupes de stats comme sur les cartes officielles : combat (V P A C) puis (T I).

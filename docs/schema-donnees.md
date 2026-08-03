@@ -178,6 +178,13 @@ interface Equipment {
   munition?: { unitCost: number; max?: number };  // munitions achetables (tir sans recharge)
   grantsCasting?: { magicWayIds: string[] };      // objet conférant l'incantation (focus/relique)
   durability?: number;        // armures / boucliers
+  // Protection : un `seuil` renseigné suffit à dire que l'objet protège, QUELLE QUE SOIT sa catégorie
+  // (Vouge de Moringa : arme de corps à corps qui « compte comme un bouclier -1/5/-2, DV10 »).
+  // La catégorie décide seulement de l'emplacement, cf. `armorRole` : « armure » occupe l'emplacement
+  // d'armure (ou celui du Gambison si `stacksWithArmor`), toute autre catégorie s'ajoute sans emplacement.
+  protectionEchec?: number; seuil?: number; protectionReussite?: number;
+  heavySeuil?: number;        // seuil amélioré si le porteur est déjà au moins aussi protégé
+  stacksWithArmor?: boolean;  // armure à emplacement propre (Gambison)
   perceArmure?: number | "1D5";
   effectsText: string;        // verbatim
   grantsSkills?: SkillRef[];   // ex. la Faucille d'Os confère « Riposte »

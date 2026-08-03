@@ -89,7 +89,11 @@ export function ProfileStatCard({
   onSetUpgradeCount?: (id: string, qty: number) => void;
   /** Modifications d'effets à refléter sur le profil affiché (stats/compétences/traits). */
   mods?: ProfileMods;
-  /** Armures portées (équipement de catégorie « armure », ex. Brigandine), affichées après l'armure innée. */
+  /**
+   * Protections à afficher, **armure innée comprise** (cf. `wornArmorsFrom`) : l'armure ordinaire
+   * achetée remplace l'innée, le Gambison et les objets protecteurs s'y ajoutent. Absent = aperçu
+   * hors liste, où seule l'armure innée du profil est connue.
+   */
   wornArmors?: ArmorDisplay[];
   /** Équipement réellement porté ; défaut = l'équipement de base (aperçu d'une fiche hors liste). */
   wornEquipIds?: string[];
@@ -256,10 +260,9 @@ export function ProfileStatCard({
             </div>
           )}
         </div>
-        {/* Une seule armure : achetée/portée (remplace l'innée) sinon innée. */}
-        <ArmorBlock
-          armors={wornArmors && wornArmors.length > 0 ? wornArmors : p.armor ? [armorDisplay(p.armor)] : []}
-        />
+        {/* Les protections sont composées par `wornArmorsFrom` (armure innée comprise) ; hors liste,
+            il ne reste que l'armure innée à montrer. */}
+        <ArmorBlock armors={wornArmors ?? (p.armor ? [armorDisplay(p.armor)] : [])} />
         <SkillChips
           skills={skillOrder.map((id) => {
             const a = skillAgg.get(id)!;

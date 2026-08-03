@@ -11,6 +11,7 @@ import {
   genericSpellAllocation,
   maxPagesInPool,
   pageAllocation,
+  spellGrants,
 } from "./magic";
 import { recruitableWithoutSeal } from "./recruitment";
 import { isSlaveIn } from "./slavery";
@@ -1595,5 +1596,93 @@ describe("Esclaves (LDR Saison 2, p. 10)", () => {
     const libre = inst(PORTEUSE, { addedEquipmentIds: ["epee-longue"], specialCardIds: ["lien-de-la-terre"] });
     const res = evaluateList(carte, makeList([inst("gouns-shaman-2"), libre], "gouns"));
     expect(slaveIssues(res)).toEqual([]);
+  });
+});
+
+describe("sorts offerts au choix (grant-spell-choice)", () => {
+  const DEMI_SOEUR = "profile-1785410170666";
+  const GRANT = "demi-soeur-sort-osteomancie";
+  const demiSoeur = catalog.profiles.find((p) => p.id === DEMI_SOEUR)!;
+  const grantOf = (cat: Catalog = catalog) =>
+    spellGrants(cat, demiSoeur, inst(DEMI_SOEUR), new Set(demiSoeur.traits))[0];
+
+  it("la carte « Demi-soeur » ouvre une offre d'un sort d'Ostéomancie", () => {
+    const g = grantOf();
+    expect(g.effectId).toBe(GRANT);
+    expect(g.count).toBe(1);
+    expect(g.name).toBe("Demi-soeur");
+  });
+
+  it("l'offre ne connaît ni page ni niveau : sorts de grimoire et génériques de la voie s'y côtoient", () => {
+    const ids = grantOf().choices.map((s) => s.id);
+    expect(ids).toContain("spell-1785239128129"); // Ordre sépulcral - 3 pages
+    expect(ids).toContain("spell-1785237940302"); // Poudre d'os - générique
+  });
+
+  it("les réservations tiennent : la Demi-soeur n'atteint pas les sorts des Filles de Nyx", () => {
+    const ids = grantOf().choices.map((s) => s.id);
+    expect(ids).not.toContain("seduction-du-fiel"); // réservé au trait « fille-de-nyx »
+    expect(ids).not.toContain("guilde-noire-passe-passe"); // réservé à Bharbathos
+  });
+
+  it("le sort offert ne consomme ni page ni niveau, même sans grimoire", () => {
+    // 3 pages : impossible à financer sans grimoire s'il passait par le budget général.
+    const x = inst(DEMI_SOEUR, { grantedSpellIds: { [GRANT]: ["spell-1785239128129"] } });
+    const res = evalFang([x]);
+    expect(res.issues.filter((i) => i.severity === "error")).toEqual([]);
+    expect(res.costByInstance[x.instanceId]).toBe(demiSoeur.cost);
+  });
+
+  it("le prix en Kouronnes du sort reste dû", () => {
+    const payant: Spell = {
+      id: "banc-osteomancie-payante",
+      name: "Banc d'essai - Ostéomancie payante",
+      kind: "grimoire",
+      magicWayId: "osteomancie",
+      pages: 2,
+      cost: 10,
+      target: "Soi-même",
+      difficulties: [],
+    };
+    const cat: Catalog = { ...catalog, spells: [...catalog.spells, payant] };
+    const x = inst(DEMI_SOEUR, { grantedSpellIds: { [GRANT]: [payant.id] } });
+    const res = evaluateList(cat, makeList([x]));
+    expect(res.issues.filter((i) => i.severity === "error")).toEqual([]);
+    expect(res.costByInstance[x.instanceId]).toBe(demiSoeur.cost + 10);
+  });
+
+  it("un sort hors de la sélection est refusé", () => {
+    const x = inst(DEMI_SOEUR, { grantedSpellIds: { [GRANT]: ["onde-revigorante"] } }); // shamanisme
+    const res = evalFang([x]);
+    expect(res.issues.map((i) => i.ruleId)).toContain("granted-spell-not-eligible");
+  });
+
+  it("le quota de l'offre est tenu", () => {
+    const x = inst(DEMI_SOEUR, {
+      grantedSpellIds: { [GRANT]: ["spell-1785238451420", "spell-1785238621986"] },
+    });
+    const res = evalFang([x]);
+    expect(res.issues.map((i) => i.ruleId)).toContain("granted-spell-over-count");
+  });
+
+  it("un choix dont l'offre a disparu est signalé, pas appliqué en silence", () => {
+    const x = inst(DEMI_SOEUR, { grantedSpellIds: { "effet-envole": ["spell-1785238451420"] } });
+    const res = evalFang([x]);
+    expect(res.issues.map((i) => i.ruleId)).toContain("granted-spell-orphan");
+  });
+
+  it("un même sort ne peut être connu deux fois (offert et payé)", () => {
+    const x = inst(DEMI_SOEUR, {
+      grimoireId: "grand",
+      spellIds: ["spell-1785238451420"],
+      grantedSpellIds: { [GRANT]: ["spell-1785238451420"] },
+    });
+    const res = evalFang([x]);
+    expect(res.issues.map((i) => i.ruleId)).toContain("spell-duplicate");
+  });
+
+  it("une figurine sans offre n'en reçoit aucune", () => {
+    const goulue = catalog.profiles.find((p) => p.id === "fangs-goulue-1")!;
+    expect(spellGrants(catalog, goulue, inst(goulue.id), new Set(goulue.traits))).toEqual([]);
   });
 });

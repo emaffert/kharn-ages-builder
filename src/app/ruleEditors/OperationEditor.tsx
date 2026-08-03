@@ -1,7 +1,7 @@
 import type { Catalog, EffectOperation } from "@core";
 import { EQUIPMENT_CATEGORIES, MASTERY_DOMAINS, INPUT, removeAt, replaceAt } from "../admin/shared";
 import { Combobox, DomainIcon, Field, ChipMultiSelect, InlineCheck, NumberField } from "../admin/primitives";
-import { AddButton, RemoveButton, StatSelect, TxtField } from "./kit";
+import { AddButton, RemoveButton, StatSelect, StringList, TxtField } from "./kit";
 import { skillOptions, spellOptions } from "./helpers";
 import { OfSelector } from "./SelectorEditor";
 
@@ -20,6 +20,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, skillId: "" };
     case "grant-spell":
       return { kind, spellId: "" };
+    case "grant-spell-choice":
+      return { kind, count: 1 };
     case "grant-trait":
       return { kind, trait: "" };
     case "stat-modifier":
@@ -46,6 +48,7 @@ const OP_LABELS: Record<EffectOperation["kind"], string> = {
   "grimoire-discount": "Réduire un grimoire",
   "grant-skill": "Conférer une compétence",
   "grant-spell": "Conférer un sort",
+  "grant-spell-choice": "Conférer des sorts au choix",
   "grant-trait": "Conférer un trait",
   "grant-mastery-die": "Conférer un dé de maîtrise",
   "unlock-upgrade": "Débloquer une amélioration",
@@ -60,7 +63,10 @@ const OP_LABELS: Record<EffectOperation["kind"], string> = {
 // `cap` est volontairement absent du menu (non implémenté par le moteur).
 const OP_GROUPS: { group: string; kinds: EffectOperation["kind"][] }[] = [
   { group: "Coût", kinds: ["cost-delta", "cost-set", "grimoire-discount"] },
-  { group: "Octrois", kinds: ["grant-skill", "grant-spell", "grant-trait", "grant-mastery-die", "unlock-upgrade"] },
+  {
+    group: "Octrois",
+    kinds: ["grant-skill", "grant-spell", "grant-spell-choice", "grant-trait", "grant-mastery-die", "unlock-upgrade"],
+  },
   { group: "Caractéristiques & compétences", kinds: ["stat-modifier", "stat-count", "stat-max", "skill-count"] },
   { group: "Divers", kinds: ["spell-pages", "limit-modifier"] },
 ];
@@ -236,6 +242,43 @@ export function OperationEditor({
             onChange={(v) => onChange({ ...op, spellId: v })}
           />
         </Field>
+      )}
+
+      {op.kind === "grant-spell-choice" && (
+        <>
+          <NumberField
+            label="Nombre de sorts"
+            className="w-32"
+            value={op.count ?? 1}
+            onChange={(v) => onChange({ ...op, count: v ?? 1 })}
+          />
+          <Field label="Voie offerte" hint="tous les sorts de la voie">
+            <select
+              value={op.magicWayId ?? ""}
+              onChange={(e) => onChange({ ...op, magicWayId: e.target.value || undefined })}
+              className={INPUT}
+            >
+              <option value="">— aucune</option>
+              {cat.magicWays.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <StringList
+            label="Sorts nommés"
+            values={op.spellIds ?? []}
+            onChange={(v) => onChange({ ...op, spellIds: v.length ? v : undefined })}
+            options={spellOptions(cat)}
+            combo
+          />
+          <p className="adm-block-note">
+            Le porteur choisit lui-même ses sorts dans cette sélection. Ils ne consomment ni page de
+            grimoire ni niveau, et s'ajoutent à ce qu'il achète par ailleurs ; leur prix en Kouronnes reste
+            dû. Les sorts réservés restent réservés : ils n'apparaissent que si le porteur y a droit.
+          </p>
+        </>
       )}
 
       {op.kind === "grant-trait" && (

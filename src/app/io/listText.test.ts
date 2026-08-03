@@ -89,3 +89,47 @@ describe("export/import texte", () => {
     expect(back.addedEquipmentCounts).toEqual({ [stacked.id]: 2 });
   });
 });
+
+describe("sorts offerts", () => {
+  const GRANT = "demi-soeur-sort-osteomancie";
+  const ORDRE_SEPULCRAL = "spell-1785239128129";
+
+  function docWithGrant(): ListDocument {
+    const doc = makeDoc();
+    doc.fersDeLance[0].members.push({
+      instanceId: "d",
+      profileId: "profile-1785410170666",
+      addedEquipmentIds: [],
+      removedBaseEquipmentIds: [],
+      spellIds: [],
+      grantedSpellIds: { [GRANT]: [ORDRE_SEPULCRAL] },
+    });
+    return doc;
+  }
+
+  it("l'export nomme le sort offert sans exposer l'identifiant de son effet", () => {
+    const txt = exportText(catalog, docWithGrant());
+    expect(txt).toContain("sort offert · Ordre sépulcral");
+    expect(txt).not.toContain(GRANT);
+  });
+
+  it("la relecture rattache le sort à l'offre qui peut l'accueillir", () => {
+    const { doc, unresolved } = importText(catalog, exportText(catalog, docWithGrant()));
+    const demi = doc.fersDeLance[0].members.find((m) => m.profileId === "profile-1785410170666")!;
+    expect(demi.grantedSpellIds).toEqual({ [GRANT]: [ORDRE_SEPULCRAL] });
+    expect(demi.spellIds).toEqual([]); // un sort offert n'est pas un sort payé
+    expect(unresolved).toEqual([]);
+  });
+
+  it("un sort offert sans offre pour l'accueillir est signalé", () => {
+    // L'Apathée n'a pas la carte « Demi-soeur » : rien chez elle n'offre de sort.
+    const txt = exportText(catalog, makeDoc()).replace(
+      "sort · Séduction du Fiel",
+      "sort offert · Séduction du Fiel",
+    );
+    const { doc, unresolved } = importText(catalog, txt);
+    const apathee = doc.fersDeLance[0].members.find((m) => m.profileId === "fangs-apathee-3")!;
+    expect(apathee.grantedSpellIds).toBeUndefined();
+    expect(unresolved.join("\n")).toContain("Séduction du Fiel");
+  });
+});

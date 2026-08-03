@@ -4,7 +4,7 @@ import { ProfileStatCard, type ProfileMods } from "./ProfileStatCard";
 import { MountOptionsEditor } from "./MountOptions";
 import { EquipPanel } from "./EquipPanel";
 import { MagiePanel } from "./MagiePanel";
-import { canBuy, castWays, wornArmorsFrom, type ItemInfo } from "./shared";
+import { canBuy, castWays, spellGrants, wornArmorsFrom, type ItemInfo } from "./shared";
 
 /**
  * Éditeur d'une figurine (onglets Carte / Équipement / Améliorations / Magie) et ses panneaux.
@@ -33,6 +33,8 @@ export function FigureEditor({
   onSetUpgradeCount,
   onGrimoire,
   onToggleSpell,
+  grantedSpells,
+  onToggleGrantedSpell,
   onInfo,
   equipmentUpgrades,
   onToggleEquipmentUpgrade,
@@ -61,6 +63,9 @@ export function FigureEditor({
   onSetUpgradeCount: (id: string, qty: number) => void;
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
+  /** Sorts offerts retenus, par effet qui les octroie (cf. `ProfileInstance.grantedSpellIds`). */
+  grantedSpells?: Record<string, string[]>;
+  onToggleGrantedSpell: (effectId: string, spellId: string) => void;
   onInfo: (info: ItemInfo) => void;
   equipmentUpgrades: Record<string, string[]>;
   onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
@@ -74,6 +79,8 @@ export function FigureEditor({
 }) {
   const activeBase = p.baseEquipmentIds.filter((id) => !removed.includes(id));
   const ways = castWays(p, cat, upgrades, [...activeBase, ...added], (mods?.grantedSkills ?? []).map((g) => g.skillId));
+  // Une offre de sorts ouvre l'onglet magie même sans voie maîtrisée : l'offre vaut connaissance du sort.
+  const hasGrant = spellGrants(p, cat, upgrades, [...activeBase, ...added]).length > 0;
   const castable = ways.length > 0;
 
   // Les améliorations se cochent désormais directement dans l'onglet « Carte » (plus d'onglet dédié).
@@ -81,7 +88,7 @@ export function FigureEditor({
   const tabs = [
     { id: "carte" as const, label: "Carte" },
     canBuy(p, cat) && { id: "equip" as const, label: "Équipement" },
-    (castable || spells.length > 0) && { id: "magie" as const, label: "Magie" },
+    (castable || hasGrant || spells.length > 0) && { id: "magie" as const, label: "Magie" },
     mountId != null && { id: "monture" as const, label: "Monture" },
   ].filter(Boolean) as { id: TabId; label: string }[];
   const [tab, setTab] = useState<TabId>("carte");
@@ -111,6 +118,7 @@ export function FigureEditor({
           mods={mods}
           wornArmors={wornArmorsFrom(cat, [...activeBase, ...added], undefined, p.armor)}
           wornEquipIds={[...activeBase, ...added]}
+          grantedSpells={grantedSpells}
           factionId={factionId}
         />
       )}
@@ -147,6 +155,8 @@ export function FigureEditor({
           wornEquipIds={[...activeBase, ...added]}
           onGrimoire={onGrimoire}
           onToggleSpell={onToggleSpell}
+          grantedSpells={grantedSpells}
+          onToggleGrantedSpell={onToggleGrantedSpell}
           onInfo={onInfo}
           grimoireDiscount={mods?.grimoireDiscount}
         />

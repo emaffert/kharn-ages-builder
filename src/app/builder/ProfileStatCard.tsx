@@ -74,6 +74,7 @@ export function ProfileStatCard({
   mods,
   wornArmors,
   wornEquipIds,
+  grantedSpells,
   factionId,
 }: {
   p: Profile;
@@ -92,6 +93,8 @@ export function ProfileStatCard({
   wornArmors?: ArmorDisplay[];
   /** Équipement réellement porté ; défaut = l'équipement de base (aperçu d'une fiche hors liste). */
   wornEquipIds?: string[];
+  /** Sorts offerts retenus par le joueur, par effet qui les octroie (absent hors liste : rien à montrer). */
+  grantedSpells?: Record<string, string[]>;
   /** Faction du Fer de Lance d'accueil : une esclave n'a droit à aucune amélioration. */
   factionId?: string;
 }) {
@@ -142,7 +145,12 @@ export function ProfileStatCard({
   const grantedTraits = mods?.grantedTraitIds ?? [];
   // Sorts connus d'office (signature) - affichés même pour les non-mages, cliquables. Ils peuvent
   // venir du profil, d'une carte qui le vise ou d'un objet porté (cf. `innateSpellIds`).
-  const innateSpells = innateSpellIds(p, cat, upgrades ?? [], wornEquipIds ?? p.baseEquipmentIds)
+  // Les sorts *offerts* (choisis dans une sélection, ex. Demi-soeur) rejoignent la même section :
+  // du point de vue de la fiche, ce sont eux aussi des sorts connus sans grimoire ni page.
+  const innateSpells = [
+    ...innateSpellIds(p, cat, upgrades ?? [], wornEquipIds ?? p.baseEquipmentIds),
+    ...new Set(Object.values(grantedSpells ?? {}).flat()),
+  ]
     .map((id) => cat.spells.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => Boolean(s));
   const cards = specialCardsForProfile(p, cat);

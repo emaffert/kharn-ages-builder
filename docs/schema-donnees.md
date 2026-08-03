@@ -431,6 +431,7 @@ type EffectOperation =
   | { kind: "unlock-upgrade"; upgradeId: string; label: string; cost: number; equipmentCategories: Equipment["category"][]; grantsSkills?: SkillRef[] } // Borax
   | { kind: "grant-skill"; skillId: string; value?: string | number; precision?: string; incrementIfPresent?: number } // +N si déjà connue
   | { kind: "grant-spell"; spellId: string }                           // sort de signature (Alaric : Lien Mental)
+  | { kind: "grant-spell-choice"; magicWayId?: string; spellIds?: string[]; count?: number } // N sorts au choix, hors budget (Demi-soeur : 1 sort d'Ostéomancie)
   | { kind: "grant-trait"; trait: string }                             // tag sans compétence (voir ci-dessous)
   | { kind: "grant-mastery-die"; domains: MasteryDomain[] }            // affichage (Bannière Khéropse)
   | { kind: "stat-modifier"; stat: StatKey; amount: number | "level" } // Apprentie de Nyx : +niveau en I
@@ -521,6 +522,7 @@ interface ProfileInstance {
   addedEquipmentIds: string[];
   removedBaseEquipmentIds: string[];
   spellIds: string[];
+  grantedSpellIds?: Record<string, string[]>; // sorts offerts retenus, par effet « grant-spell-choice » (hors budget)
   grimoireId?: "petit" | "grand";
   munitions?: Record<string, number>; // quantité de munitions par arme de tir (sans recharge)
   mount?: {

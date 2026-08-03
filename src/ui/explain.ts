@@ -135,6 +135,16 @@ export function describeEffect(e: Effect, cat: Catalog): string {
       base = `Connaît d'office le sort « ${sp} » (${tgt})`;
       break;
     }
+    case "grant-spell-choice": {
+      const n = op.count ?? 1;
+      const way = op.magicWayId ? cat.magicWays.find((w) => w.id === op.magicWayId)?.name ?? op.magicWayId : null;
+      const named = (op.spellIds ?? []).map((id) => cat.spells.find((s) => s.id === id)?.name ?? id);
+      const pool = [way ? `de la voie « ${way} »` : null, named.length ? `parmi ${named.join(", ")}` : null]
+        .filter(Boolean)
+        .join(" ou ");
+      base = `Connaît ${n} sort${n > 1 ? "s" : ""} au choix ${pool || "(sélection non renseignée)"}, sans grimoire ni budget de pages (${tgt})`;
+      break;
+    }
     case "grant-trait":
       base = `Octroie le trait « ${op.trait} » à ${tgt}`;
       break;

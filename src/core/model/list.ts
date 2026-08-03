@@ -16,6 +16,14 @@ export const ProfileInstanceSchema = z.object({
   addedEquipmentCounts: z.record(z.string(), z.number().int().min(1)).optional(),
   removedBaseEquipmentIds: z.array(z.string()),
   spellIds: z.array(z.string()),
+  /**
+   * Sorts **offerts** retenus par le joueur, rangés par effet qui les octroie (`effectId → spellIds`,
+   * cf. l'opération `grant-spell-choice`). Rangés à part de `spellIds` parce qu'ils ne se paient ni en
+   * pages ni en niveaux : les confondre reviendrait à leur inventer un budget. La clé est l'identifiant
+   * de l'effet, pour que deux sources (une carte et une arme) gardent chacune son quota, et pour que le
+   * choix s'efface avec la source qui l'offrait.
+   */
+  grantedSpellIds: z.record(z.string(), z.array(z.string())).optional(),
   grimoireId: z.enum(["petit", "grand"]).optional(),
   /**
    * Munitions achetées, par arme : `equipId → { typeId → indice de palier }` (indice dans

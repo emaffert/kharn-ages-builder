@@ -4,6 +4,7 @@ import {
   evaluateList,
   munitionKindForEquip,
   munitionLinesFor,
+  spellGrants,
   type Catalog,
   type ListDocument,
   type ProfileInstance,
@@ -48,6 +49,11 @@ export function exportText(cat: Catalog, doc: ListDocument): string {
     }
     if (m.grimoireId) out.push(`    grimoire · ${cat.grimoires.find((g) => g.id === m.grimoireId)?.name ?? m.grimoireId}`);
     for (const id of m.spellIds) out.push(`    sort · ${cat.spells.find((s) => s.id === id)?.name ?? id}`);
+    // Le sort offert est nommé, pas rattaché à l'identifiant de son effet : le format texte est fait
+    // pour être lu et recopié à la main. La relecture rattache le sort à l'offre qui peut l'accueillir.
+    for (const id of new Set(Object.values(m.grantedSpellIds ?? {}).flat())) {
+      out.push(`    sort offert · ${cat.spells.find((s) => s.id === id)?.name ?? id}`);
+    }
     for (const id of m.specialCardIds ?? []) out.push(`    amélioration · ${cat.specialCards.find((c) => c.id === id)?.name ?? id}`);
     return out;
   };
@@ -119,6 +125,9 @@ export function importText(cat: Catalog, text: string): TextImportResult {
   const byName = <T extends { name: string }>(list: T[], label: string) =>
     list.find((x) => norm(x.name) === norm(label));
 
+  /** Sorts offerts lus par nom, rattachés à leur offre une fois la figurine entièrement lue. */
+  const pendingGranted = new Map<ProfileInstance, string[]>();
+
   const rawLines = text.split(/\r?\n/);
   let current: ProfileInstance | null = null;
   let currentTop: ProfileInstance | null = null;
@@ -150,7 +159,7 @@ export function importText(cat: Catalog, text: string): TextImportResult {
     }
 
     // Détail d'une figurine : « mot-clé · valeur ».
-    const detail = line.match(/^(équip\.?|arme|sort|grimoire|am[ée]lioration)\s*[·:]\s*(.+)$/i);
+    const detail = line.match(/^(équip\.?|arme|sort offert|sort|grimoire|am[ée]lioration)\s*[·:]\s*(.+)$/i);
     if (detail && current) {
       const kind = norm(detail[1]);
       let val = detail[2].trim();
@@ -191,6 +200,11 @@ export function importText(cat: Catalog, text: string): TextImportResult {
         const g = cat.grimoires.find((x) => norm(x.name) === norm(val) || x.id === norm(val));
         if (g) current.grimoireId = g.id;
         else unresolved.push(raw);
+      } else if (kind === "sort offert") {
+        // Rattachement différé : l'offre peut venir d'une amélioration, lue plus bas dans le bloc.
+        const s = byName(cat.spells, val);
+        if (s) pendingGranted.set(current, [...(pendingGranted.get(current) ?? []), s.id]);
+        else unresolved.push(raw);
       } else if (kind === "sort") {
         const s = byName(cat.spells, val);
         if (s) current.spellIds.push(s.id);
@@ -228,6 +242,23 @@ export function importText(cat: Catalog, text: string): TextImportResult {
       currentTop = inst;
       if (/meneur/i.test(line) || leaderInstanceId === "") leaderInstanceId = inst.instanceId;
     }
+  }
+
+  // Sorts offerts : la figurine est complète (équipement, améliorations), on peut donc savoir quelles
+  // offres elle porte et placer chaque sort dans la première qui l'accepte et qui a encore de la place.
+  for (const [inst, spellIds] of pendingGranted) {
+    const prof = cat.profiles.find((p) => p.id === inst.profileId);
+    if (!prof) continue;
+    const grants = spellGrants(cat, prof, inst, new Set(prof.traits));
+    const map: Record<string, string[]> = {};
+    for (const spellId of spellIds) {
+      const grant = grants.find(
+        (g) => (map[g.effectId]?.length ?? 0) < g.count && g.choices.some((s) => s.id === spellId),
+      );
+      if (grant) map[grant.effectId] = [...(map[grant.effectId] ?? []), spellId];
+      else unresolved.push(`    sort offert · ${cat.spells.find((s) => s.id === spellId)?.name ?? spellId}`);
+    }
+    if (Object.keys(map).length) inst.grantedSpellIds = map;
   }
 
   const now = new Date().toISOString();

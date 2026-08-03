@@ -2,6 +2,7 @@ import {
   castWays as coreCastWays,
   pageBonusSources as corePageBonusSources,
   innateSpellIds as coreInnateSpellIds,
+  spellGrants as coreSpellGrants,
   pageAllocation as corePageAllocation,
   genericSpellAllocation as coreGenericSpellAllocation,
   spellLevelCost as coreSpellLevelCost,
@@ -28,6 +29,7 @@ import type {
   ProfileInstance,
   Selector,
   Spell,
+  SpellGrant,
 } from "@core";
 import type { ArmorDisplay } from "./StatSheet";
 // Libellés de présentation partagés avec l'admin (source unique dans @ui) - alias pour garder les noms locaux.
@@ -395,6 +397,16 @@ export function innateSpellIds(
   wornEquipIds: string[] = p.baseEquipmentIds,
 ): string[] {
   return coreInnateSpellIds(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits));
+}
+
+/** Offres de sorts au choix portées par la figurine (profil, carte qui la vise, équipement porté). */
+export function spellGrants(
+  p: Profile,
+  cat: Catalog,
+  selectedUpgrades: string[],
+  wornEquipIds: string[] = p.baseEquipmentIds,
+): SpellGrant[] {
+  return coreSpellGrants(cat, p, synthInstance(p, selectedUpgrades, wornEquipIds), new Set(p.traits));
 }
 
 export function pageBonus(p: Profile, cat: Catalog, selectedUpgrades: string[], wornEquipIds: string[] = p.baseEquipmentIds): number {

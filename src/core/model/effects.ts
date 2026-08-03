@@ -55,6 +55,22 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   // Octroie la connaissance d'un sort « de signature » (connu d'office, gratuit, hors budget de pages).
   // Ex. Alaric connaît « Lien Mental ». Affiché sur la fiche même pour un non-lanceur.
   z.object({ kind: z.literal("grant-spell"), spellId: z.string() }),
+  /**
+   * Octroie `count` sort(s) **au choix du joueur** dans une sélection : tous les sorts d'une voie
+   * (`magicWayId`) et/ou une liste explicite (`spellIds`) - au moins l'un des deux, sinon la sélection
+   * est vide (brouillon d'admin, qui ne doit pas fuiter dans le constructeur).
+   *
+   * Sort offert = **hors budget** de pages ET de niveaux, sans grimoire, cumulable avec le grimoire et
+   * les autres bonus. Le prix en Ko du sort reste dû, et la réservation du sort (`reservedTo`)
+   * s'applique toujours : une Fille de Nyx atteint ainsi les sorts qui lui sont réservés, pas une autre.
+   * Ex. Demi-soeur : « Possède 1 sort d'Ostéomancie sans grimoire » ; Vouge de Moringa : 3 sorts d'Adansonia.
+   */
+  z.object({
+    kind: z.literal("grant-spell-choice"),
+    magicWayId: z.string().optional(),
+    spellIds: z.array(z.string()).optional(),
+    count: z.number().optional(),
+  }),
   // Octroie un trait (tag mécanique) aux cibles, jusqu'au point fixe, AVANT la validation - donc lu
   // par les règles et les sélecteurs qui inspectent les traits. À réserver aux tags sans compétence
   // correspondante : quand la carte affiche une compétence (« Apatride »), c'est `grant-skill` qui

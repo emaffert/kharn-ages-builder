@@ -25,6 +25,7 @@ export function PurchaseSummary({
   removed,
   grimoireId,
   spellIds,
+  grantedSpellIds,
   upgrades,
   upgradeCounts,
   munitions,
@@ -52,6 +53,8 @@ export function PurchaseSummary({
   grimoireDiscount?: Record<string, number>;
   grimoireId?: string;
   spellIds: string[];
+  /** Sorts offerts retenus, par effet qui les octroie : hors budget, mais leur prix en Ko reste dû. */
+  grantedSpellIds?: Record<string, string[]>;
   upgrades: string[];
   upgradeCounts?: Record<string, number>;
   munitions: Record<string, Record<string, number>>;
@@ -173,6 +176,22 @@ export function PurchaseSummary({
         title: "Sorts sélectionnés",
         price: `${sCost} Ko`,
         lines: spells.map((s) => `${s.name} - ${s.pages ?? 0} p${s.cost ? ` · ${s.cost} Ko` : ""}`),
+      }),
+    );
+  }
+  // Sorts offerts : hors budget de pages et de niveaux, mais ils gardent leur prix en Kouronnes.
+  const offered = [...new Set(Object.values(grantedSpellIds ?? {}).flat())]
+    .map((id) => cat.spells.find((s) => s.id === id))
+    .filter((s): s is Spell => Boolean(s));
+  if (offered.length > 0) {
+    magie.push(
+      chip(`${offered.length} sort${offered.length > 1 ? "s" : ""} offert${offered.length > 1 ? "s" : ""}`, {
+        title: "Sorts offerts",
+        price: `${offered.reduce((n, s) => n + (s.cost ?? 0), 0)} Ko`,
+        lines: [
+          "Sans grimoire, hors budget de pages et de niveaux.",
+          ...offered.map((s) => `${s.name}${s.cost ? ` · ${s.cost} Ko` : ""}`),
+        ],
       }),
     );
   }

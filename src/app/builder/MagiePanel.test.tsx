@@ -19,6 +19,7 @@ function baseProps(over: Partial<React.ComponentProps<typeof MagiePanel>> = {}) 
     wornEquipIds: [] as string[],
     onGrimoire: vi.fn(),
     onToggleSpell: vi.fn(),
+    onToggleGrantedSpell: vi.fn(),
     onInfo: vi.fn(),
     ...over,
   };
@@ -89,5 +90,53 @@ describe("MagiePanel - séparation des deux budgets", () => {
     expect(screen.queryByText("Confusion")).toBeNull();
     fireEvent.click(screen.getByText(/^Sorts génériques /));
     expect(screen.getByText("Confusion")).toBeTruthy();
+  });
+});
+
+describe("MagiePanel - sorts offerts", () => {
+  const GRANT = "demi-soeur-sort-osteomancie";
+  const ORDRE_SEPULCRAL = "spell-1785239128129";
+  const demiSoeur = catalog.profiles.find((p) => p.id === "profile-1785410170666")!;
+  const offerte = (over: Partial<React.ComponentProps<typeof MagiePanel>> = {}) =>
+    baseProps({ profile: demiSoeur, ways: ["osteomancie"], ...over });
+
+  const openOfferts = () => fireEvent.click(screen.getByText(/^Sorts offerts /));
+
+  it("un troisième segment apparaît, avec son propre compteur", () => {
+    render(<MagiePanel {...offerte()} />);
+    expect(screen.getByText("Sorts offerts 0/1")).toBeTruthy();
+  });
+
+  it("le segment n'existe pas pour une figurine sans offre", () => {
+    const goulue = catalog.profiles.find((p) => p.id === "fangs-goulue-1")!;
+    render(<MagiePanel {...baseProps({ profile: goulue, ways: ["osteomancie"] })} />);
+    expect(screen.queryByText(/^Sorts offerts /)).toBeNull();
+  });
+
+  it("le choix remonte avec l'identifiant de l'offre", () => {
+    const onToggleGrantedSpell = vi.fn();
+    render(<MagiePanel {...offerte({ onToggleGrantedSpell })} />);
+    openOfferts();
+    const row = screen.getByText("Ordre sépulcral").closest(".fe-item")!;
+    fireEvent.click(row.querySelector("button.add")!);
+    expect(onToggleGrantedSpell).toHaveBeenCalledWith(GRANT, ORDRE_SEPULCRAL);
+  });
+
+  it("l'offre servie bloque les ajouts suivants", () => {
+    render(<MagiePanel {...offerte({ grantedSpells: { [GRANT]: [ORDRE_SEPULCRAL] } })} />);
+    expect(screen.getByText("Sorts offerts 1/1")).toBeTruthy();
+    openOfferts();
+    expect(screen.getAllByTitle("Déjà 1 sort choisi").length).toBeGreaterThan(0);
+  });
+
+  it("un sort pris en offert n'est plus proposé à l'achat", () => {
+    render(<MagiePanel {...offerte({ grimoire: "grand", grantedSpells: { [GRANT]: [ORDRE_SEPULCRAL] } })} />);
+    // Volet grimoire : le sort est connu, il n'a plus à être payé.
+    expect(screen.queryByText("Ordre sépulcral")).toBeNull();
+  });
+
+  it("un choix dont l'offre a disparu est signalé", () => {
+    render(<MagiePanel {...offerte({ grantedSpells: { "effet-envole": [ORDRE_SEPULCRAL] } })} />);
+    expect(screen.getByText(/sort offert sans source/i)).toBeTruthy();
   });
 });

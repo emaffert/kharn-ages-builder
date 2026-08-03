@@ -7,6 +7,23 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-03
+
+### Les sorts offerts
+
+- Certaines cartes et certains objets donnent un sort « pour rien » : la **Demi-soeur** possède
+  1 sort d'Ostéomancie sans grimoire, la **Vouge de Moringa** offre 3 sorts d'Adansonia. C'était
+  écrit sur les cartes, mais le constructeur ne savait pas le proposer.
+- L'onglet « Magie » affiche désormais un troisième volet, **« Sorts offerts »**, avec son propre
+  compteur. On y choisit ses sorts comme ailleurs, source par source.
+- Ces sorts ne demandent **aucun grimoire** et ne consomment **ni page ni niveau** : ils s'ajoutent
+  à tout ce que la figurine achète par ailleurs. Leur prix en Kouronnes, lui, reste dû.
+- Les réservations continuent de s'appliquer : la Demi-soeur ne pioche pas dans les sorts réservés
+  aux Filles de Nyx, mais une Fille de Nyx qui recevrait la même offre y aurait droit.
+- Un sort ne se connaît qu'une fois : celui qu'on prend en offert disparaît de la liste des sorts
+  à payer, et inversement. Si l'objet qui offrait le sort est revendu, le constructeur le signale
+  au lieu de garder le sort en douce.
+
 ## 2026-07-31 (2)
 
 ### Les esclaves

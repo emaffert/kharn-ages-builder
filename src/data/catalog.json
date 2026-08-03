@@ -1,5 +1,5 @@
 {
-  "version": "0.3.10",
+  "version": "0.3.12",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -12927,22 +12927,6 @@
             "value": "2"
           },
           "sourceText": ""
-        },
-        {
-          "id": "e-1785436693593",
-          "source": {
-            "kind": "equipment",
-            "id": "equip-1785436448046"
-          },
-          "scope": "fer-de-lance",
-          "target": {
-            "self": true
-          },
-          "operation": {
-            "kind": "cost-delta",
-            "amount": 0
-          },
-          "sourceText": ""
         }
       ],
       "reservedTo": {
@@ -15755,7 +15739,25 @@
         }
       ],
       "constraints": [],
-      "effects": [],
+      "effects": [
+        {
+          "id": "e-1785779843666",
+          "source": {
+            "kind": "special-card",
+            "id": "card-1785410528373"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-spell-choice",
+            "magicWayId": "osteomancie",
+            "count": 1
+          },
+          "sourceText": ""
+        }
+      ],
       "cardImage": ""
     },
     {

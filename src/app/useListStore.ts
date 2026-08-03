@@ -88,6 +88,8 @@ export interface ListStore {
   toggleMountEquipUpgrade: (instanceId: string, equipId: string, upgradeId: string) => void;
   setGrimoire: (instanceId: string, g: "none" | "petit" | "grand") => void;
   toggleSpell: (instanceId: string, spellId: string) => void;
+  /** Sort **offert** par un effet (`grant-spell-choice`) : ajoute/retire le choix du joueur pour cet effet. */
+  toggleGrantedSpell: (instanceId: string, effectId: string, spellId: string) => void;
   toggleUpgrade: (instanceId: string, cardId: string) => void;
   /** Quantité d'une amélioration *empilable* (`perLevelStack`) ; 0 = retirée, plafonnée au niveau. */
   setUpgradeCount: (instanceId: string, cardId: string, qty: number) => void;
@@ -289,6 +291,14 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
       patchMember(instanceId, (m) => ({ ...m, grimoireId: g === "none" ? undefined : g })),
     toggleSpell: (instanceId, spellId) =>
       patchMember(instanceId, (m) => ({ ...m, spellIds: toggle(m.spellIds, spellId) })),
+    toggleGrantedSpell: (instanceId, effectId, spellId) =>
+      patchMember(instanceId, (m) => {
+        const map = { ...(m.grantedSpellIds ?? {}) };
+        const next = toggle(map[effectId] ?? [], spellId);
+        if (next.length) map[effectId] = next;
+        else delete map[effectId];
+        return { ...m, grantedSpellIds: Object.keys(map).length ? map : undefined };
+      }),
     setUpgradeCount: (instanceId, cardId, qty) =>
       patchMember(instanceId, (m) => {
         const level = catalog.profiles.find((p) => p.id === m.profileId)?.level ?? 1;

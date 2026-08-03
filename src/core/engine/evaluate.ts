@@ -21,8 +21,10 @@ import {
   castableSpells,
   forbiddenGrimoires,
   genericSpellAllocation,
+  grantedSpellIds,
   innateSpellIds,
   pageAllocation,
+  spellGrants,
   wornEquipmentIds,
 } from "./magic";
 import { totalMunitionCost } from "./munitions";
@@ -569,7 +571,9 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog)
     cost += temboEquipmentSurcharge(cat, ri.traits, id) * qty; // surcoût Tembo (p.20), équipement ajouté uniquement
   }
   if (inst.grimoireId) cost += idx.grimoireCost.get(inst.grimoireId) ?? 0;
-  for (const id of inst.spellIds) cost += idx.spellCost.get(id) ?? 0;
+  // Un sort offert échappe aux budgets de pages et de niveaux, pas à son prix : l'offre porte sur la
+  // connaissance du sort, pas sur les Kouronnes.
+  for (const id of [...inst.spellIds, ...grantedSpellIds(inst)]) cost += idx.spellCost.get(id) ?? 0;
   cost += totalMunitionCost(cat, inst);
   // Coût de la monture (niveau, équipement monté, options « monture ») : traité à part. Voir `mountCostOf`.
   // Ici on n'ajoute que les options « cavalier » et « partagées » (comptées une fois, côté cavalier).
@@ -922,6 +926,59 @@ function validateSlaves(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[]
   }
 }
 
+/**
+ * Sorts **offerts** (`grant-spell-choice`) : le choix du joueur reste rattaché à l'offre qui l'a permis.
+ * Une offre qui disparaît (arme revendue, amélioration décochée) laisse un choix orphelin, qu'il faut
+ * signaler plutôt que d'appliquer en douce - même logique que `spell-not-castable` pour les sorts payés.
+ * Un sort ne se connaît par ailleurs qu'une fois : le prendre en offert *et* le payer serait un doublon.
+ */
+function validateGrantedSpells(
+  cat: Catalog,
+  ri: ResolvedInstance,
+  push: (ruleId: string, message: string) => void,
+): void {
+  const { profile: p, instance: inst, traits } = ri;
+  const chosenByEffect = Object.entries(inst.grantedSpellIds ?? {}).filter(([, ids]) => ids.length > 0);
+  if (chosenByEffect.length === 0) return;
+  const grants = new Map(spellGrants(cat, p, inst, traits).map((g) => [g.effectId, g]));
+  const spellName = (id: string) => cat.spells.find((s) => s.id === id)?.name ?? id;
+
+  for (const [effectId, ids] of chosenByEffect) {
+    const grant = grants.get(effectId);
+    if (!grant) {
+      push(
+        "granted-spell-orphan",
+        `« ${p.name} » garde ${ids.length > 1 ? "des sorts offerts" : "un sort offert"} dont la source a disparu : ${ids.map(spellName).join(", ")}.`,
+      );
+      continue;
+    }
+    const eligible = new Set(grant.choices.map((s) => s.id));
+    const strays = ids.filter((id) => !eligible.has(id));
+    if (strays.length > 0) {
+      push(
+        "granted-spell-not-eligible",
+        `« ${p.name} » : ${strays.map(spellName).join(", ")} ne fait pas partie des sorts offerts par « ${grant.name} ».`,
+      );
+    }
+    if (ids.length > grant.count) {
+      push(
+        "granted-spell-over-count",
+        `« ${p.name} » : ${ids.length} sorts offerts par « ${grant.name} » pour ${grant.count} accordé${grant.count > 1 ? "s" : ""}.`,
+      );
+    }
+  }
+
+  // Un même sort ne peut être connu qu'une fois, qu'il soit offert par deux sources ou offert et payé.
+  const all = [...inst.spellIds, ...chosenByEffect.flatMap(([, ids]) => ids)];
+  const dupes = [...new Set(all.filter((id, i) => all.indexOf(id) !== i))];
+  if (dupes.length > 0) {
+    push(
+      "spell-duplicate",
+      `« ${p.name} » connaît ${dupes.length > 1 ? "plusieurs fois les sorts" : "deux fois le sort"} : ${dupes.map(spellName).join(", ")}.`,
+    );
+  }
+}
+
 /** Validations dérivées : grimoire interdit, capacité de pages, sorts sans lanceur, mains/armure. */
 function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
   for (const ri of resolved) {
@@ -939,6 +996,8 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
     if (inst.grimoireId && forbiddenGrimoires(p).has(inst.grimoireId)) {
       push("grimoire-forbidden", `« ${p.name} » ne peut pas acquérir ce grimoire.`);
     }
+
+    validateGrantedSpells(cat, ri, push);
 
     if (inst.spellIds.length > 0) {
       const granted = [...ri.grantedSkills].map(([skillId, g]) => ({ skillId, value: g.value }));

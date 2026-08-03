@@ -405,7 +405,7 @@ export function ConstraintListEditor({
  * liste n'existe. Cf. `borneEffects` dans `core/engine/magic.ts`. Conséquence assumée : elles ne
  * visent jamais d'autres figurines et ne peuvent pas être conditionnelles.
  */
-const BEARER_ONLY_OPS: EffectOperation["kind"][] = ["grant-spell", "spell-pages"];
+const BEARER_ONLY_OPS: EffectOperation["kind"][] = ["grant-spell", "grant-spell-choice", "spell-pages"];
 const bearerOnly = (e: Effect) => BEARER_ONLY_OPS.includes(e.operation.kind);
 
 /**

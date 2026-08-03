@@ -121,6 +121,11 @@ Types de contraintes à prévoir : exclusion d'équipement, dépendance de prés
 - **Voies de magie** par faction : Ostéomancie (Fangs), Shamanisme (Goûns), Le Sang et l'Acier (Khârns), Sacrifice (Khérops), Adansonia (Tembos/Khémistes).
 - Compétences liées : **Affinité (voie X)**, **Archimage** (toutes les voies ; se suffit à elle-même,
   sans compétence d'école).
+- **Sorts offerts** : certaines cartes et certains objets donnent un ou plusieurs sorts au choix, pris
+  dans une sélection (ex. Demi-soeur : 1 sort d'Ostéomancie sans grimoire ; Vouge de Moringa : 3 sorts
+  d'Adansonia). Ils ne demandent aucun grimoire et ne consomment ni page ni niveau : ils s'ajoutent à
+  ce que le mage achète par ailleurs. Le prix en Ko du sort reste dû, les réservations de sort
+  s'appliquent toujours, et un sort ne se connaît qu'une fois par figurine.
 
 ## Montures et Cavaliers (Bataille)
 

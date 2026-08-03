@@ -60,9 +60,10 @@ export type PageSource = { name: string; amount: number; magicWayId?: string };
  * ceux des cartes qui la visent (une amélioration ne compte que si elle est achetée) et ceux de
  * l'équipement qu'elle a sur elle.
  *
- * C'est la base des deux opérations que le moteur ne résout pas dans son pipeline d'occurrences
- * (`spell-pages`, `grant-spell`) : elles doivent rester calculables sur une fiche isolée - aperçu de
- * profil avant recrutement, panneau de magie qui simule un équipement - où aucune liste n'existe.
+ * C'est la base des opérations que le moteur ne résout pas dans son pipeline d'occurrences
+ * (`spell-pages`, `grant-spell`, `grant-spell-choice`) : elles doivent rester calculables sur une fiche
+ * isolée - aperçu de profil avant recrutement, panneau de magie qui simule un équipement - où aucune
+ * liste n'existe.
  * Elles ne visent donc jamais que le porteur, et ne peuvent pas être conditionnelles.
  */
 function borneEffects(
@@ -118,6 +119,51 @@ export function innateSpellIds(
     effect.operation.kind === "grant-spell" && effect.target.self ? [effect.operation.spellId] : [],
   );
   return [...new Set(ids)];
+}
+
+/**
+ * Une offre de sorts au choix portée par la figurine (effet `grant-spell-choice`) : `count` sorts à
+ * prendre dans `choices`, hors de tout budget. Une offre par effet, pour que deux sources gardent
+ * chacune son quota.
+ */
+export interface SpellGrant {
+  /** Identifiant de l'effet : c'est la clé de `ProfileInstance.grantedSpellIds`. */
+  effectId: string;
+  /** Nom de la source (profil, carte, objet), pour dire au joueur d'où vient l'offre. */
+  name: string;
+  count: number;
+  /** Sorts éligibles, réservations comprises. Vide = offre inexploitable (sélection non renseignée). */
+  choices: Spell[];
+}
+
+/**
+ * Offres de sorts au choix conférées à la figurine (ex. Demi-soeur : 1 sort d'Ostéomancie).
+ * La sélection réunit la voie (`magicWayId`) et la liste explicite (`spellIds`) ; la réservation du
+ * sort s'applique comme partout ailleurs. La maîtrise de la voie n'est PAS exigée : l'offre vaut
+ * connaissance du sort, comme un sort de signature.
+ */
+export function spellGrants(
+  cat: Catalog,
+  profile: Profile,
+  inst: ProfileInstance,
+  traits: ReadonlySet<string>,
+): SpellGrant[] {
+  return borneEffects(cat, profile, inst, traits).flatMap(({ name, effect }) => {
+    const op = effect.operation;
+    if (op.kind !== "grant-spell-choice" || !effect.target.self) return [];
+    const explicit = new Set(op.spellIds ?? []);
+    const choices = cat.spells.filter(
+      (s) =>
+        (explicit.has(s.id) || (op.magicWayId != null && s.magicWayId === op.magicWayId)) &&
+        spellReservationOk(s, profile, traits),
+    );
+    return [{ effectId: effect.id, name, count: Math.max(0, Math.floor(op.count ?? 1)), choices }];
+  });
+}
+
+/** Sorts offerts effectivement retenus, tous effets confondus (dédoublonnés, dans l'ordre de saisie). */
+export function grantedSpellIds(inst: ProfileInstance): string[] {
+  return [...new Set(Object.values(inst.grantedSpellIds ?? {}).flat())];
 }
 
 export function pageBonus(cat: Catalog, profile: Profile, inst: ProfileInstance, traits: ReadonlySet<string>): number {

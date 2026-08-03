@@ -524,6 +524,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             removed={x.inst.removedBaseEquipmentIds}
             grimoireId={x.inst.grimoireId}
             spellIds={x.inst.spellIds}
+            grantedSpellIds={x.inst.grantedSpellIds}
             upgrades={[...new Set([...(x.inst.specialCardIds ?? []), ...sharedActiveCardIds])]}
             upgradeCounts={x.inst.specialCardCounts}
             munitions={x.inst.munitions ?? {}}
@@ -763,6 +764,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             onSetUpgradeCount={(cid, qty) => store.setUpgradeCount(editItem.inst.instanceId, cid, qty)}
             onGrimoire={(g) => store.setGrimoire(editItem.inst.instanceId, g)}
             onToggleSpell={(sid) => store.toggleSpell(editItem.inst.instanceId, sid)}
+            grantedSpells={editItem.inst.grantedSpellIds}
+            onToggleGrantedSpell={(eid, sid) => store.toggleGrantedSpell(editItem.inst.instanceId, eid, sid)}
             onInfo={setItemInfo}
             equipmentUpgrades={editItem.inst.equipmentUpgrades ?? {}}
             onToggleEquipmentUpgrade={(eid, uid) =>

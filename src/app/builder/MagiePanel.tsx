@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { SegmentedControl } from "@ui";
-import type { Catalog, GenericSpellAllocation, GrantedSkillRef, PageAllocation, Profile, Spell } from "@core";
+import type {
+  Catalog,
+  GenericSpellAllocation,
+  GrantedSkillRef,
+  PageAllocation,
+  Profile,
+  Spell,
+  SpellGrant,
+} from "@core";
 import { SectionTitle, SlotChip } from "./components";
 import {
   forbiddenGrimoires,
@@ -8,6 +16,7 @@ import {
   pageAllocation,
   pageBonusSources,
   spellBudgetBits,
+  spellGrants,
   spellInfo,
   spellsFor,
   type ItemInfo,
@@ -18,8 +27,12 @@ import {
  * un sort de voie se paie en **pages** et suppose un grimoire acheté. Ce sont deux budgets distincts,
  * donc deux sélections : le contrôle segmenté dit laquelle on dépense et porte les deux soldes, pour
  * que l'autre reste visible sans y basculer.
+ *
+ * Un troisième volet apparaît quand la figurine reçoit des **sorts offerts** (Demi-soeur : 1 sort
+ * d'Ostéomancie sans grimoire) : ils ne se paient dans aucun des deux budgets, donc les y mélanger
+ * fausserait les deux compteurs.
  */
-type SpellPane = "generique" | "grimoire";
+type SpellPane = "generique" | "grimoire" | "offert";
 
 export function MagiePanel({
   profile: p,
@@ -30,8 +43,10 @@ export function MagiePanel({
   ways,
   grantedSkills,
   wornEquipIds,
+  grantedSpells,
   onGrimoire,
   onToggleSpell,
+  onToggleGrantedSpell,
   onInfo,
   grimoireDiscount,
 }: {
@@ -45,8 +60,11 @@ export function MagiePanel({
   ways: string[];
   /** Compétences octroyées par effet : une Affinité conférée par un objet ouvre elle aussi son école. */
   grantedSkills?: readonly GrantedSkillRef[];
+  /** Sorts offerts retenus, par effet qui les octroie (cf. `ProfileInstance.grantedSpellIds`). */
+  grantedSpells?: Record<string, string[]>;
   onGrimoire: (g: "none" | "petit" | "grand") => void;
   onToggleSpell: (id: string) => void;
+  onToggleGrantedSpell: (effectId: string, spellId: string) => void;
   onInfo: (info: ItemInfo) => void;
   grimoireDiscount?: Record<string, number>;
 }) {
@@ -59,10 +77,26 @@ export function MagiePanel({
   const alloc = pageAllocation(p, cat, upgrades, wornEquipIds, spells, grimoire);
   const gen = genericSpellAllocation(p, cat, spells);
   const isGeneric = (id: string) => cat.spells.find((s) => s.id === id)?.kind === "generique";
+  // Sorts offerts : une offre par effet, chacune avec son quota (Demi-soeur 1, Vouge de Moringa 3).
+  const grants = spellGrants(p, cat, upgrades, wornEquipIds);
+  const grantedByEffect = grantedSpells ?? {};
+  const grantedIds = grants.flatMap((g) => grantedByEffect[g.effectId] ?? []);
+  const grantedCap = grants.reduce((n, g) => n + g.count, 0);
+  // Un sort ne se connaît qu'une fois : ce qui est déjà pris ailleurs disparaît des autres volets.
+  const known = new Set([...spells, ...grantedIds]);
   // On ouvre sur le budget que la figurine dépense déjà : personne ne perd de vue son grimoire.
   const [pane, setPane] = useState<SpellPane>(() =>
     grimoire !== "none" || spells.some((id) => !isGeneric(id)) ? "grimoire" : "generique",
   );
+
+  // Une offre peut disparaître après coup (arme revendue, amélioration décochée) : le choix qu'elle
+  // portait devient orphelin. On le dit plutôt que de le laisser compter en silence.
+  const liveEffectIds = new Set(grants.map((g) => g.effectId));
+  const orphanCount = Object.entries(grantedByEffect)
+    .filter(([effectId]) => !liveEffectIds.has(effectId))
+    .reduce((n, [, ids]) => n + ids.length, 0);
+  // Le volet « offerts » disparaît avec ses offres : on retombe alors sur un volet qui existe encore.
+  const activePane: SpellPane = pane === "offert" && grants.length === 0 ? "grimoire" : pane;
 
   // Bonus de pages « généraux » (non dédiés à une voie) : les pools dédiés ont leur propre compteur.
   const generalSources = pageBonusSources(p, cat, upgrades, wornEquipIds).filter((s) => !s.magicWayId);
@@ -76,6 +110,9 @@ export function MagiePanel({
     alloc.over
       ? `Capacité de pages dépassée (${alloc.general.used} / ${capLabel} au budget général) - retire un sort ou prends un grimoire plus grand.`
       : null,
+    orphanCount > 0
+      ? `${orphanCount} sort${orphanCount > 1 ? "s offerts" : " offert"} sans source : ce qui les offrait n'est plus sur la figurine.`
+      : null,
   ].filter((w): w is string => w != null);
 
   return (
@@ -88,15 +125,23 @@ export function MagiePanel({
 
       <SegmentedControl
         ariaLabel="Budget de sorts"
-        value={pane}
+        value={activePane}
         onChange={setPane}
         options={[
           { value: "generique", label: `Sorts génériques ${gen.used}/${gen.cap} niv` },
           { value: "grimoire", label: `Grimoire ${alloc.general.used}/${capLabel} p` },
+          ...(grants.length > 0
+            ? [{ value: "offert" as const, label: `Sorts offerts ${grantedIds.length}/${grantedCap}` }]
+            : []),
         ]}
       />
 
-      {pane === "generique" ? (
+      {activePane === "offert" ? (
+        <p className="fe-mag-bonus">
+          Sorts offerts par une carte ou un objet : sans grimoire, hors budget de pages et de niveaux.
+          Ils s'ajoutent à ce que la figurine achète par ailleurs.
+        </p>
+      ) : activePane === "generique" ? (
         <div className="flex flex-wrap items-center gap-3">
           <SlotChip label="Niveaux" used={gen.used} cap={gen.cap} />
           <span className="fe-mag-bonus">Autant de niveaux de sorts que le niveau du profil. Sans grimoire.</span>
@@ -121,23 +166,143 @@ export function MagiePanel({
         </div>
       )}
 
-      <SpellPanel
-        profile={p}
-        cat={cat}
-        pane={pane}
-        ways={ways}
-        grantedSkills={grantedSkills}
-        alloc={alloc}
-        gen={gen}
-        selected={spells}
-        onToggle={onToggleSpell}
-        onInfo={onInfo}
-        isBlocked={(id) =>
-          isGeneric(id)
-            ? genericSpellAllocation(p, cat, [...spells, id]).over
-            : pageAllocation(p, cat, upgrades, wornEquipIds, [...spells, id], grimoire).over
-        }
-      />
+      {activePane === "offert" ? (
+        <GrantedSpellPanel
+          cat={cat}
+          grants={grants}
+          chosen={grantedByEffect}
+          known={known}
+          onToggle={onToggleGrantedSpell}
+          onInfo={onInfo}
+        />
+      ) : (
+        <SpellPanel
+          profile={p}
+          cat={cat}
+          pane={activePane}
+          ways={ways}
+          grantedSkills={grantedSkills}
+          alloc={alloc}
+          gen={gen}
+          selected={spells}
+          takenElsewhere={new Set(grantedIds)}
+          onToggle={onToggleSpell}
+          onInfo={onInfo}
+          isBlocked={(id) =>
+            isGeneric(id)
+              ? genericSpellAllocation(p, cat, [...spells, id]).over
+              : pageAllocation(p, cat, upgrades, wornEquipIds, [...spells, id], grimoire).over
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+/** Raison du blocage d'un ajout : l'offre a déjà donné tout ce qu'elle avait. */
+const fullTitle = (count: number) => `Déjà ${count} sort${count > 1 ? "s" : ""} choisi${count > 1 ? "s" : ""}`;
+
+/**
+ * Volet des sorts **offerts** : une section par offre (la source dit d'où vient le cadeau), chacune
+ * limitée à son quota. Aucun compteur de pages ni de niveaux ici - ces sorts n'en consomment pas.
+ */
+function GrantedSpellPanel({
+  cat,
+  grants,
+  chosen,
+  known,
+  onToggle,
+  onInfo,
+}: {
+  cat: Catalog;
+  grants: SpellGrant[];
+  chosen: Record<string, string[]>;
+  /** Sorts déjà connus par ailleurs (payés ou offerts par une autre source) : jamais proposés deux fois. */
+  known: ReadonlySet<string>;
+  onToggle: (effectId: string, spellId: string) => void;
+  onInfo: (info: ItemInfo) => void;
+}) {
+  const row = (grantId: string, s: Spell, action: "add" | "rem", blockedTitle?: string) => (
+    <div
+      key={s.id}
+      className={`fe-item is-clickable${blockedTitle ? " is-blocked" : ""}`}
+      title={blockedTitle ?? "Voir le détail"}
+      onClick={() => onInfo(spellInfo(s, cat))}
+    >
+      {action === "add" && (
+        <button
+          className="fe-move add"
+          onClick={(ev) => {
+            ev.stopPropagation();
+            onToggle(grantId, s.id);
+          }}
+          disabled={Boolean(blockedTitle)}
+          title={blockedTitle ?? "Ajouter"}
+        >
+          ←
+        </button>
+      )}
+      <span className="fe-item-main">
+        <span className="fe-item-name">{s.name}</span>
+        <span className="fe-item-bits">
+          {spellBudgetBits(s)}
+          {s.cost ? ` · ${s.cost} Ko` : ""}
+        </span>
+      </span>
+      {action === "rem" && (
+        <button
+          className="fe-move rem"
+          onClick={(ev) => {
+            ev.stopPropagation();
+            onToggle(grantId, s.id);
+          }}
+          title="Retirer"
+        >
+          →
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="fe-root">
+      {grants.map((g) => {
+        const picked = (chosen[g.effectId] ?? [])
+          .map((id) => cat.spells.find((s) => s.id === id))
+          .filter((s): s is Spell => Boolean(s));
+        const full = picked.length >= g.count;
+        const avail = g.choices.filter((s) => !known.has(s.id));
+        return (
+          <div key={g.effectId}>
+            <div className="fe-section-head">
+              <SectionTitle>{g.name}</SectionTitle>
+              <span className="tot">
+                sorts{" "}
+                <b>
+                  {picked.length}/{g.count}
+                </b>
+              </span>
+            </div>
+            <div className="fe-panes">
+              {/* Volet retenus - à gauche (près de la fiche), comme pour les sorts payés. */}
+              <div>
+                <p className="fe-group-label">Retenus</p>
+                <div className="fe-scroll">
+                  {picked.map((s) => row(g.effectId, s, "rem"))}
+                  {picked.length === 0 && <p className="fe-mag-bonus">Aucun sort choisi.</p>}
+                </div>
+              </div>
+              <div>
+                <p className="fe-group-label">Disponible</p>
+                <div className="fe-scroll">
+                  {avail.map((s) => row(g.effectId, s, "add", full ? fullTitle(g.count) : undefined))}
+                  {avail.length === 0 && <p className="fe-mag-bonus">Aucun sort disponible.</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -152,6 +317,7 @@ function SpellPanel({
   alloc,
   gen,
   selected,
+  takenElsewhere,
   onToggle,
   onInfo,
   isBlocked,
@@ -164,6 +330,8 @@ function SpellPanel({
   alloc: PageAllocation;
   gen: GenericSpellAllocation;
   selected: string[];
+  /** Sorts déjà pris comme sorts offerts : inutile de proposer de les repayer. */
+  takenElsewhere: ReadonlySet<string>;
   onToggle: (id: string) => void;
   onInfo: (info: ItemInfo) => void;
   /** Ajouter ce sort dépasserait-il son budget (attribution atomique optimale recalculée pour les pages) ? */
@@ -181,7 +349,11 @@ function SpellPanel({
   // On ne filtre PAS les sorts connus d'office : l'éligibilité est gérée par `spell.reservedTo`,
   // et un sort générique connu d'office doit rester ajoutable.
   const avail = spellsFor(p, cat, ways, grantedSkills).filter(
-    (s) => inPane(s) && !selected.includes(s.id) && (q === "" || s.name.toLowerCase().includes(q)),
+    (s) =>
+      inPane(s) &&
+      !selected.includes(s.id) &&
+      !takenElsewhere.has(s.id) &&
+      (q === "" || s.name.toLowerCase().includes(q)),
   );
   const groupsOf = (list: Spell[]) => [...new Set(list.map(groupOf))].sort((a, b) => a.localeCompare(b));
   const blockedTitle = pane === "generique" ? "Budget de niveaux insuffisant" : "Pas assez de pages";

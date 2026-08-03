@@ -34,6 +34,53 @@ function newInstance(cat: Catalog, profileId: string, factionId: string): Profil
   };
 }
 
+/** Recopie une table `clé → tableau` (améliorations par objet, sorts offerts par effet). */
+function copyLists<T>(v: Record<string, T[]> | undefined): Record<string, T[]> | undefined {
+  return v ? Object.fromEntries(Object.entries(v).map(([k, list]) => [k, [...list]])) : undefined;
+}
+
+/**
+ * Copie du **chargement** d'une figurine : tout ce qu'on lui a acheté ou choisi, et rien d'autre.
+ *
+ * Les deux champs qui pointent vers d'AUTRES figurines sont laissés de côté, parce que ce sont des
+ * liens et non des options : `attachedInstanceIds` (les Likans sont des recrues à part entière, avec
+ * leurs propres limites de recrutement) et `bodyguardOfInstanceId` (un emplacement gratuit offert par
+ * une autre figurine, que le joueur repose en un clic). Tout le reste suit, monture comprise.
+ *
+ * Les conteneurs imbriqués sont recopiés en propre : sans cela, la copie et l'original partageraient
+ * leurs tableaux, et équiper l'une toucherait l'autre.
+ */
+function copyLoadout(src: ProfileInstance): ProfileInstance {
+  return {
+    ...src,
+    instanceId: newInstanceId(src.profileId),
+    attachedInstanceIds: undefined,
+    bodyguardOfInstanceId: undefined,
+    addedEquipmentIds: [...src.addedEquipmentIds],
+    addedEquipmentCounts: src.addedEquipmentCounts ? { ...src.addedEquipmentCounts } : undefined,
+    removedBaseEquipmentIds: [...src.removedBaseEquipmentIds],
+    spellIds: [...src.spellIds],
+    grantedSpellIds: copyLists(src.grantedSpellIds),
+    equipmentUpgrades: copyLists(src.equipmentUpgrades),
+    munitions: src.munitions
+      ? Object.fromEntries(Object.entries(src.munitions).map(([id, tiers]) => [id, { ...tiers }]))
+      : undefined,
+    specialCardIds: src.specialCardIds ? [...src.specialCardIds] : undefined,
+    specialCardCounts: src.specialCardCounts ? { ...src.specialCardCounts } : undefined,
+    mountOptionIds: src.mountOptionIds ? { ...src.mountOptionIds } : undefined,
+    mount: src.mount
+      ? {
+          ...src.mount,
+          addedEquipmentIds: src.mount.addedEquipmentIds ? [...src.mount.addedEquipmentIds] : undefined,
+          removedBaseEquipmentIds: src.mount.removedBaseEquipmentIds
+            ? [...src.mount.removedBaseEquipmentIds]
+            : undefined,
+          equipmentUpgrades: copyLists(src.mount.equipmentUpgrades),
+        }
+      : undefined,
+  };
+}
+
 function emptyList(cat: Catalog, factionId: string): ListDocument {
   const now = new Date().toISOString();
   return {
@@ -72,6 +119,8 @@ export interface ListStore {
   newList: (factionId: string, opts?: { format?: ListDocument["format"]; pointsLimit?: number }) => void;
   addMember: (profileId: string) => void;
   addAttached: (carrierInstanceId: string, profileId: string) => void;
+  /** Recrute une copie d'une figurine avec tout son chargement, juste après elle (cf. `copyLoadout`). */
+  duplicateMember: (instanceId: string) => void;
   removeMember: (instanceId: string) => void;
   moveMember: (fromInstanceId: string, toInstanceId: string) => void;
   setLeader: (instanceId: string) => void;
@@ -170,6 +219,15 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
             m,
           ],
         };
+      }),
+    duplicateMember: (instanceId) =>
+      patchFdl((f) => {
+        const i = f.members.findIndex((m) => m.instanceId === instanceId);
+        if (i < 0) return f;
+        // Insérée juste après l'originale : c'est là qu'on l'attend en la créant.
+        const members = [...f.members];
+        members.splice(i + 1, 0, copyLoadout(f.members[i]));
+        return { ...f, members };
       }),
     removeMember: (instanceId) =>
       patchFdl((f) => {

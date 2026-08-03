@@ -7,6 +7,22 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-03 (3)
+
+### Dupliquer une figurine
+
+- Un bouton **« Dupliquer »** apparaît sur chaque figurine de la liste, à côté de la corbeille. La
+  copie arrive juste en dessous, avec **tout ce qu'on avait acheté** : armes, armures, améliorations,
+  munitions, grimoire et sorts (offerts compris), cartes, monture et ses options.
+- Le bouton ne s'affiche pas sur les profils **uniques** ni sur les **personnages** : leur second
+  exemplaire n'existera jamais. Ailleurs, il se **grise** dès que la limite de recrutement est
+  atteinte, bonus compris (le +1 du Lieutenant khérops, par exemple).
+- Deux choses ne suivent pas la copie, parce que ce sont des liens vers d'autres figurines et non de
+  l'équipement : les **rattachées** (Likans, Muskh), qui sont des recrues à part entière avec leurs
+  propres limites, et la **désignation de garde du corps**, qui se repose en un clic.
+- La copie peut se retrouver en faute sur d'autres règles (deux armures, budget de pages dépassé…) :
+  le constructeur la crée quand même et signale le problème sur sa ligne, comme partout ailleurs.
+
 ## 2026-08-03 (2)
 
 ### Une arme peut protéger

@@ -1601,12 +1601,14 @@ describe("Esclaves (LDR Saison 2, p. 10)", () => {
   });
 });
 
-const DEMI_SOEUR_CARD = "card-1785410528373";
-/** L'identifiant de l'effet est généré par l'admin : on le relit plutôt que de le figer ici. */
+/**
+ * Identifiants du catalogue : ceux des cartes comme ceux de leurs effets sont réécrits par l'admin
+ * (slug, effet re-créé). On retrouve donc l'offre par ce qu'elle FAIT, jamais par un identifiant figé.
+ */
 const grantEffectId = (): string =>
   catalog.specialCards
-    .find((c) => c.id === DEMI_SOEUR_CARD)!
-    .effects.find((e) => e.operation.kind === "grant-spell-choice")!.id;
+    .flatMap((c) => c.effects)
+    .find((e) => e.operation.kind === "grant-spell-choice")!.id;
 
 describe("sorts offerts au choix (grant-spell-choice)", () => {
   const DEMI_SOEUR = "profile-1785410170666";

@@ -23,6 +23,7 @@ import {
   designationLabelFor,
   isAttachmentDependent,
   isDependent,
+  isDuplicable,
   profileMatchesAnySelector,
   protecteeSelectorsFor,
   recruitableDependentGroups,
@@ -51,7 +52,7 @@ import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from 
 import { RecruitPill } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
-import { TrashIcon } from "./icons";
+import { CopyIcon, TrashIcon } from "./icons";
 import { CardPreview } from "./CardPreview";
 import { FigureEditor } from "./FigureEditor";
 import { MountPicker, MountPreview, MountSheet } from "./MountDialog";
@@ -397,6 +398,12 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       canOwnSlaves && !slaveChoices.some((s) => slaveBlockReason(id, x.p, s) == null)
         ? (slaveBlockReason(id, x.p, slaveChoices[0]) ?? "Aucun esclave disponible")
         : null;
+    // Duplication : sans objet pour un profil unique (U) ou personnage (P), dont le second exemplaire
+    // n'existera jamais - le bouton n'apparaît pas du tout plutôt que de rester grisé en permanence.
+    // Pas de bouton non plus sur une sous-ligne : les rattachées se recrutent par la pastille de leur
+    // porteuse, qui connaît sa capacité. Ailleurs, il se grise quand la limitation est atteinte.
+    const canDuplicate = !attached && isDuplicable(x.p);
+    const duplicateBlocked = canDuplicate && atLimit(x.p) ? "Limite de recrutement atteinte" : null;
     // Monture : proposée sur une figurine éligible non montée (et pas sur une sous-ligne).
     const canAddMount = !attached && !x.inst.mount && eligibleMountsFor(cat, x.p).length > 0;
     const hasActions = depGroups.length > 0 || eligible || canAddMount || canOwnSlaves;
@@ -460,6 +467,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 title={open ? "Replier le détail" : "Déplier le détail des achats"}
               >
                 {open ? "▾" : "▸"}
+              </button>
+            )}
+            {canDuplicate && (
+              <button
+                className="bld-icon"
+                title={duplicateBlocked ?? "Dupliquer avec tout son équipement"}
+                aria-label="Dupliquer"
+                disabled={duplicateBlocked != null}
+                onClick={() => store.duplicateMember(id)}
+              >
+                <CopyIcon />
               </button>
             )}
             <button className="bld-icon danger" title="Retirer" onClick={() => store.removeMember(id)}>

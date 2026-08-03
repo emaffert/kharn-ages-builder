@@ -371,6 +371,15 @@ export function forbiddenCats(p: Profile, cat: Catalog): Set<string> {
   return forbidden;
 }
 
+/**
+ * Le profil peut-il exister en plusieurs exemplaires, et donc être dupliqué ?
+ *
+ * Non pour un profil **unique** (U) ni pour un **personnage** (P) : le second exemplaire n'existera
+ * jamais, un bouton grisé en permanence n'apprendrait rien à personne. Partout ailleurs le bouton
+ * s'affiche, quitte à se griser quand la limitation est atteinte (cf. `atLimit`).
+ */
+export const isDuplicable = (p: Profile) => p.limitation.kind !== "U" && p.limitation.kind !== "P";
+
 /** Une figurine peut-elle acheter quelque chose ? Non si toutes les catégories d'achat sont interdites. */
 export function canBuy(p: Profile, cat: Catalog): boolean {
   const forbidden = forbiddenCats(p, cat);

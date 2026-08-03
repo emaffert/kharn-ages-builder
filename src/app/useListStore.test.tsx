@@ -177,3 +177,72 @@ describe("useListStore", () => {
     expect(result.current.fdl.members[0].specialCardIds).toEqual(["racines-tribales-herboriste"]);
   });
 });
+
+describe("duplicateMember", () => {
+  it("recopie le chargement et place la copie juste après l'originale", () => {
+    const { result } = renderHook(() => useListStore("fangs"));
+    act(() => result.current.addMember("fangs-goulue-1"));
+    act(() => result.current.addMember("fangs-apathee-3"));
+    const goulue = result.current.fdl.members[0].instanceId;
+    act(() => result.current.addEquip(goulue, "epee-longue"));
+
+    act(() => result.current.duplicateMember(goulue));
+    const members = result.current.fdl.members;
+    expect(members).toHaveLength(3);
+    expect(members[1].profileId).toBe("fangs-goulue-1"); // insérée derrière l'originale
+    expect(members[1].instanceId).not.toBe(goulue);
+    expect(members[1].addedEquipmentIds).toEqual(["epee-longue"]);
+    // Le coût double : la copie est une recrue de plus, pas un affichage.
+    expect(result.current.evaluation.costByInstance[members[1].instanceId]).toBe(
+      result.current.evaluation.costByInstance[goulue],
+    );
+  });
+
+  it("la copie est indépendante : l'équiper ne touche pas l'originale", () => {
+    const { result } = renderHook(() => useListStore("fangs"));
+    act(() => result.current.addMember("fangs-goulue-1"));
+    const goulue = result.current.fdl.members[0].instanceId;
+    act(() => result.current.duplicateMember(goulue));
+    const copie = result.current.fdl.members[1].instanceId;
+    act(() => result.current.addEquip(copie, "epee-longue"));
+    expect(result.current.fdl.members[0].addedEquipmentIds).toEqual([]);
+    expect(result.current.fdl.members[1].addedEquipmentIds).toEqual(["epee-longue"]);
+  });
+
+  it("la copie arrive sans les rattachées de l'originale", () => {
+    const { result } = renderHook(() => useListStore("fangs"));
+    act(() => result.current.addMember("fangs-goulue-1"));
+    const goulue = result.current.fdl.members[0].instanceId;
+    act(() => result.current.addAttached(goulue, "fangs-likan-1"));
+    act(() => result.current.duplicateMember(goulue));
+    const copie = result.current.fdl.members.find(
+      (m) => m.profileId === "fangs-goulue-1" && m.instanceId !== goulue,
+    )!;
+    expect(copie.attachedInstanceIds).toBeUndefined();
+    expect(result.current.fdl.members.filter((m) => m.profileId === "fangs-likan-1")).toHaveLength(1);
+  });
+
+  it("la copie arrive sans la désignation de garde du corps", () => {
+    const { result } = renderHook(() => useListStore("fangs"));
+    act(() => result.current.addMember("fangs-apathee-3"));
+    act(() => result.current.addMember("fangs-larbin-1"));
+    const [apathee, larbin] = result.current.fdl.members.map((m) => m.instanceId);
+    act(() => result.current.setGuard(larbin, apathee));
+    act(() => result.current.duplicateMember(larbin));
+    const copie = result.current.fdl.members.find(
+      (m) => m.profileId === "fangs-larbin-1" && m.instanceId !== larbin,
+    )!;
+    expect(copie.bodyguardOfInstanceId).toBeUndefined();
+    // L'originale garde la sienne : elle reste gratuite, la copie non.
+    expect(result.current.evaluation.costByInstance[larbin]).toBe(0);
+    expect(result.current.evaluation.costByInstance[copie.instanceId]).toBeGreaterThan(0);
+  });
+
+  it("dupliquer le meneur ne change pas le meneur", () => {
+    const { result } = renderHook(() => useListStore("fangs"));
+    act(() => result.current.addMember("fangs-goulue-1"));
+    const goulue = result.current.fdl.members[0].instanceId;
+    act(() => result.current.duplicateMember(goulue));
+    expect(result.current.fdl.leaderInstanceId).toBe(goulue);
+  });
+});

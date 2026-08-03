@@ -589,6 +589,8 @@ body {
 .bld-icon:hover { background: var(--tint-2); color: var(--bone); }
 .bld-icon.danger { color: color-mix(in srgb, var(--scorch) 45%, var(--bone-dim)); }
 .bld-icon.danger:hover { background: color-mix(in srgb, var(--scorch) 18%, transparent); color: var(--scorch); }
+.bld-icon:disabled { opacity: .35; cursor: not-allowed; }
+.bld-icon:disabled:hover { background: transparent; color: var(--bone-faint); }
 
 .bld-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .bld-pill { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--ember);

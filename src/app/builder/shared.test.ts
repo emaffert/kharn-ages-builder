@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { catalog } from "@data";
-import { innateSpellIds, pageBonusSources, wornArmorsFrom } from "./shared";
+import { innateSpellIds, isDuplicable, pageBonusSources, wornArmorsFrom } from "./shared";
 
 /**
  * Armure de Combat Khârne (équipement `eq-armure-combat-kharne`, `heavySeuil` 5) : le seuil de réussite
@@ -127,5 +127,30 @@ describe("wornArmorsFrom - cumul des protections", () => {
 
   it("un objet sans valeurs de protection n'ajoute aucune ligne", () => {
     expect(labels(["faucille-os"])).toEqual(["🛡 Armure"]);
+  });
+});
+
+/**
+ * Bouton « dupliquer » : masqué là où un second exemplaire n'existera jamais, affiché partout
+ * ailleurs (il se grise sur la limitation atteinte, ce que gère `atLimit` côté écran).
+ */
+describe("isDuplicable", () => {
+  const profile = (id: string) => catalog.profiles.find((p) => p.id === id)!;
+
+  it("un profil à limitation X est duplicable", () => {
+    expect(isDuplicable(profile("fangs-larbin-1"))).toBe(true); // LIM 5
+    expect(isDuplicable(profile("fangs-goulue-1"))).toBe(true); // LIM 4
+  });
+
+  it("un profil unique (U) ou un personnage (P) ne l'est pas", () => {
+    expect(isDuplicable(profile("fangs-executeur-3"))).toBe(false); // U
+    expect(isDuplicable(profile("fangs-apathee-3"))).toBe(false); // P
+  });
+
+  it("aucun profil unique du catalogue n'échappe à la règle", () => {
+    const fautifs = catalog.profiles.filter(
+      (p) => isDuplicable(p) && (p.limitation.kind === "U" || p.limitation.kind === "P"),
+    );
+    expect(fautifs).toEqual([]);
   });
 });

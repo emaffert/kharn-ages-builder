@@ -1,23 +1,17 @@
 import { useState } from "react";
-import { findReferences, type Catalog, type CatalogSettings, type Faction, type Grimoire, type MunitionKind, type Reference } from "@core";
-import { Button, Dialog } from "@ui";
+import { findReferences, type Catalog, type CatalogSettings, type Grimoire, type MunitionKind, type Reference } from "@core";
 import { IconBucketSection } from "./IconBucketSection";
-import { AddButton, Field, Glyph, PageHeader, ReferenceList, RemoveButton, Section } from "./primitives";
+import { AddButton, ConfirmDeleteDialog, Field, Glyph, PageHeader, RemoveButton, Section, type PendingDelete } from "./primitives";
 import { INPUT } from "./shared";
-
-/** Suppression en attente de confirmation (données de référence : action à répercussion large). */
-type PendingDelete = { what: string; run: () => void; refs?: Reference[] };
 
 /**
  * Page « Réglages » : données de référence du catalogue éditées en tables (peu d'entrées) -
- * factions, grimoires (ensemble fixe petit/grand), et sortes de munitions (paliers × types).
- * Toute suppression passe par une confirmation (répercussion sur profils / équipements / listes).
+ * grimoires (ensemble fixe petit/grand), surcoût Tembo, sortes de munitions (paliers × types) et
+ * icônes. Les factions ont leur propre page (`FactionsDetail`). Toute suppression passe par une
+ * confirmation (répercussion sur profils / équipements / listes).
  */
 export function SettingsDetail({
   cat,
-  onAddFaction,
-  onUpdateFaction,
-  onRemoveFaction,
   onUpdateGrimoire,
   onAddMunitionKind,
   onUpdateMunitionKind,
@@ -25,9 +19,6 @@ export function SettingsDetail({
   onUpdateSettings,
 }: {
   cat: Catalog;
-  onAddFaction: () => void;
-  onUpdateFaction: (id: string, patch: Partial<Faction>) => void;
-  onRemoveFaction: (id: string) => void;
   onUpdateGrimoire: (id: string, patch: Partial<Grimoire>) => void;
   onAddMunitionKind: () => void;
   onUpdateMunitionKind: (id: string, patch: Partial<MunitionKind>) => void;
@@ -49,66 +40,14 @@ export function SettingsDetail({
         <div>
           <p className="adm-banner-title">Données internes sensibles</p>
           <p className="adm-banner-text">
-            Ces réglages structurent tout le catalogue. Modifier ou supprimer une <strong>faction</strong>, un{" "}
+            Ces réglages structurent tout le catalogue. Modifier ou supprimer un{" "}
             <strong>grimoire</strong> ou une <strong>sorte de munition</strong> se répercute sur les profils,
             équipements, sorts et listes déjà enregistrés. À éditer avec précaution.
           </p>
         </div>
       </div>
 
-      <PageHeader title="Réglages" subtitle="Données de référence : factions, grimoires, munitions, icônes." />
-
-      {/* ── Factions ─────────────────────────────────────────────── */}
-      <Section title="Factions" icon="identity">
-        <div className="flex flex-col gap-2">
-          {/* Grille (et non flex) : l'identifiant est de longueur variable, en flex il rognait la
-              colonne Notes d'une quantité différente à chaque ligne. */}
-          {cat.factions.length > 0 && (
-            <div className="adm-faction-row adm-field-label">
-              <span>Nom</span>
-              <span>Logo (chemin)</span>
-              <span>Notes</span>
-              <span>Identifiant</span>
-              <span />
-            </div>
-          )}
-          {cat.factions.map((f) => (
-            <div key={f.id} className="adm-faction-row">
-              <input
-                value={f.name}
-                onChange={(e) => onUpdateFaction(f.id, { name: e.target.value })}
-                className={INPUT}
-                placeholder="Nom"
-              />
-              <input
-                value={f.logo}
-                onChange={(e) => onUpdateFaction(f.id, { logo: e.target.value })}
-                className={INPUT}
-                placeholder="factions/…"
-              />
-              <input
-                value={f.notes ?? ""}
-                onChange={(e) => onUpdateFaction(f.id, { notes: e.target.value || undefined })}
-                className={INPUT}
-                placeholder="notes (optionnel)"
-              />
-              <span className="adm-faint truncate font-mono text-[10px]" title={f.id}>
-                {f.id}
-              </span>
-              <RemoveButton
-                onClick={() =>
-                  confirmDelete(
-                    `la faction « ${f.name} »`,
-                    () => onRemoveFaction(f.id),
-                    findReferences(cat, "faction", f.id),
-                  )
-                }
-              />
-            </div>
-          ))}
-          <AddButton onClick={onAddFaction}>+ faction</AddButton>
-        </div>
-      </Section>
+      <PageHeader title="Réglages" subtitle="Données de référence : grimoires, munitions, icônes." />
 
       {/* ── Grimoires (ensemble fixe) ────────────────────────────── */}
       <Section title="Grimoires" icon="magic">
@@ -212,37 +151,8 @@ export function SettingsDetail({
       {/* ── Icônes ───────────────────────────────────────────────── */}
       <IconBucketSection cat={cat} />
 
-      <Dialog
-        open={pendingDelete !== null}
-        onOpenChange={(o) => {
-          if (!o) setPendingDelete(null);
-        }}
-        size="sm"
-        title="Confirmer la suppression"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
-              Annuler
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                pendingDelete?.run();
-                setPendingDelete(null);
-              }}
-            >
-              Supprimer
-            </Button>
-          </>
-        }
-      >
-        <div className="flex flex-col gap-3">
-          <p>
-            Supprimer {pendingDelete?.what} ? Cette action touche des données de référence et est <b>irréversible</b>.
-          </p>
-          {pendingDelete?.refs && <ReferenceList refs={pendingDelete.refs} />}
-        </div>
-      </Dialog>
+      <ConfirmDeleteDialog pending={pendingDelete} onClose={() => setPendingDelete(null)} />
+
     </div>
   );
 }

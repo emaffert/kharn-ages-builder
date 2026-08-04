@@ -63,8 +63,8 @@ Autres points relevés à l'import (à garder en tête) :
 
 - Le mot-clé de faction en compétence (`frere-d-armes`, `tembo`…) se place plutôt **en fin** de la
   liste `skills` du profil (avant la compétence de magie s'il y en a une), pas forcément en tête.
-- `carnivore` / `herbivore` : **suivre la FAQ**. Les figurines **Guilde Noire ne sont ni carnivore
-  ni herbivore** (elles n'héritent pas de l'espèce d'origine) - ne pas leur mettre ces traits.
+- `carnivore` / `herbivore` : ce n'est **pas** un trait à poser, c'est une propriété du peuple
+  (`faction.nature`) héritée via le **peuple d'origine** - cf. la section dédiée plus bas.
 - Indicateur de dé d'incantation sur une carte (ligne « 0-5-1 » etc.) = le profil est **lanceur** :
   penser à la compétence de magie / `affinite` correspondante.
 - Convention confirmée : **flaguer toutes les stats** (`stats.*` + `stature` + `masteryDice` +
@@ -80,19 +80,74 @@ l'admin affiche « tag interne, non référencé par une règle » alors qu'ils 
 Traits hardcodés connus à ce jour :
 
 - `tembo` : surcoût d'équipement Tembo (`evaluate.ts` `temboEquipmentSurcharge`).
-- `monture-<faction>` : **origine « montures uniquement »**. Les figurines des factions
-  « creuset » (Guilde Noire, Affranchis) gardent l'accès à la **monture de leur peuple d'origine**
-  (mais **pas** à ses objets/sorts réservés - FAQ). `isMountEligible` accepte un profil si la
-  `factionEligibility` d'un type de monture contient sa `factionId` **ou** un trait `monture-<f>`.
-  À poser sur chaque profil de ces factions selon son origine (ex. un membre GN d'origine khéropse
-  → `monture-kherops` → Kœlod ; origine fang → aucun trait, les Fangs n'ont pas de monture ;
-  Berserker → aucune monture quoi qu'il arrive). Ne pas confondre avec la faction du profil : pour
-  ces factions, retirer leur `factionId` de la `factionEligibility` des montures (fait pour le
-  Quagga vs `guilde-noire`) et tout passer par le trait. Garder l'origine en clair dans
-  `profile.notes`.
 
 Si un nouvel import introduit un comportement moteur attaché à un trait, ajouter une ligne dans
 `BUILTIN_TRAIT_USAGE` en même temps que le code moteur.
+
+## Peuple d'origine (`profile.origin`)
+
+Les factions « creuset » (Guilde Noire, Affranchis) rassemblent des transfuges. Ce qu'ils gardent de
+leur peuple est **énuméré** par la FAQ, et rien d'autre :
+
+- la **monture** de ce peuple (`isMountEligible` lit `originFactionId(profile)` = `origin` sinon
+  `factionId`), pour les deux creusets ;
+- sa **nature** carnivore / herbivore, **chez les Affranchis seulement** : « ils respectent leur
+  nature profonde d'herbivore ou de carnivore sans restrictions » (p.47). Les figurines de la Guilde
+  Noire, elles, « ne sont pas intrinsèquement représentantes de leur espèce d'origine » (FAQ) et
+  n'en ont donc aucune. Rien ne la déduit automatiquement : à l'import, poser la **compétence**
+  `carnivore` sur les profils affranchis dont le peuple d'origine a `faction.nature: "carnivore"`
+  (khârns, fangs).
+
+Pas les objets, pas les sorts, pas les compétences réservés. Conséquences pratiques :
+
+- Renseigner `origin` sur **chaque** profil de ces factions (menu « Peuple d'origine » dans la fiche
+  admin) ; la nature du peuple se règle dans **Factions → Peuples**. Vide = originaire de sa
+  propre faction, ce qui est le cas général ailleurs.
+- Une faction creuset n'a **pas** à figurer dans la `factionEligibility` d'une monture : ses membres
+  y entrent par leur origine (`guilde-noire` et `affranchis` ont été retirés du Quagga).
+- Une origine sans monture se déclare quand même (les Fangs n'en ont pas) : c'est le fait qui compte,
+  pas sa conséquence. C'est ce que l'ancien trait `monture-<faction>` ne savait pas dire ; il est
+  replié sur `origin` par `migrateCatalog`.
+- Le Berserker reste sans monture quoi qu'il arrive (compétence `berserk`, testée à part).
+- Quand une carte vise une origine (« les Affranchis **khérops** dans son aura »), c'est `origin`
+  qu'il faut lire, pas la faction.
+
+## Recrutement ouvert (`faction.openRecruitment`)
+
+Une faction peut accueillir **les génériques** (limitation « X ») d'autres peuples, sans « Allié des
+X » ni sceau : c'est la règle des Affranchis (p.46). Décrite **une fois sur la faction**, jamais en
+contrainte sur chaque profil accueilli - sans quoi tout nouveau générique importé serait muet sur son
+accès. Éditable dans **Factions → Recrutement entre peuples**.
+
+- `fromFactionIds` : les peuples accueillis. `excludeTraits` / `excludeProfileIds` : les refus.
+  `caps` : les plafonds par Fer de Lance (« pas plus d'un shaman goûn »), qui ne s'appliquent qu'aux
+  figurines **entrées par cette porte**.
+- Un refus est un **veto** (`openRecruitmentRefuses`) : il bat toutes les autres voies d'accès, sceau
+  compris. Sans quoi la figurine qu'on vient d'écarter rentrerait par la porte de derrière - c'est
+  ainsi que Khalsa, personnage de la Guilde Noire, arrivait chez les Affranchis alors qu'elle y a son
+  propre profil. Le veto ne vaut que pour les peuples listés en `fromFactionIds`.
+- Le filtre « générique » est dans le moteur (`isGeneric`), pas en donnée : c'est la définition même
+  du mot.
+- Côté équipement, `equipmentAllowedIn` retire au transfuge les objets **réservés à une faction**
+  autre que celle qui l'accueille. Les autres réservations (profil, modèle, trait, niveau) sont
+  intactes : sa propre arme de signature lui reste.
+- Côté roster, ces recrues ont leur section (« Peuples ralliés ») : les mêler aux quelques
+  « Allié des X » rendrait les deux illisibles.
+
+## Cartes portées par la bannière
+
+`SpecialCard.scope.ferDeLanceFactionIds` : la carte suit le **Fer de Lance**, pas la carte de profil.
+C'est ce que demande « toutes les figurines qui combattent sous la bannière des Affranchis
+bénéficient des effets comme une seule et même faction, que leurs cartes soient affranchies ou non ».
+Deux réglages l'accompagnent :
+
+- `scope.nonNativeOnly` : ne vise que les recrues venues d'ailleurs (ce que la faction d'accueil
+  **apprend**, et qu'elle sait déjà) ;
+- `costPerLevel` : prix multiplié par le niveau (« 5 Ko x son niveau »). À ne pas confondre avec
+  `perLevelStack`, qui laisse le joueur choisir une quantité.
+
+`specialCardsForProfile(profile, cat, fdlFactionId)` ne révèle ces cartes que si on lui passe la
+faction d'accueil : l'admin ne la connaît pas, le constructeur si.
 
 ## Compétences lues « en dur » par le moteur
 
@@ -131,8 +186,13 @@ Chemins effaçables (existence d'un `FlagButton`) :
 - stats : `stats.v`, `stats.p`, `stats.a`, `stats.c`, `stats.t`, `stats.i`, `stature`, `pa`, `pv`
   (agrégés par le chip « à vérifier (groupé) »).
 - `masteryDice`.
-- armure : `armor.protectionEchec`, `armor.seuil`, `armor.protectionReussite`, `armor.durability`.
+- `armor` : **un seul** chemin pour toute l'armure innée. Elle se lit d'un bloc sur la carte
+  (« -1 / 7 / -2 » + durabilité) et aucune de ses valeurs ne se vérifie séparément. Les anciens
+  chemins par valeur (`armor.seuil`…) sont repliés dessus par `migrateCatalog`.
 - `baseEquipmentIds`.
+
+`baseSize` n'est **pas** flaguable (pas de bouton) : il est absent de beaucoup de cartes, un champ
+vide n'y est donc pas un oubli.
 
 Si un nouveau champ doit pouvoir être « à vérifier », **ajouter d'abord son `FlagButton`** dans
 `ProfileDetail.tsx` avant de l'utiliser dans les données. Audit rapide de non-régression : vérifier
@@ -152,21 +212,27 @@ qu'aucun `unverifiedFields` ne contient un token hors de cette liste.
   archimage est lanceur même sans compétence d'école. Elle s'octroie comme n'importe quelle
   compétence (`grant-skill`, ex. « Grimoire de Josève ») ; pas de trait à poser en plus.
 
-## Workflow admin : le piège du localStorage
+## Workflow admin : le piège du brouillon local
 
-L'admin travaille sur une copie **localStorage** (`kharn-admin-catalog-v1`) qui **masque
-`catalog.json`** jusqu'à un **« Réinit. »**. « Exporter JSON » **écrase** `catalog.json` avec le
-localStorage.
+L'admin travaille sur un **brouillon** conservé dans le navigateur (localStorage
+`kharn-admin-catalog-v1`) qui **masque `catalog.json`** tant qu'on ne le remplace pas explicitement.
+Les actions de la barre latérale :
+
+- **Publier** : met le brouillon en ligne (nouvelle version du catalogue pour les joueurs).
+- **Enregistrer** (dev seulement) : **écrit** le brouillon dans `catalog.json` du dépôt.
+- **Repartir du fichier** (dev seulement) : jette le brouillon et réédite le `catalog.json` du dépôt.
+- **Repartir de la version publiée** (dev seulement) : jette le brouillon et réédite la version en
+  ligne.
 
 Conséquences, pour ne pas perdre de travail :
 
-- Après une modification de `catalog.json` sur disque, l'utilisateur doit faire **« Réinit. »** pour
-  la voir dans l'admin.
-- S'il réédite/exporte **avant** de recharger, il réécrase le disque avec sa version localStorage et
-  **perd** les modifications faites sur `catalog.json`. Ordre sûr : Réinit -> vérifier -> éditer ->
-  Exporter.
+- Après une modification de `catalog.json` sur disque (script d'import…), il faut
+  **« Repartir du fichier »** pour la voir dans l'admin.
+- Si on édite puis **« Enregistrer »** *avant* d'avoir repris le fichier, on réécrase le disque avec
+  le brouillon et on **perd** les modifications du script. Ordre sûr : Repartir du fichier ->
+  vérifier -> éditer -> Enregistrer.
 - Une modification de **code** (composant React) prend effet au simple rechargement de page, elle
-  n'est pas masquée par le localStorage.
+  n'est pas masquée par le brouillon.
 
 ## Conventions d'édition de `catalog.json`
 

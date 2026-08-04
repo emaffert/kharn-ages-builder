@@ -130,12 +130,15 @@ basculer entre « à vérifier » et « validé ». Un compteur global est affic
 
 ### Boutons
 
-- **Exporter JSON** : télécharge le catalogue édité.
-- **Importer** : recharge un catalogue depuis un fichier JSON (validé par Zod ; un message
-  d'erreur s'affiche si le JSON est invalide).
-- **Réinitialiser** : revient à la donnée d'origine (annule les modifications locales).
+- **Publier** : met le catalogue édité en ligne, dans une nouvelle version.
+- **Enregistrer** (développement) : écrit le catalogue édité dans `src/data/catalog.json`.
+- **Repartir du fichier** (développement) : abandonne les modifications locales et réédite le
+  `catalog.json` du dépôt.
+- **Repartir de la version publiée** (développement) : abandonne les modifications locales et
+  réédite la dernière version mise en ligne.
 
-Les modifications sont conservées dans le navigateur (localStorage) entre les sessions.
+Les modifications sont conservées dans le navigateur (localStorage) entre les sessions : ce
+brouillon masque `catalog.json` tant qu'on ne le remplace pas explicitement.
 
 ### Aperçu des cartes (dev uniquement)
 

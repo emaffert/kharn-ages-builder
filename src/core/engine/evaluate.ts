@@ -28,7 +28,18 @@ import {
   wornEquipmentIds,
 } from "./magic";
 import { totalMunitionCost } from "./munitions";
-import { FRERE_D_ARMES, alliedFactions, equipmentReservedOk, isApatride, sealFor } from "./recruitment";
+import { originFactionId } from "./origin";
+import {
+  FRERE_D_ARMES,
+  alliedFactions,
+  equipmentAllowedIn,
+  equipmentReservedOk,
+  isApatride,
+  openRecruitmentAccepts,
+  openRecruitmentRefuses,
+  recruitableWithoutSeal,
+  sealFor,
+} from "./recruitment";
 import { isSlaveIn, sdgValue, slaveMayBuy, slavePerCarrierMax } from "./slavery";
 
 /**
@@ -443,7 +454,26 @@ function specialCardScopeMatches(card: SpecialCard, ri: ResolvedInstance): boole
   if (card.scope.trait && ri.traits.has(card.scope.trait)) return true;
   if (card.scope.factionIds && ri.profile.factionId && card.scope.factionIds.includes(ri.profile.factionId))
     return true;
+  if (cardMatchesBanner(card, ri.profile, ri.fdlFactionId)) return true;
   return false;
+}
+
+/**
+ * Portée par la bannière : la carte suit le Fer de Lance qui accueille la figurine, pas la faction
+ * imprimée sur sa carte. `nonNativeOnly` la restreint alors aux recrues venues d'ailleurs.
+ */
+export function cardMatchesBanner(
+  card: SpecialCard,
+  profile: Profile,
+  fdlFactionId: string,
+): boolean {
+  if (!card.scope.ferDeLanceFactionIds?.includes(fdlFactionId)) return false;
+  return !card.scope.nonNativeOnly || profile.factionId !== fdlFactionId;
+}
+
+/** Prix d'une carte pour cette figurine : multiplié par son niveau quand la règle le dit. */
+export function specialCardCost(card: SpecialCard, profile: Profile): number {
+  return card.costPerLevel ? card.cost * (profile.level ?? 1) : card.cost;
 }
 
 // ── Cartes à portée Ost (sélectionnées au niveau de la liste) ────────────────
@@ -584,7 +614,7 @@ function baseInstanceCost(ri: ResolvedInstance, idx: CatalogIndex, cat: Catalog)
     if (card?.shared) continue;
     // Amélioration empilable : coût × quantité (plafond appliqué côté store/UI).
     const qty = card?.perLevelStack ? (inst.specialCardCounts?.[id] ?? 1) : 1;
-    cost += (card?.cost ?? 0) * qty;
+    cost += (card ? specialCardCost(card, ri.profile) : 0) * qty;
   }
   return cost;
 }
@@ -685,7 +715,10 @@ function computeCosts(
       if (done.has(id)) continue;
       done.add(id);
       chargedShared.set(ri.ferDeLanceId, done);
-      cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + card.cost);
+      cost.set(
+        ri.instance.instanceId,
+        (cost.get(ri.instance.instanceId) ?? 0) + specialCardCost(card, ri.profile),
+      );
     }
   }
 
@@ -778,6 +811,7 @@ function validate(
     validateLimitations(fdl, inFdl, issues, limitBonuses);
     validateConsumesSlot(cat, fdl, inFdl, issues);
     validateFactionMembership(cat, fdl, inFdl, issues);
+    validateOpenRecruitmentCaps(cat, fdl, inFdl, issues);
     validateLeader(fdl, inFdl, issues);
     validateSlaves(cat, fdl, inFdl, issues);
   }
@@ -1209,9 +1243,26 @@ function validateFactionMembership(
   inFdl: ResolvedInstance[],
   issues: Issue[],
 ): void {
+  const host = cat.factions.find((f) => f.id === fdl.factionId);
   for (const ri of inFdl) {
     const pf = ri.profile.factionId;
     if (!pf || pf === fdl.factionId) continue; // sans logo ou même faction
+    // Ce que la carte accorde nommément passe avant la règle générale du peuple (« Allié des X »,
+    // « Apatride » imprimé) : c'est `recruitableWithoutSeal` qui arbitre, pour ne pas diverger.
+    if (recruitableWithoutSeal(cat, ri.profile, fdl.factionId)) continue;
+    // Refusé par la faction d'accueil : rien ne le rattrape, pas même un sceau.
+    if (openRecruitmentRefuses(cat, ri.profile, fdl.factionId)) {
+      issues.push({
+        severity: "error",
+        ferDeLanceId: fdl.id,
+        instanceId: ri.instance.instanceId,
+        ruleId: `faction:${ri.profile.id}`,
+        message: `« ${ri.profile.name} » n'est pas accepté chez les ${host?.name ?? fdl.factionId}.`,
+        sourceText:
+          host?.openRecruitment?.sourceText ?? "Figurine écartée par la faction d'accueil.",
+      });
+      continue;
+    }
     // `apatride` peut être la compétence inscrite sur la carte, ou un octroi résolu : carte « Frères
     // d'Armes » (2+ réunis) ou sceau que la figurine porte.
     if (isApatride(ri.profile, [...ri.grantedSkills.keys()])) continue;
@@ -1219,6 +1270,7 @@ function validateFactionMembership(
     // c'est `validateSlaves` qui lui réclame son Seigneur de guerre.
     if (isSlaveIn(ri.profile, fdl.factionId)) continue;
     if (alliedFactions(ri.profile).includes(fdl.factionId)) continue; // « Allié des X »
+    if (openRecruitmentAccepts(cat, ri.profile, fdl.factionId)) continue; // recrutement ouvert
     // Voie de sortie encore ouverte : réunir un second frère d'armes, ou payer le sceau.
     const seal = sealFor(cat, ri.profile);
     const remedy = ri.profile.traits.includes(FRERE_D_ARMES)
@@ -1234,6 +1286,38 @@ function validateFactionMembership(
       message: `« ${ri.profile.name} » (${pf}) ne peut pas être recruté dans un Fer de Lance ${fdl.factionId}.${remedy}`,
       sourceText: "Vous devez composer votre Fer de Lance en choisissant parmi une unique faction.",
     });
+  }
+}
+
+/**
+ * Plafonds du recrutement ouvert : « il ne peut y en avoir plus d'un par Fer de Lance » (les shamans
+ * goûns, les prêtres du sacrifice khérops chez les Affranchis). Ne s'applique qu'aux figurines
+ * **entrées par cette porte** : un shaman goûn dans un Fer de Lance goûn n'est pas concerné.
+ */
+function validateOpenRecruitmentCaps(
+  cat: Catalog,
+  fdl: FerDeLance,
+  inFdl: ResolvedInstance[],
+  issues: Issue[],
+): void {
+  const caps = cat.factions.find((f) => f.id === fdl.factionId)?.openRecruitment?.caps;
+  for (const cap of caps ?? []) {
+    const matching = inFdl.filter(
+      (ri) =>
+        cap.profileIds.includes(ri.profile.id) &&
+        openRecruitmentAccepts(cat, ri.profile, fdl.factionId),
+    );
+    if (matching.length <= cap.max) continue;
+    for (const ri of matching) {
+      issues.push({
+        severity: "error",
+        ferDeLanceId: fdl.id,
+        instanceId: ri.instance.instanceId,
+        ruleId: `open-recruitment-cap:${cap.label}`,
+        message: `${matching.length} « ${cap.label} » dans ce Fer de Lance, pour un maximum de ${cap.max}.`,
+        sourceText: `Il ne peut y avoir plus de ${cap.max} « ${cap.label} » par Fer de Lance.`,
+      });
+    }
   }
 }
 
@@ -1357,14 +1441,22 @@ function validateReservedEquipment(cat: Catalog, resolved: ResolvedInstance[], i
   for (const ri of resolved) {
     for (const id of ri.instance.addedEquipmentIds) {
       const eq = eqById.get(id);
-      if (eq && !equipmentReservedOk(eq, ri.profile)) {
+      if (eq && !equipmentAllowedIn(cat, eq, ri.profile, ri.fdlFactionId)) {
+        // Un transfuge accueilli par le recrutement ouvert a laissé l'arsenal de son peuple derrière
+        // lui : le dire, sinon la réservation semble arbitraire (l'objet est bien « à sa faction »).
+        const lostArsenal =
+          equipmentReservedOk(eq, ri.profile) && ri.profile.factionId !== ri.fdlFactionId;
         issues.push({
           severity: "error",
           ferDeLanceId: ri.ferDeLanceId,
           instanceId: ri.instance.instanceId,
           ruleId: `reserved-${eq.id}`,
-          message: `« ${ri.profile.name} » ne peut pas être équipé de « ${eq.name} » (réservé à d'autres figurines).`,
-          sourceText: "Équipement réservé.",
+          message: lostArsenal
+            ? `« ${ri.profile.name} » a quitté son peuple : « ${eq.name} » lui reste inaccessible.`
+            : `« ${ri.profile.name} » ne peut pas être équipé de « ${eq.name} » (réservé à d'autres figurines).`,
+          sourceText: lostArsenal
+            ? "Ayant fui leur peuple d'origine, ils ont de fait perdu l'accès à l'arsenal qui le caractérisait."
+            : "Équipement réservé.",
         });
       }
     }
@@ -1577,13 +1669,12 @@ const BERSEKER_SKILL_ID = "berserk";
 export function isMountEligible(cat: Catalog, profile: Profile, mount: Mount): boolean {
   const type = cat.mountTypes.find((t) => t.id === mount.typeId);
   if (!type) return false;
-  // Éligibilité par ORIGINE : la faction du profil, OU un trait `monture-<faction>` qui encode
-  // l'origine (peuple d'avant la Guilde Noire / les Affranchis) - car ces figurines gardent l'accès
-  // à la monture de leur peuple d'origine, mais pas à ses objets/sorts réservés (FAQ).
-  const originOk = type.factionEligibility.some(
-    (f) => profile.factionId === f || profile.traits.includes(`monture-${f}`),
-  );
-  if (!originOk) return false;
+  // Éligibilité par ORIGINE : le peuple d'origine (`profile.origin`, défaut = sa faction), car les
+  // figurines des factions « creuset » gardent l'accès à la monture de leur peuple d'avant, mais pas
+  // à ses objets/sorts réservés (FAQ). Une faction creuset n'a donc pas à figurer dans
+  // `factionEligibility` : ses membres y entrent par leur origine.
+  const origin = originFactionId(profile);
+  if (!(origin != null && type.factionEligibility.includes(origin))) return false;
   if (type.excludedProfileIds?.includes(profile.id)) return false;
   if (profile.skills.some((s) => s.skillId === BERSEKER_SKILL_ID)) return false;
   if (profile.level != null && Math.abs(mount.level - profile.level) > 1) return false;

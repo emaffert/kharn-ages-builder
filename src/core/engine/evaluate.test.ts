@@ -15,7 +15,18 @@ import {
   pageAllocation,
   spellGrants,
 } from "./magic";
-import { recruitableWithoutSeal } from "./recruitment";
+import {
+  cardMatchesBanner,
+  specialCardCost,
+} from "./evaluate";
+import {
+  equipmentAllowedIn,
+  isRecruitableIn,
+  openRecruitmentAccepts,
+  openRecruitmentRefuses,
+  recruitCost,
+  recruitableWithoutSeal,
+} from "./recruitment";
 import { isSlaveIn } from "./slavery";
 
 /** L'identifiant de la voie Adansonia dans le catalogue (créée avec un id technique). */
@@ -1206,8 +1217,8 @@ describe("Apatride : la compétence de la carte, et rien d'autre", () => {
   };
 
   it("la compétence ouvre le roster de toutes les factions", () => {
-    expect(recruitableWithoutSeal(gaal, "fangs")).toBe(true);
-    expect(recruitableWithoutSeal(gaal, "tembos")).toBe(true);
+    expect(recruitableWithoutSeal(catalog, gaal, "fangs")).toBe(true);
+    expect(recruitableWithoutSeal(catalog, gaal, "tembos")).toBe(true);
   });
 
   it("la compétence suffit au recrutement hors de sa faction", () => {
@@ -1217,7 +1228,7 @@ describe("Apatride : la compétence de la carte, et rien d'autre", () => {
 
   it("le trait seul ne recrute plus personne hors de sa faction", () => {
     const sansSkill = sansCompetence.profiles.find((p) => p.id === "tembos-gaal-3")!;
-    expect(recruitableWithoutSeal(sansSkill, "fangs")).toBe(false);
+    expect(recruitableWithoutSeal(sansCompetence, sansSkill, "fangs")).toBe(false);
     const res = evaluateList(sansCompetence, makeList([inst("tembos-gaal-3")], "fangs"));
     expect(factionIssues(res)).toHaveLength(1);
   });
@@ -1727,5 +1738,134 @@ describe("un objet qui protège sans être une armure (Vouge de Moringa)", () =>
     const res = evaluateList(catalog, makeList([x], "tembos"));
     const patriarche = catalog.profiles.find((p) => p.id === PATRIARCHE)!;
     expect(res.costByInstance[x.instanceId]).toBe(patriarche.cost + eq(VOUGE).cost);
+  });
+});
+
+describe("recrutement ouvert (Affranchis)", () => {
+  const eq = (id: string) => catalog.equipment.find((e) => e.id === id)!;
+  const errs = (res: ReturnType<typeof evaluateList>, prefix: string) =>
+    res.issues.filter((i) => i.ruleId?.startsWith(prefix));
+  const list = (members: ProfileInstance[]) => makeList(members, "affranchis");
+
+  it("accueille un générique d'un peuple ouvert, sans sceau ni « Allié des X »", () => {
+    const res = evaluateList(catalog, list([inst("kharns-guerrier-1")]));
+    expect(errs(res, "faction:")).toHaveLength(0);
+    const guerrier = catalog.profiles.find((p) => p.id === "kharns-guerrier-1")!;
+    expect(recruitableWithoutSeal(catalog, guerrier, "affranchis")).toBe(true);
+    // Le coût annoncé reste celui de la carte : aucun sceau n'est imposé sur cette voie.
+    expect(recruitCost(catalog, guerrier, "affranchis")).toBe(guerrier.cost);
+  });
+
+  it("refuse un unique ou un personnage, qui ne sont pas des génériques", () => {
+    const ogodei = catalog.profiles.find((p) => p.limitation.kind === "P" && p.factionId === "kherops")!;
+    expect(openRecruitmentAccepts(catalog, ogodei, "affranchis")).toBe(false);
+    expect(errs(evaluateList(catalog, list([inst(ogodei.id)])), "faction:")).toHaveLength(1);
+  });
+
+  it("refuse les exclusions par trait (Ordre du Sang et de l'Acier, femelles fangs)", () => {
+    for (const id of ["kharns-fidele-1", "fangs-goulue-1"]) {
+      const p = catalog.profiles.find((x) => x.id === id);
+      if (!p) continue;
+      expect(openRecruitmentAccepts(catalog, p, "affranchis")).toBe(false);
+    }
+  });
+
+  it("refuse le Bourreau du Sacrifice, exclu nommément, mais garde le Prêtre", () => {
+    const bourreau = catalog.profiles.find((p) => p.id === "kherops-bourreau-2")!;
+    const pretre = catalog.profiles.find((p) => p.id === "kherops-pretre-1")!;
+    expect(openRecruitmentAccepts(catalog, bourreau, "affranchis")).toBe(false);
+    expect(openRecruitmentAccepts(catalog, pretre, "affranchis")).toBe(true);
+  });
+
+  it("plafonne les shamans goûns à un par Fer de Lance", () => {
+    const un = evaluateList(catalog, list([inst("gouns-shaman-1")]));
+    expect(errs(un, "open-recruitment-cap")).toHaveLength(0);
+    const deux = evaluateList(catalog, list([inst("gouns-shaman-1"), inst("gouns-shaman-1")]));
+    expect(errs(deux, "open-recruitment-cap")).toHaveLength(2);
+  });
+
+  it("ne plafonne pas le même profil dans son propre Fer de Lance", () => {
+    const chezEux = evaluateList(catalog, makeList([inst("gouns-shaman-1"), inst("gouns-shaman-1")], "gouns"));
+    expect(errs(chezEux, "open-recruitment-cap")).toHaveLength(0);
+  });
+
+  it("prive le transfuge de l'arsenal réservé à son peuple, pas de ses autres réservations", () => {
+    const guerrier = catalog.profiles.find((p) => p.id === "kharns-guerrier-1")!;
+    const armure = eq("eq-armure-combat-kharne");
+    expect(equipmentAllowedIn(catalog, armure, guerrier, "kharns")).toBe(true);
+    expect(equipmentAllowedIn(catalog, armure, guerrier, "affranchis")).toBe(false);
+    const res = evaluateList(catalog, list([inst("kharns-guerrier-1", { addedEquipmentIds: [armure.id] })]));
+    expect(errs(res, `reserved-${armure.id}`)).toHaveLength(1);
+  });
+});
+
+describe("cartes portées par la bannière (Affranchis)", () => {
+  const COUVERT = "affranchis-couvert-des-bois";
+  const AGUERRI = "affranchis-aguerri-aux-bois";
+  const card = (id: string) => catalog.specialCards.find((c) => c.id === id)!;
+  const guerrier = catalog.profiles.find((p) => p.id === "kharns-guerrier-2")!;
+
+  it("« Furtivité » gagne aussi les recrues d'un autre peuple", () => {
+    const x = inst("kharns-guerrier-1");
+    const res = evaluateList(catalog, makeList([x], "affranchis"));
+    expect(res.grantedSkills[x.instanceId]?.map((g) => g.skillId)).toContain("furtivite");
+  });
+
+  it("… mais pas dans un Fer de Lance d'un autre peuple", () => {
+    const x = inst("kharns-guerrier-1");
+    const res = evaluateList(catalog, makeList([x], "kharns"));
+    expect(res.grantedSkills[x.instanceId]?.map((g) => g.skillId) ?? []).not.toContain("furtivite");
+  });
+
+  it("« Aguerri aux bois » coûte 5 Ko × le niveau", () => {
+    expect(specialCardCost(card(AGUERRI), guerrier)).toBe(10); // niveau II
+    const x = inst("kharns-guerrier-2", { specialCardIds: [AGUERRI] });
+    const res = evaluateList(catalog, makeList([x], "affranchis"));
+    expect(res.costByInstance[x.instanceId]).toBe(guerrier.cost + 10);
+  });
+
+  it("« Aguerri aux bois » ne s'ouvre qu'aux recrues, pas aux Affranchis d'origine", () => {
+    const affranchi = { ...guerrier, id: "faux-affranchi", factionId: "affranchis" };
+    expect(cardMatchesBanner(card(AGUERRI), guerrier, "affranchis")).toBe(true);
+    expect(cardMatchesBanner(card(AGUERRI), affranchi, "affranchis")).toBe(false);
+    // La carte automatique, elle, ne fait pas ce tri : elle vaut pour tout le Fer de Lance.
+    expect(cardMatchesBanner(card(COUVERT), affranchi, "affranchis")).toBe(true);
+  });
+});
+
+describe("recrutement ouvert : qui la faction refuse", () => {
+  const errsFor = (res: ReturnType<typeof evaluateList>) =>
+    res.issues.filter((i) => i.ruleId?.startsWith("faction:"));
+  const refused = (id: string) =>
+    openRecruitmentRefuses(catalog, catalog.profiles.find((p) => p.id === id)!, "affranchis");
+
+  it("refuse les uniques et les personnages des peuples accueillis, sceau compris", () => {
+    // L'Agent sombre III est unique : son sceau de la Guilde Noire ne doit plus lui ouvrir la porte.
+    const agent3 = catalog.profiles.find(
+      (p) => p.factionId === "guilde-noire" && p.name === "Agent sombre" && p.level === 3,
+    )!;
+    expect(refused(agent3.id)).toBe(true);
+    expect(isRecruitableIn(catalog, agent3, "affranchis")).toBe(false);
+    expect(errsFor(evaluateList(catalog, makeList([inst(agent3.id)], "affranchis")))).toHaveLength(1);
+    // Chez elle, rien ne change.
+    expect(isRecruitableIn(catalog, agent3, "guilde-noire")).toBe(true);
+  });
+
+  it("refuse Khalsa, nommée dans les exclusions (elle a son propre profil affranchi)", () => {
+    expect(refused("guilde-noire-khalsa-2")).toBe(true);
+    expect(isRecruitableIn(catalog, catalog.profiles.find((p) => p.id === "guilde-noire-khalsa-2")!, "affranchis")).toBe(false);
+  });
+
+  it("laisse passer ce que la carte accorde nommément (« Allié des Affranchis »)", () => {
+    const bourgmestre = catalog.profiles.find((p) => p.name === "Bourgmestre")!;
+    expect(bourgmestre.limitation.kind).not.toBe("X"); // personnage : la règle générale l'écarterait
+    expect(recruitableWithoutSeal(catalog, bourgmestre, "affranchis")).toBe(true);
+    expect(errsFor(evaluateList(catalog, makeList([inst(bourgmestre.id)], "affranchis")))).toHaveLength(0);
+  });
+
+  it("ne dit rien des peuples que la faction n'accueille pas (un Tembo apatride entre)", () => {
+    const gaal = catalog.profiles.find((p) => p.id === "tembos-gaal-3")!;
+    expect(refused(gaal.id)).toBe(false);
+    expect(isRecruitableIn(catalog, gaal, "affranchis")).toBe(true);
   });
 });

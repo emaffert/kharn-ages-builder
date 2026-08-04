@@ -8,6 +8,14 @@ import { entryKey, parseEntries } from "./admin/changelog";
 
 afterEach(cleanup);
 
+/**
+ * Chaque cas monte l'administration **entière** (sidebar de 130 profils, fiche complète, éditeurs de
+ * règles) : un rendu de plusieurs secondes, qui dépassait par intermittence le délai par défaut de
+ * 5 s quand la suite tourne en parallèle. Le délai est relevé ici plutôt que globalement, pour que
+ * les tests ordinaires gardent leur garde-fou.
+ */
+const SLOW = { timeout: 20_000 };
+
 // Les nouveautés s'ouvrent à la première visite de l'administration : on les marque comme lues, ces
 // tests portent sur la navigation et la suppression, pas sur l'annonce (cf. admin/changelog.test.ts).
 beforeEach(() => {
@@ -15,7 +23,7 @@ beforeEach(() => {
   localStorage.setItem("kharn-changelog-vu", entryKey(parseEntries(changelogSource)[0]));
 });
 
-describe("AdminCatalog (rendu)", () => {
+describe("AdminCatalog (rendu)", SLOW, () => {
   it("rend sans erreur et liste des profils", () => {
     render(<AdminCatalog />);
     expect(screen.getAllByText(/Larbin/i).length).toBeGreaterThan(0);
@@ -97,16 +105,26 @@ describe("AdminCatalog (rendu)", () => {
     expect(screen.getByRole("heading", { name: /Compétence conférée/i })).toBeTruthy();
   });
 
-  it("ouvre l'onglet Réglages (factions, grimoires, surcoût Tembo)", () => {
+  it("ouvre l'onglet Réglages (grimoires, surcoût Tembo)", () => {
     render(<AdminCatalog />);
     fireEvent.click(screen.getByRole("button", { name: "Réglages" }));
     clickSubtab("Réglages");
     expect(screen.getByRole("heading", { name: /Grimoires/i })).toBeTruthy();
     expect(screen.getByRole("heading", { name: /Surcoût Tembo/i })).toBeTruthy();
   });
+
+  it("ouvre l'onglet Factions (peuples et recrutement entre eux)", () => {
+    render(<AdminCatalog />);
+    fireEvent.click(screen.getByRole("button", { name: "Réglages" }));
+    clickSubtab("Factions");
+    expect(screen.getByRole("heading", { name: /^Peuples$/i })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /Recrutement entre peuples/i })).toBeTruthy();
+    // La règle des Affranchis est saisie : ses peuples accueillis apparaissent en puces.
+    expect(screen.getAllByText(/Peuples accueillis/i).length).toBeGreaterThan(0);
+  });
 });
 
-describe("AdminCatalog (suppression d'un profil)", () => {
+describe("AdminCatalog (suppression d'un profil)", SLOW, () => {
   it("annonce les fiches qui citent le profil, puis le retire de la liste", () => {
     render(<AdminCatalog />);
     const before = Number(screen.getByText(/profil\(s\)/).textContent!.match(/^\d+/)![0]);
@@ -122,7 +140,7 @@ describe("AdminCatalog (suppression d'un profil)", () => {
   });
 });
 
-describe("AdminCatalog (suppression référencée)", () => {
+describe("AdminCatalog (suppression référencée)", SLOW, () => {
   /** Ouvre l'onglet Équipement et demande la suppression de l'objet sélectionné. */
   const askDelete = () => {
     render(<AdminCatalog />);

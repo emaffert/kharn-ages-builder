@@ -16,6 +16,7 @@ function sections(factionId: string): Record<RosterSection, string[]> {
     troupe: [],
     conditionnel: [],
     "hors-faction": [],
+    "peuples-rallies": [],
     "freres-d-armes": [],
     sceau: [],
   };
@@ -115,5 +116,15 @@ describe("sidebar - montures disponibles", () => {
     const quagga = catalog.mountTypes.find((t) => t.id === "quagga")!;
     expect(quagga.factionEligibility).not.toContain("guilde-noire");
     expect(availableMountTypeIds(catalog, "guilde-noire").has("quagga")).toBe(true);
+  });
+});
+
+describe("roster : niveaux d'un même modèle", () => {
+  it("ne propose que les niveaux réellement recrutables (Agent sombre I chez les Affranchis)", () => {
+    const agent = recruitableRosterModels(catalog, "affranchis").find((m) => m.name === "Agent sombre");
+    expect(agent?.profiles.map((p) => p.level)).toEqual([1]);
+    // Chez elle, la Guilde Noire garde ses trois niveaux.
+    const chezEux = recruitableRosterModels(catalog, "guilde-noire").find((m) => m.name === "Agent sombre");
+    expect(chezEux?.profiles.map((p) => p.level)).toEqual([1, 2, 3]);
   });
 });

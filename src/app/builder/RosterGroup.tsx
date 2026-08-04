@@ -5,6 +5,7 @@ import { LEVEL, type ModelEntry } from "./shared";
 export function RosterGroup({
   label,
   hint,
+  sub,
   items,
   onOpen,
   conditional,
@@ -14,6 +15,8 @@ export function RosterGroup({
 }: {
   label: string;
   hint?: string;
+  /** Sous-groupe d'une section déjà titrée (les peuples d'où viennent les ralliés) : titre discret. */
+  sub?: boolean;
   items: ModelEntry[];
   onOpen: (id: string) => void;
   conditional?: boolean;
@@ -25,7 +28,7 @@ export function RosterGroup({
   if (items.length === 0) return null;
   return (
     <div>
-      <div className="bld-grp-label">
+      <div className={`bld-grp-label${sub ? " is-sub" : ""}`}>
         {label}
         {hint ? <span className="hint">- {hint}</span> : <span className="line" />}
       </div>

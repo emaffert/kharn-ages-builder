@@ -8,7 +8,7 @@ export type RosterMountEntry = { type: MountType; minCost: number; icon?: string
 
 /**
  * Barre latérale du constructeur : recherche + sections de recrutement (Personnages, Troupes,
- * Recrutement conditionnel, Hors Faction, Frères d'armes, Guilde Noire, Montures). Purement
+ * Recrutement conditionnel, Hors Faction, Peuples ralliés, Frères d'armes, Guilde Noire, Montures). Purement
  * présentationnelle : les sections déjà catégorisées et les callbacks lui sont fournis par
  * `BuilderScreen`.
  */
@@ -21,6 +21,7 @@ export function RosterSidebar({
   troupes,
   conditionnels,
   horsFaction,
+  peuplesRallies,
   freresDArmes,
   sceau,
   sceauHint,
@@ -40,6 +41,11 @@ export function RosterSidebar({
   troupes: ModelEntry[];
   conditionnels: ModelEntry[];
   horsFaction: ModelEntry[];
+  /**
+   * Génériques d'autres peuples accueillis en masse par le recrutement ouvert (Affranchis), groupés
+   * par peuple d'origine : la liste à plat serait trop longue pour qu'on y retrouve quoi que ce soit.
+   */
+  peuplesRallies: { label: string; items: ModelEntry[] }[];
   freresDArmes: ModelEntry[];
   /** Recrues qui n'entrent qu'en payant leur sceau (Guilde Noire) : coût affiché sceau compris. */
   sceau: ModelEntry[];
@@ -83,6 +89,22 @@ export function RosterSidebar({
             <RosterGroup label="Troupes" items={troupes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={onPreview} />
             <RosterGroup label="Recrutement conditionnel" items={conditionnels} onOpen={onPreview} conditional />
             <RosterGroup label="Hors Faction" items={horsFaction} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={onPreview} />
+            {peuplesRallies.length > 0 && (
+              <div className="bld-grp-label">
+                Peuples ralliés<span className="line" />
+              </div>
+            )}
+            {peuplesRallies.map((g) => (
+              <RosterGroup
+                key={g.label}
+                label={g.label}
+                sub
+                items={g.items}
+                maxed={modelMaxed}
+                onQuickAdd={onQuickAdd}
+                onOpen={onPreview}
+              />
+            ))}
             <RosterGroup label="Frères d'armes" items={freresDArmes} maxed={modelMaxed} onQuickAdd={onQuickAdd} onOpen={onPreview} />
             <RosterGroup
               label="Guilde Noire"

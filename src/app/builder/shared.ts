@@ -10,10 +10,11 @@ import {
   forbiddenGrimoires as coreForbiddenGrimoires,
   castableSpells as coreCastableSpells,
   eligibleMountsFor as coreEligibleMountsFor,
-  equipmentReservedOk,
+  equipmentAllowedIn,
   isApatride,
   isRecruitableIn,
   isSlaveIn,
+  openRecruitmentAccepts,
   mountKindOf,
   mountOptionCostOf,
   sealRequiredFor,
@@ -386,8 +387,9 @@ export function canBuy(p: Profile, cat: Catalog): boolean {
   return PURCHASE_CATS.some((c) => !forbidden.has(c));
 }
 
-/** Une figurine correspond-elle à la réservation d'un équipement ? (toutes les dimensions fournies). */
-export const equipReservedOk = equipmentReservedOk;
+/** Une figurine peut-elle porter cet objet dans un Fer de Lance de cette faction ? (réservations +
+ *  arsenal perdu par un transfuge du recrutement ouvert). */
+export const equipAllowedIn = equipmentAllowedIn;
 
 // ── Magie ── Adaptateurs minces vers `src/core/engine/magic.ts` (logique unique côté cœur).
 // Les panneaux travaillent avec (profil, listes) ; on synthétise une `ProfileInstance` pour appeler le cœur.
@@ -529,17 +531,26 @@ export type ModelEntry = { id: string; name: string; profiles: Profile[]; icon?:
 
 /** Sections de la sidebar. `personnage`/`troupe`/`conditionnel` = natifs de la faction ; les recrues
  *  inter-factions vont en `freres-d-armes` (trait `frere-d-armes`, ni allié ni apatride de carte), `sceau`
- *  (recrutable seulement en payant son sceau, ex. Guilde Noire) ou `hors-faction` (alliés). */
+ *  (recrutable seulement en payant son sceau, ex. Guilde Noire), `peuples-rallies` (génériques accueillis
+ *  en masse par le recrutement ouvert des Affranchis) ou `hors-faction` (alliés). */
 export type RosterSection =
   | "personnage"
   | "troupe"
   | "conditionnel"
   | "hors-faction"
+  | "peuples-rallies"
   | "freres-d-armes"
   | "sceau";
 
-/** Modèles recrutables dans une faction (faction courante + recrues inter-factions), niveaux triés.
- *  N'ajoute pas l'icône ni le filtre de recherche (laissés au composant). */
+/**
+ * Modèles recrutables dans une faction (faction courante + recrues inter-factions), niveaux triés.
+ * N'ajoute pas l'icône ni le filtre de recherche (laissés au composant).
+ *
+ * Le filtre porte sur **chaque niveau**, pas seulement sur le modèle : un même modèle peut n'être
+ * accueilli que jusqu'à un certain niveau (les Affranchis prennent l'Agent sombre I mais pas les II
+ * et III, qui sont uniques). Garder tous ses niveaux reviendrait à les proposer au recrutement pour
+ * les refuser ensuite, à l'ajout.
+ */
 export function recruitableRosterModels(cat: Catalog, factionId: string): ModelEntry[] {
   return cat.models
     .map((m) => ({
@@ -547,10 +558,10 @@ export function recruitableRosterModels(cat: Catalog, factionId: string): ModelE
       name: m.name,
       profiles: m.profileIds
         .map((id) => cat.profiles.find((p) => p.id === id))
-        .filter((p): p is Profile => Boolean(p))
+        .filter((p): p is Profile => p != null && isRecruitableIn(cat, p, factionId))
         .sort((a, b) => (a.level ?? 0) - (b.level ?? 0)),
     }))
-    .filter((m) => m.profiles.length > 0 && m.profiles.some((p) => isRecruitableIn(cat, p, factionId)));
+    .filter((m) => m.profiles.length > 0);
 }
 
 /** Section de sidebar d'un modèle, déterminée par son premier profil. */
@@ -567,11 +578,14 @@ export function rosterSectionOf(cat: Catalog, factionId: string, profile: Profil
     !isApatride(profile) &&
     !(profile.recruitment ?? []).some((c) => c.type === "faction-membership");
   if (frere) return "freres-d-armes";
+  // Le recrutement ouvert amène des dizaines de génériques : les mêler aux quelques « Allié des X »
+  // rendrait les deux illisibles.
+  if (openRecruitmentAccepts(cat, profile, factionId)) return "peuples-rallies";
   return sealRequiredFor(cat, profile, factionId) ? "sceau" : "hors-faction";
 }
 
 /** Ids des types de monture accessibles à au moins un profil recrutable dans la faction (faction
- *  courante OU recrue inter-factions via son origine `monture-<faction>`). */
+ *  courante OU recrue inter-factions, via son peuple d'origine `profile.origin`). */
 export function availableMountTypeIds(cat: Catalog, factionId: string): Set<string> {
   return new Set(
     cat.profiles

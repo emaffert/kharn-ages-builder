@@ -23,6 +23,7 @@ function props(over: Partial<React.ComponentProps<typeof RosterSidebar>> = {}) {
     troupes: [] as ModelEntry[],
     conditionnels: [] as ModelEntry[],
     horsFaction: [] as ModelEntry[],
+    peuplesRallies: [] as { label: string; items: ModelEntry[] }[],
     freresDArmes: [] as ModelEntry[],
     sceau: [] as ModelEntry[],
     mountTypes: [] as RosterMountEntry[],

@@ -20,9 +20,9 @@ import { SectionTitle, SlotChip } from "./components";
 import {
   CAT_LABEL,
   PURCHASE_CATS,
+  equipAllowedIn,
   equipBits,
   equipInfo,
-  equipReservedOk,
   forbiddenCats,
   type ItemInfo,
 } from "./shared";
@@ -129,7 +129,7 @@ export function EquipPanel({
       PURCHASE_CATS.includes(e.category) &&
       !forbidden.has(e.category) &&
       (!asSlave || slaveMayBuy(e)) &&
-      equipReservedOk(e, p) &&
+      equipAllowedIn(cat, e, p, factionId) &&
       !isHiddenSeal(e) &&
       (!p.baseEquipmentIds.includes(e.id) || removed.includes(e.id) || Boolean(e.stackable)) &&
       (!added.includes(e.id) || Boolean(e.stackable)) &&

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
-import { Tag } from "@ui";
+import { Button, Dialog, Tag } from "@ui";
 import { canRenameId, findReferences, idIsFree, type Catalog, type Reference, type RefKind } from "@core";
 import type { FieldValue } from "../useCatalogStore";
 import { INPUT, SECTION } from "./shared";
@@ -782,5 +782,56 @@ export function ReferenceList({ refs }: { refs: Reference[] }) {
         disparaîtra aussi (une compétence de profil, un effet qui ne cite que cet objet).
       </p>
     </div>
+  );
+}
+
+/** Suppression de donnée de référence en attente de confirmation (répercussion large). */
+export type PendingDelete = { what: string; run: () => void; refs?: Reference[] };
+
+/**
+ * Modale de confirmation partagée par les pages de **données de référence** (factions, grimoires,
+ * munitions) : supprimer l'une d'elles se répercute sur les profils, équipements et listes déjà
+ * enregistrés, on ne le fait donc jamais d'un simple clic.
+ */
+export function ConfirmDeleteDialog({
+  pending,
+  onClose,
+}: {
+  pending: PendingDelete | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog
+      open={pending !== null}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+      size="sm"
+      title="Confirmer la suppression"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              pending?.run();
+              onClose();
+            }}
+          >
+            Supprimer
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <p>
+          Supprimer {pending?.what} ? Cette action touche des données de référence et est{" "}
+          <b>irréversible</b>.
+        </p>
+        {pending?.refs && <ReferenceList refs={pending.refs} />}
+      </div>
+    </Dialog>
   );
 }

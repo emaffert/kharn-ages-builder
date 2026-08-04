@@ -250,9 +250,7 @@ body {
 .fs-tile p { margin: 0 0 12px; font-size: 12.5px; color: var(--bone-dim); line-height: 1.4; min-height: 34px; }
 .fs-count { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faction-2); font-weight: 600; }
 .fs-tile.is-soon .fs-count { color: var(--bone-faint); }
-/* Affranchis (transverse) : eyebrow doré + liseré discret pour dire « pas une maison classique ». */
-.fs-eyebrow { position: absolute; top: 12px; left: 12px; font-size: 10px; font-weight: 700; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--gold); }
+/* Affranchis : liseré doré discret pour dire « pas une maison classique ». */
 .fs-tile.is-transverse { box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--gold) 32%, transparent); }
 
 .fs-setup { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; padding: 20px 24px;
@@ -425,6 +423,12 @@ body {
   background: linear-gradient(90deg, color-mix(in srgb, var(--ember) 40%, transparent), transparent); }
 .bld-grp-label .hint { color: var(--bone-faint); font-family: Inter, sans-serif; letter-spacing: .02em;
   text-transform: none; font-size: 10.5px; font-weight: 400; }
+/* Sous-groupe (les peuples d'où viennent les ralliés) : en retrait et en sourdine, pour que la
+   section qui les chapeaute reste le repère de lecture. */
+.bld-grp-label.is-sub { margin: 10px 6px 5px 16px; font-size: 10.5px; letter-spacing: .12em;
+  color: var(--bone-dim); }
+.bld-grp-label.is-sub .line { background: linear-gradient(90deg,
+  color-mix(in srgb, var(--bone-dim) 22%, transparent), transparent); }
 
 .bld-ritem { display: flex; align-items: stretch; border-radius: 10px; position: relative; transition: .16s var(--ease); }
 .bld-ritem:hover { background: var(--tint-2); }

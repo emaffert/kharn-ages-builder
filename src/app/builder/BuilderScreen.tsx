@@ -117,6 +117,12 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const troupes = inSection("troupe");
   const conditionnels = inSection("conditionnel");
   const horsFaction = inSection("hors-faction");
+  // Les ralliés se comptent par dizaines : une seule liste serait un mur. On la scinde par peuple
+  // d'où ils viennent, dans l'ordre du catalogue (stable d'une session à l'autre).
+  const rallies = inSection("peuples-rallies");
+  const peuplesRallies = cat.factions
+    .map((f) => ({ label: f.name, items: rallies.filter((m) => m.profiles[0]?.factionId === f.id) }))
+    .filter((g) => g.items.length > 0);
   const freresDArmes = inSection("freres-d-armes");
   const sceau = inSection("sceau");
   // Coût de recrutement montré avant l'ajout : le sceau imposé y est déjà intégré (il sera équipé
@@ -345,6 +351,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       troupes={troupes}
       conditionnels={conditionnels}
       horsFaction={horsFaction}
+      peuplesRallies={peuplesRallies}
       freresDArmes={freresDArmes}
       sceau={sceau}
       sceauHint={sceauHint}
@@ -552,6 +559,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             grimoireDiscount={evaluation.grimoireDiscount[x.inst.instanceId] ?? {}}
             mountId={x.inst.mount?.mountId}
             mountOptionIds={x.inst.mountOptionIds}
+            factionId={factionId}
             onPick={setItemInfo}
           />
         )}

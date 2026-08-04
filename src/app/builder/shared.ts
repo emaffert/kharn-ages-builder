@@ -488,17 +488,29 @@ export function spellBudgetBits(s: Spell): string {
   return s.kind === "generique" ? `${coreSpellLevelCost(s)} niv` : `${s.pages ?? 0} p`;
 }
 
+/**
+ * Fiche d'un sort. Les pages de grimoire (ou les niveaux d'un sort générique) rejoignent le prix en
+ * Ko dans l'en-tête : ce sont deux monnaies, elles répondent à la même question. Cible et cadence
+ * sont toujours brèves, la durée est parfois une phrase entière - elle prend alors toute la ligne.
+ */
 export function spellInfo(s: Spell, cat: Catalog): ItemInfo {
   const way = cat.magicWays.find((w) => w.id === s.magicWayId)?.name;
-  const budget = s.kind === "generique" ? `${coreSpellLevelCost(s)} niveau(x)` : `${s.pages ?? 0} page(s)`;
+  const niveaux = coreSpellLevelCost(s);
+  const budget =
+    s.kind === "generique"
+      ? { value: String(niveaux), unit: niveaux > 1 ? "niveaux" : "niveau" }
+      : { value: String(s.pages ?? 0), unit: (s.pages ?? 0) > 1 ? "pages" : "page" };
+  const stats: InfoStat[] = [{ label: "Cible", text: s.target }];
+  if (s.cadence) stats.push({ label: "Cadence", text: s.cadence });
+  if (s.duration) stats.push({ label: "Durée", text: s.duration, wide: s.duration.length > 22 });
   return {
     title: s.name,
-    price: s.cost != null && s.cost > 0 ? `${s.cost} Ko` : "-",
-    lines: [
-      `${budget}${way ? ` · ${way}` : ""}`,
-      `Cible : ${s.target}`,
-      ...s.difficulties.map((d) => `${d.threshold}+ : ${d.effectText}`),
-    ],
+    kind: way,
+    prices: [budget, ...(s.cost != null && s.cost > 0 ? [{ value: String(s.cost), unit: "Ko" }] : [])],
+    price: "",
+    stats,
+    ladder: s.difficulties.map((d) => ({ threshold: d.threshold, text: d.effectText })),
+    lines: [],
   };
 }
 
@@ -517,12 +529,54 @@ export function equipBits(e: Catalog["equipment"][number]): string {
   return bits.join(" · ");
 }
 
-/** Fiche d'un équipement (nom, prix, stats + effet) pour l'affichage au clic. */
-export function equipInfo(e: Catalog["equipment"][number]): ItemInfo {
+/** Nature d'un équipement, telle qu'on la nomme au joueur. */
+const EQUIP_KIND: Record<string, string> = {
+  "arme-cac": "Corps à corps",
+  "arme-tir": "Tir",
+  bouclier: "Bouclier",
+  armure: "Armure",
+  objet: "Objet",
+};
+
+/**
+ * Fiche d'un équipement : ses valeurs chiffrées en cartouche étiqueté, puis le texte de sa carte.
+ * Chaque case ne paraît que si l'objet la renseigne - une fronde n'a ni recharge ni munitions.
+ */
+export function equipInfo(e: Catalog["equipment"][number], cat?: Catalog): ItemInfo {
+  const stats: InfoStat[] = [];
+  if (e.hands) stats.push({ label: "Mains", value: e.hands === "1-2" ? "1 ou 2" : String(e.hands) });
+  if (e.allonge != null) stats.push({ label: "Allonge", value: String(e.allonge), unit: "″" });
+  // Portée d'un seul tenant (courte / longue / max) : la découper coûterait une deuxième ligne.
+  if (e.range) {
+    const p = [e.range.short, e.range.long, e.range.max].filter((n) => n != null);
+    stats.push({ label: "Portée", value: p.join(" / ") });
+  }
+  if (e.reload) stats.push({ label: "Recharge", value: String(e.reload.paCost), unit: "PA" });
+  if (e.perceArmure != null) stats.push({ label: "Perce-armure", value: String(e.perceArmure) });
+  if (e.seuil != null) {
+    stats.push({
+      label: "Protection",
+      armor: {
+        protectionEchec: e.protectionEchec,
+        seuil: e.seuil,
+        protectionReussite: e.protectionReussite,
+      },
+    });
+  }
+  if (e.durability != null) stats.push({ label: "Durée de vie", value: String(e.durability) });
+  if (e.munitionKind) {
+    const kind = cat?.munitionKinds?.find((k) => k.id === e.munitionKind);
+    const nom = kind?.label ?? e.munitionKind;
+    stats.push({ label: "Munitions", text: e.baseMunitions ? `${e.baseMunitions} ${nom.toLowerCase()}` : nom });
+  }
   return {
     title: e.name,
-    price: e.cost === 0 ? "gratuit" : `${e.cost} Ko`,
-    lines: [equipBits(e), e.effectsText].filter(Boolean),
+    kind: EQUIP_KIND[e.category],
+    prices: e.cost > 0 ? [{ value: String(e.cost), unit: "Ko" }] : [],
+    price: e.cost === 0 ? "Compris" : "",
+    stats,
+    text: e.effectsText || undefined,
+    lines: [],
   };
 }
 
@@ -630,9 +684,38 @@ export type Modal =
   | { kind: "mount-preview"; typeId: string };
 
 /** Fiche courte d'un achat (arme, équipement, carte) affichée au clic depuis le résumé. */
+/** Une valeur du cartouche : une étiquette, et soit un nombre, soit un texte, soit une armure. */
+export type InfoStat = {
+  label: string;
+  /** Valeur brève, cadrée en chiffres (« 2 », « 3 / 7 / 7 »). */
+  value?: string;
+  /** Unité accolée, en petit (« Ko », « PA », « ″ »). */
+  unit?: string;
+  /** Valeur qui se lit plutôt qu'elle ne se compare (« 1 ennemi dans l'aura »). */
+  text?: string;
+  /** Prend toute la largeur : pour une durée qui est une phrase entière. */
+  wide?: boolean;
+  /** Protection d'une armure, rendue comme le cartouche des cartes (seuil dans la cuirasse). */
+  armor?: { protectionEchec?: number; seuil?: number; protectionReussite?: number };
+};
+
 export type ItemInfo = {
   title: string;
+  /** Nature, sous le titre, là où une carte l'imprime (« Tir », « Armure », « Ostéomancie »). */
+  kind?: string;
+  /**
+   * Ce que l'objet coûte, une entrée par monnaie (« 22 Ko », « 2 pages »). Utilisé par les fiches
+   * structurées ; les autres appelants passent `price`. Vide des deux côtés = rien n'est affiché,
+   * ce qui vaut mieux qu'un tiret : 51 des 55 sorts n'ont aucun coût en Ko.
+   */
+  prices?: { value: string; unit?: string }[];
   price: string;
+  /** Cartouche de valeurs étiquetées, à la place d'une ligne d'abréviations. */
+  stats?: InfoStat[];
+  /** Échelle de difficulté d'un sort : le jet à obtenir, et ce qu'il produit. */
+  ladder?: { threshold: number; text: string }[];
+  /** Texte officiel de la carte, rendu tel qu'il est écrit. */
+  text?: string;
   lines: string[];
   /** Effets responsables d'une modification (bloc « Modifiée par », visuellement séparé du descriptif). */
   sources?: { label: string; text: string }[];

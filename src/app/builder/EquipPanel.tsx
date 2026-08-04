@@ -378,7 +378,7 @@ export function EquipPanel({
                 <div className="fe-col">
                   {list.map(({ id, isBase, e }) => (
                     <div key={id}>
-                      <div className="fe-item is-clickable" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
+                      <div className="fe-item is-clickable" onClick={() => onInfo(equipInfo(e, cat))} title="Voir le détail">
                         <span className="fe-item-main">
                           <span className="fe-item-name">{e.name}</span>
                           {qtyOf(id, isBase) > 1 && <span className="fe-item-qty">×{qtyOf(id, isBase)}</span>}
@@ -482,7 +482,7 @@ export function EquipPanel({
                         key={e.id}
                         className={`fe-item is-clickable${blocked ? " is-blocked" : ""}`}
                         title={blocked ?? "Voir le détail"}
-                        onClick={() => onInfo(equipInfo(e))}
+                        onClick={() => onInfo(equipInfo(e, cat))}
                       >
                         <button
                           className="fe-move add"

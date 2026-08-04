@@ -12,6 +12,8 @@ export function Dialog({
   title,
   description,
   size = "md",
+  eyebrow,
+  aside,
   children,
   footer,
 }: {
@@ -20,6 +22,11 @@ export function Dialog({
   title: ReactNode;
   description?: ReactNode;
   size?: "sm" | "md" | "lg";
+  /** Nature du sujet, sous le titre (« Tir », « Ostéomancie »). Un titre qui passe à la ligne ne
+   *  décale alors rien : les deux vivent dans la même colonne. */
+  eyebrow?: ReactNode;
+  /** Mention alignée à droite du titre, sur sa première ligne (le prix d'un objet). */
+  aside?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
 }) {
@@ -33,8 +40,12 @@ export function Dialog({
           {...(description ? {} : { "aria-describedby": undefined })}
         >
           <div className="ui-dialog__head">
-            <RD.Title className="ui-dialog__title">{title}</RD.Title>
+            <div className="ui-dialog__id">
+              <RD.Title className="ui-dialog__title">{title}</RD.Title>
+              {eyebrow ? <span className="ui-dialog__kind">{eyebrow}</span> : null}
+            </div>
             {description ? <RD.Description className="sr-only">{description}</RD.Description> : null}
+            {aside ? <span className="ui-dialog__aside">{aside}</span> : null}
             <RD.Close className="ui-dialog__x" aria-label="Fermer">
               ✕
             </RD.Close>

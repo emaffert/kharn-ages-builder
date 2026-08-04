@@ -104,10 +104,12 @@ export function PurchaseSummary({
       ),
     ];
     const qty = qtyOf(e);
-    const base = equipInfo(e);
+    const base = equipInfo(e, cat);
     if (munCost === 0 && upCost === 0 && disc === 0 && surcharge === 0 && qty === 1) return chip(label(e), base);
     return chip(label(e), {
       ...base,
+      // Le total recalculé remplace le prix de catalogue : `prices` est vidé, sinon il primerait.
+      prices: undefined,
       price: `${e.cost * qty + munCost + upCost + (disc + surcharge) * qty} Ko`,
       lines: [
         ...base.lines,

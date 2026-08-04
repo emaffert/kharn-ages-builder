@@ -33,9 +33,10 @@ export function MountPurchaseSummary({
         .map((uid) => e.upgrades?.find((u) => u.id === uid))
         .filter((u): u is NonNullable<typeof u> => Boolean(u));
       const upCost = ups.reduce((n, u) => n + u.cost, 0);
-      const base = equipInfo(e);
+      const base = equipInfo(e, cat);
       return chip(e.name, {
         ...base,
+        prices: undefined, // le total remplace le prix de catalogue
         price: `${equipCostOf(e) + upCost} Ko`,
         lines: [...base.lines, ...ups.map((u) => `${u.label} (+${u.cost} Ko)`)],
       });

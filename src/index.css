@@ -147,14 +147,20 @@ body {
 .ui-dialog--sm { width: min(460px, 94vw); max-height: 86vh; }
 .ui-dialog--md { width: min(720px, 95vw); height: min(560px, 90vh); }
 .ui-dialog--lg { width: min(920px, 96vw); height: min(640px, 92vh); }
-.ui-dialog__head { display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+.ui-dialog__head { display: flex; align-items: flex-start; gap: 14px; padding: 14px 18px;
   border-bottom: 1px solid var(--hair);
   background: radial-gradient(120% 200% at 0% 0%, var(--header-glow), transparent 55%); }
-.ui-dialog__title { font-family: "Cinzel", Georgia, serif; font-size: 17px; letter-spacing: .02em; }
+/* Titre et nature dans une même colonne : un nom qui passe à la ligne ne décale plus ce qui suit. */
+.ui-dialog__id { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ui-dialog__title { font-family: "Cinzel", Georgia, serif; font-size: 17px; letter-spacing: .02em;
+  line-height: 1.22; }
+.ui-dialog__kind { font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--bone-faint); }
+.ui-dialog__aside { flex: none; padding-top: 2px; }
 .ui-dialog__body { flex: 1; min-height: 0; overflow: auto; padding: 18px; }
 .ui-dialog__foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px;
   padding: 12px 18px; border-top: 1px solid var(--hair); background: var(--tint-1); }
-.ui-dialog__x { margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+.ui-dialog__x { display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 30px; border-radius: 8px; color: var(--bone-dim); cursor: pointer;
   border: 1px solid transparent; transition: .16s var(--ease); }
 .ui-dialog__x:hover { background: var(--tint-2); color: var(--bone); }
@@ -674,6 +680,70 @@ body {
 .mdl-price { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-weight: 700;
   font-size: 13px; color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent); margin-bottom: 12px; }
+
+/* ── Fiche d'objet et de sort ────────────────────────────────────────────── */
+/* Ce que la fiche coûte, dans son en-tête : une entrée par monnaie (Ko, pages de grimoire), en or
+   Cinzel comme la pièce imprimée au bas des cartes. */
+.mdl-cost { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.mdl-cost b { font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 16px; color: var(--gold);
+  font-variant-numeric: tabular-nums; }
+.mdl-cost b u { text-decoration: none; font-family: Inter, sans-serif; font-weight: 600; font-size: 10.5px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--gold-dim); margin-left: 4px; }
+.mdl-cost b + b::before { content: "·"; margin-right: 8px; color: var(--bone-faint); font-weight: 400; }
+
+/* Cartouche : les valeurs chiffrées, étiquetées. Une arme n'est pas une phrase. Les cases absentes
+   ne s'affichent pas - une fronde n'a ni recharge ni munitions. */
+.mdl-stats { display: flex; flex-wrap: wrap; gap: 1px; margin: 0 0 16px; border-radius: 9px; overflow: hidden;
+  background: var(--hair-strong); box-shadow: inset 0 0 0 1px var(--hair-strong); }
+/* Une seule valeur (« Mains 2 ») n'a pas à traverser la modale : la boîte se réduit alors à elle.
+   Dès qu'il y en a plusieurs, elles se partagent la largeur comme avant. */
+.mdl-stats:has(.mdl-stat:only-child) { width: fit-content; max-width: 100%; }
+.mdl-stat { position: relative; flex: 1 1 auto; min-width: 84px; padding: 8px 12px 9px;
+  background: var(--forge-2); }
+.mdl-stat.is-wide { flex: 1 1 100%; }
+.mdl-stat.is-armor { display: flex; align-items: center; justify-content: center; padding: 6px 12px; }
+.mdl-stat .k { display: block; font-size: 9.5px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--bone-faint); margin-bottom: 3px; }
+.mdl-stat.is-armor .k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.mdl-stat .v { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 15px; color: var(--bone);
+  font-variant-numeric: tabular-nums; }
+.mdl-stat .v u { text-decoration: none; color: var(--bone-faint); font-size: 12px; margin-left: 4px; }
+/* Une durée, une cible, se lisent au lieu de se comparer : autre fonte, même encre - elles n'ont
+   rien de secondaire. */
+.mdl-stat .v.txt { font-family: Inter, sans-serif; font-weight: 500; font-size: 13.5px; line-height: 1.45;
+  color: var(--bone); }
+
+/* Protection : le seuil dans la cuirasse, encadré par l'échec et la réussite (cf. ArmorRibbon). */
+.mdl-ribbon { display: flex; align-items: center; gap: 9px; }
+.mdl-ribbon .side { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 16px;
+  color: var(--bone-dim); font-variant-numeric: tabular-nums; min-width: 18px; text-align: center; }
+.mdl-ribbon .plate { position: relative; width: 38px; height: 42px; flex: none; display: grid;
+  place-items: center; }
+.mdl-ribbon .plate svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mdl-ribbon .plate i { position: relative; font-style: normal; font-family: "Cinzel", Georgia, serif;
+  font-weight: 700; font-size: 18px; color: var(--bone); font-variant-numeric: tabular-nums;
+  padding-bottom: 4px; }
+
+/* Échelle de difficulté : un sort est une suite ordonnée, mieux on lance mieux ça marche. Le pion
+   octogonal reprend la forme de la pièce du jeu. Seul endroit où la fiche hausse le ton. */
+.mdl-ladder { display: flex; flex-direction: column; margin-top: 4px; }
+.mdl-rung { display: flex; gap: 13px; padding: 11px 0; border-top: 1px solid var(--hair); }
+.mdl-rung:first-child { border-top: 0; padding-top: 0; }
+.mdl-rung .pin { flex: none; width: 40px; height: 40px; display: grid; place-items: center;
+  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 24%, var(--forge-2)), var(--forge-2)); }
+.mdl-rung:first-child .pin {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 38%, var(--forge-2)), var(--forge-2)); }
+.mdl-rung .pin i { font-style: normal; font-family: "Cinzel", Georgia, serif; font-weight: 700;
+  font-size: 15px; color: var(--gold); font-variant-numeric: tabular-nums; line-height: 1; }
+.mdl-rung .pin i sup { font-size: 9px; font-weight: 600; color: var(--gold-dim); vertical-align: top;
+  margin-left: 1px; }
+.mdl-rung p { margin: 0; align-self: center; font-size: 13.5px; line-height: 1.5; color: var(--bone); }
+
+/* Texte de la carte. Aligné sur le TEXTE du cartouche et non sur son cadre, sinon les deux colonnes
+   de lecture paraissent décalées de la valeur du retrait. */
+.mdl-verb { margin: 0; font-size: 13.5px; line-height: 1.58; color: var(--bone); white-space: pre-line; }
+.mdl-stats + .mdl-verb, .mdl-ladder + .mdl-verb { padding-left: 12px; }
 /* Texte verbatim : les retours à la ligne de la carte sont rendus tels quels. `pre-line`
    (et non `pre-wrap`) écrase au passage les espaces surnuméraires de saisie. */
 .mdl-line { font-size: 13.5px; line-height: 1.5; color: var(--bone); white-space: pre-line; }

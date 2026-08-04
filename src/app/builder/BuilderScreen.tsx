@@ -61,6 +61,7 @@ import { FigureEditor } from "./FigureEditor";
 import { MountPicker, MountPreview, MountSheet } from "./MountDialog";
 import { OstPanel } from "./OstPanel";
 import { PurchaseSummary } from "./PurchaseSummary";
+import { ArmorRibbon } from "./ArmorRibbon";
 import { MountSubline } from "./MountSubline";
 import { RosterSidebar } from "./RosterSidebar";
 import { encodeList } from "../io/listCode";
@@ -1118,8 +1119,63 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           );
         })()}
       {itemInfo && (
-        <Dialog open onOpenChange={(o) => !o && setItemInfo(null)} title={itemInfo.title} size="sm">
-          {itemInfo.price && <span className="mdl-price">{itemInfo.price}</span>}
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setItemInfo(null)}
+          title={itemInfo.title}
+          size="sm"
+          /* En-tête : ce que la fiche coûte, à côté de son nom. Rien à payer = rien d'affiché -
+             sur 55 sorts, 51 n'ont aucun coût en Ko, et un « - » n'apprenait rien à personne. */
+          eyebrow={itemInfo.kind}
+          aside={
+            (itemInfo.prices?.length ?? 0) > 0 || itemInfo.price ? (
+              <span className="mdl-cost">
+                {(itemInfo.prices ?? [{ value: itemInfo.price }]).map((p, k) => (
+                  <b key={k}>
+                    {p.value}
+                    {p.unit && <u>{p.unit}</u>}
+                  </b>
+                ))}
+              </span>
+            ) : undefined
+          }
+        >
+          {itemInfo.stats && itemInfo.stats.length > 0 && (
+            <div className="mdl-stats">
+              {itemInfo.stats.map((st, k) => (
+                <div key={k} className={`mdl-stat${st.wide ? " is-wide" : ""}${st.armor ? " is-armor" : ""}`}>
+                  <span className="k">{st.label}</span>
+                  {st.armor ? (
+                    <ArmorRibbon armor={st.armor} />
+                  ) : st.text != null ? (
+                    <span className="v txt">{st.text}</span>
+                  ) : (
+                    <span className="v">
+                      {st.value}
+                      {st.unit && <u>{st.unit}</u>}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Un sort est une suite ordonnée : mieux on lance, mieux ça marche. */}
+          {itemInfo.ladder && itemInfo.ladder.length > 0 && (
+            <div className="mdl-ladder">
+              {itemInfo.ladder.map((r, k) => (
+                <div key={k} className="mdl-rung">
+                  <span className="pin">
+                    <i>
+                      {r.threshold}
+                      <sup>+</sup>
+                    </i>
+                  </span>
+                  <p>{r.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {itemInfo.text && <p className="mdl-verb">{itemInfo.text}</p>}
           {itemInfo.lines.length > 0 && (
             <div>
               {itemInfo.lines.map((l, k) => (

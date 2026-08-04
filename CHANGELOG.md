@@ -7,6 +7,23 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06
+
+### Les fiches d'arme et de sort deviennent lisibles
+
+- **Le prix n'occupe plus le devant de la scène.** Il rejoint le nom, en or, comme la pièce imprimée
+  au bas des cartes - et quand il n'y a rien à payer, **plus rien ne s'affiche** au lieu d'un « - ».
+  Sur les 55 sorts du jeu, 51 n'ont aucun coût en Kouronnes : la pastille était vide neuf fois sur dix.
+- **Les valeurs chiffrées reprennent leur nom.** `Tir · 2 m · Port.3/7 max 7` devient un tableau où
+  chaque case est étiquetée, et les cases qui n'ont pas lieu d'être disparaissent : une Fronde n'a ni
+  recharge ni munitions, sa fiche n'en parle plus.
+- **L'armure retrouve le cartouche des cartes** : le seuil dans la cuirasse, encadré par la
+  protection en cas d'échec et en cas de réussite. `Arm.-2/6/-3` ne disait pas quel nombre était lequel.
+- **Les sorts affichent enfin leur cadence et leur durée**, que la fiche passait sous silence alors
+  que toutes les cartes les impriment.
+- **Les seuils d'un sort forment une échelle** : le jet à obtenir dans un jeton, l'effet en face.
+  Mieux on lance, mieux ça marche - la fiche le montre maintenant d'un coup d'œil.
+
 ## 2026-08-05 (2)
 
 ### L'Agent sombre choisit son peuple

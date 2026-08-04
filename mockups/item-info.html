@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Khârn-Âges - Fiche d'objet et de sort (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="forge.css" />
+<style>
+body{--faction:#736784;--faction-2:#a99bbd;--faction-deep:#241f2d;
+  padding:34px 26px 70px;background:
+    radial-gradient(70% 50% at 50% 0%, color-mix(in srgb,var(--faction) 10%,transparent), transparent 60%),
+    var(--forge)}
+.wrap{max-width:1180px;margin:0 auto}
+.page-head{margin-bottom:26px}
+.page-head h1{margin:0 0 6px;font-family:Cinzel;font-weight:600;font-size:25px;letter-spacing:.01em}
+.page-head p{margin:0;max-width:64ch;font-size:13.5px;line-height:1.6;color:var(--bone-dim)}
+
+/* Chaque famille sur sa propre rangée : les paires avant/après ne doivent jamais être séparées. */
+.family{margin-top:30px}
+.family > h2{margin:0 0 14px;font-family:Cinzel;font-weight:600;font-size:13px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ember);padding-bottom:8px;border-bottom:1px solid var(--hair)}
+.grid{display:grid;gap:24px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start}
+.slot{display:flex;flex-direction:column;gap:9px}
+.slot > h3{margin:0;font-family:Inter;font-weight:600;font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--bone-faint)}
+.slot > h3 em{font-style:normal;color:var(--scorch)}
+.slot > h3 b{font-weight:700;color:var(--moss)}
+
+/* ── La modale (coquille commune avant/après) ───────────────────────────── */
+.dlg{border-radius:14px;overflow:hidden;background:linear-gradient(180deg,var(--forge-2),var(--forge));
+  box-shadow:0 30px 70px -30px #000, inset 0 0 0 1px var(--hair-strong)}
+.dlg-head{display:flex;align-items:flex-start;gap:16px;padding:14px 18px 13px;border-bottom:1px solid var(--hair)}
+/* Titre et nature empilés : le prix ne peut plus s'aligner sur une deuxième ligne de titre et
+   produire un zigzag. La nature descend sous le nom, là où une carte l'imprime. */
+.dlg-title{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dlg-title h4{margin:0;font-family:Cinzel;font-weight:600;font-size:17.5px;line-height:1.22}
+.dlg-body{padding:16px 18px 18px}
+
+/* ── AVANT : tel quel aujourd'hui ───────────────────────────────────────── */
+.old-price{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-weight:700;
+  font-size:13px;color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gold) 40%,transparent);margin-bottom:12px}
+.old-line{margin:0;font-size:13.5px;line-height:1.5;color:var(--bone);white-space:pre-line}
+.old-line + .old-line{margin-top:5px}
+
+/* ── APRÈS ──────────────────────────────────────────────────────────────── */
+/* En-tête = ce que ça coûte. Le prix en Ko et le prix en pages sont deux monnaies :
+   ils voyagent ensemble, en or Cinzel comme la pièce imprimée au bas des cartes.
+   Rien à payer = rien d'affiché. */
+.kind{font-family:Inter;font-weight:600;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--bone-faint)}
+.price{margin-left:auto;flex:none;display:flex;align-items:baseline;gap:8px;white-space:nowrap;padding-top:3px}
+.price b + b::before{content:"·";margin-right:8px;color:var(--bone-faint);font-family:Inter;font-weight:400}
+.price b{font-family:Cinzel;font-weight:700;font-size:16px;color:var(--gold);font-variant-numeric:tabular-nums}
+.price b u{text-decoration:none;font-family:Inter;font-weight:600;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--gold-dim);margin-left:4px}
+.price .free{font-family:Inter;font-weight:600;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--bone-faint)}
+
+/* Cartouche : les valeurs chiffrées, étiquetées. Une arme n'est pas une phrase. */
+.stats{display:flex;flex-wrap:wrap;gap:1px;margin:0 0 16px;border-radius:9px;overflow:hidden;
+  background:var(--hair-strong);box-shadow:inset 0 0 0 1px var(--hair-strong)}
+.stat{flex:1 1 auto;min-width:84px;padding:8px 12px 9px;background:var(--forge-2)}
+.stat .k{display:block;font-family:Inter;font-weight:600;font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--bone-faint);margin-bottom:3px}
+/* Suffixe d'étiquette : nomme les valeurs d'un triplet (portée courte / longue / max) sans coûter
+   une ligne de plus, et sans laisser trois nombres nus au lecteur. */
+.stat .k em{font-style:normal;text-transform:none;letter-spacing:.02em;
+  color:color-mix(in srgb,var(--bone-faint) 72%,transparent)}
+.stat .v{font-family:Cinzel;font-weight:600;font-size:15px;color:var(--bone);font-variant-numeric:tabular-nums}
+.stat .v u{text-decoration:none;color:var(--bone-faint);font-size:12px;margin-left:4px}
+.stat.full{flex:1 1 100%}
+/* Une seule valeur n'a pas à traverser la modale ; à plusieurs, elles se partagent la largeur. */
+.stats:has(.stat:only-child){width:fit-content;max-width:100%}
+/* Une durée, une cible, sont parfois des phrases entières : même encre que les chiffres, elles ont
+   la même importance - seule la fonte change, parce qu'on les lit et non qu'on les compare. */
+.stat .v.txt{font-family:Inter;font-weight:500;font-size:13.5px;line-height:1.45;color:var(--bone)}
+
+/* Le texte de la carte : ses mots, sans décor. Aligné sur le texte du cartouche (et non sur son
+   cadre), sinon les deux colonnes de lecture semblent décalées de la valeur du padding. */
+.verb{margin:0;font-size:13.5px;line-height:1.58;color:var(--bone);white-space:pre-line}
+.stats + .verb{padding-left:12px}
+
+/* ── Armure : le cartouche des cartes ───────────────────────────────────── */
+/* Sur la carte, le seuil vit à l'intérieur d'une cuirasse, encadré par l'échec et la réussite.
+   Le dispositif dit lui-même ce que chaque nombre signifie : il tient donc dans une cellule du
+   cartouche, sans légende qui répéterait les trois valeurs. */
+.stat.armor{display:flex;align-items:center;justify-content:center;padding:6px 12px}
+.ribbon{display:flex;align-items:center;gap:9px}
+.ribbon .side{font-family:Cinzel;font-weight:600;font-size:16px;color:var(--bone-dim);
+  font-variant-numeric:tabular-nums;min-width:18px;text-align:center}
+.plate{position:relative;width:38px;height:42px;flex:none;display:grid;place-items:center}
+.plate svg{position:absolute;inset:0;width:100%;height:100%}
+.plate i{position:relative;font-style:normal;font-family:Cinzel;font-weight:700;font-size:18px;
+  color:var(--bone);font-variant-numeric:tabular-nums;padding-bottom:4px}
+
+/* ── Sorts : l'échelle de difficulté ────────────────────────────────────── */
+/* Un sort est une suite ordonnée : mieux on lance, mieux ça marche. L'ordre porte donc une
+   information, et c'est le seul endroit de la fiche où la maquette hausse le ton. */
+.ladder{display:flex;flex-direction:column;margin-top:4px}
+.rung{display:flex;gap:13px;padding:11px 0;border-top:1px solid var(--hair)}
+.rung:first-child{border-top:0;padding-top:0}
+.pin{flex:none;width:40px;height:40px;display:grid;place-items:center;
+  clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);
+  background:linear-gradient(180deg, color-mix(in srgb,var(--gold) 24%,var(--forge-2)), var(--forge-2))}
+.pin i{font-style:normal;font-family:Cinzel;font-weight:700;font-size:15px;color:var(--gold);
+  font-variant-numeric:tabular-nums;line-height:1}
+.pin i sup{font-size:9px;font-weight:600;color:var(--gold-dim);vertical-align:top;margin-left:1px}
+.rung:first-child .pin{background:linear-gradient(180deg, color-mix(in srgb,var(--gold) 38%,var(--forge-2)), var(--forge-2))}
+.rung p{margin:0;align-self:center;font-size:13.5px;line-height:1.5;color:var(--bone)}
+
+.note{margin:14px 0 0;padding-top:11px;border-top:1px solid var(--hair);font-size:12.5px;line-height:1.45;
+  color:var(--bone-dim)}
+.note .lbl{display:block;font-family:Inter;font-weight:700;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ember);margin-bottom:5px}
+.note b{color:var(--bone);font-weight:600}
+
+.legend{margin-top:38px;padding-top:20px;border-top:1px solid var(--hair)}
+.legend h2{margin:0 0 12px;font-family:Cinzel;font-weight:600;font-size:15px}
+.legend ol{margin:0;padding-left:20px;max-width:82ch}
+.legend li{font-size:13.5px;line-height:1.65;color:var(--bone-dim);margin-bottom:9px}
+.legend li b{color:var(--bone);font-weight:600}
+.legend li code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--gold-dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-head">
+    <h1>Fiche d'objet et de sort</h1>
+    <p>
+      Ce qui s'ouvre quand on clique une arme, une armure ou un sort dans le constructeur.
+      Contenu réel du catalogue, chaque famille avec son état actuel en premier.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════ SORTS ═══════════════════════════ -->
+  <section class="family">
+    <h2>Sorts</h2>
+    <div class="grid">
+
+      <div class="slot">
+        <h3><em>Aujourd'hui</em></h3>
+        <div class="dlg">
+          <div class="dlg-head"><h4>Châtiment</h4></div>
+          <div class="dlg-body">
+            <span class="old-price">-</span>
+            <p class="old-line">1 page(s) · Le Sang et l'Acier</p>
+            <p class="old-line">Cible : 1 ennemi dans l'aura</p>
+            <p class="old-line">10+ : I/2 dgts</p>
+            <p class="old-line">16+ : I dgts</p>
+            <p class="old-line">24+ : I+T dgts</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · trois seuils, aucun coût en Ko</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Châtiment</h4>
+              <span class="kind">Le Sang et l'Acier</span>
+            </span>
+            <span class="price"><b>1<u>page</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Cible</span><span class="v txt">1 ennemi dans l'aura</span></div>
+              <div class="stat"><span class="k">Cadence</span><span class="v txt">2 / tour</span></div>
+              <div class="stat"><span class="k">Durée</span><span class="v txt">Immédiat</span></div>
+            </div>
+            <div class="ladder">
+              <div class="rung"><span class="pin"><i>10<sup>+</sup></i></span><p>I/2 dégâts</p></div>
+              <div class="rung"><span class="pin"><i>16<sup>+</sup></i></span><p>I dégâts</p></div>
+              <div class="rung"><span class="pin"><i>24<sup>+</sup></i></span><p>I+T dégâts</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · payant, réservé, durée longue</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Séduction du Fiel</h4>
+              <span class="kind">Ostéomancie</span>
+            </span>
+            <span class="price"><b>2<u>pages</u></b><b>10<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Cible</span><span class="v txt">Le lanceur</span></div>
+              <div class="stat"><span class="k">Cadence</span><span class="v txt">1 / tour</span></div>
+              <div class="stat full"><span class="k">Durée</span><span class="v txt">Jusqu'à la fin de la prochaine activation du lanceur.</span></div>
+            </div>
+            <div class="ladder">
+              <div class="rung">
+                <span class="pin"><i>17<sup>+</sup></i></span>
+                <p>Aucun effet ne peut être appliqué sur le lanceur lors des attaques réussies contre elle.</p>
+              </div>
+              <div class="rung">
+                <span class="pin"><i>21<sup>+</sup></i></span>
+                <p>Aucun effet ne peut être appliqué sur le lanceur lors des attaques, des défenses et des tirs réussis contre elle.</p>
+              </div>
+            </div>
+            <p class="note"><span class="lbl">Réservé à</span>Filles de Nyx</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ ARMES ═══════════════════════════ -->
+  <section class="family">
+    <h2>Armes</h2>
+    <div class="grid">
+
+      <div class="slot">
+        <h3><em>Aujourd'hui</em></h3>
+        <div class="dlg">
+          <div class="dlg-head"><h4>Arbalète des Steppes</h4></div>
+          <div class="dlg-body">
+            <span class="old-price">22 Ko</span>
+            <p class="old-line">Tir · 2 m · Port.3/7 max 7</p>
+            <p class="old-line">6 dégâts. Recharge 1 PA. Lors d'un tir qui « utilise » l'effet de A, peut choisir celui de C à la place.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · tir avec recharge et munitions</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Arbalète des Steppes</h4>
+              <span class="kind">Tir</span>
+            </span>
+            <span class="price"><b>22<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Mains</span><span class="v">2</span></div>
+              <div class="stat"><span class="k">Portée</span><span class="v">3 / 7 / 7</span></div>
+              <div class="stat"><span class="k">Recharge</span><span class="v">1<u>PA</u></span></div>
+              <div class="stat"><span class="k">Munitions</span><span class="v txt">Carreaux</span></div>
+            </div>
+            <p class="verb">6 dégâts. Recharge 1 PA. Lors d'un tir qui « utilise » l'effet de A, peut choisir celui de C à la place.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · tir sans munitions ni recharge</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Fronde</h4>
+              <span class="kind">Tir</span>
+            </span>
+            <span class="price"><b>12<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Mains</span><span class="v">1</span></div>
+              <div class="stat"><span class="k">Portée</span><span class="v">0 / 6 / 6</span></div>
+            </div>
+            <p class="verb">3 dégâts. Sonne en cas de RC.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · arc, munitions fournies</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Arc de guerre</h4>
+              <span class="kind">Tir</span>
+            </span>
+            <span class="price"><b>25<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Mains</span><span class="v">2</span></div>
+              <div class="stat"><span class="k">Portée</span><span class="v">4 / 8</span></div>
+              <div class="stat"><span class="k">Munitions</span><span class="v txt">12 flèches</span></div>
+            </div>
+            <p class="verb">5 dégâts. Compte comme une épée bâtarde (+3 ATT / +3 DEF) au corps à corps.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · corps à corps</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Claymore</h4>
+              <span class="kind">Corps à corps</span>
+            </span>
+            <span class="price"><b>35<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Mains</span><span class="v">2</span></div>
+              <div class="stat"><span class="k">Allonge</span><span class="v">1,5<u>″</u></span></div>
+            </div>
+            <p class="verb">+4 dgts.
++2 en attaque.
+Attaque à 3 PA uniquement.
+-2 en V si C ≤4.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · avec provenance d'une remise</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Morgenstern</h4>
+              <span class="kind">Corps à corps</span>
+            </span>
+            <span class="price"><b>22<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Mains</span><span class="v">1</span></div>
+              <div class="stat"><span class="k">Perce-armure</span><span class="v">1</span></div>
+            </div>
+            <p class="verb">RC = sonne.
+L'armure adverse protège 1 dgt de moins.
+Pas d'EC en attaque.</p>
+            <p class="note"><span class="lbl">Modifiée par</span><b>Ogodeï</b> - Paye 10 de moins les armes à deux mains.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ ARMURES & OBJETS ═══════════════════════ -->
+  <section class="family">
+    <h2>Armures et objets</h2>
+    <div class="grid">
+
+      <div class="slot">
+        <h3><em>Aujourd'hui</em></h3>
+        <div class="dlg">
+          <div class="dlg-head"><h4>Armure de plate</h4></div>
+          <div class="dlg-body">
+            <span class="old-price">25 Ko</span>
+            <p class="old-line">Arm.-2/6/-3 · DV 10</p>
+            <p class="old-line">1 seule armure par Safar en plus d'un gambison.
+-1 en V si C≤4.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · le cartouche des cartes</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Armure de plate</h4>
+              <span class="kind">Armure</span>
+            </span>
+            <span class="price"><b>25<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat armor">
+                <span class="k" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Protection</span>
+                <span class="ribbon">
+                <b class="side">-2</b>
+                <span class="plate">
+                  <svg viewBox="0 0 42 46" aria-hidden="true">
+                    <path d="M21 1 C15 1 10 2.6 6 5.4 L4 7 L6.6 13.4 C6.2 16 6 18.6 6 21.2 C6 30.6 11.6 39.4 21 45 C30.4 39.4 36 30.6 36 21.2 C36 18.6 35.8 16 35.4 13.4 L38 7 L36 5.4 C32 2.6 27 1 21 1 Z"
+                      fill="color-mix(in srgb, var(--bone) 13%, transparent)"
+                      stroke="color-mix(in srgb, var(--bone) 34%, transparent)" stroke-width="1.4" />
+                  </svg>
+                  <i>6</i>
+                </span>
+                <b class="side">-3</b>
+                </span>
+              </div>
+              <div class="stat"><span class="k">Durée de vie</span><span class="v">10</span></div>
+            </div>
+            <p class="verb">1 seule armure par Safar en plus d'un gambison.
+-1 en V si C≤4.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · bouclier, une seule valeur</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Broquel</h4>
+              <span class="kind">Bouclier</span>
+            </span>
+            <span class="price"><b>10<u>Ko</u></b></span>
+          </div>
+          <div class="dlg-body">
+            <div class="stats">
+              <div class="stat"><span class="k">Durée de vie</span><span class="v">7</span></div>
+            </div>
+            <p class="verb">+2 en défense.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot">
+        <h3><b>Proposition</b> · objet sans coût ni chiffre</h3>
+        <div class="dlg">
+          <div class="dlg-head">
+            <span class="dlg-title">
+              <h4>Bol de Millet</h4>
+              <span class="kind">Objet</span>
+            </span>
+            <span class="price"><span class="free">Compris</span></span>
+          </div>
+          <div class="dlg-body">
+            <p class="verb">Restaure 1D5 PV à un herbivore à son contact (2 utilisations).</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="legend">
+    <h2>Ce qui change, et pourquoi</h2>
+    <ol>
+      <li>
+        <b>L'en-tête dit ce que ça coûte, le corps dit ce que ça fait.</b> La nature de l'objet
+        (« Tir », « Armure », « Ostéomancie ») se range <b>sous</b> le nom, là où une carte l'imprime :
+        un titre qui passe à la ligne ne peut plus désaligner le reste. Le prix rejoint le titre,
+        en or Cinzel comme la pièce imprimée au bas des cartes - et les <b>pages de grimoire</b> l'y
+        rejoignent, parce que c'est l'autre monnaie du sort. Elles étaient perdues au milieu du texte.
+        Quand il n'y a rien à payer, <b>on n'affiche rien</b> : sur 55 sorts, <b>51 n'ont aucun coût
+        en Ko</b>, la pastille montrait donc « - » neuf fois sur dix.
+      </li>
+      <li>
+        <b>Les chiffres deviennent un cartouche étiqueté.</b> <code>Tir · 2 m · Port.3/7 max 7</code>
+        était un tableau écrasé en phrase. Chaque valeur reprend son étiquette, et celles qui n'ont
+        pas lieu d'être ne s'affichent pas : la Fronde n'a ni recharge ni munitions, sa fiche n'en
+        parle pas ; le Broquel n'a même qu'une valeur. La portée reste groupée en un
+        seul triplet, courte / longue / max : la découper coûtait une deuxième ligne.
+      </li>
+      <li>
+        <b>L'armure reprend le dispositif des cartes</b> : le seuil dans la cuirasse, encadré par
+        l'échec et la réussite. <code>Arm.-2/6/-3</code> ne disait pas quel nombre était lequel ; le
+        dispositif le dit tout seul, et tient donc dans une cellule du cartouche, la durée de vie
+        occupant la seconde. Celle-ci est <b>un nombre</b> - les cases à cocher des cartes servent à
+        jouer, pas à consulter un catalogue.
+      </li>
+      <li>
+        <b>Les sorts affichent enfin cadence et durée.</b> Les <b>55 sorts</b> du catalogue les
+        renseignent, la modale n'en montrait aucune, alors que ce sont deux des trois lignes de
+        l'en-tête d'une carte de sort. Cible et cadence sont courtes (24 et 21 signes au pire) : elles
+        tiennent sur une ligne avec la durée. Mais <b>19 durées sur 55 dépassent 22 signes</b> - la
+        case passe alors sur toute la largeur, en corps de texte et <b>de la même encre</b> que les
+        autres valeurs. Deux lignes au maximum, dans tous les cas.
+      </li>
+      <li>
+        <b>L'échelle de difficulté est le cœur de la fiche du sort.</b> Un sort est une suite
+        ordonnée - mieux on lance, mieux ça marche -, l'ordre porte donc une information. Les seuils
+        deviennent des échelons, le pion octogonal reprenant la forme de la pièce du jeu. C'est le
+        seul endroit où la fiche hausse le ton : elle n'a besoin d'aucun intertitre pour être comprise.
+      </li>
+      <li>
+        <b>« Réservé à » et « Modifiée par » partagent un même bas de fiche.</b> Deux informations qui
+        ne viennent pas de l'objet mais de son contexte : elles se ressemblent, elles se rangent
+        ensemble, sous un filet.
+      </li>
+    </ol>
+  </div>
+
+</div>
+<script src="mockups.js"></script>
+</body>
+</html>

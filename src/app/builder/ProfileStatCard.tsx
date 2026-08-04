@@ -434,7 +434,7 @@ export function ProfileStatCard({
           {baseEq.length > 0 ? (
             <div className="fe-eqrow">
               {baseEq.map((e) => (
-                <button key={e.id} className="fe-eq" onClick={() => onInfo(equipInfo(e))} title="Voir le détail">
+                <button key={e.id} className="fe-eq" onClick={() => onInfo(equipInfo(e, cat))} title="Voir le détail">
                   <span className="nm">
                     {e.name}
                     {baseEquipmentCount(p, e.id) > 1 && ` ×${baseEquipmentCount(p, e.id)}`}

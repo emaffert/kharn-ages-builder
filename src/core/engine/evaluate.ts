@@ -27,6 +27,7 @@ import {
   spellGrants,
   wornEquipmentIds,
 } from "./magic";
+import { engineIdOf } from "../model/engineIds";
 import { totalMunitionCost } from "./munitions";
 import { effectiveOrigin, needsOriginChoice, originFactionId } from "./origin";
 import {
@@ -1684,7 +1685,7 @@ export function mountLabel(cat: Catalog, mountId: string): string {
 }
 
 /** Compétence « Berseker » : interdit à son porteur d'acquérir une monture (règles de bataille p.29). */
-const BERSEKER_SKILL_ID = "berserk";
+const BERSEKER_SKILL_ID = engineIdOf("berserk");
 
 /**
  * Un profil peut-il prendre CE niveau de monture ? Faction autorisée par le type, profil non exclu,

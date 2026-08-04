@@ -1,4 +1,5 @@
 import type { Catalog } from "./catalog";
+import { engineId } from "./engineIds";
 
 /**
  * Graphe des références entre entités du catalogue.
@@ -113,8 +114,23 @@ export const COLLECTION_OF: Record<RefKind, keyof Catalog> = {
  */
 export const FIXED_ID_KINDS: readonly RefKind[] = ["grimoire", "faction"];
 
-/** Peut-on renommer une entité de ce type ? */
-export const canRenameId = (kind: RefKind): boolean => !FIXED_ID_KINDS.includes(kind);
+/**
+ * Peut-on renommer cette entité ? Non si son **type** est une constante du code (factions,
+ * grimoires), non plus si c'est **cet identifiant-là** que le moteur lit en dur (cf. `ENGINE_IDS`) :
+ * la cascade réparerait toutes les références du catalogue, mais le code, lui, chercherait toujours
+ * l'ancien nom.
+ */
+export function canRenameId(kind: RefKind, id?: string): boolean {
+  if (FIXED_ID_KINDS.includes(kind)) return false;
+  return id == null || engineId(kind, id) == null;
+}
+
+/** Pourquoi cet identifiant est-il verrouillé ? (message destiné à l'éditeur) */
+export function whyIdIsFixed(kind: RefKind, id: string): string | undefined {
+  if (FIXED_ID_KINDS.includes(kind)) return "Cet identifiant est une constante du moteur : il ne peut pas être renommé.";
+  const locked = engineId(kind, id);
+  return locked && `Le moteur lit cet identifiant en dur (${locked.why}) : le renommer le rendrait inopérant.`;
+}
 
 /** Une référence trouvée : qui cite l'identifiant, et à quel titre. */
 export interface Reference {

@@ -1,4 +1,5 @@
 import type { Catalog, Equipment, OpenRecruitment, Profile } from "../model";
+import { engineIdOf } from "../model/engineIds";
 import { isSlaveIn } from "./slavery";
 
 /**
@@ -18,7 +19,7 @@ import { isSlaveIn } from "./slavery";
  * écriture, celle de la carte : les octrois (sceau, carte « Frères d'Armes ») passent eux aussi par
  * `grant-skill`. Aucun trait homonyme n'est lu.
  */
-export const APATRIDE = "apatride";
+export const APATRIDE = engineIdOf("apatride");
 /** Trait des « Frères d'Armes » : apatrides dès qu'ils sont 2 dans un même Fer de Lance. */
 export const FRERE_D_ARMES = "frere-d-armes";
 

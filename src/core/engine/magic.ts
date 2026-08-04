@@ -6,6 +6,7 @@
  */
 import type { Catalog, Effect, Equipment, Profile, SpecialCard, Spell } from "../model";
 import type { ProfileInstance } from "../model";
+import { engineIdOf } from "../model/engineIds";
 
 /** Équipement effectivement porté : équipement de base non retiré + équipement acheté. */
 export function wornEquipmentIds(profile: Profile, inst: ProfileInstance): string[] {
@@ -29,7 +30,7 @@ function cardApplies(card: SpecialCard, profile: Profile, traits: ReadonlySet<st
  * suffit à elle-même et s'octroie comme n'importe quelle compétence (ex. « Grimoire de Josève » →
  * `grant-skill` sur son porteur). Pas de trait jumeau à tenir à jour, contrairement à `apatride`.
  */
-export const ARCHIMAGE_SKILL_ID = "archimage";
+export const ARCHIMAGE_SKILL_ID = engineIdOf("archimage");
 
 /**
  * Voies de magie lançables : la figurine possède la compétence qui maîtrise cette voie
@@ -318,7 +319,7 @@ export function forbiddenGrimoires(profile: Profile): Set<string> {
   return out;
 }
 
-const AFFINITY_SKILL_ID = "affinite";
+const AFFINITY_SKILL_ID = engineIdOf("affinite");
 
 /** Normalise un libellé pour comparer une valeur d'« Affinité X » à une voie (casse/accents/ponctuation). */
 function normLabel(s: string): string {

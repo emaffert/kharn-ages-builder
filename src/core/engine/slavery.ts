@@ -16,9 +16,10 @@
  * précède ne la concerne, ni le porteur, ni le plafond, ni la restriction d'équipement.
  */
 import type { Catalog, Constraint, Equipment, Profile } from "../model";
+import { engineIdOf } from "../model/engineIds";
 
 /** Compétence du porteur : « SDG X ». Sa valeur plafonne le nombre d'esclaves possédés. */
-export const SDG_SKILL_ID = "seigneur-de-guerre";
+export const SDG_SKILL_ID = engineIdOf("seigneur-de-guerre");
 
 /** Paramètres de la contrainte `slave`, tels que saisis dans l'admin. */
 export type SlaveParams = {

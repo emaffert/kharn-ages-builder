@@ -7,6 +7,8 @@ export * from "./common";
 export * from "./constraints";
 export * from "./effects";
 export * from "./references";
+export * from "./engineIds";
+export * from "./slugs";
 export * from "./catalog";
 export * from "./list";
 

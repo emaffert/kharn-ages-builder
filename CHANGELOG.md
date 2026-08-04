@@ -7,6 +7,22 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (4)
+
+### Un garde rapproché ne compte plus double
+
+- **Une figurine ne peut être désignée que par un seul garde.** Broutcha ne peut pas offrir à la fois
+  son Larbin gratuit de Fille de Nyx et la remise de 35 Kouronnes de Djouked : son emplacement de
+  garde rapprochée va à l'un ou à l'autre. Le constructeur l'empêchait déjà à la saisie, mais une
+  liste plus ancienne pouvait encore porter les deux sans que rien ne le signale. Elle est maintenant
+  refusée, en pointant la désignation en trop.
+- **Rien ne change quand les emplacements existent vraiment** : avec deux Filles de Nyx, un Larbin
+  gratuit et Djouked cohabitent toujours.
+- **Une désignation ne franchit plus les frontières.** Un garde ne peut désigner qu'une figurine de
+  son propre Fer de Lance, et ne peut pas se désigner lui-même. Ces liaisons impossibles à saisir
+  restaient acceptées si une liste en portait ; elles sont maintenant signalées plutôt que de faire
+  disparaître une remise sans explication.
+
 ## 2026-08-06 (3)
 
 ### Trois règles de cartes que le constructeur laissait passer

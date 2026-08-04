@@ -189,6 +189,77 @@ describe("calcul de coût", () => {
     expect(djoukedCost(evalFang([inst("fangs-djouked-2", { bodyguardOfInstanceId: "x" })]))).toBe(90);
   });
 
+  it("Broutcha n'offre qu'un emplacement de garde : Djouked ET un Larbin gratuit sont refusés", () => {
+    const broutcha = inst("fangs-broutcha-2");
+    const djouked = inst("fangs-djouked-2", { bodyguardOfInstanceId: broutcha.instanceId });
+    const larbin = inst("fangs-larbin-1", { bodyguardOfInstanceId: broutcha.instanceId });
+    const res = evalFang([broutcha, djouked, larbin]);
+    const issue = res.issues.find((i) => i.ruleId === "guard-slot-taken");
+    expect(issue?.severity).toBe("error");
+    // L'erreur pointe la désignation en trop (la seconde), pas celle qui tient.
+    expect(issue?.instanceId).toBe(larbin.instanceId);
+  });
+
+  it("Deux Filles de Nyx offrent deux emplacements : un Larbin gratuit et Djouked cohabitent", () => {
+    const broutcha = inst("fangs-broutcha-2");
+    const apathee = inst("fangs-apathee-3");
+    const djouked = inst("fangs-djouked-2", { bodyguardOfInstanceId: broutcha.instanceId });
+    const larbin = inst("fangs-larbin-1", { bodyguardOfInstanceId: apathee.instanceId });
+    const res = evalFang([broutcha, apathee, djouked, larbin]);
+    expect(res.issues.some((i) => i.ruleId === "guard-slot-taken")).toBe(false);
+    expect(res.costByInstance[djouked.instanceId]).toBe(55);
+    expect(res.costByInstance[larbin.instanceId]).toBe(0);
+  });
+
+  it("Une désignation hors du Fer de Lance est refusée, et n'accorde pas la remise", () => {
+    const broutcha = inst("fangs-broutcha-2");
+    const djouked = inst("fangs-djouked-2", { bodyguardOfInstanceId: broutcha.instanceId });
+    // Broutcha dans un second Fer de Lance : Djouked ne peut pas la désigner à distance.
+    const res = evaluateList(catalog, {
+      schemaVersion: "1",
+      catalogVersion: catalog.version,
+      id: "test",
+      name: "Test",
+      format: "escarmouche",
+      createdAt: "2026-06-30T00:00:00Z",
+      updatedAt: "2026-06-30T00:00:00Z",
+      fersDeLance: [
+        { id: "fdl1", factionId: "fangs", leaderInstanceId: djouked.instanceId, members: [djouked] },
+        { id: "fdl2", factionId: "fangs", leaderInstanceId: broutcha.instanceId, members: [broutcha] },
+      ],
+      snapshot: { totalCost: 0, entries: [] },
+    });
+    const issue = res.issues.find((i) => i.ruleId === "guard-slot-taken");
+    expect(issue?.instanceId).toBe(djouked.instanceId);
+    expect(issue?.message).toMatch(/autre Fer de Lance/);
+    expect(res.costByInstance[djouked.instanceId]).toBe(90); // plein tarif, pas de −35
+  });
+
+  it("Une désignation vers une figurine absente est refusée", () => {
+    const djouked = inst("fangs-djouked-2", { bodyguardOfInstanceId: "disparue" });
+    const res = evalFang([djouked, inst("fangs-broutcha-2")]);
+    const issue = res.issues.find((i) => i.ruleId === "guard-slot-taken");
+    expect(issue?.message).toMatch(/ne fait plus partie de la liste/);
+  });
+
+  it("Une figurine ne peut pas se désigner elle-même", () => {
+    const djouked = inst("fangs-djouked-2");
+    djouked.bodyguardOfInstanceId = djouked.instanceId;
+    const res = evalFang([djouked, inst("fangs-broutcha-2")]);
+    const issue = res.issues.find((i) => i.ruleId === "guard-slot-taken");
+    expect(issue?.message).toMatch(/se désigner elle-même/);
+    expect(res.costByInstance[djouked.instanceId]).toBe(90);
+  });
+
+  it("Une seule désignation par protégé ne gêne pas deux gardes visant deux protégés distincts", () => {
+    const apathee = inst("fangs-apathee-3");
+    const broutcha = inst("fangs-broutcha-2");
+    const l1 = inst("fangs-larbin-1", { bodyguardOfInstanceId: apathee.instanceId });
+    const l2 = inst("fangs-larbin-1", { bodyguardOfInstanceId: broutcha.instanceId });
+    const res = evalFang([apathee, broutcha, l1, l2]);
+    expect(res.issues.some((i) => i.ruleId === "guard-slot-taken")).toBe(false);
+  });
+
   it("Exécuteur II paye 10 de moins son arbalète de poing", () => {
     const res = evalFang([inst("fangs-executeur-2", { addedEquipmentIds: ["arbalete-de-poing"] })]);
     // 80 (Exécuteur II) + 25 (arbalète) - 10 (arme de prédilection) = 95

@@ -338,9 +338,15 @@ function conditionHolds(
 function designationOk(effect: Effect, ri: ResolvedInstance, all: ResolvedInstance[]): boolean {
   const targetId = ri.instance.bodyguardOfInstanceId;
   if (targetId == null) return false;
+  // Le protégé doit exister, être dans le MÊME Fer de Lance, et n'être pas le garde lui-même : une
+  // désignation ne traverse pas les Fers de Lance et ne se replie pas sur soi. Cherché ici plutôt
+  // que laissé à la seule validation, pour que la remise ne tombe jamais sur une liaison illégale.
+  const protectee = all.find(
+    (r) => r.instance.instanceId === targetId && r.ferDeLanceId === ri.ferDeLanceId,
+  );
+  if (protectee == null || protectee.instance.instanceId === ri.instance.instanceId) return false;
   if (!effect.designation) return true;
-  const protectee = all.find((r) => r.instance.instanceId === targetId);
-  return protectee != null && instanceMatchesIdentity(effect.designation.of, protectee);
+  return instanceMatchesIdentity(effect.designation.of, protectee);
 }
 
 function collectEffectOccurrences(
@@ -815,6 +821,7 @@ function validate(
     validateOpenRecruitmentCaps(cat, fdl, inFdl, issues);
     validateLeader(fdl, inFdl, issues);
     validateSlaves(cat, fdl, inFdl, issues);
+    validateGuardSlots(fdl, inFdl, resolved, issues);
   }
 
   validateChosenOrigin(cat, resolved, issues);
@@ -853,6 +860,76 @@ function validateLeader(fdl: FerDeLance, inFdl: ResolvedInstance[], issues: Issu
   );
   if (!isChar(leader.profile) && !topTwo.has(leader.instance.instanceId)) {
     push(`« ${leader.profile.name} » ne peut pas être meneur (ni personnage, ni parmi les deux plus chères).`);
+  }
+}
+
+/**
+ * Un protégé n'offre qu'**un seul** emplacement de désignation (« garde du corps », « garde
+ * rapprochée »).
+ *
+ * Deux effets indépendants peuvent convoiter le même : le Larbin gratuit qu'une Fille de Nyx offre
+ * (`cost-set`, désignation portée par la cible) et la remise de 35 Ko de Djouked (`cost-delta`,
+ * désignation portée par la source). Rien dans `designationOk` ne les fait se concurrencer : il
+ * vérifie que le protégé correspond au sélecteur, pas qu'il est encore libre. Broutcha payait donc
+ * les deux à la fois.
+ *
+ * Le constructeur retire déjà les protégés pris de la liste qu'il propose (`availableProtectees`),
+ * si bien que la règle tenait à l'écran et nulle part ailleurs. On la vérifie ici pour qu'une liste
+ * importée, restaurée d'une version antérieure ou retouchée à la main ne la contourne pas en silence.
+ *
+ * Trois liaisons sont refusées, les trois que le constructeur rend seulement *inatteignables* :
+ * se désigner soi-même, désigner hors de son Fer de Lance, et désigner un protégé déjà pris.
+ * `designationOk` écarte déjà les deux premières du calcul des coûts - la validation existe pour que
+ * le joueur voie l'erreur au lieu de perdre une remise sans comprendre pourquoi.
+ */
+function validateGuardSlots(
+  fdl: FerDeLance,
+  inFdl: ResolvedInstance[],
+  resolved: ResolvedInstance[],
+  issues: Issue[],
+): void {
+  const push = (guard: ResolvedInstance, message: string) =>
+    issues.push({
+      severity: "error",
+      ferDeLanceId: fdl.id,
+      instanceId: guard.instance.instanceId,
+      ruleId: "guard-slot-taken",
+      message,
+      sourceText: "Une figurine ne peut être désignée que par un seul garde, dans son Fer de Lance.",
+    });
+
+  const guardsByProtectee = new Map<string, ResolvedInstance[]>();
+  for (const ri of inFdl) {
+    const protecteeId = ri.instance.bodyguardOfInstanceId;
+    if (protecteeId == null) continue;
+    if (protecteeId === ri.instance.instanceId) {
+      push(ri, `« ${ri.profile.name} » ne peut pas se désigner elle-même comme protégée.`);
+      continue;
+    }
+    // Hors du Fer de Lance : la liaison ne vaut rien, et l'ignorer en silence laisserait le joueur
+    // croire à une remise acquise. On distingue « ailleurs » de « nulle part » pour qu'il sache quoi faire.
+    if (!inFdl.some((r) => r.instance.instanceId === protecteeId)) {
+      const elsewhere = resolved.find((r) => r.instance.instanceId === protecteeId);
+      push(
+        ri,
+        elsewhere
+          ? `« ${ri.profile.name} » désigne « ${elsewhere.profile.name} », qui appartient à un autre Fer de Lance.`
+          : `« ${ri.profile.name} » désigne une figurine qui ne fait plus partie de la liste.`,
+      );
+      continue;
+    }
+    guardsByProtectee.set(protecteeId, [...(guardsByProtectee.get(protecteeId) ?? []), ri]);
+  }
+  for (const [protecteeId, guards] of guardsByProtectee) {
+    if (guards.length < 2) continue;
+    const name = inFdl.find((ri) => ri.instance.instanceId === protecteeId)!.profile.name;
+    // La première désignation tient ; l'erreur pointe les suivantes, celles que le joueur doit défaire.
+    for (const extra of guards.slice(1)) {
+      push(
+        extra,
+        `« ${name} » est déjà désignée par « ${guards[0].profile.name} » : elle n'offre qu'un seul emplacement de garde.`,
+      );
+    }
   }
 }
 

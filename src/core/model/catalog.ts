@@ -16,10 +16,47 @@ import { EffectSchema } from "./effects";
  * Référence : docs/schema-donnees.md - couche 1.
  */
 
+/**
+ * Nature alimentaire d'un peuple : ouvre l'action « dévorer » (carnivore) et les Formations
+ * réservées à l'une ou l'autre. Le livret ne l'imprime pas sur les cartes (« tous les combattants
+ * khârns et fangs sont par nature carnivores, c'est un fait ») : elle se déduit donc du peuple.
+ */
+export const FactionNatureSchema = z.enum(["carnivore", "herbivore"]);
+export type FactionNature = z.infer<typeof FactionNatureSchema>;
+
+/**
+ * Recrutement ouvert : la faction accueille les **génériques** (limitation « X » - ni unique ni
+ * personnage) d'autres factions, sans « Allié des X » ni sceau. C'est la règle des Affranchis
+ * (règles de bataille p.46) : décrite une fois ici plutôt qu'en contrainte sur chaque profil
+ * accueilli, sans quoi tout nouveau générique importé serait muet sur son accès.
+ */
+export const OpenRecruitmentSchema = z.object({
+  /** Factions dont les génériques sont accueillis. */
+  fromFactionIds: z.array(z.string()),
+  /** Génériques refusés malgré l'ouverture, par trait (ex. `femelle-fang`, `ordre-du-sang-et-acier`). */
+  excludeTraits: z.array(z.string()).optional(),
+  /** Génériques refusés nommément (ex. Bourreau du Sacrifice : seul le Prêtre niveau I est toléré). */
+  excludeProfileIds: z.array(z.string()).optional(),
+  /**
+   * Plafonds par Fer de Lance sur un groupe de profils accueillis (ex. « il ne peut y avoir plus
+   * d'un shaman goûn par Fer de Lance »). `label` nomme le groupe dans le message d'erreur.
+   */
+  caps: z
+    .array(z.object({ label: z.string(), profileIds: z.array(z.string()), max: z.number() }))
+    .optional(),
+  /** Wording officiel dont la règle est tirée - fait foi. */
+  sourceText: z.string(),
+});
+export type OpenRecruitment = z.infer<typeof OpenRecruitmentSchema>;
+
 export const FactionSchema = z.object({
   id: z.string(),
   name: z.string(),
   logo: z.string(),
+  /** Nature du peuple, héritée par ses figurines et par celles qui en sont **originaires**. */
+  nature: FactionNatureSchema.optional(),
+  /** Cf. `OpenRecruitmentSchema`. Absent = faction fermée (le cas général). */
+  openRecruitment: OpenRecruitmentSchema.optional(),
   notes: z.string().optional(),
 });
 export type Faction = z.infer<typeof FactionSchema>;
@@ -84,6 +121,20 @@ export const ProfileSchema = z.object({
   level: LevelSchema.optional(),
   /** Absent => profil « sans logo ». */
   factionId: z.string().optional(),
+  /**
+   * **Peuple d'origine**, pour les factions « creuset » qui recrutent chez les autres (Guilde Noire,
+   * Affranchis) : la figurine a quitté son peuple mais en garde la **monture** et la **nature**
+   * carnivore/herbivore - pas ses objets ni ses sorts réservés (FAQ). Absent = originaire de sa
+   * propre faction. Remplace l'ancien trait `monture-<faction>`, qui ne savait pas dire l'origine
+   * d'un peuple sans monture (les Fangs).
+   */
+  origin: z.string().optional(),
+  /**
+   * **Diamètre du socle** en millimètres, tel qu'imprimé à droite de la limitation. Propriété de la
+   * figurine physique, pas de son profil de jeu : elle ne change rien au recrutement ni au coût.
+   * Absente sur beaucoup de cartes, qui ne l'impriment pas.
+   */
+  baseSize: z.union([z.literal(30), z.literal(40), z.literal(50), z.literal(60)]).optional(),
   cost: z.number(),
   limitation: LimitationSchema,
   stats: StatsSchema,
@@ -353,6 +404,19 @@ export const SpecialCardSchema = z.object({
     trait: z.string().optional(),
     /** Réservée à une (ou plusieurs) faction entière, ex. « Ordre de Mission Royale » → Khârns. */
     factionIds: z.array(z.string()).optional(),
+    /**
+     * Portée par la **bannière**, pas par la carte de profil : la carte vise toute figurine d'un Fer
+     * de Lance de ces factions, quelle que soit la sienne. C'est ce que demandent les bonus des
+     * Affranchis, dont « toutes les figurines qui combattent sous leur bannière bénéficient des
+     * effets comme une seule et même faction, que leurs cartes soient affranchies ou non » (p.47).
+     */
+    ferDeLanceFactionIds: z.array(z.string()).optional(),
+    /**
+     * Avec `ferDeLanceFactionIds` : ne vise que les **recrues d'un autre peuple**. Sert aux règles
+     * qui n'existent que pour elles (l'entraînement d'éclaireur affranchi, que les Affranchis
+     * d'origine possèdent déjà).
+     */
+    nonNativeOnly: z.boolean().optional(),
   }),
   /**
    * `true` : amélioration *choisie* par le joueur (achat optionnel, ex. Apprentie de Nyx, Crosse).
@@ -376,6 +440,12 @@ export const SpecialCardSchema = z.object({
    * La quantité choisie est stockée dans `ProfileInstance.specialCardCounts`.
    */
   perLevelStack: z.boolean().optional(),
+  /**
+   * `true` : le prix est **multiplié par le niveau** de la figurine (« il lui en coûtera 5 Ko × son
+   * niveau »). À ne pas confondre avec `perLevelStack`, qui laisse le joueur choisir la quantité :
+   * ici le prix suit le niveau, sans choix.
+   */
+  costPerLevel: z.boolean().optional(),
   /**
    * `true` : carte à portée **Ost** - sélectionnée au niveau de la liste (pas d'une figurine), ses effets
    * (portée `ost`) s'appliquent à toute la bande. `scope` sert alors de **disponibilité** (la carte n'est

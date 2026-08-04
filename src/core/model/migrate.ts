@@ -85,6 +85,36 @@ function migrateBaseEquipmentCounts(p: Bag): string[] {
   return repeated;
 }
 
+/**
+ * L'origine s'écrivait en trait `monture-<faction>`, un nom qui décrivait la conséquence (la monture
+ * accessible) plutôt que le fait (le peuple d'origine) - et qui restait donc muet pour un peuple sans
+ * monture. On le replie sur le champ `origin`, seule forme lue désormais.
+ */
+function migrateOrigin(p: Bag): void {
+  const traits = Array.isArray(p.traits) ? p.traits.filter((t) => typeof t === "string") : [];
+  const mount = (traits as string[]).find((t) => t.startsWith("monture-"));
+  if (!mount) return;
+  p.traits = (traits as string[]).filter((t) => t !== mount);
+  if (typeof p.origin !== "string") p.origin = mount.slice("monture-".length);
+}
+
+/**
+ * L'armure se flaguait valeur par valeur (`armor.seuil`, `armor.durability`…), alors qu'elle se lit
+ * d'un bloc sur la carte et qu'aucune de ses valeurs ne se vérifie seule. Les quatre chemins sont
+ * repliés sur `armor` - sans quoi les anciens resteraient dans `unverifiedFields` sans plus aucun
+ * bouton pour les effacer, donc un ⚠ perpétuel.
+ */
+const ARMOR_PATHS = ["armor.protectionEchec", "armor.seuil", "armor.protectionReussite", "armor.durability"];
+
+function migrateArmorFlag(p: Bag): void {
+  const flags = Array.isArray(p.unverifiedFields)
+    ? p.unverifiedFields.filter((f): f is string => typeof f === "string")
+    : [];
+  if (!flags.some((f) => ARMOR_PATHS.includes(f))) return;
+  const kept = flags.filter((f) => !ARMOR_PATHS.includes(f));
+  p.unverifiedFields = kept.includes("armor") ? kept : [...kept, "armor"];
+}
+
 /** Applique les rattrapages à une donnée brute de catalogue (non mutante pour l'appelant). */
 export function migrateCatalog(data: unknown): unknown {
   if (!isBag(data)) return data;
@@ -94,7 +124,11 @@ export function migrateCatalog(data: unknown): unknown {
   for (const e of bags(cat.equipment)) {
     if (typeof e.id === "string" && stacked.has(e.id)) e.stackable = true;
   }
-  for (const p of bags(cat.profiles)) migrateConstraintHolder(p, "recruitment");
+  for (const p of bags(cat.profiles)) {
+    migrateConstraintHolder(p, "recruitment");
+    migrateOrigin(p);
+    migrateArmorFlag(p);
+  }
   for (const c of bags(cat.specialCards)) migrateConstraintHolder(c, "constraints");
   for (const [collection, field] of NAMED_COLLECTIONS) {
     for (const entity of bags(cat[collection])) {

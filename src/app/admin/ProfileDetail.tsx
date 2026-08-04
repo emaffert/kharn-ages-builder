@@ -409,6 +409,47 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
                     ))}
                   </select>
                 </Field>
+                {/* Origine : ne concerne que les transfuges (Guilde Noire, Affranchis). Vide = la
+                    figurine est du peuple de sa faction, ce qui est le cas général. */}
+                <Field label="Peuple d’origine" className="w-44">
+                  <select
+                    value={profile.origin ?? ""}
+                    onChange={(e) => patch({ origin: e.target.value || undefined })}
+                    className={INPUT}
+                    title="Peuple quitté par la figurine : lui laisse la monture et la nature de ce peuple, pas ses objets ni ses sorts réservés."
+                  >
+                    <option value="">— sa faction —</option>
+                    {cat.factions
+                      .filter((f) => f.id !== profile.factionId)
+                      .map((f) => (
+                        <option key={f.id} value={f.id}>
+                          {f.name}
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+                {/* Socle : imprimé à droite de la limitation sur les cartes qui le donnent. Ne sert
+                    qu'à la figurine physique, aucune règle ne le lit. */}
+                <Field label="Socle" className="w-28">
+                  <select
+                    value={profile.baseSize ?? ""}
+                    onChange={(e) =>
+                      patch({
+                        baseSize: e.target.value
+                          ? (Number(e.target.value) as Profile["baseSize"])
+                          : undefined,
+                      })
+                    }
+                    className={INPUT}
+                    title="Diamètre du socle en mm, tel qu'imprimé sur la carte. Laisser vide si la carte ne le donne pas."
+                  >
+                    <option value="">—</option>
+                    <option value="30">30 mm</option>
+                    <option value="40">40 mm</option>
+                    <option value="50">50 mm</option>
+                    <option value="60">60 mm</option>
+                  </select>
+                </Field>
               </div>
               <Field label="Limitation">
                 <LimitationEditor
@@ -510,36 +551,45 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
             </div>
           </Section>
 
-          <Section title="Armure innée" icon="armor">
+          {/* Une armure se lit d'un bloc sur la carte (« -1 / 7 / -2 » + durabilité) : un seul
+              indicateur « à vérifier » pour les quatre valeurs, comme pour les caractéristiques. */}
+          <Section
+            title="Armure innée"
+            icon="armor"
+            meta={
+              profile.armor ? (
+                <span className="flex items-center gap-1.5">
+                  <FlagButton active={uv("armor")} onClick={() => flag("armor")} />
+                  <span className="text-[11px] adm-faint">à vérifier</span>
+                </span>
+              ) : undefined
+            }
+          >
             {profile.armor ? (
               <div className="flex flex-wrap items-center gap-2">
                 <EditableNumber
                   label="Prot. échec"
                   value={profile.armor.protectionEchec ?? null}
-                  unverified={uv("armor.protectionEchec")}
+                  unverified={uv("armor")}
                   onChange={(v) => setArmor({ protectionEchec: typeof v === "number" ? v : undefined })}
-                  onToggle={() => flag("armor.protectionEchec")}
                 />
                 <EditableNumber
                   label="Seuil"
                   value={profile.armor.seuil ?? null}
-                  unverified={uv("armor.seuil")}
+                  unverified={uv("armor")}
                   onChange={(v) => setArmor({ seuil: typeof v === "number" ? v : undefined })}
-                  onToggle={() => flag("armor.seuil")}
                 />
                 <EditableNumber
                   label="Prot. réussite"
                   value={profile.armor.protectionReussite ?? null}
-                  unverified={uv("armor.protectionReussite")}
+                  unverified={uv("armor")}
                   onChange={(v) => setArmor({ protectionReussite: typeof v === "number" ? v : undefined })}
-                  onToggle={() => flag("armor.protectionReussite")}
                 />
                 <EditableNumber
                   label="Durabilité"
                   value={profile.armor.durability ?? null}
-                  unverified={uv("armor.durability")}
+                  unverified={uv("armor")}
                   onChange={(v) => setArmor({ durability: typeof v === "number" ? v : undefined })}
-                  onToggle={() => flag("armor.durability")}
                 />
                 <RemoveButton onClick={() => patch({ armor: undefined })} />
               </div>

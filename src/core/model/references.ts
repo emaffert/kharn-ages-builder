@@ -27,7 +27,7 @@ const REF_KEYS: Record<RefKind, readonly string[]> = {
   profile: ["profileIds", "profileId", "subjectProfileId", "requiredProfileId", "excludedProfileIds"],
   model: ["modelId", "modelIds"],
   equipment: ["baseEquipmentIds", "fixedBaseEquipmentIds", "equipmentIds", "addedEquipmentIds"],
-  faction: ["factionId", "factionIds", "allowedFactions", "factionEligibility", "factions"],
+  faction: ["factionId", "factionIds", "allowedFactions", "factionEligibility", "factions", "origin", "fromFactionIds"],
   skill: ["skillId", "skillIds"],
   spell: ["spellId", "spellIds"],
   magicWay: ["magicWayId", "magicWayIds"],
@@ -59,6 +59,8 @@ const KEY_LABEL: Record<string, string> = {
   allowedFactions: "factions autorisées",
   factionEligibility: "factions éligibles",
   factions: "factions",
+  origin: "peuple d'origine",
+  fromFactionIds: "recrutement ouvert",
   skillId: "compétence",
   spellId: "sort",
   spellIds: "sorts",
@@ -125,6 +127,18 @@ type Bag = Record<string, unknown>;
 const isBag = (v: unknown): v is Bag => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /**
+ * La valeur de cette clé porte-t-elle vraiment des identifiants ?
+ *
+ * Deux clés de `REF_KEYS` sont homonymes d'une **collection** du catalogue : `factions` (réservation
+ * d'une option de monture) et `profiles` (nulle part, mais la symétrie coûte peu). À la racine, ces
+ * clés portent les entités elles-mêmes, pas des références - les traiter comme une liste
+ * d'identifiants reviendrait à ne jamais descendre dans la collection, et à laisser passer toute
+ * référence nichée dans une faction.
+ */
+const holdsIds = (v: unknown): v is string | string[] =>
+  typeof v === "string" || (Array.isArray(v) && v.every((x) => typeof x === "string"));
+
+/**
  * Parcourt les références de `kind` sous `node`. `fn` reçoit chaque identifiant rencontré et
  * retourne sa valeur de remplacement (identique pour une simple lecture).
  */
@@ -147,10 +161,9 @@ function mapRefs(node: unknown, kind: RefKind, fn: (id: string, where: string) =
       );
       continue;
     }
-    if (REF_KEYS[kind].includes(key)) {
+    if (REF_KEYS[kind].includes(key) && holdsIds(value)) {
       const where = KEY_LABEL[key] ?? key;
-      if (typeof value === "string") node[key] = fn(value, where);
-      else if (Array.isArray(value)) node[key] = value.map((v) => (typeof v === "string" ? fn(v, where) : v));
+      node[key] = typeof value === "string" ? fn(value, where) : value.map((v) => fn(v, where));
       continue;
     }
     mapRefs(value, kind, fn);
@@ -222,7 +235,9 @@ export function renameId(cat: Catalog, kind: RefKind, oldId: string, newId: stri
  * facultatif sur une voie de magie, mais constitutif d'une compétence de profil.
  */
 const CLEARABLE_BY_COLLECTION: Record<string, readonly string[]> = {
-  profiles: ["modelId", "factionId"],
+  // Un transfuge dont le peuple d'origine disparaît reste recrutable : il perd seulement l'accès à
+  // la monture et à la nature de ce peuple.
+  profiles: ["modelId", "factionId", "origin"],
   // Une arme de tir dont la sorte de munition disparaît reste une arme : elle cesse seulement
   // d'ouvrir l'achat de munitions.
   equipment: ["munitionKind"],
@@ -260,7 +275,7 @@ function prune(node: unknown, kind: RefKind, id: string): unknown | typeof DROP 
       out[key] = Object.fromEntries(Object.entries(value).filter(([f]) => f !== id));
       continue;
     }
-    if (REF_KEYS[kind].includes(key)) {
+    if (REF_KEYS[kind].includes(key) && holdsIds(value)) {
       if (Array.isArray(value)) { out[key] = value.filter((v) => v !== id); continue; }
       if (value === id) {
         if (CLEARABLE_ANYWHERE.includes(key)) continue; // champ vidé : l'objet survit

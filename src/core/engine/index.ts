@@ -6,6 +6,7 @@
 
 export * from "./evaluate";
 export * from "./magic";
+export * from "./origin";
 export * from "./recruitment";
 export * from "./slavery";
 export * from "./munitions";

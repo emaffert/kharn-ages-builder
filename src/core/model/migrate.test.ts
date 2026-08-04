@@ -38,6 +38,22 @@ describe("mise à niveau d'un catalogue antérieur", () => {
     expect(parsed.profiles[0].notes).toContain("Règle à encoder.");
   });
 
+  it("replie le trait « monture-<faction> » sur le peuple d'origine", () => {
+    const raw = structuredClone(catalog) as { profiles: { traits: string[]; origin?: string }[] };
+    raw.profiles[0].traits = ["monture-kherops", "guerrier"];
+    delete raw.profiles[0].origin;
+    const parsed = parseCatalog(raw);
+    expect(parsed.profiles[0].origin).toBe("kherops");
+    expect(parsed.profiles[0].traits).toEqual(["guerrier"]);
+  });
+
+  it("replie les quatre flags d'armure sur un seul, effaçable", () => {
+    const raw = structuredClone(catalog) as { profiles: { unverifiedFields?: string[] }[] };
+    raw.profiles[0].unverifiedFields = ["stats.v", "armor.seuil", "armor.durability"];
+    const parsed = parseCatalog(raw);
+    expect(parsed.profiles[0].unverifiedFields).toEqual(["stats.v", "armor"]);
+  });
+
   it("laisse intact un catalogue déjà à jour", () => {
     expect(parseCatalog(catalog)).toEqual(catalog);
   });

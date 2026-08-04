@@ -54,7 +54,18 @@ interface Faction {
   name: string;
   logo: string;               // référence d'asset
   subFactions?: string[];     // ex. Goûns -> ["dogons", "mongos"]
+  nature?: "carnivore" | "herbivore";  // nature du peuple, héritée par ses originaires
+  openRecruitment?: OpenRecruitment;   // accueille les génériques d'autres peuples (Affranchis)
   notes?: string;
+}
+
+/** Règle de recrutement ouvert : cf. docs/procedure-import-faction.md. */
+interface OpenRecruitment {
+  fromFactionIds: string[];
+  excludeTraits?: string[];
+  excludeProfileIds?: string[];
+  caps?: { label: string; profileIds: string[]; max: number }[];
+  sourceText: string;
 }
 ```
 
@@ -105,6 +116,8 @@ interface Profile {
   name: string;
   level?: Level;              // null pour certains profils spéciaux (Aliénés, etc.)
   factionId?: string;         // absent => profil "sans logo"
+  origin?: string;            // peuple quitté (creusets) : lui laisse monture et nature, rien d'autre
+  baseSize?: 30 | 40 | 50 | 60;  // socle en mm, imprimé à droite de la limitation (souvent absent)
   cost: number;               // Ko
   isNamed?: boolean;          // personnage nommé
 

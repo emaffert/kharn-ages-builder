@@ -166,10 +166,28 @@ Types de contraintes à prévoir : exclusion d'équipement, dépendance de prés
 
 ## Mode Bataille - éléments de liste additionnels
 
-- **Pactes** (1 seul par Ost), chacun avec conditions de composition + avantage : Alliance (Goûns/Tembos), Ost des plaines (Dogons), Ost des Affranchis, Ordre de l'Acier, Maison Claire, Ost impérial, Guilde en mission, Ost de la Horde, Ost d'Euthéria.
-- **PIONs** : achat de 1 à 3, coût incrémental 5 / 10 / 15 Ko ; possible uniquement si l'Ost est en infériorité numérique **et** de niveau ; jamais plus que le nombre d'activations adverses.
-- **Ordres** : « équipements » pour Vassaux/SDG, coût en Ko (intégré au « barda » de l'Ost).
-- **Formations** : optionnelles, **sans coût** (choix tactique en cours de partie, non pertinent pour la construction de liste).
+Détail complet (règles verbatim, décomptes, impact sur la construction) :
+[`chantiers/mode-bataille.md`](chantiers/mode-bataille.md).
+
+- **Pactes** : **18** au livre de bataille, **1 seul par Ost**, décidé à la constitution, ni ses
+  avantages ni ses restrictions ne sont optionnels. Chacun pose des conditions de composition et
+  donne un avantage. Fangs : Ost des Affranchis, Ost des filles de Nyx, Ost de la Horde, Sabbat des
+  Meneuses, La Curée. Goûns : Ost des plaines, Chevaucheurs des Plaines. Guilde Noire : La Guilde en
+  mission. Khârns : Maison Claire, Ordre du Sang de Balthus, Complot des assassins, Ordre de
+  l'Acier. Khérops : Ost impérial, Armée des Frères, Détachement des Steppes. Tembos/Khémistes : Ost
+  d'Euthéria, École d'Euthéria, L'Alliance (Goûns/Tembos).
+- **PIONs** : achat de 1 à 3, coût incrémental 5 / 10 / 15 Ko ; possible uniquement si l'Ost est en
+  infériorité numérique **et** de niveau ; jamais plus que le nombre d'activations adverses.
+  Achetés en **phase d'adaptation**, une fois les Fers de Lance révélés.
+- **Ordres** : **12** au livre de bataille, de 5 à 25 Ko. « Équipements » dont se munissent les
+  Vassaux et le SDG, **intégrés à la valeur de barda de l'Ost**. Acquis une fois l'Ost adverse connu.
+  Autant d'exemplaires d'un même ordre que de tours, mais un seul ordre par tour et par leader.
+  L'adversaire ne connaît que le **montant total** en Ko.
+- **Formations** : **16** au livre de bataille (le texte en annonce 15, écart à vérifier),
+  optionnelles et **sans coût**. Elles se choisissent **avant la partie** et sont contraintes par la
+  faction ou la nature du peuple, donc elles relèvent bien de la déclaration de liste ; c'est leur
+  *emploi* (une par tour, chacune une seule fois, révélée en début de tour) qui est tactique.
+  Cinq d'entre elles modulent le nombre de marqueurs d'activation.
 
 ## Faction des Affranchis (Bataille)
 

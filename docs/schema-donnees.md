@@ -30,6 +30,7 @@ Voir aussi : [`regles-creation-liste.md`](regles-creation-liste.md) pour les rè
 interface Catalog {
   version: string;            // version du catalogue (ex. "2026.06.01")
   rulesVersion: string;       // version des règles/FAQ couverte (ex. "FAQ 2026-01")
+  settings?: CatalogSettings; // paramètres de règles transverses (ex. surcoût Tembo)
   factions: Faction[];
   skills: Skill[];            // dictionnaire des compétences
   magicWays: MagicWay[];
@@ -38,13 +39,19 @@ interface Catalog {
   equipment: Equipment[];
   grimoires: Grimoire[];
   spells: Spell[];
+  mountTypes: MountType[];    // Quagga, Koelod, Mochère… (éligibilité partagée)
   mounts: Mount[];
   mountOptions: MountOption[];
-  pacts: Pact[];              // mode bataille
-  orders: Order[];            // mode bataille
   specialCards: SpecialCard[]; // cartes spéciales / de règle / de trait
+  munitionKinds?: MunitionKind[];
+  icons?: Record<string, string>; // portraits recadrés, indexés par `cardImage`
 }
 ```
+
+> **Pas encore de `pacts` ni d'`orders`.** Le mode Bataille n'est pas implémenté : les Pactes,
+> Ordres et Formations n'existent ni dans `CatalogSchema` ni dans `catalog.json`. Leur forme
+> **prévisionnelle** est décrite plus bas, à titre d'intention. Voir
+> [`chantiers/mode-bataille.md`](chantiers/mode-bataille.md).
 
 ### Faction
 
@@ -268,7 +275,13 @@ interface MountOption {        // caparaçon, lance de cavalerie, compétences a
 }
 ```
 
-### Pactes et Ordres (mode bataille)
+### Pactes, Ordres et Formations (mode bataille) - PRÉVISIONNEL
+
+> **Rien de tout cela n'existe dans le code à ce jour.** Ces interfaces décrivent une intention,
+> pas une implémentation : le format bataille est désactivé dans le constructeur et le catalogue
+> n'a ni `pacts`, ni `orders`, ni `formations`. Le découpage du travail et le décompte réel
+> (18 Pactes, 12 Ordres, 16 Formations) sont dans
+> [`chantiers/mode-bataille.md`](chantiers/mode-bataille.md).
 
 ```ts
 interface Pact {
@@ -277,6 +290,7 @@ interface Pact {
   compositionText: string;    // conditions verbatim
   composition: Constraint[];  // encodage structuré (scope = ost)
   advantageText: string;      // verbatim
+  effects?: Effect[];         // avantage à impact construction (scope = ost)
 }
 
 interface Order {
@@ -285,6 +299,14 @@ interface Order {
   cost: number;
   effectText: string;         // verbatim
   assignableTo: ("vassal" | "seigneur-de-guerre")[];
+}
+
+interface Formation {
+  id: string;
+  name: string;
+  effectText: string;         // verbatim
+  scope: { factionIds?: string[]; nature?: "carnivore" | "herbivore" }; // absent = générique
+  markerDelta?: number;       // ex. Formation khârne -1, Formation fang +1
 }
 ```
 

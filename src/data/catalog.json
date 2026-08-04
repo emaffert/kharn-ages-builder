@@ -1,5 +1,5 @@
 {
-  "version": "0.4.3",
+  "version": "0.4.4",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -428,19 +428,19 @@
       "sourceText": "Un ennemi provoquant la terreur impose un test de témérité (T + 1D10 ≥ seuil indiqué) à quiconque l'a dans sa ZDC ou veut entrer dans sa ZDC."
     },
     {
-      "id": "skill-1783417945899",
+      "id": "le-sang-et-l-acier",
       "keyword": "Le Sang et l'Acier",
       "hasValue": false,
       "sourceText": "Un mage khârn aura un bonus de + 1 pour chaque adversaire blessé dans son aura."
     },
     {
-      "id": "skill-1783418059003",
+      "id": "le-sacrifice",
       "keyword": "Le Sacrifice",
       "hasValue": false,
       "sourceText": "Un mage khérops obtient un bonus de + 1 par allié blessé dans son aura."
     },
     {
-      "id": "skill-1783418079004",
+      "id": "adansonia",
       "keyword": "Adansonia",
       "hasValue": false,
       "sourceText": "Un mage tembo ou une prêtresse khémiste aura un bonus de + 1 par combattant vivant de son camp sur le champ de bataille."
@@ -505,19 +505,19 @@
       "id": "sang-et-acier",
       "name": "Le Sang et l'Acier",
       "factionId": "kharns",
-      "skillId": "skill-1783417945899"
+      "skillId": "le-sang-et-l-acier"
     },
     {
       "id": "le-sacrifice",
       "name": "Le Sacrifice",
       "factionId": "kherops",
-      "skillId": "skill-1783418059003"
+      "skillId": "le-sacrifice"
     },
     {
-      "id": "way-1783500043343",
+      "id": "adansonia-l-arbre-de-vie",
       "name": "Adansonia l'arbre de vie",
       "factionId": "tembos",
-      "skillId": "skill-1783418079004"
+      "skillId": "adansonia"
     }
   ],
   "models": [
@@ -851,8 +851,8 @@
         "kherops-guerrier-2-2",
         "kherops-guerrier-3-1",
         "kherops-guerrier-3-2",
-        "profile-1785435233802",
-        "profile-1785435462300"
+        "kherops-guerrier-iii-1",
+        "kherops-guerrier-iii-2"
       ]
     },
     {
@@ -1120,117 +1120,117 @@
       ]
     },
     {
-      "id": "model-1785410889262",
+      "id": "fangs-demi-soeur",
       "name": "Demi-soeur",
       "factionId": "fangs",
       "profileIds": [
-        "profile-1785410170666"
+        "fangs-demi-soeur-3"
       ]
     },
     {
-      "id": "model-1785411091401",
+      "id": "fangs-nyx",
       "name": "Nyx",
       "factionId": "fangs",
       "profileIds": [
-        "profile-1785411080435"
+        "fangs-nyx-3"
       ]
     },
     {
-      "id": "model-profile-1785418323892",
+      "id": "gouns-porteuse-d-eau",
       "name": "Porteuse d'eau",
       "factionId": "gouns",
       "profileIds": [
-        "profile-1785418323892"
+        "gouns-porteuse-d-eau-1"
       ]
     },
     {
-      "id": "model-profile-1785421140855",
+      "id": "tembos-patriarche",
       "name": "Patriarche",
       "factionId": "tembos",
       "profileIds": [
-        "profile-1785421140855"
+        "tembos-patriarche-3"
       ]
     },
     {
-      "id": "model-profile-1785422331665",
+      "id": "guilde-noire-goulue-sombre",
       "name": "Goulue sombre",
       "factionId": "guilde-noire",
       "profileIds": [
-        "profile-1785422331665"
+        "guilde-noire-goulue-sombre-2"
       ]
     },
     {
-      "id": "model-profile-1785422681863",
+      "id": "guilde-noire-guerrier-sombre-kherops",
       "name": "Guerrier sombre khérops",
       "factionId": "guilde-noire",
       "profileIds": [
-        "profile-1785422681863"
+        "guilde-noire-guerrier-sombre-kherops-1"
       ]
     },
     {
-      "id": "model-profile-1785423104518",
+      "id": "guilde-noire-guerrier-sombre-kharn",
       "name": "Guerrier sombre khârn",
       "factionId": "guilde-noire",
       "profileIds": [
-        "profile-1785423104518"
+        "guilde-noire-guerrier-sombre-kharn-2"
       ]
     },
     {
-      "id": "model-profile-1785423433530",
+      "id": "guilde-noire-mongo-sombre",
       "name": "Mongo sombre",
       "factionId": "guilde-noire",
       "profileIds": [
-        "profile-1785423433530"
+        "guilde-noire-mongo-sombre-3"
       ]
     },
     {
-      "id": "model-profile-1785423741476",
+      "id": "guilde-noire-agent-sombre",
       "name": "Agent sombre",
       "factionId": "guilde-noire",
       "profileIds": [
-        "profile-1785423741476",
-        "profile-1785423938572",
-        "profile-1785424157109"
+        "guilde-noire-agent-sombre-1",
+        "guilde-noire-agent-sombre-2",
+        "guilde-noire-agent-sombre-3"
       ]
     },
     {
-      "id": "model-profile-1785424417613",
+      "id": "guilde-noire-cameriste",
       "name": "Camériste",
       "factionId": "guilde-noire",
       "profileIds": [
-        "profile-1785424417613"
+        "guilde-noire-cameriste-1"
       ]
     },
     {
-      "id": "model-profile-1785425881820",
+      "id": "kharns-martha",
       "name": "Martha",
       "factionId": "kharns",
       "profileIds": [
-        "profile-1785425881820"
+        "kharns-martha-1"
       ]
     },
     {
-      "id": "model-profile-1785427326487",
+      "id": "kharns-balthus",
       "name": "Balthus",
       "factionId": "kharns",
       "profileIds": [
-        "profile-1785427326487"
+        "kharns-balthus-3"
       ]
     },
     {
-      "id": "model-profile-1785434553138",
+      "id": "kherops-nagoi-khan",
       "name": "Nagoï khan",
       "factionId": "kherops",
       "profileIds": [
-        "profile-1785434553138"
+        "kherops-nagoi-khan-3"
       ]
     },
     {
-      "id": "model-profile-1785435773939",
+      "id": "tembos-sage-du-conseil",
       "name": "Sage du conseil",
       "factionId": "tembos",
       "profileIds": [
-        "profile-1785435773939"
+        "tembos-sage-du-conseil-2"
       ]
     },
     {
@@ -5308,7 +5308,7 @@
       "pv": 24,
       "skills": [
         {
-          "skillId": "skill-1783417945899"
+          "skillId": "le-sang-et-l-acier"
         },
         {
           "skillId": "carnivore"
@@ -5415,7 +5415,7 @@
           "skillId": "carnivore"
         },
         {
-          "skillId": "skill-1783417945899"
+          "skillId": "le-sang-et-l-acier"
         }
       ],
       "baseEquipmentIds": [
@@ -5976,7 +5976,7 @@
           "value": 1
         },
         {
-          "skillId": "skill-1783417945899"
+          "skillId": "le-sang-et-l-acier"
         },
         {
           "skillId": "carnivore"
@@ -7140,7 +7140,7 @@
       "pv": 32,
       "skills": [
         {
-          "skillId": "skill-1783418059003"
+          "skillId": "le-sacrifice"
         },
         {
           "skillId": "peau-dure"
@@ -7199,7 +7199,7 @@
       "pv": 34,
       "skills": [
         {
-          "skillId": "skill-1783418059003"
+          "skillId": "le-sacrifice"
         },
         {
           "skillId": "peau-dure"
@@ -8529,7 +8529,7 @@
           "skillId": "khemiste"
         },
         {
-          "skillId": "skill-1783418079004"
+          "skillId": "adansonia"
         },
         {
           "skillId": "receptif",
@@ -8601,7 +8601,7 @@
           "skillId": "khemiste"
         },
         {
-          "skillId": "skill-1783418079004"
+          "skillId": "adansonia"
         },
         {
           "skillId": "receptif",
@@ -8675,7 +8675,7 @@
           "skillId": "khemiste"
         },
         {
-          "skillId": "skill-1783418079004"
+          "skillId": "adansonia"
         },
         {
           "skillId": "autorite"
@@ -8750,7 +8750,7 @@
           "skillId": "tembo"
         },
         {
-          "skillId": "skill-1783418079004"
+          "skillId": "adansonia"
         },
         {
           "skillId": "moringa",
@@ -8830,7 +8830,7 @@
           "skillId": "khemiste"
         },
         {
-          "skillId": "skill-1783418079004"
+          "skillId": "adansonia"
         },
         {
           "skillId": "ambidextre"
@@ -9870,8 +9870,8 @@
       "unverifiedFields": []
     },
     {
-      "id": "profile-1785410170666",
-      "modelId": "model-1785410889262",
+      "id": "fangs-demi-soeur-3",
+      "modelId": "fangs-demi-soeur",
       "name": "Demi-soeur",
       "level": 3,
       "factionId": "fangs",
@@ -9938,8 +9938,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785411080435",
-      "modelId": "model-1785411091401",
+      "id": "fangs-nyx-3",
+      "modelId": "fangs-nyx",
       "name": "Nyx",
       "level": 3,
       "factionId": "fangs",
@@ -10026,8 +10026,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785418323892",
-      "modelId": "model-profile-1785418323892",
+      "id": "gouns-porteuse-d-eau-1",
+      "modelId": "gouns-porteuse-d-eau",
       "name": "Porteuse d'eau",
       "level": 1,
       "factionId": "gouns",
@@ -10112,8 +10112,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785421140855",
-      "modelId": "model-profile-1785421140855",
+      "id": "tembos-patriarche-3",
+      "modelId": "tembos-patriarche",
       "name": "Patriarche",
       "level": 3,
       "factionId": "tembos",
@@ -10138,7 +10138,7 @@
           "skillId": "tembo"
         },
         {
-          "skillId": "skill-1783418079004"
+          "skillId": "adansonia"
         },
         {
           "skillId": "effroi",
@@ -10204,8 +10204,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785422331665",
-      "modelId": "model-profile-1785422331665",
+      "id": "guilde-noire-goulue-sombre-2",
+      "modelId": "guilde-noire-goulue-sombre",
       "name": "Goulue sombre",
       "level": 2,
       "factionId": "guilde-noire",
@@ -10273,8 +10273,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785422681863",
-      "modelId": "model-profile-1785422681863",
+      "id": "guilde-noire-guerrier-sombre-kherops-1",
+      "modelId": "guilde-noire-guerrier-sombre-kherops",
       "name": "Guerrier sombre Khérops",
       "level": 1,
       "factionId": "guilde-noire",
@@ -10341,8 +10341,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785423104518",
-      "modelId": "model-profile-1785423104518",
+      "id": "guilde-noire-guerrier-sombre-kharn-2",
+      "modelId": "guilde-noire-guerrier-sombre-kharn",
       "name": "Guerrier sombre Khârn",
       "level": 2,
       "factionId": "guilde-noire",
@@ -10411,8 +10411,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785423433530",
-      "modelId": "model-profile-1785423433530",
+      "id": "guilde-noire-mongo-sombre-3",
+      "modelId": "guilde-noire-mongo-sombre",
       "name": "Mongo sombre",
       "level": 3,
       "factionId": "guilde-noire",
@@ -10486,8 +10486,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785423741476",
-      "modelId": "model-profile-1785423741476",
+      "id": "guilde-noire-agent-sombre-1",
+      "modelId": "guilde-noire-agent-sombre",
       "name": "Agent sombre",
       "level": 1,
       "factionId": "guilde-noire",
@@ -10544,8 +10544,8 @@
       "cardImage": "cards/Guilde Noire/agent_sombre.jpg"
     },
     {
-      "id": "profile-1785423938572",
-      "modelId": "model-profile-1785423741476",
+      "id": "guilde-noire-agent-sombre-2",
+      "modelId": "guilde-noire-agent-sombre",
       "name": "Agent sombre",
       "level": 2,
       "factionId": "guilde-noire",
@@ -10611,8 +10611,8 @@
       "cardImage": "cards/Guilde Noire/agent_sombre.jpg"
     },
     {
-      "id": "profile-1785424157109",
-      "modelId": "model-profile-1785423741476",
+      "id": "guilde-noire-agent-sombre-3",
+      "modelId": "guilde-noire-agent-sombre",
       "name": "Agent sombre",
       "level": 3,
       "factionId": "guilde-noire",
@@ -10684,8 +10684,8 @@
       "cardImage": "cards/Guilde Noire/agent_sombre.jpg"
     },
     {
-      "id": "profile-1785424417613",
-      "modelId": "model-profile-1785424417613",
+      "id": "guilde-noire-cameriste-1",
+      "modelId": "guilde-noire-cameriste",
       "name": "Camériste",
       "level": 1,
       "factionId": "guilde-noire",
@@ -10747,8 +10747,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785425881820",
-      "modelId": "model-profile-1785425881820",
+      "id": "kharns-martha-1",
+      "modelId": "kharns-martha",
       "name": "Martha",
       "level": 1,
       "factionId": "kharns",
@@ -10810,8 +10810,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785427326487",
-      "modelId": "model-profile-1785427326487",
+      "id": "kharns-balthus-3",
+      "modelId": "kharns-balthus",
       "name": "Balthus",
       "level": 3,
       "factionId": "kharns",
@@ -10833,7 +10833,7 @@
       "pv": 30,
       "skills": [
         {
-          "skillId": "skill-1783417945899"
+          "skillId": "le-sang-et-l-acier"
         },
         {
           "skillId": "seigneur-de-guerre",
@@ -10879,8 +10879,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785434553138",
-      "modelId": "model-profile-1785434553138",
+      "id": "kherops-nagoi-khan-3",
+      "modelId": "kherops-nagoi-khan",
       "name": "Nagoï khan",
       "level": 3,
       "factionId": "kherops",
@@ -10959,7 +10959,7 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785435233802",
+      "id": "kherops-guerrier-iii-1",
       "modelId": "kherops-guerrier-1",
       "name": "Guerrier III",
       "level": 1,
@@ -11007,7 +11007,7 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785435462300",
+      "id": "kherops-guerrier-iii-2",
       "modelId": "kherops-guerrier-1",
       "name": "Guerrier III",
       "level": 2,
@@ -11060,8 +11060,8 @@
       "cardImage": ""
     },
     {
-      "id": "profile-1785435773939",
-      "modelId": "model-profile-1785435773939",
+      "id": "tembos-sage-du-conseil-2",
+      "modelId": "tembos-sage-du-conseil",
       "name": "Sage du conseil",
       "level": 2,
       "factionId": "tembos",
@@ -11086,7 +11086,7 @@
           "skillId": "tembo"
         },
         {
-          "skillId": "skill-1783418079004"
+          "skillId": "adansonia"
         },
         {
           "skillId": "receptif",
@@ -11118,7 +11118,7 @@
         }
       ],
       "baseEquipmentIds": [
-        "equip-1785436169266"
+        "canne-des-sages"
       ],
       "masteryDice": [
         [
@@ -13475,7 +13475,7 @@
           "operation": {
             "kind": "spell-pages",
             "amount": 5,
-            "magicWayId": "way-1783500043343"
+            "magicWayId": "adansonia-l-arbre-de-vie"
           },
           "sourceText": "Peuvent contenir 5 pages de la voie Adansonia."
         },
@@ -14343,7 +14343,7 @@
       "effectsText": "Si un marqueur de carcasse est frappé par la faux, il devient un marqueur \"damné\". Il s'activera au tour suivant et possède le profil d'affamé ou de larbin. il ne gère pas les objo. Il ne possède pas de PV. il est retiré du terrain en infligeant 1D10 dgts à qui le dévore/pille.",
       "reservedTo": {
         "profileIds": [
-          "profile-1785411080435"
+          "fangs-nyx-3"
         ],
         "levels": [
           3
@@ -14354,7 +14354,7 @@
       }
     },
     {
-      "id": "equip-1785421869818",
+      "id": "vaillante",
       "name": "Vaillante",
       "category": "arme-cac",
       "cost": 25,
@@ -14373,7 +14373,7 @@
       }
     },
     {
-      "id": "equip-1785427673889",
+      "id": "grimoire-de-joseve",
       "name": "Grimoire de Josève",
       "category": "objet",
       "cost": 70,
@@ -14383,7 +14383,7 @@
           "id": "e-1785427803831",
           "source": {
             "kind": "equipment",
-            "id": "equip-1785427673889"
+            "id": "grimoire-de-joseve"
           },
           "scope": "fer-de-lance",
           "target": {
@@ -14399,7 +14399,7 @@
           "id": "e-1785427975282",
           "source": {
             "kind": "equipment",
-            "id": "equip-1785427673889"
+            "id": "grimoire-de-joseve"
           },
           "scope": "fer-de-lance",
           "target": {
@@ -14415,7 +14415,7 @@
       ],
       "reservedTo": {
         "profileIds": [
-          "profile-1785427326487"
+          "kharns-balthus-3"
         ],
         "levels": [
           3
@@ -14426,7 +14426,7 @@
       }
     },
     {
-      "id": "equip-1785428065532",
+      "id": "canne-de-joseve",
       "name": "Canne de josève",
       "category": "arme-cac",
       "cost": 30,
@@ -14434,12 +14434,12 @@
       "effectsText": "Réceptacle des PA que Balthus n'a pas utilisé au tour précédent. elle ne peut cependant pas retenir plus de PA qu'il n'en possède en début de partie. Il peut décider de les utiliser à tout moment en les cochant comme des PA classiques. Si c'est possible elle absorbe 1 PA à Balthus à la fin d'un tour de jeu.",
       "reservedTo": {
         "profileIds": [
-          "profile-1785427326487"
+          "kharns-balthus-3"
         ]
       }
     },
     {
-      "id": "equip-1785434978938",
+      "id": "ecrabouilleur-de-kang",
       "name": "Écrabouilleur de kang",
       "category": "arme-cac",
       "cost": 30,
@@ -14450,7 +14450,7 @@
           "id": "e-1785435047000",
           "source": {
             "kind": "equipment",
-            "id": "equip-1785434978938"
+            "id": "ecrabouilleur-de-kang"
           },
           "scope": "fer-de-lance",
           "target": {
@@ -14465,12 +14465,12 @@
       ],
       "reservedTo": {
         "profileIds": [
-          "profile-1785434553138"
+          "kherops-nagoi-khan-3"
         ]
       }
     },
     {
-      "id": "equip-1785436169266",
+      "id": "canne-des-sages",
       "name": "Canne des sages",
       "category": "arme-cac",
       "cost": 0,
@@ -14481,7 +14481,7 @@
           "id": "e-1785436195216",
           "source": {
             "kind": "equipment",
-            "id": "equip-1785436169266"
+            "id": "canne-des-sages"
           },
           "scope": "fer-de-lance",
           "target": {
@@ -14490,19 +14490,19 @@
           "operation": {
             "kind": "spell-pages",
             "amount": 1,
-            "magicWayId": "way-1783500043343"
+            "magicWayId": "adansonia-l-arbre-de-vie"
           },
           "sourceText": ""
         }
       ],
       "reservedTo": {
         "profileIds": [
-          "profile-1785435773939"
+          "tembos-sage-du-conseil-2"
         ]
       }
     },
     {
-      "id": "equip-1785436448046",
+      "id": "vouge-de-moringa",
       "name": "Vouge de Moringa",
       "category": "arme-cac",
       "cost": 35,
@@ -14518,7 +14518,7 @@
           "id": "e-1785436477701",
           "source": {
             "kind": "equipment",
-            "id": "equip-1785436448046"
+            "id": "vouge-de-moringa"
           },
           "scope": "fer-de-lance",
           "target": {
@@ -14534,7 +14534,7 @@
       ],
       "reservedTo": {
         "profileIds": [
-          "profile-1785421140855"
+          "tembos-patriarche-3"
         ],
         "traits": [
           "tembo"
@@ -14700,7 +14700,7 @@
       "cost": 10,
       "reservedTo": {
         "profileIds": [
-          "profile-1785411080435"
+          "fangs-nyx-3"
         ],
         "trait": "fille-de-nyx"
       },
@@ -14728,7 +14728,7 @@
       "cost": 10,
       "reservedTo": {
         "profileIds": [
-          "profile-1785411080435"
+          "fangs-nyx-3"
         ],
         "trait": "fille-de-nyx"
       },
@@ -14755,7 +14755,7 @@
       "pages": 2,
       "reservedTo": {
         "profileIds": [
-          "profile-1785411080435"
+          "fangs-nyx-3"
         ],
         "trait": "meneuse"
       },
@@ -14825,7 +14825,7 @@
       "id": "drain-d-energie",
       "name": "Drain d'énergie",
       "kind": "grimoire",
-      "magicWayId": "way-1783500043343",
+      "magicWayId": "adansonia-l-arbre-de-vie",
       "pages": 2,
       "reservedTo": {
         "trait": "tembo"
@@ -14848,7 +14848,7 @@
       "id": "guerison-vegetale",
       "name": "Guérison végétale",
       "kind": "grimoire",
-      "magicWayId": "way-1783500043343",
+      "magicWayId": "adansonia-l-arbre-de-vie",
       "pages": 1,
       "reservedTo": {
         "trait": "khemiste"
@@ -14868,7 +14868,7 @@
       "id": "confiance-partagee",
       "name": "Confiance partagée",
       "kind": "grimoire",
-      "magicWayId": "way-1783500043343",
+      "magicWayId": "adansonia-l-arbre-de-vie",
       "pages": 2,
       "reservedTo": {
         "trait": "tembo"
@@ -14922,7 +14922,7 @@
       "cost": 10,
       "reservedTo": {
         "profileIds": [
-          "profile-1785411080435"
+          "fangs-nyx-3"
         ]
       },
       "target": "2 toises",
@@ -14972,7 +14972,7 @@
       ]
     },
     {
-      "id": "spell-1785236064844",
+      "id": "insensibilite",
       "name": "Insensibilité",
       "kind": "generique",
       "target": "Aura.",
@@ -14986,7 +14986,7 @@
       ]
     },
     {
-      "id": "spell-1785236244908",
+      "id": "invulnerabilite",
       "name": "Invulnérabilité",
       "kind": "generique",
       "target": "Aura.",
@@ -15000,7 +15000,7 @@
       ]
     },
     {
-      "id": "spell-1785236368261",
+      "id": "prescience",
       "name": "Prescience",
       "kind": "generique",
       "target": "Le lanceur",
@@ -15014,7 +15014,7 @@
       ]
     },
     {
-      "id": "spell-1785236957022",
+      "id": "soin-mineur",
       "name": "Soin mineur",
       "kind": "generique",
       "target": "Jusqu'à 5 toises",
@@ -15028,7 +15028,7 @@
       ]
     },
     {
-      "id": "spell-1785237140235",
+      "id": "la-voix-des-trolls",
       "name": "La voix des trolls",
       "kind": "generique",
       "target": "Adversaire",
@@ -15042,7 +15042,7 @@
       ]
     },
     {
-      "id": "spell-1785237228941",
+      "id": "dissimulation",
       "name": "Dissimulation",
       "kind": "grimoire",
       "magicWayId": "shamanisme",
@@ -15078,7 +15078,7 @@
       ]
     },
     {
-      "id": "spell-1785237417366",
+      "id": "brouillard",
       "name": "Brouillard",
       "kind": "grimoire",
       "magicWayId": "shamanisme",
@@ -15094,7 +15094,7 @@
       ]
     },
     {
-      "id": "spell-1785237508670",
+      "id": "connaissances-des-simples",
       "name": "Connaissances des simples",
       "kind": "grimoire",
       "magicWayId": "shamanisme",
@@ -15110,7 +15110,7 @@
       ]
     },
     {
-      "id": "spell-1785237592536",
+      "id": "vent-bienfaiteur",
       "name": "Vent bienfaiteur",
       "kind": "grimoire",
       "magicWayId": "shamanisme",
@@ -15126,7 +15126,7 @@
       ]
     },
     {
-      "id": "spell-1785237761924",
+      "id": "l-esprit-de-n-gaos",
       "name": "L'esprit de N'gaos",
       "kind": "grimoire",
       "magicWayId": "shamanisme",
@@ -15142,7 +15142,7 @@
       ]
     },
     {
-      "id": "spell-1785237850707",
+      "id": "fondu-naturel",
       "name": "Fondu naturel",
       "kind": "grimoire",
       "magicWayId": "shamanisme",
@@ -15158,7 +15158,7 @@
       ]
     },
     {
-      "id": "spell-1785237940302",
+      "id": "poudre-d-os",
       "name": "Poudre d'os",
       "kind": "generique",
       "magicWayId": "osteomancie",
@@ -15178,7 +15178,7 @@
       ]
     },
     {
-      "id": "spell-1785238003162",
+      "id": "malediction",
       "name": "Malédiction",
       "kind": "generique",
       "magicWayId": "osteomancie",
@@ -15198,7 +15198,7 @@
       ]
     },
     {
-      "id": "spell-1785238304371",
+      "id": "affaiblissement",
       "name": "Affaiblissement",
       "kind": "generique",
       "magicWayId": "osteomancie",
@@ -15222,7 +15222,7 @@
       ]
     },
     {
-      "id": "spell-1785238451420",
+      "id": "poigne-spectrale",
       "name": "Poigne spectrale",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15242,7 +15242,7 @@
       ]
     },
     {
-      "id": "spell-1785238621986",
+      "id": "aura-de-mort",
       "name": "Aura de mort",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15262,7 +15262,7 @@
       ]
     },
     {
-      "id": "spell-1785238717581",
+      "id": "deliquescence",
       "name": "Déliquescence",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15282,7 +15282,7 @@
       ]
     },
     {
-      "id": "spell-1785238896684",
+      "id": "osteomancie",
       "name": "Ostéomancie",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15298,7 +15298,7 @@
       ]
     },
     {
-      "id": "spell-1785239128129",
+      "id": "ordre-sepulcral",
       "name": "Ordre sépulcral",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15314,7 +15314,7 @@
       ]
     },
     {
-      "id": "spell-1785239280236",
+      "id": "l-appel-des-limbes",
       "name": "L'appel des limbes",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15330,7 +15330,7 @@
       ]
     },
     {
-      "id": "spell-1785239518635",
+      "id": "armure-en-os",
       "name": "Armure en os",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15350,7 +15350,7 @@
       ]
     },
     {
-      "id": "spell-1785239660114",
+      "id": "guerison-des-limbes",
       "name": "Guérison des limbes",
       "kind": "grimoire",
       "magicWayId": "osteomancie",
@@ -15358,7 +15358,7 @@
       "cost": 10,
       "reservedTo": {
         "profileIds": [
-          "profile-1785411080435"
+          "fangs-nyx-3"
         ],
         "trait": "fille-de-nyx"
       },
@@ -15377,7 +15377,7 @@
       ]
     },
     {
-      "id": "spell-1785239884075",
+      "id": "chatiment",
       "name": "Châtiment",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
@@ -15401,7 +15401,7 @@
       ]
     },
     {
-      "id": "spell-1785240031285",
+      "id": "par-l-acier",
       "name": "Par l'acier!",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
@@ -15417,7 +15417,7 @@
       ]
     },
     {
-      "id": "spell-1785240107835",
+      "id": "pour-le-sang",
       "name": "Pour le sang!",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
@@ -15437,7 +15437,7 @@
       ]
     },
     {
-      "id": "spell-1785240213768",
+      "id": "puissance-du-culte",
       "name": "Puissance du culte",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
@@ -15457,7 +15457,7 @@
       ]
     },
     {
-      "id": "spell-1785240293146",
+      "id": "esprit-de-joseve",
       "name": "Esprit de Josève",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
@@ -15473,7 +15473,7 @@
       ]
     },
     {
-      "id": "spell-1785240433340",
+      "id": "galvanisation",
       "name": "Galvanisation",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
@@ -15493,7 +15493,7 @@
       ]
     },
     {
-      "id": "spell-1785240535434",
+      "id": "aureole-de-gloire",
       "name": "Auréolé de gloire",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
@@ -15509,7 +15509,7 @@
       ]
     },
     {
-      "id": "spell-1785240650367",
+      "id": "marche-des-supplicies",
       "name": "Marche des suppliciés",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15525,7 +15525,7 @@
       ]
     },
     {
-      "id": "spell-1785240742049",
+      "id": "aveugle-par-la-haine",
       "name": "Aveuglé par la haine",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15541,7 +15541,7 @@
       ]
     },
     {
-      "id": "spell-1785240854044",
+      "id": "bain-de-sang",
       "name": "Bain de sang",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15561,7 +15561,7 @@
       ]
     },
     {
-      "id": "spell-1785240950230",
+      "id": "douleur-galvanisante",
       "name": "Douleur galvanisante",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15581,7 +15581,7 @@
       ]
     },
     {
-      "id": "spell-1785241049854",
+      "id": "furie-du-combat",
       "name": "Furie du combat",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15601,7 +15601,7 @@
       ]
     },
     {
-      "id": "spell-1785241196940",
+      "id": "souffrir-pour-tenir",
       "name": "Souffrir pour tenir",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15617,7 +15617,7 @@
       ]
     },
     {
-      "id": "spell-1785241290822",
+      "id": "rage-sanguinaire",
       "name": "Rage sanguinaire",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15633,7 +15633,7 @@
       ]
     },
     {
-      "id": "spell-1785241400121",
+      "id": "puissance-de-la-souffrance",
       "name": "Puissance de la souffrance",
       "kind": "grimoire",
       "magicWayId": "le-sacrifice",
@@ -15649,10 +15649,10 @@
       ]
     },
     {
-      "id": "spell-1785241595611",
+      "id": "ressourcement",
       "name": "Ressourcement",
       "kind": "grimoire",
-      "magicWayId": "way-1783500043343",
+      "magicWayId": "adansonia-l-arbre-de-vie",
       "pages": 1,
       "reservedTo": {
         "trait": "khemiste"
@@ -15668,10 +15668,10 @@
       ]
     },
     {
-      "id": "spell-1785241713950",
+      "id": "racines-sucoirs",
       "name": "Racines suçoirs",
       "kind": "grimoire",
-      "magicWayId": "way-1783500043343",
+      "magicWayId": "adansonia-l-arbre-de-vie",
       "pages": 1,
       "reservedTo": {
         "trait": "khemiste"
@@ -15691,10 +15691,10 @@
       ]
     },
     {
-      "id": "spell-1785241929394",
+      "id": "intimidation",
       "name": "Intimidation",
       "kind": "grimoire",
-      "magicWayId": "way-1783500043343",
+      "magicWayId": "adansonia-l-arbre-de-vie",
       "pages": 1,
       "reservedTo": {
         "trait": "tembo"
@@ -15710,10 +15710,10 @@
       ]
     },
     {
-      "id": "spell-1785242096203",
+      "id": "l-arbre-de-vie",
       "name": "L'arbre de vie",
       "kind": "grimoire",
-      "magicWayId": "way-1783500043343",
+      "magicWayId": "adansonia-l-arbre-de-vie",
       "pages": 3,
       "reservedTo": {
         "profileIds": [
@@ -15732,14 +15732,14 @@
       ]
     },
     {
-      "id": "spell-1785428688195",
+      "id": "sang-des-ancetres",
       "name": "Sang des Ancêtres",
       "kind": "grimoire",
       "magicWayId": "sang-et-acier",
       "pages": 2,
       "reservedTo": {
         "profileIds": [
-          "profile-1785427326487"
+          "kharns-balthus-3"
         ]
       },
       "target": "Le lanceur",
@@ -15785,7 +15785,7 @@
       "cardImage": "cards/Gouns/mochere.jpg"
     },
     {
-      "id": "mount-type-1785420849595",
+      "id": "mochere-de-combat",
       "name": "Mochère de combat",
       "kind": "mochere",
       "factionEligibility": [
@@ -16061,8 +16061,8 @@
       ]
     },
     {
-      "id": "mount-1785420849595",
-      "typeId": "mount-type-1785420849595",
+      "id": "mochere-de-combat-2",
+      "typeId": "mochere-de-combat",
       "level": 2,
       "cost": 45,
       "bonuses": {
@@ -17350,7 +17350,7 @@
       "cost": 0,
       "scope": {
         "profileIds": [
-          "profile-1785410170666"
+          "fangs-demi-soeur-3"
         ]
       },
       "rulesText": "Possède 1 sort d'Ostéomancie sans grimoire. \nDurant l'activation de la demi-soeur, 1 fille de Nyx peut réaliser une et unique action. 1 fois par partie par fille.",
@@ -17382,7 +17382,7 @@
       "cost": 0,
       "scope": {
         "profileIds": [
-          "profile-1785411080435"
+          "fangs-nyx-3"
         ]
       },
       "rulesText": "SDG 5. \nQuand Nyx est vaincue, elle se réincarne instantanément dans la\nfemelle fang alliée la plus proche.\nElle conserve les PV, PA de son corps d'accucil mais remplace toutes les caractéristiques et l'équipement de ce profil par les siens. Si ce corps est une Fille de Nyx, elle regagne au choix tous ses PA ou tous ses PV.\nDe plus, elle peut accéder à tous les sorts fangs et en connaît 8 pages cumulables avec n'importe quel grimoire.",
@@ -17517,9 +17517,9 @@
       "cost": 0,
       "scope": {
         "profileIds": [
-          "profile-1785423741476",
-          "profile-1785423938572",
-          "profile-1785424157109"
+          "guilde-noire-agent-sombre-1",
+          "guilde-noire-agent-sombre-2",
+          "guilde-noire-agent-sombre-3"
         ]
       },
       "rulesText": "- Un Agent Sombre est un infiltré de la Guilde Noire. Recrutés dans tous les royaumes, ils peuvent venir de n'importe quel peuple.\n\n- Vous pouvez représenter le profil d'Agent sombre shouaité par la figurine non nommée de non unique de votre choix. Elle acquiert toutes les caractéristiques de ce profil d'Agent.\n\n- Les Agents sombres Niveau I sont joués uniquement sur socle de 40mm, les Niveaux II et III sont au choix représentés sur socle de 40 ou 50 mm.",

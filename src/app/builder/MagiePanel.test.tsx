@@ -104,8 +104,8 @@ const grantEffectId = (): string =>
 
 describe("MagiePanel - sorts offerts", () => {
   const GRANT = grantEffectId();
-  const ORDRE_SEPULCRAL = "spell-1785239128129";
-  const demiSoeur = catalog.profiles.find((p) => p.id === "profile-1785410170666")!;
+  const ORDRE_SEPULCRAL = "ordre-sepulcral";
+  const demiSoeur = catalog.profiles.find((p) => p.id === "fangs-demi-soeur-3")!;
   const offerte = (over: Partial<React.ComponentProps<typeof MagiePanel>> = {}) =>
     baseProps({ profile: demiSoeur, ways: ["osteomancie"], ...over });
 

@@ -96,7 +96,7 @@ describe("effets portés par une figurine (hors contexte de liste)", () => {
  * être des armures (Vouge de Moringa) s'y ajoutent. La fiche peut donc porter plusieurs lignes.
  */
 describe("wornArmorsFrom - cumul des protections", () => {
-  const VOUGE = "equip-1785436448046";
+  const VOUGE = "vouge-de-moringa";
   const innate = { protectionEchec: 0, seuil: 6, protectionReussite: -1, durability: 6 };
   const labels = (ids: string[]) => wornArmorsFrom(catalog, ids, undefined, innate).map((a) => a.label);
 

@@ -101,13 +101,13 @@ const grantEffectId = (): string =>
 
 describe("sorts offerts", () => {
   const GRANT = grantEffectId();
-  const ORDRE_SEPULCRAL = "spell-1785239128129";
+  const ORDRE_SEPULCRAL = "ordre-sepulcral";
 
   function docWithGrant(): ListDocument {
     const doc = makeDoc();
     doc.fersDeLance[0].members.push({
       instanceId: "d",
-      profileId: "profile-1785410170666",
+      profileId: "fangs-demi-soeur-3",
       addedEquipmentIds: [],
       removedBaseEquipmentIds: [],
       spellIds: [],
@@ -124,7 +124,7 @@ describe("sorts offerts", () => {
 
   it("la relecture rattache le sort à l'offre qui peut l'accueillir", () => {
     const { doc, unresolved } = importText(catalog, exportText(catalog, docWithGrant()));
-    const demi = doc.fersDeLance[0].members.find((m) => m.profileId === "profile-1785410170666")!;
+    const demi = doc.fersDeLance[0].members.find((m) => m.profileId === "fangs-demi-soeur-3")!;
     expect(demi.grantedSpellIds).toEqual({ [GRANT]: [ORDRE_SEPULCRAL] });
     expect(demi.spellIds).toEqual([]); // un sort offert n'est pas un sort payé
     expect(unresolved).toEqual([]);

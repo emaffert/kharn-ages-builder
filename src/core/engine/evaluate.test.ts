@@ -31,7 +31,7 @@ import {
 import { isSlaveIn } from "./slavery";
 
 /** L'identifiant de la voie Adansonia dans le catalogue (créée avec un id technique). */
-const ADANSONIA = "way-1783500043343";
+const ADANSONIA = "adansonia-l-arbre-de-vie";
 
 /**
  * Sorts de banc d'essai : une page, aucune réservation. Éprouver l'Affinité et les pools de pages
@@ -1036,9 +1036,9 @@ describe("Affinité X (accès grimoire à une autre voie)", () => {
 });
 
 describe("Archimage (maîtrise de toutes les voies)", () => {
-  const balthus = catalog.profiles.find((p) => p.id === "profile-1785427326487")!;
+  const balthus = catalog.profiles.find((p) => p.id === "kharns-balthus-3")!;
   /** L'objet qui octroie « Archimage » à son porteur (réservé à Balthus). */
-  const GRIMOIRE_JOSEVE = "equip-1785427673889";
+  const GRIMOIRE_JOSEVE = "grimoire-de-joseve";
   const allWays = catalog.magicWays.map((w) => w.id);
 
   it("la compétence se suffit à elle-même : toutes les voies, sans compétence d'école", () => {
@@ -1069,7 +1069,7 @@ describe("Archimage (maîtrise de toutes les voies)", () => {
   });
 
   it("retirer le grimoire rend illégaux les sorts qu'il avait ouverts", () => {
-    const POIGNE = "spell-1785238451420"; // Ostéomancie, 1 page, sans réservation
+    const POIGNE = "poigne-spectrale"; // Ostéomancie, 1 page, sans réservation
     const armed = inst(balthus.id, {
       addedEquipmentIds: [GRIMOIRE_JOSEVE],
       grimoireId: "grand",
@@ -1096,11 +1096,11 @@ describe("réservation des sorts génériques", () => {
 
   it("un générique réservé à un personnage n'apparaît que chez lui", () => {
     expect(spellsOf(catalog, bharbathos, ["osteomancie"])).toContain("guilde-noire-passe-passe");
-    expect(spellsOf(catalog, nephtys, ["way-1783500043343"])).not.toContain("guilde-noire-passe-passe");
+    expect(spellsOf(catalog, nephtys, ["adansonia-l-arbre-de-vie"])).not.toContain("guilde-noire-passe-passe");
   });
 
   it("un générique sans réservation reste ouvert à tous les lanceurs", () => {
-    expect(spellsOf(catalog, nephtys, ["way-1783500043343"])).toContain("confusion");
+    expect(spellsOf(catalog, nephtys, ["adansonia-l-arbre-de-vie"])).toContain("confusion");
   });
 
   it("une figurine sans voie maîtrisée ne voit aucun sort, pas même un générique", () => {
@@ -1116,7 +1116,7 @@ describe("réservation des sorts génériques", () => {
       ),
     };
     expect(spellsOf(reserve, bharbathos, ["osteomancie"])).toContain("confusion");
-    expect(spellsOf(reserve, nephtys, ["way-1783500043343"])).not.toContain("confusion");
+    expect(spellsOf(reserve, nephtys, ["adansonia-l-arbre-de-vie"])).not.toContain("confusion");
   });
 });
 
@@ -1478,7 +1478,7 @@ describe("améliorations intrinsèques d'un objet", () => {
 });
 
 describe("Esclaves (LDR Saison 2, p. 10)", () => {
-  const PORTEUSE = "profile-1785418323892"; // Porteuse d'eau, goûne, 40 Ko, seule esclave du catalogue
+  const PORTEUSE = "gouns-porteuse-d-eau-1"; // Porteuse d'eau, goûne, 40 Ko, seule esclave du catalogue
   const GOURDIN = "gourdin"; // arme de corps à corps gratuite
   /**
    * Le catalogue livré ne porte pas encore la contrainte (elle se pose dans l'admin). On l'y greffe
@@ -1541,7 +1541,7 @@ describe("Esclaves (LDR Saison 2, p. 10)", () => {
     const a = inst(PORTEUSE);
     const b = inst(PORTEUSE);
     // Balthus a SDG 5 : la règle générale l'autoriserait, mais sa carte à elle n'en tolère qu'une.
-    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [a.instanceId, b.instanceId] });
+    const balthus = inst("kharns-balthus-3", { attachedInstanceIds: [a.instanceId, b.instanceId] });
     const others = [inst("kharns-syrga"), inst("kharns-syrga")];
     const res = evaluateList(carte, makeList([balthus, a, b, ...others], "kharns"));
     expect(slaveIssues(res).map((i) => i.ruleId)).toContain("slave-over-warlord-capacity");
@@ -1550,7 +1550,7 @@ describe("Esclaves (LDR Saison 2, p. 10)", () => {
   it("sans plafond de carte, le porteur en possède autant que sa valeur de SDG", () => {
     const a = inst(PORTEUSE);
     const b = inst(PORTEUSE);
-    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [a.instanceId, b.instanceId] });
+    const balthus = inst("kharns-balthus-3", { attachedInstanceIds: [a.instanceId, b.instanceId] });
     const others = [inst("kharns-syrga"), inst("kharns-syrga")];
     expect(slaveIssues(evaluateList(sansPlafond, makeList([balthus, a, b, ...others], "kharns")))).toEqual([]);
 
@@ -1565,7 +1565,7 @@ describe("Esclaves (LDR Saison 2, p. 10)", () => {
   it("les esclaves ne dépassent jamais en nombre les autres combattants", () => {
     const a = inst(PORTEUSE);
     const b = inst(PORTEUSE);
-    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [a.instanceId, b.instanceId] });
+    const balthus = inst("kharns-balthus-3", { attachedInstanceIds: [a.instanceId, b.instanceId] });
     // 2 esclaves pour 1 autre combattant → refusé ; en ajoutant un second Khârn, 2 pour 2 → accepté.
     const trop = evaluateList(sansPlafond, makeList([balthus, a, b], "kharns"));
     expect(slaveIssues(trop).map((i) => i.ruleId)).toContain("slave-outnumber");
@@ -1593,7 +1593,7 @@ describe("Esclaves (LDR Saison 2, p. 10)", () => {
 
   it("sa condition lui tient lieu de laissez-passer inter-factions", () => {
     const esclave = inst(PORTEUSE); // goûne, dans un Fer de Lance khârn
-    const balthus = inst("profile-1785427326487", { attachedInstanceIds: [esclave.instanceId] });
+    const balthus = inst("kharns-balthus-3", { attachedInstanceIds: [esclave.instanceId] });
     const res = evaluateList(carte, makeList([balthus, esclave, inst("kharns-syrga")], "kharns"));
     expect(res.issues.filter((i) => i.ruleId?.startsWith("faction:"))).toEqual([]);
   });
@@ -1623,7 +1623,7 @@ const grantEffectId = (): string =>
     .find((e) => e.operation.kind === "grant-spell-choice")!.id;
 
 describe("sorts offerts au choix (grant-spell-choice)", () => {
-  const DEMI_SOEUR = "profile-1785410170666";
+  const DEMI_SOEUR = "fangs-demi-soeur-3";
   const GRANT = grantEffectId();
   const demiSoeur = catalog.profiles.find((p) => p.id === DEMI_SOEUR)!;
   const grantOf = (cat: Catalog = catalog) =>
@@ -1638,8 +1638,8 @@ describe("sorts offerts au choix (grant-spell-choice)", () => {
 
   it("l'offre ne connaît ni page ni niveau : sorts de grimoire et génériques de la voie s'y côtoient", () => {
     const ids = grantOf().choices.map((s) => s.id);
-    expect(ids).toContain("spell-1785239128129"); // Ordre sépulcral - 3 pages
-    expect(ids).toContain("spell-1785237940302"); // Poudre d'os - générique
+    expect(ids).toContain("ordre-sepulcral"); // Ordre sépulcral - 3 pages
+    expect(ids).toContain("poudre-d-os"); // Poudre d'os - générique
   });
 
   it("les réservations tiennent : la Demi-soeur n'atteint pas les sorts des Filles de Nyx", () => {
@@ -1650,7 +1650,7 @@ describe("sorts offerts au choix (grant-spell-choice)", () => {
 
   it("le sort offert ne consomme ni page ni niveau, même sans grimoire", () => {
     // 3 pages : impossible à financer sans grimoire s'il passait par le budget général.
-    const x = inst(DEMI_SOEUR, { grantedSpellIds: { [GRANT]: ["spell-1785239128129"] } });
+    const x = inst(DEMI_SOEUR, { grantedSpellIds: { [GRANT]: ["ordre-sepulcral"] } });
     const res = evalFang([x]);
     expect(res.issues.filter((i) => i.severity === "error")).toEqual([]);
     expect(res.costByInstance[x.instanceId]).toBe(demiSoeur.cost);
@@ -1682,14 +1682,14 @@ describe("sorts offerts au choix (grant-spell-choice)", () => {
 
   it("le quota de l'offre est tenu", () => {
     const x = inst(DEMI_SOEUR, {
-      grantedSpellIds: { [GRANT]: ["spell-1785238451420", "spell-1785238621986"] },
+      grantedSpellIds: { [GRANT]: ["poigne-spectrale", "aura-de-mort"] },
     });
     const res = evalFang([x]);
     expect(res.issues.map((i) => i.ruleId)).toContain("granted-spell-over-count");
   });
 
   it("un choix dont l'offre a disparu est signalé, pas appliqué en silence", () => {
-    const x = inst(DEMI_SOEUR, { grantedSpellIds: { "effet-envole": ["spell-1785238451420"] } });
+    const x = inst(DEMI_SOEUR, { grantedSpellIds: { "effet-envole": ["poigne-spectrale"] } });
     const res = evalFang([x]);
     expect(res.issues.map((i) => i.ruleId)).toContain("granted-spell-orphan");
   });
@@ -1697,8 +1697,8 @@ describe("sorts offerts au choix (grant-spell-choice)", () => {
   it("un même sort ne peut être connu deux fois (offert et payé)", () => {
     const x = inst(DEMI_SOEUR, {
       grimoireId: "grand",
-      spellIds: ["spell-1785238451420"],
-      grantedSpellIds: { [GRANT]: ["spell-1785238451420"] },
+      spellIds: ["poigne-spectrale"],
+      grantedSpellIds: { [GRANT]: ["poigne-spectrale"] },
     });
     const res = evalFang([x]);
     expect(res.issues.map((i) => i.ruleId)).toContain("spell-duplicate");
@@ -1711,8 +1711,8 @@ describe("sorts offerts au choix (grant-spell-choice)", () => {
 });
 
 describe("un objet qui protège sans être une armure (Vouge de Moringa)", () => {
-  const VOUGE = "equip-1785436448046";
-  const PATRIARCHE = "profile-1785421140855";
+  const VOUGE = "vouge-de-moringa";
+  const PATRIARCHE = "tembos-patriarche-3";
   const eq = (id: string) => catalog.equipment.find((e) => e.id === id)!;
 
   it("le rôle défensif se lit sur l'objet, pas sur sa catégorie", () => {
@@ -1872,7 +1872,7 @@ describe("recrutement ouvert : qui la faction refuse", () => {
 });
 
 describe("origine choisie au recrutement (Agent sombre)", () => {
-  const AGENT = "profile-1785423938572"; // Agent sombre II
+  const AGENT = "guilde-noire-agent-sombre-2"; // Agent sombre II
   const agent = catalog.profiles.find((p) => p.id === AGENT)!;
   const list = (origin?: string) =>
     makeList([inst(AGENT, origin ? { origin } : {})], "guilde-noire");

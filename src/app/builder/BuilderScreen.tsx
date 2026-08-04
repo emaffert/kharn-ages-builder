@@ -452,7 +452,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           )}
           <div className={`bld-thumb${attached ? " sm" : ""}`}>
             {icon && <img className="bld-thumb-img" src={icon} alt="" />}
-            <FactionEmblem kind={fac.emblem} className="sig" />
             {!icon && <span className="lvl">{LEVEL[x.p.level ?? 0] || "·"}</span>}
           </div>
           <div className="bld-uinfo">

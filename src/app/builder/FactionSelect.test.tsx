@@ -27,9 +27,14 @@ describe("FactionSelect (vue)", () => {
     }
   });
 
-  it("désactive les factions « à venir » (sans profil) et les marque comme telles", () => {
+  it("désactive les factions « à venir » (personne à recruter) et les marque comme telles", () => {
     render(<FactionSelect store={makeStore()} onStart={() => {}} onLoad={() => {}} />);
-    const soon = FACTIONS.filter((f) => !catalog.profiles.some((p) => p.factionId === f.id));
+    // Une faction qui ouvre ses rangs est jouable même sans profil à elle : elle recrute ailleurs.
+    const soon = FACTIONS.filter(
+      (f) =>
+        !catalog.profiles.some((p) => p.factionId === f.id) &&
+        !catalog.factions.find((c) => c.id === f.id)?.openRecruitment,
+    );
     for (const f of soon) {
       const tile = screen.getByRole("heading", { name: f.name }).closest("button");
       expect(tile, `tuile ${f.id}`).toBeTruthy();
@@ -38,7 +43,7 @@ describe("FactionSelect (vue)", () => {
     if (soon.length > 0) expect(screen.getAllByText(/à venir/i).length).toBe(soon.length);
   });
 
-  it("démarre une liste avec la faction, le format et le budget sélectionnés", () => {
+  it("démarre une liste avec la faction, le format et le budget par défaut (500 Ko)", () => {
     const onStart = vi.fn();
     render(<FactionSelect store={makeStore()} onStart={onStart} onLoad={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Nouvelle liste" }));
@@ -46,15 +51,15 @@ describe("FactionSelect (vue)", () => {
     const [factionId, format, points] = onStart.mock.calls[0];
     expect(catalog.profiles.some((p) => p.factionId === factionId)).toBe(true);
     expect(format).toBe("escarmouche");
-    expect(points).toBe(300);
+    expect(points).toBe(500);
   });
 
-  it("propose 500 Ko comme second budget prédéfini", () => {
+  it("propose 300 Ko comme autre budget prédéfini", () => {
     const onStart = vi.fn();
     render(<FactionSelect store={makeStore()} onStart={onStart} onLoad={() => {}} />);
-    fireEvent.click(screen.getByRole("radio", { name: "500 Ko" }));
+    fireEvent.click(screen.getByRole("radio", { name: "300 Ko" }));
     fireEvent.click(screen.getByRole("button", { name: "Nouvelle liste" }));
-    expect(onStart.mock.calls[0][2]).toBe(500);
+    expect(onStart.mock.calls[0][2]).toBe(300);
   });
 
   it("affiche « Aucune liste sauvegardée » quand la bibliothèque est vide", () => {

@@ -31,20 +31,25 @@ export function FactionSelect({
   onStart: (id: string, format: ListDocument["format"], pointsLimit: number) => void;
   onLoad: (doc: ListDocument) => void;
 }) {
-  // Une faction est jouable si le catalogue contient des profils pour elle.
-  const counts = useMemo(() => {
+  /**
+   * Une faction est jouable si on peut lui recruter quelqu'un : ses propres profils, ou ceux qu'elle
+   * accueille quand elle ouvre ses rangs (les Affranchis, qui rassemblent les autres peuples).
+   * Compter les seuls profils natifs la déclarerait « à venir » alors qu'elle a déjà tout un roster.
+   */
+  const playable = useMemo(() => {
     const c = new Map<string, number>();
     for (const p of store.catalog.profiles) if (p.factionId) c.set(p.factionId, (c.get(p.factionId) ?? 0) + 1);
+    for (const f of store.catalog.factions) if (f.openRecruitment) c.set(f.id, c.get(f.id) ?? 1);
     return c;
   }, [store.catalog]);
-  const firstAvailable = FACTIONS.find((f) => (counts.get(f.id) ?? 0) > 0) ?? FACTIONS[0];
+  const firstAvailable = FACTIONS.find((f) => (playable.get(f.id) ?? 0) > 0) ?? FACTIONS[0];
 
   const [selectedId, setSelectedId] = useState(firstAvailable.id);
   const selected = FACTIONS.find((f) => f.id === selectedId) ?? firstAvailable;
 
   const [format, setFormat] = useState<ListDocument["format"]>("escarmouche");
-  const [budget, setBudget] = useState<"300" | "500" | "custom">("300");
-  const [customPoints, setCustomPoints] = useState("300"); // chaîne : autorise le champ vide en cours de saisie
+  const [budget, setBudget] = useState<"300" | "500" | "custom">("500");
+  const [customPoints, setCustomPoints] = useState("500"); // chaîne : autorise le champ vide en cours de saisie
   const points = budget === "custom" ? Number(customPoints) || 0 : Number(budget);
 
   const [showImport, setShowImport] = useState(false);
@@ -70,8 +75,7 @@ export function FactionSelect({
 
         <div className="fs-grid">
           {FACTIONS.map((f) => {
-            const n = counts.get(f.id) ?? 0;
-            const soon = n === 0;
+            const soon = (playable.get(f.id) ?? 0) === 0;
             const facVars = {
               "--faction": f.color,
               "--faction-2": f.colorBright,
@@ -87,7 +91,6 @@ export function FactionSelect({
                 style={facVars}
                 onClick={() => !soon && setSelectedId(f.id)}
               >
-                {f.transverse && <span className="fs-eyebrow">Transverse</span>}
                 <FactionEmblem kind={f.emblem} className="fs-emblem" />
                 <h3>{f.name}</h3>
                 <p>{f.blurb}</p>

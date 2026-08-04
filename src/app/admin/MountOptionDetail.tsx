@@ -1,6 +1,6 @@
 import type { Catalog, MountOption } from "@core";
 import { INPUT, SECTION } from "./shared";
-import { ChipMultiSelect, Combobox, DetailHeader, DetailPage, EditableNumber, Field, FieldGroup, Section } from "./primitives";
+import { AutoTextarea, ChipMultiSelect, Combobox, DetailHeader, DetailPage, EditableNumber, Field, FieldGroup, Section } from "./primitives";
 
 /** Éditeur d'une option de monture (règles de bataille p.32) : panier, compétence, réservations, coûts. */
 const BUCKETS: [MountOption["bucket"], string][] = [
@@ -136,11 +136,9 @@ export function MountOptionDetail({
           </Section>
 
           <Section title={SECTION.verbatim} icon="verbatim">
-            <textarea
+            <AutoTextarea
               value={o.effectsText ?? ""}
-              rows={2}
-              onChange={(e) => onChange({ effectsText: e.target.value || undefined })}
-              className={`${INPUT} w-full`}
+              onChange={(v) => onChange({ effectsText: v || undefined })}
             />
           </Section>
 

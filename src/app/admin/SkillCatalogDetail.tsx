@@ -1,6 +1,5 @@
 import type { Catalog, Skill } from "@core";
-import { CheckField, DetailHeader, DetailPage, IdField, Section } from "./primitives";
-import { INPUT } from "./shared";
+import { AutoTextarea, CheckField, DetailHeader, DetailPage, IdField, Section } from "./primitives";
 
 export function SkillCatalogDetail({
   skill: s,
@@ -36,11 +35,10 @@ export function SkillCatalogDetail({
           </Section>
 
           <Section title="Description" icon="verbatim">
-            <textarea
+            <AutoTextarea
               value={s.sourceText}
-              rows={3}
-              onChange={(e) => onChange({ sourceText: e.target.value })}
-              className={`${INPUT} w-full`}
+              onChange={(v) => onChange({ sourceText: v })}
+              minRows={3}
             />
           </Section>
         </>

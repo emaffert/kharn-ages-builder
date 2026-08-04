@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { protects, type Catalog, type Equipment, type EquipmentUpgrade } from "@core";
-import { AddButton, CardImageSection, DetailHeader, DetailPage, Field, FieldGroup, IdField, NumberField, RemoveButton, Section } from "./primitives";
+import { AddButton, AutoTextarea, CardImageSection, DetailHeader, DetailPage, Field, FieldGroup, IdField, NumberField, RemoveButton, Section } from "./primitives";
 import { EQUIPMENT_CATEGORIES, INPUT, SECTION } from "./shared";
 import { ReservedToEditor } from "./editors";
 import { EffectListEditor } from "../RuleEditors";
@@ -268,11 +268,9 @@ export function EquipmentDetail({
           )}
 
           <Section title={SECTION.verbatim} icon="verbatim">
-            <textarea
+            <AutoTextarea
               value={e.effectsText}
-              rows={2}
-              onChange={(ev) => onChange({ effectsText: ev.target.value })}
-              className={`${INPUT} w-full`}
+              onChange={(v) => onChange({ effectsText: v })}
             />
           </Section>
 

@@ -1,5 +1,5 @@
 import type { Catalog, Faction, OpenRecruitment } from "@core";
-import { AddButton, Field, RemoveButton } from "./primitives";
+import { AddButton, AutoTextarea, Field, RemoveButton } from "./primitives";
 import { INPUT } from "./shared";
 import { ChipRow, StringList } from "../ruleEditors/kit";
 
@@ -138,12 +138,7 @@ export function OpenRecruitmentEditor({
       </div>
 
       <Field label="Texte officiel" hint="Le wording des règles, qui fait foi.">
-        <textarea
-          value={open.sourceText}
-          onChange={(e) => set({ sourceText: e.target.value })}
-          rows={3}
-          className={INPUT}
-        />
+        <AutoTextarea value={open.sourceText} onChange={(v) => set({ sourceText: v })} minRows={3} />
       </Field>
 
       <button type="button" onClick={() => onChange(undefined)} className="adm-x text-xs">

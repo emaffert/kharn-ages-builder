@@ -527,11 +527,10 @@ export function NotesSection({
       <div className="space-y-2">
         {notes.map((n, i) => (
           <div key={i} className="flex items-start gap-2">
-            <textarea
+            <AutoTextarea
               value={n}
-              rows={2}
-              onChange={(e) => commit(notes.map((x, j) => (j === i ? e.target.value : x)))}
-              className={`${INPUT} flex-1`}
+              onChange={(v) => commit(notes.map((x, j) => (j === i ? v : x)))}
+              className="flex-1"
             />
             <RemoveButton onClick={() => commit(notes.filter((_, j) => j !== i))} />
           </div>
@@ -833,5 +832,57 @@ export function ConfirmDeleteDialog({
         {pending?.refs && <ReferenceList refs={pending.refs} />}
       </div>
     </Dialog>
+  );
+}
+
+/**
+ * Zone de texte qui **se règle sur son contenu** : deux lignes à vide, puis elle grandit à mesure
+ * qu'on écrit, jusqu'à un plafond au-delà duquel elle défile.
+ *
+ * Les textes verbatim vont de la demi-ligne (« +1 dégât. ») au paragraphe de six lignes : une
+ * hauteur fixe est soit trop grande pour les premiers, soit trop petite pour les seconds, et
+ * obligeait à empoigner la poignée de redimensionnement pour relire ce qu'on venait de saisir.
+ */
+export function AutoTextarea({
+  value,
+  onChange,
+  minRows = 2,
+  maxRows = 10,
+  className = "",
+  ...rest
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  minRows?: number;
+  maxRows?: number;
+  className?: string;
+} & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "value" | "onChange" | "rows">) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  // Mesurer après peinture : `scrollHeight` n'est juste qu'une fois la hauteur remise à zéro, et il
+  // faut le refaire à chaque changement de valeur - y compris quand elle vient d'ailleurs (reset de
+  // fiche, « Repartir du fichier »), d'où la dépendance sur `value` plutôt qu'un simple onInput.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const style = getComputedStyle(el);
+    const line = parseFloat(style.lineHeight) || 18;
+    const chrome = el.offsetHeight - el.clientHeight + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+    el.style.height = "auto";
+    const rows = Math.min(maxRows, Math.max(minRows, Math.ceil((el.scrollHeight - chrome) / line)));
+    el.style.height = `${rows * line + chrome}px`;
+    el.style.overflowY = el.scrollHeight > el.clientHeight ? "auto" : "hidden";
+  }, [value, minRows, maxRows]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      // Pleine largeur par défaut : `admin.css` ne l'accorde qu'aux champs placés dans un `Field`,
+      // et une zone de texte hors `Field` retombait sinon sur la largeur native d'un `<textarea>`,
+      // soit une colonne étroite au milieu d'une section large.
+      className={`${INPUT} w-full ${className}`}
+      {...rest}
+    />
   );
 }

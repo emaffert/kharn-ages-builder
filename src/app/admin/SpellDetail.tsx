@@ -1,5 +1,5 @@
 import type { Catalog, Spell } from "@core";
-import { AddButton, CardImageSection, ChipMultiSelect, Combobox, DetailHeader, DetailPage, Field, IdField, RemoveButton, Section } from "./primitives";
+import { AddButton, AutoTextarea, CardImageSection, ChipMultiSelect, Combobox, DetailHeader, DetailPage, Field, IdField, RemoveButton, Section } from "./primitives";
 import { INPUT, removeAt, replaceAt } from "./shared";
 import { ProfileMultiSelect } from "./editors";
 
@@ -115,13 +115,12 @@ export function SpellDetail({
                     }
                     className={`${INPUT} w-20`}
                   />
-                  <textarea
+                  <AutoTextarea
                     value={d.effectText}
-                    rows={2}
-                    onChange={(e) =>
-                      onChange({ difficulties: replaceAt(s.difficulties, i, { ...d, effectText: e.target.value }) })
+                    onChange={(v) =>
+                      onChange({ difficulties: replaceAt(s.difficulties, i, { ...d, effectText: v }) })
                     }
-                    className={`${INPUT} flex-1`}
+                    className="flex-1"
                   />
                   <RemoveButton onClick={() => onChange({ difficulties: removeAt(s.difficulties, i) })} />
                 </div>

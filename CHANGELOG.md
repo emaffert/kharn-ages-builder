@@ -7,6 +7,43 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-04
+
+### Les Affranchis ouvrent leurs rangs
+
+- La faction des **Affranchis** entre dans le constructeur, avec ses **23 figurines** : de Maraka et
+  Clotrique, qui la mènent, jusqu'au Jardinier à 30 Ko. C'est la dernière faction du jeu à rejoindre
+  l'outil - toutes y sont désormais.
+- **Khalsa** existe en deux versions, une par camp, chacune avec ce que sa carte lui donne : cape
+  d'ombre et rossignol chez la Guilde Noire, « Furtivité 3 » chez les Affranchis.
+- Un Fer de Lance affranchi accueille **les combattants ordinaires des autres peuples** (khârns,
+  khérops, goûns, fangs et Guilde Noire), sans rien payer ni personne à réunir. Ils apparaissent dans
+  une section **« Peuples ralliés »** du roster. Les restrictions des règles sont appliquées : pas de
+  membre de l'Ordre du Sang et de l'Acier, pas de femelle fang, pas de Bourreau du Sacrifice, et
+  **un seul** shaman goûn ou prêtre du Sacrifice khérops par Fer de Lance.
+- **Une figurine qui rallie les Affranchis laisse derrière elle l'arsenal de son peuple** : le
+  Guerrier khârn ne peut plus acheter l'Armure de Combat Khârne. Ses armes de signature, elles, lui
+  restent.
+- Tous les membres d'un Fer de Lance affranchi gagnent **Furtivité**, y compris les ralliés : ils
+  combattent comme une seule et même faction. Les autres, venus d'ailleurs, peuvent apprendre
+  **« Éclaireur 2 » et « Rusé »** pour 5 Ko multipliés par leur niveau.
+- Une figurine peut désormais déclarer son **peuple d'origine**, distinct de la faction sous laquelle
+  elle combat. C'est ce qui lui laisse la **monture** de son peuple, et sa nature **carnivore** chez
+  les Affranchis - et cela répare au passage les membres de la Guilde Noire venus des Fangs, dont
+  l'origine n'était nulle part.
+- Le roster range les ralliés **par peuple d'origine** : la liste d'un seul tenant était un mur.
+- Un peuple accueilli l'est **selon ses propres règles, et seulement elles** : une figurine unique ou
+  un personnage de ces peuples ne peut plus s'inviter en payant un sceau de la Guilde Noire. Ce que la
+  carte accorde nommément (« Allié des Affranchis », « Apatride ») passe toujours avant, comme il se
+  doit pour le Bourgmestre.
+- Le roster ne propose plus que les **niveaux réellement recrutables** d'une figurine : l'Agent
+  sombre s'affichait avec ses trois niveaux chez les Affranchis, qui n'acceptent que le premier.
+
+### Petites choses
+
+- Le budget d'une nouvelle liste est à **500 Ko** par défaut.
+- La tuile des Affranchis perd sa mention « Transverse ».
+
 ## 2026-08-03 (3)
 
 ### Dupliquer une figurine

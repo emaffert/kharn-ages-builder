@@ -52,3 +52,56 @@
 - Alaric et les Sunkherces peuvent utiliser un sort particulier sans grimoire
 - Artisane Dogon, Dogon, et des Mongos ont une stat en fonction du nombre de certains profils en jeu
 - Il y a deux profils de Champion Tribal, qui sont les même mais avec des loadouts différents. On peut les nommer en fonction de leur loadout
+
+## Affranchis
+
+- Dossier de cartes nettoyé : 94 fichiers -> 24, une carte par fichier (recto illustré à gauche,
+  stats à droite). 23 profils + la carte « Khalsa l'Ombre Lune ». Écartés : 43 doublons du pack
+  « preview », 3 dos de carte et la carte de présentation du pack.
+- **Khalsa** est bi-faction et sa carte spéciale lui donne des équipements et des compétences
+  différents selon le camp : deux profils distincts (un GN, un Affranchi) portant chacun directement
+  ce qui lui revient, plutôt qu'une règle conditionnelle. Le profil GN existe déjà
+  (`guilde-noire-khalsa-2`, carte Affranchie en illustration). Sa carte affranchie n'affiche pas
+  « Indépendant », que le profil GN porte : à revérifier.
+- **Deux « Franc Cogneur Khérops »** : même illustration, niveau I (85 Ko, Lim 2) et niveau II
+  (110 Ko, Lim U). Un seul modèle, deux niveaux - noter que le niveau II passe unique, ce qui est
+  inhabituel.
+- **Maraka** est goûne (« simple tisserande goûne », p.44) et **Clotrique** bûcheron de
+  Ligneux-Ville : leur origine vient du récit, pas de leur carte. Pour les autres, elle se lit sur
+  l'illustration du recto.
+- Le **socle** (`profile.baseSize`, en mm) se lit à droite de la limitation, quand la carte le donne.
+  Chez les Affranchis, seules les 11 cartes du pack de Renforts l'impriment ; les 12 autres n'ont
+  rien et restent vides. Champ d'admin uniquement pour l'instant (section « Identité »), aucune règle
+  ne le lit et le constructeur ne l'affiche pas encore.
+- La nature carnivore / herbivore se déduit du peuple d'origine (`faction.nature`), conformément à la
+  FAQ : chez les Affranchis elle dépend du visuel de la carte, c'est-à-dire du peuple représenté.
+- Bonus de faction restés en **verbatim** parce qu'ils ne touchent ni la composition ni le coût : le
+  +1 d'incantation par allié non activé dans l'aura, et le bonus de défense contre les tirs à couvert
+  (égal au niveau).
+- **Points restés en verbatim**, faute de mécanique qui les couvre - tous sont des effets de jeu,
+  sans incidence sur la composition ni sur le coût :
+  - Ferronière : « les Affranchis **khérops** dans son aura ». Viser une **origine** n'est pas
+    exprimable par un sélecteur (`Selector` n'a pas de dimension `origin`).
+  - Repenti, « Apprenti » : copie en début de partie une compétence générique d'un allié au choix.
+  - Swe Dova, « Champion désigné » : draine jusqu'à 6 PA sur des Niveaux 1 alliés.
+  - Vivandière « Fricot », Percussionniste « Tambour de la liberté », Béquilleur « Vorace »,
+    Tireur Yuntaishan « Qui-vive », Clotrique (partage sa témérité), Mendiant (+3 en soutien).
+- **Arme au nom générique, règles propres** : quand une carte donne à une arme banale un effet que
+  l'objet partagé n'a pas, créer un objet **au nom de sa figurine**, réservé à elle
+  (`reservedTo.profileIds`), plutôt que dévier l'objet commun. Trois cas ici : « Hache d'abattage de
+  Boquillon » (dégâts et effets appliqués 2 fois en cas de RC), « Hache d'abattage de Clotrique »
+  (+1 dégât, confère riposte) et « Marteau de guerre du Stoppeur » (+2 en défense en plus).
+- **« Bol de Millet »** (Vivandière) : un **seul** objet. « 2 utilisations » n'est pas deux
+  exemplaires - c'est une réserve interne qui se décompte en jeu, elle reste dans la description.
+  Ne pas confondre avec les doses de poison de la Camériste, qui sont bien trois objets. Prix non
+  imprimé, à confirmer.
+- **Synkherces** : c'est une **carte spéciale** (portée : trait `synkherces`), qu'un mot-clé imprimé
+  signale sur les cartes de profil. Elle existait pour le Guerrier Albinos mais n'accordait rien :
+  Riposte et « Onde revigorante » étaient saisis en dur sur lui, donc ni visibles comme octrois ni
+  réutilisables. Ils sont désormais portés par la carte (deux effets `target: self`), et Swe Dova la
+  partage. Le Madrier n'a besoin d'aucun effet : il est déjà `reservedTo.traits: ["synkherces"]`.
+  Le mot-clé suit la convention du projet : compétence `synkherce` pour l'affichage, trait
+  `synkherces` pour la mécanique.
+- **Furtivité** est passée « à valeur » dans le dictionnaire : la carte affranchie de Khalsa affiche
+  « Furtivité 3 », les autres l'affichent sans valeur.
+- **Stature** : aucune carte affranchie ne l'imprime. Toutes sont à 4 en valeur d'attente, flaguées.

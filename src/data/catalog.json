@@ -1,5 +1,5 @@
 {
-  "version": "0.3.13",
+  "version": "0.4.0",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -11,27 +11,32 @@
     {
       "id": "fangs",
       "name": "Fangs",
-      "logo": "fangs"
+      "logo": "fangs",
+      "nature": "carnivore"
     },
     {
       "id": "gouns",
       "name": "Goüns",
-      "logo": "gouns"
+      "logo": "gouns",
+      "nature": "herbivore"
     },
     {
       "id": "kharns",
       "name": "Khârns",
-      "logo": "kharns"
+      "logo": "kharns",
+      "nature": "carnivore"
     },
     {
       "id": "kherops",
       "name": "Khérops",
-      "logo": "kherops"
+      "logo": "kherops",
+      "nature": "herbivore"
     },
     {
       "id": "tembos",
       "name": "Tembos",
       "logo": "tembos",
+      "nature": "herbivore",
       "notes": "Aussi appelés Khémistes (même faction, même logo)."
     },
     {
@@ -42,7 +47,41 @@
     {
       "id": "affranchis",
       "name": "Affranchis",
-      "logo": "affranchis"
+      "logo": "affranchis",
+      "openRecruitment": {
+        "fromFactionIds": [
+          "kharns",
+          "kherops",
+          "gouns",
+          "fangs",
+          "guilde-noire"
+        ],
+        "excludeTraits": [
+          "ordre-du-sang-et-acier",
+          "femelle-fang"
+        ],
+        "excludeProfileIds": [
+          "kherops-bourreau-2",
+          "guilde-noire-khalsa-2"
+        ],
+        "caps": [
+          {
+            "label": "shaman goûn",
+            "profileIds": [
+              "gouns-shaman-1"
+            ],
+            "max": 1
+          },
+          {
+            "label": "prêtre du Sacrifice khérops",
+            "profileIds": [
+              "kherops-pretre-1"
+            ],
+            "max": 1
+          }
+        ],
+        "sourceText": "Un Fer de Lance ou un Ost d'Affranchis peut comporter n'importe quel générique (comprenez non personnage et non unique) des factions khârne, khéropse, goûne, fang et Guilde Noire en respectant les restrictions suivantes : aucun fidèle, frère ou membre de l'Ordre du Sang et de l'Acier parmi les Khârns ; aucune femelle parmi les Fangs ; seuls les shamans goûns de niveau I y sont autorisés (pas de niveau II ni III), il ne peut y en avoir plus d'un par Fer de Lance ; seuls les Prêtres du sacrifice khérops (niveau I) y sont autorisés (pas de niveau II ni III), il ne peut y en avoir plus d'un par Fer de Lance ; seuls les génériques non uniques, Agents sombres niveau I, brutes, voleurs ou négociateurs par exemple sont tolérés pour la Guilde Noire ; les Tembos et les Khémistes non « apatrides » ne peuvent en faire partie."
+      }
     }
   ],
   "skills": [
@@ -193,7 +232,7 @@
     {
       "id": "furtivite",
       "keyword": "Furtivité",
-      "hasValue": false,
+      "hasValue": true,
       "sourceText": "Ils ajoutent à leur défense un bonus d'une valeur égale à leur niveau dès qu'ils sont à couvert."
     },
     {
@@ -441,6 +480,12 @@
       "keyword": "Frères d'armes",
       "hasValue": false,
       "sourceText": "Compagnons de Mathys. Effets liés via la carte « Frères d'Armes » (apatride et compétences dès 2 frères d'armes dans le Fer de Lance)."
+    },
+    {
+      "id": "synkherce",
+      "keyword": "Synkherce",
+      "hasValue": false,
+      "sourceText": "Les Synkherces sont solitaires, ils apprennent donc à se soigner seuls, ils maîtrisent uniquement le sort « Onde revigorante » sur eux-mêmes, sans grimoire. Riposte. Possibilité d'acquérir le Madrier en en payant le coût."
     }
   ],
   "magicWays": [
@@ -1186,6 +1231,176 @@
       "factionId": "tembos",
       "profileIds": [
         "profile-1785435773939"
+      ]
+    },
+    {
+      "id": "affranchis-maraka",
+      "name": "Maraka",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-maraka-3"
+      ]
+    },
+    {
+      "id": "affranchis-franc-archer-kharn",
+      "name": "Franc Archer Khârn",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-franc-archer-kharn-2"
+      ]
+    },
+    {
+      "id": "affranchis-vivandiere",
+      "name": "Vivandière",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-vivandiere-2"
+      ]
+    },
+    {
+      "id": "affranchis-boquillon",
+      "name": "Boquillon",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-boquillon-2"
+      ]
+    },
+    {
+      "id": "affranchis-mendiant",
+      "name": "Mendiant",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-mendiant-1"
+      ]
+    },
+    {
+      "id": "affranchis-percussionniste",
+      "name": "Percussionniste",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-percussionniste-2"
+      ]
+    },
+    {
+      "id": "affranchis-franc-archer-goun",
+      "name": "Franc Archer Goûn",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-franc-archer-goun-2"
+      ]
+    },
+    {
+      "id": "affranchis-khalsa",
+      "name": "Khalsa",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-khalsa-2"
+      ]
+    },
+    {
+      "id": "affranchis-bequilleur",
+      "name": "Béquilleur",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-bequilleur-2"
+      ]
+    },
+    {
+      "id": "affranchis-revolte",
+      "name": "Révolté",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-revolte-2"
+      ]
+    },
+    {
+      "id": "affranchis-ferroniere",
+      "name": "Ferronière",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-ferroniere-2"
+      ]
+    },
+    {
+      "id": "affranchis-belliciste",
+      "name": "Belliciste",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-belliciste-2"
+      ]
+    },
+    {
+      "id": "affranchis-franc-cogneur-kherops",
+      "name": "Franc Cogneur Khérops",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-franc-cogneur-kherops-1",
+        "affranchis-franc-cogneur-kherops-2"
+      ]
+    },
+    {
+      "id": "affranchis-jardinier",
+      "name": "Jardinier",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-jardinier-1"
+      ]
+    },
+    {
+      "id": "affranchis-brise-ligne",
+      "name": "Brise-Ligne",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-brise-ligne-2"
+      ]
+    },
+    {
+      "id": "affranchis-reitre-1",
+      "name": "Reître",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-reitre-1-2",
+        "affranchis-reitre-2-2"
+      ]
+    },
+    {
+      "id": "affranchis-stoppeur",
+      "name": "Stoppeur",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-stoppeur-2"
+      ]
+    },
+    {
+      "id": "affranchis-clotrique",
+      "name": "Clotrique",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-clotrique-3"
+      ]
+    },
+    {
+      "id": "affranchis-swe-dova",
+      "name": "Swe Dova",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-swe-dova-2"
+      ]
+    },
+    {
+      "id": "affranchis-tireur-yuntaishan",
+      "name": "Tireur Yuntaishan",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-tireur-yuntaishan-1"
+      ]
+    },
+    {
+      "id": "affranchis-repenti",
+      "name": "Repenti",
+      "factionId": "affranchis",
+      "profileIds": [
+        "affranchis-repenti-1"
       ]
     }
   ],
@@ -3188,7 +3403,7 @@
           "value": 12
         },
         {
-          "skillId": "riposte"
+          "skillId": "synkherce"
         }
       ],
       "baseEquipmentIds": [],
@@ -3214,29 +3429,7 @@
         "synkherces"
       ],
       "recruitment": [],
-      "effects": [
-        {
-          "id": "grant-spell-onde-revigorante",
-          "source": {
-            "kind": "profile",
-            "id": "gouns-guerrier-albinos-3"
-          },
-          "scope": "fer-de-lance",
-          "target": {
-            "self": true
-          },
-          "operation": {
-            "kind": "grant-spell",
-            "spellId": "onde-revigorante"
-          },
-          "sourceText": "Connaît le sort « Onde revigorante » d'office."
-        }
-      ],
       "rules": [
-        {
-          "label": "Synkherces",
-          "text": ""
-        },
         {
           "label": "Rassurant",
           "text": "Les Dogons et les Mongos dans son aura ont +2 en témérité."
@@ -8817,6 +9010,7 @@
       "name": "Mathys",
       "level": 3,
       "factionId": "guilde-noire",
+      "origin": "kharns",
       "cost": 135,
       "limitation": {
         "kind": "P"
@@ -8877,17 +9071,13 @@
         ]
       ],
       "traits": [
-        "frere-d-armes",
-        "monture-kharns"
+        "frere-d-armes"
       ],
       "recruitment": [],
       "rules": [
         {
           "text": "« Peut piller »"
         }
-      ],
-      "notes": [
-        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
       ],
       "cardImage": "cards/Guilde Noire/mathys-fr.jpg",
       "unverifiedFields": []
@@ -8898,6 +9088,7 @@
       "name": "Bharbathos",
       "level": 3,
       "factionId": "guilde-noire",
+      "origin": "fangs",
       "cost": 120,
       "limitation": {
         "kind": "P"
@@ -8964,9 +9155,6 @@
       ],
       "recruitment": [],
       "rules": [],
-      "notes": [
-        "Origine Fang. Trait « monture-fangs » : sert UNIQUEMENT à définir la monture accessible (aucune (les Fangs n’ont pas de monture)), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/bharbathos.jpg",
       "unverifiedFields": []
     },
@@ -8976,6 +9164,7 @@
       "name": "Gakere",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "gouns",
       "cost": 130,
       "limitation": {
         "kind": "P"
@@ -9033,14 +9222,10 @@
         ]
       ],
       "traits": [
-        "frere-d-armes",
-        "monture-gouns"
+        "frere-d-armes"
       ],
       "recruitment": [],
       "rules": [],
-      "notes": [
-        "Origine Goûn. Trait « monture-gouns » : sert UNIQUEMENT à définir la monture accessible (Mochère), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/gakere.jpg",
       "unverifiedFields": []
     },
@@ -9050,6 +9235,7 @@
       "name": "Kaito",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kherops",
       "cost": 110,
       "limitation": {
         "kind": "P"
@@ -9107,8 +9293,7 @@
         ]
       ],
       "traits": [
-        "frere-d-armes",
-        "monture-kherops"
+        "frere-d-armes"
       ],
       "recruitment": [],
       "effects": [
@@ -9141,9 +9326,6 @@
           "text": "tant que Sükh est en jeu, Kaito gagne « foi inébranlable »."
         }
       ],
-      "notes": [
-        "Origine Khérops. Trait « monture-kherops » : sert UNIQUEMENT à définir la monture accessible (Kœlod), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/kaito.jpg",
       "unverifiedFields": []
     },
@@ -9153,6 +9335,7 @@
       "name": "Sükh",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kherops",
       "cost": 110,
       "limitation": {
         "kind": "P"
@@ -9205,8 +9388,7 @@
         ]
       ],
       "traits": [
-        "frere-d-armes",
-        "monture-kherops"
+        "frere-d-armes"
       ],
       "recruitment": [],
       "rules": [
@@ -9216,7 +9398,7 @@
         }
       ],
       "notes": [
-        "Origine Khérops. Trait « monture-kherops » : sert UNIQUEMENT à définir la monture accessible (Kœlod), pas l’accès aux objets/sorts réservés de ce peuple. Berserker → aucune monture en pratique."
+        "Berserker → aucune monture en pratique."
       ],
       "cardImage": "cards/Guilde Noire/sukh.jpg",
       "unverifiedFields": []
@@ -9227,6 +9409,7 @@
       "name": "Brute de la Guilde",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kherops",
       "cost": 110,
       "limitation": {
         "kind": "X",
@@ -9277,9 +9460,7 @@
           "offensive"
         ]
       ],
-      "traits": [
-        "monture-kherops"
-      ],
+      "traits": [],
       "recruitment": [
         {
           "id": "c-guilde-noire-kherops",
@@ -9323,9 +9504,6 @@
           "text": ""
         }
       ],
-      "notes": [
-        "Origine Khérops. Trait « monture-kherops » : sert UNIQUEMENT à définir la monture accessible (Kœlod), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/brute-de-la-guilde.jpg",
       "unverifiedFields": []
     },
@@ -9335,6 +9513,7 @@
       "name": "Voleur de la Guilde",
       "level": 1,
       "factionId": "guilde-noire",
+      "origin": "fangs",
       "cost": 100,
       "limitation": {
         "kind": "X",
@@ -9402,9 +9581,6 @@
         }
       ],
       "rules": [],
-      "notes": [
-        "Origine Fang. Trait « monture-fangs » : sert UNIQUEMENT à définir la monture accessible (aucune (les Fangs n’ont pas de monture)), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/voleur-de-la-guilde.jpg",
       "unverifiedFields": []
     },
@@ -9414,6 +9590,7 @@
       "name": "Négociateur de la Guilde",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kharns",
       "cost": 110,
       "limitation": {
         "kind": "X",
@@ -9464,9 +9641,7 @@
           "defensive"
         ]
       ],
-      "traits": [
-        "monture-kharns"
-      ],
+      "traits": [],
       "recruitment": [
         {
           "id": "c-guilde-noire-kharns",
@@ -9481,9 +9656,6 @@
         }
       ],
       "rules": [],
-      "notes": [
-        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/negociateur-de-la-guilde.jpg",
       "unverifiedFields": []
     },
@@ -9493,6 +9665,7 @@
       "name": "Raimbert",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kharns",
       "cost": 118,
       "limitation": {
         "kind": "P"
@@ -9546,14 +9719,9 @@
           "offensive"
         ]
       ],
-      "traits": [
-        "monture-kharns"
-      ],
+      "traits": [],
       "recruitment": [],
       "rules": [],
-      "notes": [
-        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/raimbert.jpg",
       "unverifiedFields": []
     },
@@ -9563,6 +9731,7 @@
       "name": "Courtisane",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kharns",
       "cost": 50,
       "limitation": {
         "kind": "U"
@@ -9601,9 +9770,7 @@
           "objectif"
         ]
       ],
-      "traits": [
-        "monture-kharns"
-      ],
+      "traits": [],
       "recruitment": [
         {
           "id": "c-guilde-noire-kharns",
@@ -9631,9 +9798,6 @@
           "text": ""
         }
       ],
-      "notes": [
-        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
-      ],
       "cardImage": "cards/Guilde Noire/courtisane.jpg",
       "unverifiedFields": []
     },
@@ -9643,6 +9807,7 @@
       "name": "Khalsa",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kharns",
       "cost": 140,
       "limitation": {
         "kind": "P"
@@ -9695,14 +9860,11 @@
           "offensive"
         ]
       ],
-      "traits": [
-        "monture-kharns"
-      ],
+      "traits": [],
       "recruitment": [],
       "rules": [],
       "notes": [
-        "Bi-faction GN/Affranchis. Importée ici comme profil GN pur ; le profil Affranchi sera créé à l'import des Affranchis.",
-        "Origine Khârn. Trait « monture-kharns » : sert UNIQUEMENT à définir la monture accessible (Quagga), pas l’accès aux objets/sorts réservés de ce peuple."
+        "Bi-faction GN/Affranchis. Importée ici comme profil GN pur ; le profil Affranchi sera créé à l'import des Affranchis."
       ],
       "cardImage": "cards/Guilde Noire/affranchis-khalsa-2.jpg",
       "unverifiedFields": []
@@ -9947,9 +10109,6 @@
           "text": "Limitée à 1 par allié possédant \"SDG\" si elle est jouée en tant qu'esclave "
         }
       ],
-      "notes": [
-        ""
-      ],
       "cardImage": ""
     },
     {
@@ -10050,6 +10209,7 @@
       "name": "Goulue sombre",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "fangs",
       "cost": 55,
       "limitation": {
         "kind": "X",
@@ -10118,6 +10278,7 @@
       "name": "Guerrier sombre Khérops",
       "level": 1,
       "factionId": "guilde-noire",
+      "origin": "kherops",
       "cost": 65,
       "limitation": {
         "kind": "X",
@@ -10185,6 +10346,7 @@
       "name": "Guerrier sombre Khârn",
       "level": 2,
       "factionId": "guilde-noire",
+      "origin": "kharns",
       "cost": 100,
       "limitation": {
         "kind": "X",
@@ -10254,6 +10416,7 @@
       "name": "Mongo sombre",
       "level": 3,
       "factionId": "guilde-noire",
+      "origin": "gouns",
       "cost": 90,
       "limitation": {
         "kind": "X",
@@ -10505,6 +10668,7 @@
       "name": "Camériste",
       "level": 1,
       "factionId": "guilde-noire",
+      "origin": "gouns",
       "cost": 50,
       "limitation": {
         "kind": "X",
@@ -10951,6 +11115,1425 @@
       "recruitment": [],
       "rules": [],
       "cardImage": ""
+    },
+    {
+      "id": "affranchis-maraka-3",
+      "modelId": "affranchis-maraka",
+      "name": "Maraka",
+      "level": 3,
+      "factionId": "affranchis",
+      "origin": "gouns",
+      "cost": 120,
+      "limitation": {
+        "kind": "P"
+      },
+      "stats": {
+        "v": 4,
+        "p": 3,
+        "a": 6,
+        "c": 3,
+        "t": 7,
+        "i": 5
+      },
+      "stature": 3,
+      "pa": 9,
+      "pv": 27,
+      "skills": [
+        {
+          "skillId": "furtivite"
+        },
+        {
+          "skillId": "instinct-de-survie"
+        },
+        {
+          "skillId": "ralliement"
+        },
+        {
+          "skillId": "chef-de-guerre",
+          "value": 3
+        },
+        {
+          "skillId": "seigneur-de-guerre",
+          "value": 2
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "objectif",
+          "tir",
+          "esoterique",
+          "defensive",
+          "offensive"
+        ],
+        [
+          "objectif",
+          "esoterique",
+          "defensive",
+          "offensive"
+        ],
+        [
+          "esoterique",
+          "objectif",
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "text": "Les Safars de son Ost ou de son Fer de Lance dans son aura, peuvent relancer gratuitement 1 dé par défense."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-maraka.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-franc-archer-kharn-2",
+      "modelId": "affranchis-franc-archer-kharn",
+      "name": "Franc Archer Khârn",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "cost": 90,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 5,
+        "a": 4,
+        "c": 4,
+        "t": 4,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 30,
+      "skills": [
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "bond",
+          "value": 3
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-arc-en-acier"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "tir"
+        ],
+        [
+          "tir",
+          "defensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-franc-archer-kharn.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-vivandiere-2",
+      "modelId": "affranchis-vivandiere",
+      "name": "Vivandière",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "gouns",
+      "cost": 60,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 3,
+        "a": 4,
+        "c": 3,
+        "t": 5,
+        "i": 5
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 22,
+      "skills": [],
+      "baseEquipmentIds": [
+        "affranchis-pilon",
+        "affranchis-bol-de-millet"
+      ],
+      "fixedBaseEquipmentIds": [
+        "affranchis-bol-de-millet"
+      ],
+      "masteryDice": [
+        [
+          "esoterique",
+          "objectif",
+          "defensive",
+          "offensive"
+        ],
+        [
+          "esoterique",
+          "offensive",
+          "objectif",
+          "defensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Fricot",
+          "text": "Les Affranchis dans son aura peuvent additionner 1D10 au résultat final d'une ATT ou d'une DEF, 1/tour."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-vivandiere.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-boquillon-2",
+      "modelId": "affranchis-boquillon",
+      "name": "Boquillon",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "cost": 80,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 5,
+        "a": 4,
+        "c": 5,
+        "t": 6,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 30,
+      "skills": [
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "brutalite",
+          "value": 1
+        },
+        {
+          "skillId": "riposte"
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-hache-d-abattage-boquillon"
+      ],
+      "masteryDice": [
+        [
+          "objectif",
+          "defensive",
+          "offensive"
+        ],
+        [
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-boquillon.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-mendiant-1",
+      "modelId": "affranchis-mendiant",
+      "name": "Mendiant",
+      "level": 1,
+      "factionId": "affranchis",
+      "origin": "fangs",
+      "cost": 40,
+      "limitation": {
+        "kind": "X",
+        "value": 3
+      },
+      "stats": {
+        "v": 4,
+        "p": 3,
+        "a": 3,
+        "c": 3,
+        "t": 2,
+        "i": 2
+      },
+      "stature": 3,
+      "pa": 8,
+      "pv": 18,
+      "skills": [
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "instinct-de-survie"
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif",
+          "esoterique",
+          "tir"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "text": "Apporte +3 en soutien aux Affranchis dans le même corps à corps."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-mendiant.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-percussionniste-2",
+      "modelId": "affranchis-percussionniste",
+      "name": "Percussionniste",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kherops",
+      "cost": 98,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 3,
+        "p": 5,
+        "a": 3,
+        "c": 5,
+        "t": 4,
+        "i": 3
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 30,
+      "skills": [
+        {
+          "skillId": "peau-dure"
+        },
+        {
+          "skillId": "ralliement"
+        },
+        {
+          "skillId": "riposte"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "defensive",
+          "esoterique"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Tambour de la liberté",
+          "text": "Les alliés peuvent gratuitement utiliser l'effet de V en cas de défense ratée 1 fois par tour (l'effet est appliqué après avoir subi l'attaque)."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-percussionniste.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-franc-archer-goun-2",
+      "modelId": "affranchis-franc-archer-goun",
+      "name": "Franc Archer Goûn",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "gouns",
+      "cost": 85,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 2,
+        "a": 4,
+        "c": 2,
+        "t": 4,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 24,
+      "skills": [
+        {
+          "skillId": "rusee"
+        },
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "eclaireur",
+          "value": 2
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-arc-dague"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "objectif",
+          "tir"
+        ],
+        [
+          "defensive",
+          "tir"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-franc-archer-goun.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-khalsa-2",
+      "modelId": "affranchis-khalsa",
+      "name": "Khalsa",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "cost": 140,
+      "limitation": {
+        "kind": "P"
+      },
+      "stats": {
+        "v": 5,
+        "p": 4,
+        "a": 5,
+        "c": 4,
+        "t": 4,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 30,
+      "skills": [
+        {
+          "skillId": "embuscade"
+        },
+        {
+          "skillId": "fine-lame"
+        },
+        {
+          "skillId": "bond",
+          "value": 4
+        },
+        {
+          "skillId": "ambidextre"
+        },
+        {
+          "skillId": "furtivite",
+          "value": 3
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "guilde-noire-dague-damasquinee"
+      ],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif",
+          "tir"
+        ],
+        [
+          "esoterique",
+          "objectif",
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "text": "Chez les Affranchis, elle possède la compétence « Furtivité 3 »."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-khalsa.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-bequilleur-2",
+      "modelId": "affranchis-bequilleur",
+      "name": "Béquilleur",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "fangs",
+      "baseSize": 40,
+      "cost": 90,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 4,
+        "p": 3,
+        "a": 4,
+        "c": 3,
+        "t": 4,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 30,
+      "skills": [
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "executeur"
+        },
+        {
+          "skillId": "sadique"
+        },
+        {
+          "skillId": "le-sang-m-attire",
+          "value": 4
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "scramasaxe"
+      ],
+      "masteryDice": [
+        [
+          "offensive"
+        ],
+        [
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Vorace",
+          "text": "Lorsqu'il dévore une carcasse il récupère le double de PV."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-bequilleur.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-revolte-2",
+      "modelId": "affranchis-revolte",
+      "name": "Révolté",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "gouns",
+      "baseSize": 50,
+      "cost": 140,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 5,
+        "a": 4,
+        "c": 4,
+        "t": 4,
+        "i": 5
+      },
+      "stature": 4,
+      "pa": 9,
+      "pv": 27,
+      "skills": [
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "foi-inebranlable"
+        },
+        {
+          "skillId": "riposte"
+        },
+        {
+          "skillId": "chef-de-guerre",
+          "value": 4
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-lance-tribale"
+      ],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif",
+          "tir"
+        ],
+        [
+          "offensive",
+          "tir",
+          "objectif",
+          "defensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "text": "Les Affranchis Niveau I dans son aura gagnent « Héroïque défense »."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-revolte.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-ferroniere-2",
+      "modelId": "affranchis-ferroniere",
+      "name": "Ferronière",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kherops",
+      "baseSize": 50,
+      "cost": 100,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 4,
+        "p": 5,
+        "a": 4,
+        "c": 5,
+        "t": 4,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 34,
+      "skills": [
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "peau-dure"
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-marteau-enclume"
+      ],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive"
+        ],
+        [
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "text": "Les Affranchis khérops dans son aura « sonnent » en cas de RC."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-ferroniere.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-belliciste-2",
+      "modelId": "affranchis-belliciste",
+      "name": "Belliciste",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "baseSize": 40,
+      "cost": 100,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 6,
+        "p": 3,
+        "a": 5,
+        "c": 3,
+        "t": 6,
+        "i": 5
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 30,
+      "armor": {
+        "seuil": 5,
+        "protectionEchec": 0,
+        "protectionReussite": -2,
+        "durability": 7
+      },
+      "skills": [
+        {
+          "skillId": "fine-lame"
+        },
+        {
+          "skillId": "bond",
+          "value": 4
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "epee-batarde"
+      ],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive"
+        ],
+        [
+          "offensive",
+          "defensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "effects": [
+        {
+          "id": "affranchis-belliciste-specialiste",
+          "source": {
+            "kind": "profile",
+            "id": "affranchis-belliciste-2"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "all": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "specialiste",
+            "value": "attaque"
+          },
+          "sourceText": "Les Affranchis de son Fer de Lance gagnent « Spécialiste attaque »."
+        }
+      ],
+      "rules": [
+        {
+          "text": "Réalise des RC sur 9 et 10 lors de toutes ses attaques."
+        },
+        {
+          "text": "Les Affranchis de son Fer de Lance gagnent « Spécialiste attaque »."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-belliciste.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-franc-cogneur-kherops-1",
+      "modelId": "affranchis-franc-cogneur-kherops",
+      "name": "Franc Cogneur Khérops",
+      "level": 1,
+      "factionId": "affranchis",
+      "origin": "kherops",
+      "baseSize": 50,
+      "cost": 85,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 3,
+        "p": 4,
+        "a": 3,
+        "c": 5,
+        "t": 4,
+        "i": 2
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 33,
+      "skills": [
+        {
+          "skillId": "brutalite",
+          "value": 1
+        },
+        {
+          "skillId": "peau-dure"
+        },
+        {
+          "skillId": "coup-de-corne"
+        },
+        {
+          "skillId": "heroique",
+          "value": "coup de corne"
+        }
+      ],
+      "baseEquipmentIds": [
+        "morgenstern"
+      ],
+      "masteryDice": [
+        [
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-franc-cogneur-kherops-1.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-franc-cogneur-kherops-2",
+      "modelId": "affranchis-franc-cogneur-kherops",
+      "name": "Franc Cogneur Khérops",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kherops",
+      "baseSize": 50,
+      "cost": 110,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 3,
+        "p": 5,
+        "a": 3,
+        "c": 5,
+        "t": 5,
+        "i": 2
+      },
+      "stature": 5,
+      "pa": 8,
+      "pv": 36,
+      "armor": {
+        "seuil": 6,
+        "protectionEchec": 0,
+        "protectionReussite": -1,
+        "durability": 6
+      },
+      "skills": [
+        {
+          "skillId": "brutalite",
+          "value": 1
+        },
+        {
+          "skillId": "peau-dure"
+        },
+        {
+          "skillId": "coup-de-corne"
+        },
+        {
+          "skillId": "heroique",
+          "value": "coup de corne"
+        }
+      ],
+      "baseEquipmentIds": [
+        "morgenstern"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "offensive"
+        ],
+        [
+          "offensive",
+          "defensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-franc-cogneur-kherops-2.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-jardinier-1",
+      "modelId": "affranchis-jardinier",
+      "name": "Jardinier",
+      "level": 1,
+      "factionId": "affranchis",
+      "origin": "kherops",
+      "baseSize": 40,
+      "cost": 30,
+      "limitation": {
+        "kind": "X",
+        "value": 5
+      },
+      "stats": {
+        "v": 3,
+        "p": 2,
+        "a": 3,
+        "c": 2,
+        "t": 4,
+        "i": 3
+      },
+      "stature": 3,
+      "pa": 7,
+      "pv": 18,
+      "skills": [
+        {
+          "skillId": "instinct-de-survie"
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-houe"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "objectif"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-jardinier.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-brise-ligne-2",
+      "modelId": "affranchis-brise-ligne",
+      "name": "Brise-Ligne",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kherops",
+      "baseSize": 60,
+      "cost": 140,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 3,
+        "p": 6,
+        "a": 3,
+        "c": 6,
+        "t": 5,
+        "i": 2
+      },
+      "stature": 5,
+      "pa": 8,
+      "pv": 36,
+      "armor": {
+        "seuil": 6,
+        "protectionEchec": 0,
+        "protectionReussite": -1,
+        "durability": 6
+      },
+      "skills": [
+        {
+          "skillId": "brutalite",
+          "value": 2
+        },
+        {
+          "skillId": "peau-dure"
+        },
+        {
+          "skillId": "charge-brutale",
+          "value": 2
+        },
+        {
+          "skillId": "sauvage"
+        },
+        {
+          "skillId": "riposte"
+        }
+      ],
+      "baseEquipmentIds": [
+        "fleau"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "offensive"
+        ],
+        [
+          "offensive",
+          "defensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-brise-ligne.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-reitre-1-2",
+      "modelId": "affranchis-reitre-1",
+      "name": "Reître (Scramasaxe)",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "baseSize": 50,
+      "cost": 95,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 5,
+        "a": 4,
+        "c": 4,
+        "t": 4,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 27,
+      "armor": {
+        "seuil": 7,
+        "protectionEchec": -1,
+        "protectionReussite": -2,
+        "durability": 6
+      },
+      "skills": [
+        {
+          "skillId": "eclaireur",
+          "value": 2
+        },
+        {
+          "skillId": "riposte"
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "scramasaxe"
+      ],
+      "masteryDice": [
+        [
+          "offensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "objectif"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-reitre-1.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-reitre-2-2",
+      "modelId": "affranchis-reitre-1",
+      "name": "Reître (Glaive)",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "baseSize": 50,
+      "cost": 97,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 5,
+        "a": 4,
+        "c": 5,
+        "t": 4,
+        "i": 3
+      },
+      "stature": 4,
+      "pa": 8,
+      "pv": 27,
+      "armor": {
+        "seuil": 7,
+        "protectionEchec": -1,
+        "protectionReussite": -2,
+        "durability": 6
+      },
+      "skills": [
+        {
+          "skillId": "embuscade"
+        },
+        {
+          "skillId": "independant"
+        },
+        {
+          "skillId": "rusee"
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "glaive",
+        "broquel"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "offensive"
+        ],
+        [
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-reitre-2.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-stoppeur-2",
+      "modelId": "affranchis-stoppeur",
+      "name": "Stoppeur",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "baseSize": 50,
+      "cost": 135,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 4,
+        "p": 6,
+        "a": 4,
+        "c": 5,
+        "t": 4,
+        "i": 3
+      },
+      "stature": 4,
+      "pa": 9,
+      "pv": 30,
+      "armor": {
+        "seuil": 7,
+        "protectionEchec": -1,
+        "protectionReussite": -2,
+        "durability": 6
+      },
+      "skills": [
+        {
+          "skillId": "executeur"
+        },
+        {
+          "skillId": "heroique",
+          "value": "défense"
+        },
+        {
+          "skillId": "stable"
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-marteau-de-guerre-stoppeur"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "offensive"
+        ],
+        [
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [],
+      "cardImage": "cards/Affranchis/affranchis-stoppeur.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-clotrique-3",
+      "modelId": "affranchis-clotrique",
+      "name": "Clotrique",
+      "level": 3,
+      "factionId": "affranchis",
+      "origin": "kharns",
+      "cost": 165,
+      "limitation": {
+        "kind": "P"
+      },
+      "stats": {
+        "v": 4,
+        "p": 5,
+        "a": 4,
+        "c": 5,
+        "t": 7,
+        "i": 4
+      },
+      "stature": 4,
+      "pa": 9,
+      "pv": 33,
+      "armor": {
+        "seuil": 6,
+        "protectionEchec": -1,
+        "protectionReussite": -2,
+        "durability": 8
+      },
+      "skills": [
+        {
+          "skillId": "furtivite"
+        },
+        {
+          "skillId": "brutalite",
+          "value": 1
+        },
+        {
+          "skillId": "bretteur",
+          "value": 2
+        },
+        {
+          "skillId": "hors-norme"
+        },
+        {
+          "skillId": "chef-de-guerre",
+          "value": 2
+        },
+        {
+          "skillId": "seigneur-de-guerre",
+          "value": 3
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-hache-d-abattage-clotrique"
+      ],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "offensive",
+          "defensive",
+          "objectif"
+        ],
+        [
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "text": "Les Safars de son Fer de Lance dans son aura peuvent utiliser sa témérité."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-clotrique.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-swe-dova-2",
+      "modelId": "affranchis-swe-dova",
+      "name": "Swe Dova",
+      "level": 2,
+      "factionId": "affranchis",
+      "origin": "gouns",
+      "cost": 162,
+      "limitation": {
+        "kind": "U"
+      },
+      "stats": {
+        "v": 3,
+        "p": 6,
+        "a": 3,
+        "c": 6,
+        "t": 4,
+        "i": 3
+      },
+      "stature": 5,
+      "pa": 9,
+      "pv": 28,
+      "skills": [
+        {
+          "skillId": "coup-de-corne"
+        },
+        {
+          "skillId": "heroique",
+          "value": "défense"
+        },
+        {
+          "skillId": "hors-norme"
+        },
+        {
+          "skillId": "brutalite",
+          "value": 2
+        },
+        {
+          "skillId": "synkherce"
+        }
+      ],
+      "baseEquipmentIds": [
+        "affranchis-bau-a-cognee"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "offensive"
+        ],
+        [
+          "defensive",
+          "offensive"
+        ]
+      ],
+      "traits": [
+        "synkherces"
+      ],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Champion désigné",
+          "text": "Peut « drainer » (utiliser) jusqu'à 6 PA sur des Niveaux 1 alliés dans son aura pour agir durant son activation."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-swe-dova.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-tireur-yuntaishan-1",
+      "modelId": "affranchis-tireur-yuntaishan",
+      "name": "Tireur Yuntaishan",
+      "level": 1,
+      "factionId": "affranchis",
+      "origin": "kherops",
+      "cost": 85,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 3,
+        "p": 4,
+        "a": 4,
+        "c": 5,
+        "t": 3,
+        "i": 3
+      },
+      "stature": 5,
+      "pa": 8,
+      "pv": 30,
+      "skills": [
+        {
+          "skillId": "eclaireur",
+          "value": 3
+        },
+        {
+          "skillId": "riposte"
+        }
+      ],
+      "baseEquipmentIds": [
+        "arbalete"
+      ],
+      "masteryDice": [
+        [
+          "defensive",
+          "tir"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Qui-vive",
+          "text": "Peut effectuer un tir gratuit grâce à l'effet de A lors d'une « riposte » si son arme est chargée, même au CàC."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-tireur-yuntaishan.jpg",
+      "unverifiedFields": []
+    },
+    {
+      "id": "affranchis-repenti-1",
+      "modelId": "affranchis-repenti",
+      "name": "Repenti",
+      "level": 1,
+      "factionId": "affranchis",
+      "origin": "fangs",
+      "cost": 40,
+      "limitation": {
+        "kind": "X",
+        "value": 2
+      },
+      "stats": {
+        "v": 4,
+        "p": 3,
+        "a": 3,
+        "c": 3,
+        "t": 2,
+        "i": 2
+      },
+      "stature": 3,
+      "pa": 7,
+      "pv": 18,
+      "skills": [
+        {
+          "skillId": "instinct-de-survie"
+        },
+        {
+          "skillId": "carnivore"
+        }
+      ],
+      "baseEquipmentIds": [],
+      "masteryDice": [
+        [
+          "offensive",
+          "defensive",
+          "objectif",
+          "tir",
+          "esoterique"
+        ]
+      ],
+      "traits": [],
+      "recruitment": [],
+      "rules": [
+        {
+          "label": "Apprenti",
+          "text": "Possède une unique compétence générique d'un de ses alliés au choix en début de partie. Il la conserve même si l'allié n'est plus en jeu."
+        }
+      ],
+      "cardImage": "cards/Affranchis/affranchis-repenti.jpg",
+      "unverifiedFields": []
     }
   ],
   "equipment": [
@@ -12105,13 +13688,8 @@
       "effectsText": "+1 dégât. Ajoute gratuitement l'effet de A dès qu'elle utilise l'effet de V en attaque.",
       "reservedTo": {
         "profileIds": [
-          "guilde-noire-khalsa-2"
-        ],
-        "levels": [
-          2
-        ],
-        "factionIds": [
-          "affranchis"
+          "guilde-noire-khalsa-2",
+          "affranchis-khalsa-2"
         ]
       }
     },
@@ -12939,6 +14517,140 @@
         ],
         "traits": [
           "tembo"
+        ]
+      }
+    },
+    {
+      "id": "affranchis-arc-en-acier",
+      "name": "Arc en acier",
+      "category": "arme-tir",
+      "cost": 20,
+      "hands": 2,
+      "range": {
+        "short": 8,
+        "long": 10
+      },
+      "munitionKind": "fleches",
+      "baseMunitions": 8,
+      "effectsText": "+2 dégâts."
+    },
+    {
+      "id": "affranchis-pilon",
+      "name": "Pilon",
+      "category": "arme-cac",
+      "cost": 5,
+      "hands": 1,
+      "effectsText": "Regagne 1 PV par défense réussie."
+    },
+    {
+      "id": "affranchis-hache-d-abattage-boquillon",
+      "name": "Hache d'abattage de Boquillon",
+      "category": "arme-cac",
+      "cost": 15,
+      "hands": 2,
+      "effectsText": "Les dégâts et les effets sont appliqués 2 fois en cas de RC (à la place de la stature).",
+      "reservedTo": {
+        "profileIds": [
+          "affranchis-boquillon-2"
+        ]
+      }
+    },
+    {
+      "id": "affranchis-hache-d-abattage-clotrique",
+      "name": "Hache d'abattage de Clotrique",
+      "category": "arme-cac",
+      "cost": 15,
+      "hands": 2,
+      "effectsText": "+1 dégât, confère « riposte ».",
+      "reservedTo": {
+        "profileIds": [
+          "affranchis-clotrique-3"
+        ]
+      }
+    },
+    {
+      "id": "affranchis-lance-tribale",
+      "name": "Lance tribale",
+      "category": "arme-cac",
+      "cost": 20,
+      "hands": 1,
+      "allonge": 1,
+      "effectsText": "Allonge / +2 en attaque. Confère « Harcèlement ».",
+      "effects": [
+        {
+          "id": "e-1785842401330",
+          "source": {
+            "kind": "equipment",
+            "id": "affranchis-lance-tribale"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "harcelement"
+          },
+          "sourceText": ""
+        }
+      ]
+    },
+    {
+      "id": "affranchis-marteau-enclume",
+      "name": "Marteau-enclume",
+      "category": "arme-cac",
+      "cost": 15,
+      "hands": 1,
+      "effectsText": "+1 dégât. Sonne lors des attaques et défenses à 3 PA."
+    },
+    {
+      "id": "affranchis-houe",
+      "name": "Houe",
+      "category": "arme-cac",
+      "cost": 6,
+      "hands": 2,
+      "effectsText": "Permet de « creuser » gratuitement."
+    },
+    {
+      "id": "affranchis-bau-a-cognee",
+      "name": "Bau à cognée",
+      "category": "arme-cac",
+      "cost": 12,
+      "hands": 2,
+      "allonge": 1,
+      "effectsText": "Allonge / Tranchante / En cas de critiques multiples inflige en plus un saignement 2."
+    },
+    {
+      "id": "affranchis-bol-de-millet",
+      "name": "Bol de Millet",
+      "category": "objet",
+      "cost": 0,
+      "effectsText": "Restaure 1D5 PV à un herbivore à son contact (2 utilisations)."
+    },
+    {
+      "id": "affranchis-arc-dague",
+      "name": "Arc dagué",
+      "category": "arme-tir",
+      "cost": 17,
+      "hands": 2,
+      "range": {
+        "short": 4,
+        "long": 8
+      },
+      "munitionKind": "fleches",
+      "baseMunitions": 8,
+      "effectsText": "4 dégâts. Saignement 2 au corps à corps, +2 en défense."
+    },
+    {
+      "id": "affranchis-marteau-de-guerre-stoppeur",
+      "name": "Marteau de guerre du Stoppeur",
+      "category": "arme-cac",
+      "cost": 35,
+      "hands": 2,
+      "effectsText": "Repousse de 2\" ou +2 à l'effet de C. Assomme en cas de RC. Pas d'attaque à 1 PA. +2 en défense.",
+      "reservedTo": {
+        "profileIds": [
+          "affranchis-stoppeur-2"
         ]
       }
     }
@@ -14026,8 +15738,7 @@
       "name": "Quagga",
       "kind": "quagga",
       "factionEligibility": [
-        "kharns",
-        "affranchis"
+        "kharns"
       ],
       "excludedProfileIds": [],
       "cardImage": "cards/Kharns/kharns-quagga-fr.jpg"
@@ -14744,7 +16455,43 @@
         }
       ],
       "constraints": [],
-      "effects": [],
+      "effects": [
+        {
+          "id": "synkherces-onde-revigorante",
+          "source": {
+            "kind": "special-card",
+            "id": "synkherces"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-spell",
+            "spellId": "onde-revigorante"
+          },
+          "sourceText": "Les Synkherces sont solitaires, ils apprennent donc à se soigner seuls, ils maîtrisent uniquement le sort « Onde revigorante » sur eux-mêmes, sans grimoire."
+        },
+        {
+          "id": "synkherces-riposte",
+          "source": {
+            "kind": "special-card",
+            "id": "synkherces"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "riposte"
+          },
+          "sourceText": "Riposte."
+        }
+      ],
+      "notes": [
+        "Le Madrier n'a pas besoin d'un effet : il est réservé au trait « synkherces », donc proposé à l'achat aux seules figurines que cette carte vise."
+      ],
       "cardImage": "cards/Gouns/guerrier-albinos.jpg"
     },
     {
@@ -15811,6 +17558,144 @@
         }
       ],
       "cardImage": ""
+    },
+    {
+      "id": "affranchis-couvert-des-bois",
+      "name": "Le couvert des bois",
+      "cost": 0,
+      "scope": {
+        "ferDeLanceFactionIds": [
+          "affranchis"
+        ]
+      },
+      "rulesText": [
+        {
+          "text": "Tous les membres d'un Fer de Lance affranchi possèdent la compétence « Furtivité » et ajoutent à leur défense contre les tirs un bonus d'une valeur égale à leur niveau dès qu'ils sont à couvert."
+        },
+        {
+          "label": "Une seule et même faction",
+          "text": "Toutes les figurines qui combattent sous la bannière des Affranchis, quelle que soit leur faction d'origine, s'apportent donc des bonus de soutien et bénéficient des effets comme une seule et même faction, que leurs cartes de profil soient « affranchies » ou non."
+        },
+        {
+          "label": "Mages",
+          "text": "Les mages affranchis (d'origine ou recrutés) auront un bonus de +1 par allié non activé dans son aura au moment de l'incantation."
+        }
+      ],
+      "constraints": [],
+      "effects": [
+        {
+          "id": "affranchis-furtivite",
+          "source": {
+            "kind": "special-card",
+            "id": "affranchis-couvert-des-bois"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "all": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "furtivite"
+          },
+          "sourceText": "Tous les membres d'un Fer de Lance affranchi possèdent la compétence « Furtivité »."
+        }
+      ],
+      "notes": [
+        "Le bonus de défense au couvert (+ niveau) et le bonus d'incantation des mages sont des effets de jeu : ils ne changent rien à la composition ni au coût, ils restent en verbatim."
+      ],
+      "cardImage": ""
+    },
+    {
+      "id": "affranchis-aguerri-aux-bois",
+      "name": "Aguerri aux bois",
+      "cost": 5,
+      "scope": {
+        "ferDeLanceFactionIds": [
+          "affranchis"
+        ],
+        "nonNativeOnly": true
+      },
+      "amelioration": true,
+      "costPerLevel": true,
+      "rulesText": [
+        {
+          "text": "Un combattant non « affranchi » qui combat pour eux peut acquérir les compétences « Éclaireur 2 » et « Rusé ». Il lui en coûtera 5 Ko x son niveau pour les 2 compétences."
+        },
+        {
+          "text": "Par exemple un Guerrier Khârn niveau II peut en tant qu'Affranchi devenir « Éclaireur 2 » et « Rusé » pour 10 Ko."
+        }
+      ],
+      "constraints": [],
+      "effects": [
+        {
+          "id": "affranchis-aguerri-eclaireur",
+          "source": {
+            "kind": "special-card",
+            "id": "affranchis-aguerri-aux-bois"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "eclaireur",
+            "value": 2
+          },
+          "sourceText": "Peut acquérir la compétence « Éclaireur 2 »."
+        },
+        {
+          "id": "affranchis-aguerri-ruse",
+          "source": {
+            "kind": "special-card",
+            "id": "affranchis-aguerri-aux-bois"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "rusee"
+          },
+          "sourceText": "Peut acquérir la compétence « Rusé »."
+        }
+      ],
+      "cardImage": ""
+    },
+    {
+      "id": "affranchis-khalsa-ombre-lune",
+      "name": "Khalsa l'Ombre Lune",
+      "cost": 0,
+      "scope": {
+        "profileIds": [
+          "affranchis-khalsa-2",
+          "guilde-noire-khalsa-2"
+        ]
+      },
+      "rulesText": [
+        {
+          "text": "Khalsa est une voleuse de la Guilde qui a rejoint les Affranchis pour le temps des conflits."
+        },
+        {
+          "text": "Elle n'a pas décidé si elle quittait définitivement la confrérie."
+        },
+        {
+          "text": "Elle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction. Sinon elle est Affranchie."
+        },
+        {
+          "text": "Au sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol »."
+        },
+        {
+          "text": "Chez les Affranchis, elle possède la compétence « Furtivité 3 »."
+        }
+      ],
+      "constraints": [],
+      "effects": [],
+      "notes": [
+        "Deux profils distincts portent chacun ce que la carte lui accorde : la version Guilde Noire a cape d'ombre et rossignol, la version Affranchie a « Furtivité 3 ». Aucun effet à résoudre."
+      ],
+      "cardImage": "cards/Affranchis/affranchis-khalsa-ombre-lune.jpg"
     }
   ],
   "munitionKinds": [
@@ -15982,6 +17867,27 @@
     "cards/Kherops/kherops-cavalier-guerrier.jpg": "987b1c89df487499.webp",
     "cards/Guilde Noire/negociateur-de-la-guilde.jpg": "6e9f2d9182013240.webp",
     "cards/Kherops/kherops-pretre-ou-bourreau-fr.jpg": "989e554576ae3ea7.webp",
-    "cards/Kherops/kherops-capitaine-commandant-1.jpg": "e4651d4ddf1f2068.webp"
+    "cards/Kherops/kherops-capitaine-commandant-1.jpg": "e4651d4ddf1f2068.webp",
+    "cards/Affranchis/affranchis-belliciste.jpg": "e51562e6d391d43b.webp",
+    "cards/Affranchis/affranchis-bequilleur.jpg": "0bfd6495e7a450b2.webp",
+    "cards/Affranchis/affranchis-boquillon.jpg": "f36f93e46b71624b.webp",
+    "cards/Affranchis/affranchis-brise-ligne.jpg": "8694f02cce9fe2a7.webp",
+    "cards/Affranchis/affranchis-clotrique.jpg": "b0901cf6d587c5df.webp",
+    "cards/Affranchis/affranchis-ferroniere.jpg": "019ad35a7603f1ad.webp",
+    "cards/Affranchis/affranchis-franc-archer-goun.jpg": "9d9ce9c2a0295f87.webp",
+    "cards/Affranchis/affranchis-franc-archer-kharn.jpg": "add6b3cf361b6580.webp",
+    "cards/Affranchis/affranchis-franc-cogneur-kherops-1.jpg": "799aa369df4e94a9.webp",
+    "cards/Affranchis/affranchis-jardinier.jpg": "ff5099b0d1e5514c.webp",
+    "cards/Affranchis/affranchis-khalsa.jpg": "6f3aeeba334e9251.webp",
+    "cards/Affranchis/affranchis-maraka.jpg": "16fbc8ca8d111027.webp",
+    "cards/Affranchis/affranchis-mendiant.jpg": "93b5e0caf824622b.webp",
+    "cards/Affranchis/affranchis-percussionniste.jpg": "b28edcb46a6e1061.webp",
+    "cards/Affranchis/affranchis-reitre-1.jpg": "0147e1cad2a97730.webp",
+    "cards/Affranchis/affranchis-repenti.jpg": "a60fe640a6c4176f.webp",
+    "cards/Affranchis/affranchis-revolte.jpg": "25c3c5caa2994c8e.webp",
+    "cards/Affranchis/affranchis-stoppeur.jpg": "bcec8c32772c8178.webp",
+    "cards/Affranchis/affranchis-swe-dova.jpg": "3a5d564951d9758a.webp",
+    "cards/Affranchis/affranchis-tireur-yuntaishan.jpg": "3a34aaa283fed55a.webp",
+    "cards/Affranchis/affranchis-vivandiere.jpg": "7b94407e1af33212.webp"
   }
 }

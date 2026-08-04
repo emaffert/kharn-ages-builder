@@ -1346,9 +1346,31 @@ function validateOpenRecruitmentCaps(
   }
 }
 
-function forbiddenCategories(c: Constraint): string[] {
-  const p = c.params as { categories?: unknown };
-  return Array.isArray(p.categories) ? (p.categories as string[]) : [];
+/**
+ * Paramètres de `forbids-equipment`. Les trois filtres se lisent ensemble : un objet est interdit
+ * s'il passe **tous** ceux qui sont renseignés, et qu'il ne figure pas dans les exceptions.
+ *
+ * - `categories` : catégories visées (vide = toutes) ;
+ * - `hands` : nombre de mains visé (vide = tous), pour « ne peut manier d'arme à 2 mains ». Une arme
+ *   bâtarde (`hands: "1-2"`) n'est jamais visée : elle se manie aussi à une main, donc rien
+ *   n'interdit de la porter ;
+ * - `exceptEquipmentIds` : liste blanche qui échappe à l'interdiction, pour les cartes qui n'ouvrent
+ *   qu'un choix fermé (« ne peut choisir que la Sarclette ou le Couteau »).
+ */
+type ForbidEquipmentParams = {
+  categories?: string[];
+  hands?: number[];
+  exceptEquipmentIds?: string[];
+};
+
+function forbidEquipmentParams(c: Constraint): ForbidEquipmentParams {
+  const p = c.params as Record<string, unknown>;
+  const list = (k: string): unknown[] => (Array.isArray(p[k]) ? (p[k] as unknown[]) : []);
+  return {
+    categories: list("categories") as string[],
+    hands: (list("hands") as unknown[]).map(Number).filter((n) => Number.isFinite(n)),
+    exceptEquipmentIds: list("exceptEquipmentIds") as string[],
+  };
 }
 
 function validateForbiddenEquipment(
@@ -1374,11 +1396,21 @@ function validateForbiddenEquipment(
   }
 
   for (const { subjectProfileId, constraint } of checks) {
-    const cats = forbiddenCategories(constraint);
+    const { categories, hands, exceptEquipmentIds } = forbidEquipmentParams(constraint);
+    // Contrainte sans aucun filtre = brouillon d'admin (créée avec des params vierges) : elle
+    // n'interdit rien, plutôt que de tout interdire d'un coup sur une fiche en cours de saisie.
+    if (!categories?.length && !hands?.length) continue;
     for (const ri of resolved.filter((r) => r.profile.id === subjectProfileId)) {
-      const offending = ri.instance.addedEquipmentIds.filter((id) =>
-        cats.includes(idx.equipmentCategory.get(id) ?? ""),
-      );
+      const offending = ri.instance.addedEquipmentIds.filter((id) => {
+        if (exceptEquipmentIds?.includes(id)) return false;
+        if (categories?.length && !categories.includes(idx.equipmentCategory.get(id) ?? "")) return false;
+        if (hands?.length) {
+          // `hands` non numérique (arme bâtarde « 1-2 ») : jamais visée, cf. `ForbidEquipmentParams`.
+          const h = cat.equipment.find((e) => e.id === id)?.hands;
+          if (typeof h !== "number" || !hands.includes(h)) return false;
+        }
+        return true;
+      });
       if (offending.length > 0) {
         issues.push({
           severity: "error",
@@ -1636,7 +1668,13 @@ function computeStatDeltas(
   };
   for (const occ of occurrences) {
     const op = occ.effect.operation;
-    if (op.kind !== "stat-modifier" && op.kind !== "stat-count" && op.kind !== "stat-max") continue;
+    if (
+      op.kind !== "stat-modifier" &&
+      op.kind !== "stat-count" &&
+      op.kind !== "stat-per-count" &&
+      op.kind !== "stat-max"
+    )
+      continue;
     if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
     if (op.kind === "stat-max") {
       // Caractéristique fixée au MAX de cette carac. (valeurs de base) parmi le groupe `of` dans la portée.
@@ -1664,6 +1702,15 @@ function computeStatDeltas(
         const m = out.get(ri.instance.instanceId) ?? new Map<string, number>();
         m.set(op.stat, value - base);
         out.set(ri.instance.instanceId, m);
+      }
+    } else if (op.kind === "stat-per-count") {
+      // Caractéristique AUGMENTÉE de `amount` par figurine comptée : contrairement à `stat-count`,
+      // le décompte s'ajoute à la valeur de base au lieu de la remplacer (ex. Mongo sombre : +1 en T
+      // par Mongo en jeu). Cumulatif comme `stat-modifier`, d'où le passage par `add`.
+      const pool = instancesInScope(resolved, occ.effect.scope, occ.ferDeLanceId);
+      const count = pool.filter((ri) => instanceMatchesIdentity(op.of, ri)).length;
+      for (const ri of resolveTargets(occ, resolved)) {
+        add(ri.instance.instanceId, op.stat, op.amount * count);
       }
     } else {
       for (const ri of resolveTargets(occ, resolved)) {
@@ -1752,7 +1799,13 @@ function collectEffectSources(
     const { effect } = occ;
     const op = effect.operation;
     let key: string | null = null;
-    if (op.kind === "stat-modifier" || op.kind === "stat-count" || op.kind === "stat-max") key = `stat:${op.stat}`;
+    if (
+      op.kind === "stat-modifier" ||
+      op.kind === "stat-count" ||
+      op.kind === "stat-per-count" ||
+      op.kind === "stat-max"
+    )
+      key = `stat:${op.stat}`;
     else if (op.kind === "grant-skill" || op.kind === "skill-count") key = `skill:${op.skillId}`;
     else if (op.kind === "limit-modifier") key = "limit";
     if (!key) continue;

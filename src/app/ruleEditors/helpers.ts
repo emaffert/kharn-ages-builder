@@ -65,6 +65,7 @@ export const OP_LABELS: Record<EffectOperation["kind"], string> = {
   "unlock-upgrade": "Débloquer une amélioration",
   "stat-modifier": "Modifier une caractéristique",
   "stat-count": "Caractéristique = comptage de figurines",
+  "stat-per-count": "Caractéristique augmentée par figurine comptée",
   "stat-max": "Caractéristique = plus forte du groupe",
   "skill-count": "Compétence = comptage de figurines",
   "spell-pages": "Pages de sorts",

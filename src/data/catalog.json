@@ -1,5 +1,5 @@
 {
-  "version": "0.4.4",
+  "version": "0.5.0",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -3961,7 +3961,24 @@
       "traits": [
         "dogon"
       ],
-      "recruitment": [],
+      "recruitment": [
+        {
+          "id": "alaric-alternative-weapon",
+          "type": "forbids-equipment",
+          "params": {
+            "categories": [
+              "arme-cac",
+              "arme-tir"
+            ],
+            "exceptEquipmentIds": [
+              "sarclette",
+              "couteau"
+            ]
+          },
+          "scope": "profil",
+          "sourceText": "Ne peut choisir que la Sarclette ou le Couteau pour arme alternative."
+        }
+      ],
       "effects": [
         {
           "id": "grant-spell-lien-mental",
@@ -6201,7 +6218,33 @@
         ]
       ],
       "traits": [],
-      "recruitment": [],
+      "recruitment": [
+        {
+          "id": "key-no-ranged",
+          "type": "forbids-equipment",
+          "params": {
+            "categories": [
+              "arme-tir"
+            ]
+          },
+          "scope": "profil",
+          "sourceText": "Ne peut manier d'arme de tir ou à 2 mains."
+        },
+        {
+          "id": "key-no-two-handed",
+          "type": "forbids-equipment",
+          "params": {
+            "categories": [
+              "arme-cac"
+            ],
+            "hands": [
+              2
+            ]
+          },
+          "scope": "profil",
+          "sourceText": "Ne peut manier d'arme de tir ou à 2 mains."
+        }
+      ],
       "effects": [
         {
           "id": "key-empoisonner-arme",
@@ -8325,7 +8368,9 @@
           "skillId": "fluet"
         }
       ],
-      "baseEquipmentIds": [],
+      "baseEquipmentIds": [
+        "petit-arc-eutheria"
+      ],
       "masteryDice": [
         [
           "defensive",
@@ -8347,32 +8392,7 @@
         "khemiste"
       ],
       "recruitment": [],
-      "effects": [
-        {
-          "id": "e-1785224580645",
-          "source": {
-            "kind": "profile",
-            "id": "tembos-eclaireuse-3"
-          },
-          "scope": "fer-de-lance",
-          "target": {
-            "self": true,
-            "equipmentIds": [
-              "petit-arc-eutheria"
-            ]
-          },
-          "operation": {
-            "kind": "cost-delta",
-            "amount": -10
-          },
-          "sourceText": ""
-        }
-      ],
-      "rules": [
-        {
-          "text": "Paye 10 Ko de moins le petit arc d'euthéria."
-        }
-      ],
+      "rules": [],
       "notes": [
         "Vivacité et Fluet octroyés d'office par le trait Khémiste (Règles de bataille)."
       ],
@@ -9317,7 +9337,7 @@
             "kind": "grant-skill",
             "skillId": "foi-inebranlable"
           },
-          "sourceText": ""
+          "sourceText": "Jumeaux : tant que Sükh est en jeu, Kaito gagne « foi inébranlable »."
         }
       ],
       "rules": [
@@ -9495,13 +9515,12 @@
             "kind": "cost-delta",
             "amount": -5
           },
-          "sourceText": ""
+          "sourceText": "Paye 5 Ko de moins les armes de CàC à une main."
         }
       ],
       "rules": [
         {
-          "label": "Paye 5 Ko de moins les armes de corps à corps à une main.",
-          "text": ""
+          "text": "Paye 5 Ko de moins les armes de corps à corps à une main."
         }
       ],
       "cardImage": "cards/Guilde Noire/brute-de-la-guilde.jpg",
@@ -10092,7 +10111,7 @@
             "perCarrierMax": 1
           },
           "scope": "fer-de-lance",
-          "sourceText": ""
+          "sourceText": "Esclave hors Goûns et Tembos."
         }
       ],
       "rules": [
@@ -10463,7 +10482,9 @@
           "defensive"
         ]
       ],
-      "traits": [],
+      "traits": [
+        "mongo"
+      ],
       "recruitment": [
         {
           "id": "c-1785426804911",
@@ -10476,6 +10497,30 @@
           },
           "scope": "fer-de-lance",
           "sourceText": ""
+        }
+      ],
+      "effects": [
+        {
+          "id": "mongo-sombre-temerite",
+          "source": {
+            "kind": "profile",
+            "id": "guilde-noire-mongo-sombre-3"
+          },
+          "scope": "ost",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "stat-per-count",
+            "stat": "t",
+            "of": {
+              "traits": [
+                "mongo"
+              ]
+            },
+            "amount": 1
+          },
+          "sourceText": "Le Mongo sombre augmente de 1 sa témérité par Mongo en jeu."
         }
       ],
       "rules": [
@@ -16733,7 +16778,8 @@
           "kharns-myriam",
           "kharns-syrga",
           "kharns-engueran",
-          "kharns-prince"
+          "kharns-prince",
+          "kharns-martha-1"
         ],
         "countAtLeast": 4
       },
@@ -16756,9 +16802,6 @@
           },
           "sourceText": "Toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé »."
         }
-      ],
-      "notes": [
-        "Le texte de la carte cite Martha parmi les cinq personnages, mais son profil n’est pas encore importé : elle a donc été retirée de la condition d’activation. À y remettre le jour où elle est saisie, sans quoi la règle restera plus stricte que la carte."
       ],
       "cardImage": "cards/Kharns/kharns-myriam.jpg"
     },
@@ -17331,20 +17374,6 @@
       "cardImage": "cards/Guilde Noire/mathys-fr.jpg"
     },
     {
-      "id": "khalsa-lombre-lune",
-      "name": "Khalsa l'Ombre Lune",
-      "cost": 0,
-      "scope": {
-        "profileIds": [
-          "guilde-noire-khalsa-2"
-        ]
-      },
-      "rulesText": "Khalsa est une voleuse de la Guilde qui a rejoint les Affrenchis pour le temps des conflits.\nElle n'a pas décidé si elle quittait définitivement la confrérie.\n\nElle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction.\nSinon elle est Affranchie.\n\nAu  sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol ».\n\nChez les Affranchis, elle possède la compétence « Furtivité 3 ».",
-      "constraints": [],
-      "effects": [],
-      "cardImage": "cards/Guilde Noire/affranchis-khalsa-2.jpg"
-    },
-    {
       "id": "demi-soeur",
       "name": "Demi-soeur",
       "cost": 0,
@@ -17353,7 +17382,7 @@
           "fangs-demi-soeur-3"
         ]
       },
-      "rulesText": "Possède 1 sort d'Ostéomancie sans grimoire. \nDurant l'activation de la demi-soeur, 1 fille de Nyx peut réaliser une et unique action. 1 fois par partie par fille.",
+      "rulesText": "Possède 1 sort d'Ostéomancie sans grimoire.\n \nDurant l'activation de la demi-soeur, 1 fille de Nyx peut réaliser une et unique action. 1 fois par partie par fille.",
       "constraints": [],
       "effects": [
         {
@@ -17371,7 +17400,7 @@
             "magicWayId": "osteomancie",
             "count": 1
           },
-          "sourceText": ""
+          "sourceText": "Possède 1 sort d'Ostéomancie sans grimoire."
         }
       ],
       "cardImage": ""
@@ -17385,7 +17414,7 @@
           "fangs-nyx-3"
         ]
       },
-      "rulesText": "SDG 5. \nQuand Nyx est vaincue, elle se réincarne instantanément dans la\nfemelle fang alliée la plus proche.\nElle conserve les PV, PA de son corps d'accucil mais remplace toutes les caractéristiques et l'équipement de ce profil par les siens. Si ce corps est une Fille de Nyx, elle regagne au choix tous ses PA ou tous ses PV.\nDe plus, elle peut accéder à tous les sorts fangs et en connaît 8 pages cumulables avec n'importe quel grimoire.",
+      "rulesText": "SDG 5. \nQuand Nyx est vaincue, elle se réincarne instantanément dans la femelle fang alliée la plus proche.\nElle conserve les PV, PA de son corps d'accucil mais remplace toutes les caractéristiques et l'équipement de ce profil par les siens. Si ce corps est une Fille de Nyx, elle regagne au choix tous ses PA ou tous ses PV.\nDe plus, elle peut accéder à tous les sorts fangs et en connaît 8 pages cumulables avec n'importe quel grimoire.",
       "constraints": [],
       "effects": [
         {
@@ -17403,7 +17432,24 @@
             "amount": 8,
             "magicWayId": "osteomancie"
           },
-          "sourceText": ""
+          "sourceText": "Nyx connaît 8 pages d'Ostéomancie cumulables avec n'importe quel grimoire."
+        },
+        {
+          "id": "e-1785859871644",
+          "source": {
+            "kind": "special-card",
+            "id": "mere-des-esprits"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-skill",
+            "skillId": "seigneur-de-guerre",
+            "value": "5"
+          },
+          "sourceText": "Nyx acquiert Seigneur de Guerre 5."
         }
       ],
       "cardImage": ""

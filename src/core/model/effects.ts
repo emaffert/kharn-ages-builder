@@ -86,6 +86,10 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
   // (ex. Instinct grégaire : T des Dogons = nombre de Dogons). Plancher = valeur de base imprimée
   // (pattern officiel : un profil sans valeur de base sur cette carac. n'a pas de plancher).
   z.object({ kind: z.literal("stat-count"), stat: StatKeySchema, of: SelectorSchema }),
+  // Ajoute `amount` à une caractéristique PAR figurine correspondant à `of` dans la portée
+  // (ex. Mongo sombre : +1 en T par Mongo en jeu). À distinguer de `stat-count`, qui *fixe* la
+  // caractéristique au décompte : ici le décompte s'ajoute à la valeur de base imprimée.
+  z.object({ kind: z.literal("stat-per-count"), stat: StatKeySchema, of: SelectorSchema, amount: z.number() }),
   // Fixe une caractéristique à la valeur MAXIMALE de cette carac. parmi les figurines correspondant
   // à `of` dans la portée (ex. « Doctrine » de l'Ordre : T et I = les plus fortes des membres de
   // l'Ordre présents dans le Fer de Lance). Lit les valeurs de BASE (imprimées) ; plancher = base.

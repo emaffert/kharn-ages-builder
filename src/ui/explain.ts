@@ -54,8 +54,13 @@ export function describeSelector(sel: Selector, cat: Catalog): string {
 export function describeConstraint(c: Constraint, cat: Catalog): string {
   switch (c.type) {
     case "forbids-equipment": {
-      const cats = (c.params as { categories?: string[] }).categories ?? [];
-      return `Interdit d'équiper : ${cats.join(", ") || "tout équipement"}.`;
+      const p = c.params as { categories?: string[]; hands?: number[]; exceptEquipmentIds?: string[] };
+      const cats = p.categories ?? [];
+      const hands = p.hands?.length ? ` à ${p.hands.join("/")} main(s)` : "";
+      const except = p.exceptEquipmentIds?.length
+        ? `, sauf ${p.exceptEquipmentIds.map((id) => equipName(cat, id)).join(" et ")}`
+        : "";
+      return `Interdit d'équiper : ${cats.join(", ") || "tout équipement"}${hands}${except}.`;
     }
     case "requires-present": {
       const req = (c.params as { requiredProfileId?: string }).requiredProfileId;
@@ -157,6 +162,9 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     case "stat-count":
       base = `${op.stat.toUpperCase()} de ${tgt} = nombre de ${describeSelector(op.of, cat)} (minimum : valeur de base du profil, si elle existe)`;
       break;
+    case "stat-per-count":
+      base = `${op.amount >= 0 ? "+" : ""}${op.amount} en ${op.stat.toUpperCase()} pour ${tgt} par ${describeSelector(op.of, cat)}`;
+      break;
     case "stat-max":
       base = `${op.stat.toUpperCase()} de ${tgt} = la plus forte valeur de ${op.stat.toUpperCase()} parmi ${describeSelector(op.of, cat)}`;
       break;
@@ -209,11 +217,17 @@ export function explainTraitUsage(trait: string, cat: Catalog): string[] {
     return c.type === "attachment" && p.carrier?.trait === trait;
   };
   // Un effet référence le trait via sa cible, sa condition, le `of` de son opération
-  // (stat-count / stat-max / skill-count) ou la désignation garde du corps.
+  // (stat-count / stat-per-count / stat-max / skill-count) ou la désignation garde du corps.
   const effectUses = (e: Effect): boolean => {
     if (selUses(e.target) || selUses(e.condition) || selUses(e.designation?.of)) return true;
     const op = e.operation;
-    if ((op.kind === "stat-count" || op.kind === "stat-max" || op.kind === "skill-count") && selUses(op.of)) {
+    if (
+      (op.kind === "stat-count" ||
+        op.kind === "stat-per-count" ||
+        op.kind === "stat-max" ||
+        op.kind === "skill-count") &&
+      selUses(op.of)
+    ) {
       return true;
     }
     return false;

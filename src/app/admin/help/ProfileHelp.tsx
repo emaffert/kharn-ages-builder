@@ -242,6 +242,12 @@ export function EffectsHelp() {
           figurines correspondant à la description donnée. Jamais en dessous de la valeur imprimée.
         </li>
         <li>
+          <strong>Caractéristique augmentée par figurine comptée</strong> - le montant s'ajoute à la
+          valeur imprimée, une fois par figurine correspondant à la description. « +1 en Témérité par
+          Mongo en jeu » se saisit ainsi. À ne pas confondre avec le comptage ci-dessus, qui
+          <em>remplace</em> la valeur au lieu de s'y ajouter.
+        </li>
+        <li>
           <strong>Caractéristique = plus forte du groupe</strong> - la valeur devient la meilleure du
           groupe décrit. Jamais en dessous de la valeur imprimée.
         </li>
@@ -329,7 +335,10 @@ export function ConstraintsHelp() {
         <li>
           <strong>Interdit d'équiper</strong> - ferme des catégories d'achat entières (armes,
           armures, boucliers, objets). Une figurine dont tout est fermé ne se voit plus proposer
-          d'équipement du tout.
+          d'équipement du tout. Deux réglages resserrent l'interdiction quand la carte ne ferme pas
+          toute une catégorie : le <strong>nombre de mains</strong>, pour « ne peut manier d'arme à
+          deux mains », et une liste d'objets <strong>laissés autorisés</strong>, pour « ne peut
+          choisir que la Sarclette ou le Couteau ».
         </li>
         <li>
           <strong>Interdit d'acquérir un grimoire</strong> - ferme le petit, le grand, ou les deux.

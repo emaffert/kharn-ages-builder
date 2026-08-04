@@ -145,11 +145,20 @@ export function SelectorEditor({
   // Une monture ne peut viser que son cavalier : `self` et `cavalier` y désignent la même figurine.
   const isMount = sourceKind === "mount";
   const sourceChecked = isMount ? (selector.cavalier ?? selector.self ?? false) : (selector.self ?? false);
-  const [costMode, setCostMode] = useState<"figure" | "items">(() =>
-    selector.equipmentCategories?.length || selector.equipmentIds?.length || selector.equipmentHands?.length
-      ? "items"
-      : "figure",
+  /**
+   * « Sur certains objets » dès que le sélecteur porte un filtre d'équipement - la donnée commande,
+   * pas un état local. Un `useState` initialisé une seule fois gardait la valeur du premier effet
+   * ouvert : rouvrir un effet filtré (la Brute, −5 Ko sur ses armes à 1 main) l'affichait « sur la
+   * figurine », filtre caché, alors que le moteur le lisait bien.
+   *
+   * L'état ne retient donc que l'intention, le temps de choisir le premier filtre : sans lui, cocher
+   * « sur certains objets » retomberait aussitôt sur « sur la figurine », le sélecteur étant encore vide.
+   */
+  const hasEquipmentFilter = Boolean(
+    selector.equipmentCategories?.length || selector.equipmentIds?.length || selector.equipmentHands?.length,
   );
+  const [wantsItems, setWantsItems] = useState(false);
+  const costMode: "figure" | "items" = hasEquipmentFilter || wantsItems ? "items" : "figure";
 
   // Un critère l'emporte sur `all` dans la lecture, puisque c'est lui qui filtre réellement : une
   // donnée ancienne portant les deux s'affiche donc pour ce qu'elle fait, et se nettoie à la première
@@ -270,7 +279,7 @@ export function SelectorEditor({
               ariaLabel="Sur quoi porte le montant"
               value={costMode}
               onChange={(m) => {
-                setCostMode(m);
+                setWantsItems(m === "items");
                 // Repasser « sur la figurine » emporte le filtre : il ne serait plus lu.
                 if (m === "figure") {
                   set({ equipmentCategories: undefined, equipmentIds: undefined, equipmentHands: undefined });

@@ -28,6 +28,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, stat: "i", amount: "level" };
     case "stat-count":
       return { kind, stat: "t", of: {} };
+    case "stat-per-count":
+      return { kind, stat: "t", of: {}, amount: 1 };
     case "stat-max":
       return { kind, stat: "t", of: {} };
     case "skill-count":
@@ -49,7 +51,10 @@ const OP_GROUPS: { group: string; kinds: EffectOperation["kind"][] }[] = [
     group: "Octrois",
     kinds: ["grant-skill", "grant-spell", "grant-spell-choice", "grant-trait", "grant-mastery-die", "unlock-upgrade"],
   },
-  { group: "Caractéristiques & compétences", kinds: ["stat-modifier", "stat-count", "stat-max", "skill-count"] },
+  {
+    group: "Caractéristiques & compétences",
+    kinds: ["stat-modifier", "stat-count", "stat-per-count", "stat-max", "skill-count"],
+  },
   { group: "Divers", kinds: ["spell-pages", "limit-modifier"] },
 ];
 
@@ -309,6 +314,25 @@ export function OperationEditor({
           <OfSelector
             label="Figurines à compter"
             note="La caractéristique est fixée à ce nombre, sans jamais descendre sous la valeur de base imprimée du profil."
+            of={op.of}
+            cat={cat}
+            onChange={(s) => onChange({ ...op, of: s })}
+          />
+        </>
+      )}
+
+      {op.kind === "stat-per-count" && (
+        <>
+          <StatSelect value={op.stat} onChange={(s) => onChange({ ...op, stat: s })} />
+          <NumberField
+            label="Par figurine comptée"
+            className="w-32"
+            value={op.amount}
+            onChange={(v) => onChange({ ...op, amount: v ?? 0 })}
+          />
+          <OfSelector
+            label="Figurines à compter"
+            note="Ce montant s'ajoute à la valeur de base imprimée, une fois par figurine comptée. Pour fixer la caractéristique au décompte plutôt que l'y ajouter, choisir « Caractéristique = comptage de figurines »."
             of={op.of}
             cat={cat}
             onChange={(s) => onChange({ ...op, of: s })}

@@ -78,6 +78,26 @@ function ParamsEditor({
             selected={arr("categories")}
             onChange={(v) => set({ categories: v })}
           />
+          <ChipsField
+            label="Seulement à ce nombre de mains"
+            options={[
+              { value: "1", label: "1 main" },
+              { value: "2", label: "2 mains" },
+            ]}
+            selected={(Array.isArray(params.hands) ? (params.hands as number[]) : []).map(String)}
+            onChange={(v) => set({ hands: v.length ? v.map(Number) : undefined })}
+          />
+          <p className="adm-block-note">
+            Sans précision, toute la catégorie est interdite. Les armes bâtardes (1 ou 2 mains) ne sont jamais
+            visées par ce filtre : elles se manient aussi à une main.
+          </p>
+          <StringList
+            label="Sauf ces objets, qui restent autorisés"
+            values={arr("exceptEquipmentIds")}
+            onChange={(v) => set({ exceptEquipmentIds: v.length ? v : undefined })}
+            options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
+            combo
+          />
           {/* Sur une carte spéciale : le profil visé. Sur une fiche de profil, le sujet est la figurine. */}
           {!onProfile && (
             <Field label="Profil visé" className="max-w-xs">
@@ -445,7 +465,7 @@ function targetsSourceOnly(e: Effect): boolean {
  */
 function scopeMatters(e: Effect): boolean {
   if (bearerOnly(e)) return false;
-  const counts = ["stat-count", "stat-max", "skill-count"].includes(e.operation.kind);
+  const counts = ["stat-count", "stat-per-count", "stat-max", "skill-count"].includes(e.operation.kind);
   return !targetsSourceOnly(e) || e.condition != null || counts;
 }
 

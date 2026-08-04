@@ -27,7 +27,7 @@ export type RefKind =
 const REF_KEYS: Record<RefKind, readonly string[]> = {
   profile: ["profileIds", "profileId", "subjectProfileId", "requiredProfileId", "excludedProfileIds"],
   model: ["modelId", "modelIds"],
-  equipment: ["baseEquipmentIds", "fixedBaseEquipmentIds", "equipmentIds", "addedEquipmentIds"],
+  equipment: ["baseEquipmentIds", "fixedBaseEquipmentIds", "equipmentIds", "addedEquipmentIds", "exceptEquipmentIds"],
   faction: ["factionId", "factionIds", "allowedFactions", "factionEligibility", "factions", "origin", "originChoices", "fromFactionIds"],
   skill: ["skillId", "skillIds"],
   spell: ["spellId", "spellIds"],
@@ -48,6 +48,7 @@ const KEY_LABEL: Record<string, string> = {
   fixedBaseEquipmentIds: "équipement de base non retirable",
   equipmentIds: "filtre d'équipement",
   addedEquipmentIds: "équipement ajouté",
+  exceptEquipmentIds: "équipement laissé autorisé",
   profileIds: "profils visés",
   profileId: "profil visé",
   subjectProfileId: "profil sujet",

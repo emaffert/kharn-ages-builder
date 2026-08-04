@@ -7,6 +7,18 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (3)
+
+### Trois règles de cartes que le constructeur laissait passer
+
+- **Key le Sénéchal refuse enfin les armes qu'il ne sait pas manier.** Sa carte lui interdit les armes
+  de tir et les armes à deux mains ; on pouvait pourtant les lui acheter. Les épées bâtardes restent
+  autorisées, puisqu'elles se manient aussi à une main.
+- **Alaric ne troque plus sa canne contre n'importe quoi.** Sa carte ne lui laisse le choix qu'entre la
+  Sarclette et le Couteau comme arme alternative. Le reste ne lui est plus proposé.
+- **Le Mongo sombre gagne la Témérité que sa carte lui promet** : +1 par Mongo en jeu, en plus de sa
+  valeur imprimée. Elle restait bloquée à 4 quelle que soit la horde qui l'accompagnait.
+
 ## 2026-08-06 (2)
 
 ### Le glisser-déposer ne déforme plus ce qu'on déplace

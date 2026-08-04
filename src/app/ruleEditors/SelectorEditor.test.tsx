@@ -37,6 +37,11 @@ function Harness({
   );
 }
 
+/** Sélecteur piloté de l'extérieur : sert à rejouer le passage d'un effet à l'autre, composant monté. */
+function SelectorForSelector({ selector }: { selector: Selector }) {
+  return <SelectorEditor selector={selector} cat={catalog} role="target" withEquipment onChange={() => {}} />;
+}
+
 describe("SelectorEditor - la position décide des champs", () => {
   it("nomme la source selon ce qui porte l'effet", () => {
     render(<Harness sourceKind="equipment" />);
@@ -124,6 +129,15 @@ describe("SelectorEditor - la position décide des champs", () => {
 
   it("ouvre d'emblée le filtre quand la donnée en porte un", () => {
     render(<Harness role="target" withEquipment initial={{ self: true, equipmentHands: [2] }} />);
+    expect(screen.getByText(/^Objets précis$/)).toBeTruthy();
+  });
+
+  it("ouvre le filtre d'un effet filtré même après en avoir affiché un qui ne l'était pas", () => {
+    // Le composant reste monté d'un effet à l'autre : un mode gardé en état local restait sur
+    // « sur la figurine » et cachait le filtre (cas de la Brute, −5 Ko sur ses armes à 1 main).
+    const { rerender } = render(<SelectorForSelector selector={{ self: true }} />);
+    expect(screen.queryByText(/^Objets précis$/)).toBeNull();
+    rerender(<SelectorForSelector selector={{ self: true, equipmentCategories: ["arme-cac"], equipmentHands: [1] }} />);
     expect(screen.getByText(/^Objets précis$/)).toBeTruthy();
   });
 

@@ -27,6 +27,8 @@ const KIND_MARKERS: [EffectOperation["kind"], { text?: RegExp; placeholder?: Reg
   ["grant-mastery-die", { text: /Domaines du dé/i }],
   ["stat-modifier", { placeholder: /nb ou/i }],
   ["stat-count", { text: /valeur de base imprimée/i }],
+  // Ancré : le libellé de l'option du menu contient lui aussi « par figurine comptée ».
+  ["stat-per-count", { text: /^Par figurine comptée$/ }],
   ["stat-max", { text: /la plus forte valeur de base/i }],
   ["skill-count", { text: /Par groupe de/i }],
   ["spell-pages", { text: /Voie dédiée/i }],

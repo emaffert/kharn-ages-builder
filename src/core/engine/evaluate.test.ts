@@ -215,6 +215,33 @@ describe("validation des contraintes", () => {
     expect(res.issues.some((i) => i.ruleId === "larbin-eprouve")).toBe(true);
   });
 
+  it("Key ne peut pas prendre d'arme de tir, ni de corps à corps à 2 mains", () => {
+    const ranged = evalFang([inst("kharns-key", { addedEquipmentIds: ["arbalete-de-poing"] })], "kharns");
+    expect(ranged.issues.some((i) => i.ruleId === "key-no-ranged")).toBe(true);
+
+    const twoHanded = evalFang([inst("kharns-key", { addedEquipmentIds: ["paire-poignards"] })], "kharns");
+    expect(twoHanded.issues.some((i) => i.ruleId === "key-no-two-handed")).toBe(true);
+  });
+
+  it("Key garde les armes de corps à corps à 1 main, et les bâtardes (maniables à 1 main)", () => {
+    const oneHanded = evalFang([inst("kharns-key", { addedEquipmentIds: ["couteau"] })], "kharns");
+    expect(oneHanded.issues.some((i) => i.ruleId?.startsWith("key-no-"))).toBe(false);
+
+    const bastard = evalFang([inst("kharns-key", { addedEquipmentIds: ["epee-batarde"] })], "kharns");
+    expect(bastard.issues.some((i) => i.ruleId?.startsWith("key-no-"))).toBe(false);
+  });
+
+  it("Alaric ne prend pour arme alternative que la Sarclette ou le Couteau", () => {
+    const ruleId = "alaric-alternative-weapon";
+    const other = evalFang([inst("gouns-alaric-1", { addedEquipmentIds: ["paire-poignards"] })], "gouns");
+    expect(other.issues.some((i) => i.ruleId === ruleId)).toBe(true);
+
+    for (const allowed of ["sarclette", "couteau"]) {
+      const res = evalFang([inst("gouns-alaric-1", { addedEquipmentIds: [allowed] })], "gouns");
+      expect(res.issues.some((i) => i.ruleId === ruleId)).toBe(false);
+    }
+  });
+
   it("Likan équipé est invalide (aliéné : pas d'ajout d'équipement)", () => {
     const res = evalFang([inst("fangs-likan-1", { addedEquipmentIds: ["couteau"] })]);
     expect(res.issues.some((i) => i.ruleId === "likan-no-equipment")).toBe(true);
@@ -355,6 +382,20 @@ describe("caractéristique dérivée d'un décompte (stat-count)", () => {
       makeList([m2b, ...Array.from({ length: 4 }, () => inst("gouns-guerrier-mongo-1"))], "gouns"),
     );
     expect(crowd.statDeltas[m2b.instanceId]?.t).toBe(2);
+  });
+
+  it("Mongo sombre : +1 en Témérité PAR Mongo, cumulé à sa base (et non fixé au décompte)", () => {
+    // Seul, il se compte lui-même : T de base 4 → +1.
+    const solo = inst("guilde-noire-mongo-sombre-3");
+    expect(evaluateList(catalog, makeList([solo], "guilde-noire")).statDeltas[solo.instanceId]?.t).toBe(1);
+
+    // Avec 2 Mongos goüns de plus : 3 Mongos en jeu → +3 (là où `stat-count` aurait donné 4, sa base).
+    const withKin = inst("guilde-noire-mongo-sombre-3");
+    const res = evaluateList(
+      catalog,
+      makeList([withKin, inst("gouns-guerrier-mongo-1"), inst("gouns-eclaireur-mongo-1")], "guilde-noire"),
+    );
+    expect(res.statDeltas[withKin.instanceId]?.t).toBe(3);
   });
 
   it("Artisane : Témérité = nombre de Goüns niveau I (faction ET niveau, dimensions cumulées)", () => {

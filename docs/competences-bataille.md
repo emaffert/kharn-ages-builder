@@ -10,9 +10,33 @@ livre de règles de bataille prennent le pas sur les cartes de profil originales
 > relues dans les données, pas seulement dans cette page. Les écarts restants sont listés en fin de
 > document.
 
+## Ambidextre
+
+Un Safar maniant une arme dans chaque main peut, lors d'une attaque à 3 PA, faire deux attaques à
+2 PA successives. S'il possède une arme maniable à 1 **et** 2 mains, il gagne « Riposte » quand il
+la manie à 2 mains.
+
+- Khârns : les **Avant-gardes**. - ✅ (I/II/III)
+- Fangs : **Broutcha**. - ✅
+
+## Furtivité
+
+Augmente le bonus de couvert d'une valeur égale au niveau. Le livre ne l'attribue à personne : elle
+n'arrive que par les cartes. Présente sur 6 profils au catalogue.
+
 ## Indépendant
 
-Tous les **personnages nommés**, sauf Key le Sénéchal et Kharl VI (Khârns) et **Muskh** (Fangs).
+Tous les **personnages nommés**, sauf Key le Sénéchal et Kharl VI (Khârns) et **Muskh** (Fangs)
+« entre autres » : **le livret laisse explicitement la liste des exceptions ouverte**, donc un
+personnage nommé sans Indépendant n'est pas un oubli tant que sa carte ne le porte pas. C'est la
+carte qui tranche, pas cette règle générale.
+
+Muskh porte bien « Indépendant » sur sa carte : l'exception du livret signifie seulement qu'il ne le
+lui *ajoute* pas. Rien à corriger.
+
+En jeu : les Safars d'un Fer de Lance dont le leader est **en embuscade** gagnent « Indépendant »
+tant qu'il n'est pas physiquement présent sur le terrain.
+
 Plus :
 
 - Khârns : les **Avant-gardes**. - ✅ (I/II/III)
@@ -21,8 +45,9 @@ Plus :
   sur leur carte, l'exception du livre signifie seulement qu'il ne le leur *ajoute* pas)
 - Goûns : les **éclaireurs mongo**. - ✅ (I/II/III)
 
-Personnages nommés : 26 des 31 profils à limitation « P » l'ont. Key est correctement exclu ;
-Kharl VI n'existe pas encore au catalogue. **Quatre manques**, voir les écarts.
+Personnages nommés : 27 des 31 profils à limitation « P » l'ont. Key est correctement exclu et
+Kharl VI n'existe pas au catalogue ; les trois autres sans Indépendant relèvent de la clause « entre
+autres » ci-dessus, à confirmer sur leur carte si le doute revient.
 
 ## Merci
 
@@ -58,29 +83,39 @@ Compétence `seigneur-de-guerre`, à valeur. Elle détermine le nombre de marque
 (cf. [`chantiers/mode-bataille.md`](chantiers/mode-bataille.md)) : sans elle, le mode bataille ne
 peut rien calculer.
 
-- Khârns : Prince (3), Engueran (2), Syrga (1), Maître de l'Ordre (1). - ✅ ; **+ Gaubert (1) et
-  Balthus (5)** présents au catalogue mais absents de cette liste.
-- Khérops : Tarsak (2), Ogodeï (1), Commandant (2), Capitaine (1). - ✅ ; **+ Lieutenant (1) et
-  Nagoï Khan (5)** présents au catalogue mais absents de cette liste. « Grand Sacrificateur (1) » :
-  **ce profil n'existe pas au catalogue** (voir les écarts).
-- Fangs : Broutcha (1), Apathée (1). - ✅
-- Affranchis : Maraka (2), Clotrique (3). - ✅ (hors livre de bataille, propres à la faction)
+Le livret ne fait que **rattraper les profils sortis avant l'extension** : les suivants portent la
+compétence d'office sur leur carte. Il est donc normal - et attendu - que le catalogue en compte
+plus que cette liste.
+
+Ce que le **livret** attribue :
+
+- Khârns : Prince (3), Engueran (2), Syrga (1), Maître de l'Ordre (1). - ✅
+- Khérops : Tarsak (2), Ogodeï (1), Commandant (2), Capitaine (1). - ✅ ; « Grand Sacrificateur (1) »
+  est nommé par le livret mais **ce profil n'existe pas chez nous** : la carte
+  `kherops-pretre-ou-bourreau-fr.jpg` s'arrête au Prêtre (niveau I, Lim 3) et au Bourreau
+  (niveau II, Lim 2).
+- Fangs : Broutcha (1). - ✅
 - Goûns : pas de SDG à valeur numérique ; le leader génère 1 marqueur par multiple complet de
   4 niveaux I, et le **Vieillard Shaman III** 1 par groupe de 3 niveaux I. Le Vieillard Shaman porte
   bien la compétence sans valeur au catalogue. - ✅
 
-## Écarts constatés au 2026-08-04
+Ce que les **cartes** ajoutent, hors livret : Gaubert (1), Balthus (5), Lieutenant khérops (1),
+Nagoï Khan (5), Apathée (1), Maraka (2), Clotrique (3). - ✅
 
-À traiter avant d'implémenter le calcul des marqueurs d'activation.
+## Corrections appliquées le 2026-08-04
 
-- **Indépendant manquant** sur 4 personnages nommés : `kherops-nagoi-khan-3`, `affranchis-maraka-3`,
-  `affranchis-khalsa-2`, `affranchis-clotrique-3`. À noter que `guilde-noire-khalsa-2` **l'a**,
-  alors que `affranchis-khalsa-2`, même personnage, ne l'a pas : incohérence entre les deux versions.
-- **« Grand Sacrificateur »** figurait dans cette checklist avec SDG 1, mais aucun profil de ce nom
-  n'existe. Les candidats khérops proches sont `kherops-bourreau-2` (Bourreau du Sacrifice) et
-  `kherops-pretre-1` (Prêtre du Sacrifice). À arbitrer sur carte avant correction.
-- **Kharl VI** n'est pas encore au catalogue ; l'exception qui le concerne est donc sans objet
-  aujourd'hui.
+- **Khalsa** : `affranchis-khalsa-2` n'avait pas « Indépendant » alors que `guilde-noire-khalsa-2`
+  l'avait. C'est un personnage nommé, la compétence lui revient dans toutes ses versions. **Corrigé.**
+  (Les deux versions diffèrent encore par ailleurs : l'Affranchie porte « Furtivité 3 » et
+  « Carnivore », pas celle de la Guilde Noire. À vérifier sur carte le jour où ça compte.)
+- **Porteuse d'eau** : `gouns-porteuse-d-eau-1` était recrutable **en tant qu'esclave** par un Fer de
+  Lance affranchi, via leur recrutement ouvert chez les Goûns, alors que le livret dit que « les
+  Affranchis se refusent à enrôler des esclaves ». `affranchis` a été ajouté à `exceptFactions` :
+  elle reste recrutable chez eux si elle satisfait les règles de recrutement ouvert, mais comme une
+  générique goûne ordinaire, pas comme une esclave. **Corrigé.**
+- **Muskh** : porte « Indépendant » sur sa carte, l'exception du livret ne fait que dire que le livre
+  ne le lui ajoute pas. **Rien à corriger.**
+- **Kharl VI** n'est pas au catalogue ; l'exception qui le concerne est sans objet aujourd'hui.
 
 ## Procédure d'import d'une nouvelle faction
 

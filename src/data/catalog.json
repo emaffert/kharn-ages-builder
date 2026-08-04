@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
+  "version": "0.5.1",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -10106,12 +10106,13 @@
           "params": {
             "exceptFactions": [
               "tembos",
-              "gouns"
+              "gouns",
+              "affranchis"
             ],
             "perCarrierMax": 1
           },
           "scope": "fer-de-lance",
-          "sourceText": "Esclave hors Goûns et Tembos."
+          "sourceText": "Esclave hors Goûns, Tembos et Affranchis."
         }
       ],
       "rules": [
@@ -11623,6 +11624,9 @@
         },
         {
           "skillId": "ambidextre"
+        },
+        {
+          "skillId": "independant"
         },
         {
           "skillId": "furtivite",

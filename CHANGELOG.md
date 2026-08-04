@@ -7,6 +7,19 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (5)
+
+### Catalogue 0.5.1 : Khalsa et la Porteuse d'eau
+
+- **Khalsa est « Indépendante » dans ses deux versions.** Sa carte affranchie ne portait pas la
+  compétence, alors que celle de la Guilde Noire l'avait : c'est un personnage nommé, elle s'active
+  et récupère ses points d'action loin de son leader quel que soit le Fer de Lance qui l'accueille.
+- **La Porteuse d'eau n'est plus une esclave chez les Affranchis.** Un Fer de Lance affranchi pouvait
+  la recruter par le recrutement ouvert, mais elle y arrivait avec la condition d'esclave : il lui
+  fallait un Seigneur de guerre pour la posséder, et elle ne pouvait porter qu'une arme de corps à
+  corps gratuite. Les Affranchis refusant d'enrôler des esclaves, elle rejoint désormais leurs rangs
+  comme une générique goûne ordinaire, avec son équipement et sa limitation habituels.
+
 ## 2026-08-06 (4)
 
 ### Un garde rapproché ne compte plus double

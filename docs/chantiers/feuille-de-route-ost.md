@@ -16,7 +16,7 @@ service mutuellement. Les fusionner change l'ordre de travail, pas le contenu.
   Lance est associé un Barda » et qu'il n'y a aujourd'hui qu'un seul Fer de Lance.
 - **Les deux livres décrivent la même phase de jeu.** La Geste appelle « modulation entre rondes »
   ce que le livre de bataille appelle « phase d'adaptation » : remplacer de l'équipement, changer le
-  niveau des combattants, et acheter des PIONs. C'est un seul sujet, pas deux.
+  niveau des combattants. C'est un seul sujet, pas deux.
 - **Le Barda accueille les Ordres.** Le livre de bataille est explicite : « en tournois, ils doivent
   être intégrés dans la valeur de barda de votre Ost ». Livrer le Barda sans prévoir cette entrée,
   c'est le rouvrir juste après.
@@ -93,7 +93,7 @@ au milieu de la phase 2.
   filtré + catégories + prix affiché + fiche d'objet », aujourd'hui soudée à une instance.
 - **Sélecteur de profil réutilisable** : même chose côté roster, pour les Safars de réserve.
 - **Cadre commun de panneau au niveau de la liste** : `OstPanel` existe, le Barda, les Pactes, les
-  Ordres, les Formations et les PIONs en ajouteront cinq. Le motif est le même (opt-in hors figurine,
+  Ordres et les Formations en ajouteront quatre. Le motif est le même (opt-in hors figurine,
   replié par défaut, jauge éventuelle).
 - **Jauges de budget multiples** : le bandeau ne connaît qu'un plafond ; il en faudra jusqu'à cinq
   (Ost, Fer de Lance, Barda, Ordres, enveloppe de mochère).
@@ -168,9 +168,9 @@ jusqu'à 3 Ordres gratuits, 3 pages de grimoire gratuites…). Les autres ne pos
 
 ---
 
-### Phase 5 - Ordres, Formations, PIONs
+### Phase 5 - Ordres et Formations
 
-Trois lots petits et indépendants, regroupés parce qu'ils partagent le cadre de panneau et se
+Deux lots petits et indépendants, regroupés parce qu'ils partagent le cadre de panneau et se
 livrent ensemble.
 
 **Ordres** (2,5 à 3,5 j) :
@@ -190,27 +190,20 @@ livrent ensemble.
 - Aucun coût, donc aucun impact budgétaire.
 - Saisie des 16 cartes, après avoir vérifié l'écart avec les 15 annoncées par le livret.
 
-**PIONs** (0,5 j) :
+**Hors périmètre - les PIONs.** Achat de 1 à 3 en phase d'adaptation, coût incrémental 5 / 10 / 15
+Ko, conditionné à une infériorité numérique et de niveau constatée **face à l'adversaire**. C'est un
+concept de mise en place de partie, pas de construction de liste : **le builder ne le gérera pas.**
 
-- 1 à 3, coût incrémental 5 / 10 / 15 Ko, plafond de 3.
-- Les conditions d'achat ne sont vérifiables que face à l'adversaire : le builder affiche le total de
-  figurines et de niveaux de l'Ost et laisse le joueur décider.
-
-**4,5 à 6,5 jours.**
+**4 à 6 jours.**
 
 ---
 
-### Phase 6 - Données de profil et aides de jeu
+### Phase 6 - Aides de jeu dérivées
 
-À faire dans cet ordre : les aides de jeu ne peuvent pas fonctionner sans les données.
-
-**Données** (0,5 j, le gros a été vérifié le 2026-08-04) :
-
-- Corriger les trois écarts relevés dans [`competences-bataille.md`](../competences-bataille.md) :
-  Indépendant manquant sur quatre personnages nommés, « Grand Sacrificateur » introuvable au
-  catalogue, incohérence entre `affranchis-khalsa-2` et `guilde-noire-khalsa-2`.
-
-**Aides de jeu dérivées** (1 à 2 j) :
+**Données** : **fait le 2026-08-04.** L'audit contre `catalog.json` v0.5.0 a montré que la checklist
+de [`competences-bataille.md`](../competences-bataille.md) était appliquée ; les deux écarts réels
+(Khalsa sans Indépendant, Porteuse d'eau recrutable en esclave par les Affranchis) sont corrigés.
+Rien à reprendre ici.
 
 - **Nombre de marqueurs d'activation** : I du Seigneur de guerre + 1 par Fer de Lance + sa valeur de
   SDG, plafonné au nombre de figurines, avec le **cas goûn** (1 par multiple complet de 4 niveaux I,
@@ -220,7 +213,7 @@ livrent ensemble.
   Safar le plus coûteux.
 - **Niveaux cumulés par Fer de Lance**, pour les PA d'accompagnement du mode accéléré.
 
-**1,5 à 2,5 jours.**
+**1 à 2 jours.**
 
 ---
 
@@ -231,7 +224,7 @@ la valeur **seulement si** le besoin tournoi est confirmé.
 
 - Notion de **variante de ronde** dérivée d'un Ost (ou d'un Fer de Lance) et de son Barda :
   changement de niveau des Safars engagés, redistribution de l'équipement, achat des Ordres une fois
-  l'adversaire connu, achat des PIONs.
+  l'adversaire connu.
 - Validation de chaque variante, comparaison entre variantes.
 - Nouvel écran, nouveau document, impact sur la synchro.
 
@@ -251,11 +244,11 @@ son Barda et ses Ordres, on valide, et on module à la main le jour du tournoi.
 | 2 | Barda | 3 à 4 j | 1 |
 | 3 | Restrictions de composition | 2 j | 2 |
 | 4 | Pactes | 5 à 7 j | 3 |
-| 5 | Ordres, Formations, PIONs | 4,5 à 6,5 j | 2 et 4 |
-| 6 | Données de profil et aides de jeu | 1,5 à 2,5 j | 0 |
+| 5 | Ordres et Formations | 4 à 6 j | 2 et 4 |
+| 6 | Aides de jeu dérivées | 1 à 2 j | 0 et 5 |
 | 7 | Phase d'adaptation | 5 à 10 j | tout |
 
-**Phases 0 à 6 : 22,5 à 31 jours.** Avec la phase 7 : 27,5 à 41 jours.
+**Phases 0 à 6 : 21 à 30 jours.** Avec la phase 7 : 26 à 40 jours.
 
 À titre de comparaison, les deux chantiers menés séparément coûtaient 4 à 6 jours (Barda phases 1-2)
 plus 16 à 24 jours (Bataille), soit 20 à 30 jours, **mais avec le refactor multi-Fers de Lance et les
@@ -268,9 +261,9 @@ Trois points d'arrêt naturels, chacun utilisable par un joueur.
 1. **Après la phase 2** (9 à 13 j) : le mode Bataille existe structurellement (Ost multi-Fers de
    Lance, validé, exportable) et le Barda est complet en escarmouche. C'est déjà deux fonctionnalités
    annoncées qui sortent de « Bientôt ».
-2. **Après la phase 5** (21 à 28,5 j) : le mode Bataille est complet côté construction de liste.
-   Pactes, Ordres, Formations, PIONs. C'est la cible naturelle du chantier.
-3. **Après la phase 6** (22,5 à 31 j) : les aides de jeu rendent la liste utilisable à la table.
+2. **Après la phase 5** (20 à 28 j) : le mode Bataille est complet côté construction de liste.
+   Pactes, Ordres, Formations. C'est la cible naturelle du chantier.
+3. **Après la phase 6** (21 à 30 j) : les aides de jeu rendent la liste utilisable à la table.
 
 ## 6. Arbitrages à trancher, par phase
 

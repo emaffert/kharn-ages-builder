@@ -7,6 +7,14 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (2)
+
+### Le glisser-déposer ne déforme plus ce qu'on déplace
+
+- **Le bloc que l'on saisit garde sa taille.** En réordonnant les figurines d'une liste, ou les lignes
+  d'une fiche dans l'administration, le bloc en cours de déplacement pouvait s'étirer ou s'écraser en
+  hauteur au moment où il changeait de place. Il suit maintenant le curseur sans se déformer.
+
 ## 2026-08-06
 
 ### Les fiches d'arme et de sort deviennent lisibles

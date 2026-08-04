@@ -19,7 +19,9 @@ export function SortableUnit({
       ref={setNodeRef}
       className="bld-unit-group"
       style={{
-        transform: CSS.Transform.toString(transform),
+        // Translate seul : `Transform` ajoute un scaleX/scaleY qui étire ou écrase
+        // le bloc déplacé quand les lignes n'ont pas toutes la même hauteur.
+        transform: CSS.Translate.toString(transform),
         transition,
         position: "relative",
         zIndex: isDragging ? 5 : undefined,

@@ -15,6 +15,9 @@ import {
   type SpecialCard,
   type Spell,
   renameId,
+  isTechnicalId,
+  suggestId,
+  technicalIdSuggestions,
   removeEntity as coreRemoveEntity,
   type RefKind,
 } from "@core";
@@ -497,6 +500,34 @@ export function useCatalogStore() {
   );
 
   /**
+   * Donne un identifiant lisible à une entité qui porte encore celui de sa création
+   * (`profile-1785410170666`). Sans effet dès qu'elle en a un vrai : on ne rebaptise pas une entité
+   * établie parce qu'on corrige une coquille dans son nom.
+   */
+  const slugifyEntityId = useCallback(
+    (kind: RefKind, id: string) =>
+      apply((c) => {
+        if (!isTechnicalId(id)) return c;
+        const next = suggestId(c, kind, id);
+        return next ? renameId(c, kind, id, next) : c;
+      }),
+    [apply],
+  );
+
+  /**
+   * Rattrapage en un passage : toutes les entités à identifiant technique reçoivent le leur. Les
+   * propositions sont calculées d'abord, ensemble, pour que deux homonymes n'en visent pas un seul ;
+   * puis appliquées l'une après l'autre, chacune avec sa cascade de références.
+   */
+  const slugifyAllIds = useCallback(
+    () =>
+      apply((c) =>
+        technicalIdSuggestions(c).reduce((acc, s) => renameId(acc, s.kind, s.from, s.to), c),
+      ),
+    [apply],
+  );
+
+  /**
    * Repart du `catalog.json` du dépôt : le brouillon est abandonné et le fichier redevient la
    * source éditée. C'est le pendant d'« Enregistrer » pour le développement.
    */
@@ -597,6 +628,8 @@ export function useCatalogStore() {
     setIcon,
     toggleUnverified,
     renameEntityId,
+    slugifyEntityId,
+    slugifyAllIds,
     removeEntity,
     resetToFile,
     saveToProject,

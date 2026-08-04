@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { findReferences, type Catalog, type CatalogSettings, type Grimoire, type MunitionKind, type Reference } from "@core";
+import { findReferences, technicalIdSuggestions, type Catalog, type CatalogSettings, type Grimoire, type MunitionKind, type Reference } from "@core";
+import { Button } from "@ui";
 import { IconBucketSection } from "./IconBucketSection";
 import { AddButton, ConfirmDeleteDialog, Field, Glyph, PageHeader, RemoveButton, Section, type PendingDelete } from "./primitives";
 import { INPUT } from "./shared";
@@ -17,8 +18,11 @@ export function SettingsDetail({
   onUpdateMunitionKind,
   onRemoveMunitionKind,
   onUpdateSettings,
+  onSlugifyAllIds,
 }: {
   cat: Catalog;
+  /** Donne un identifiant lisible à toutes les entités qui portent encore celui de leur création. */
+  onSlugifyAllIds: () => void;
   onUpdateGrimoire: (id: string, patch: Partial<Grimoire>) => void;
   onAddMunitionKind: () => void;
   onUpdateMunitionKind: (id: string, patch: Partial<MunitionKind>) => void;
@@ -148,11 +152,61 @@ export function SettingsDetail({
         </div>
       </Section>
 
+      {/* ── Identifiants ─────────────────────────────────────────── */}
+      <Section title="Identifiants" icon="identity">
+        <IdSlugifier cat={cat} onSlugifyAll={onSlugifyAllIds} />
+      </Section>
+
       {/* ── Icônes ───────────────────────────────────────────────── */}
       <IconBucketSection cat={cat} />
 
       <ConfirmDeleteDialog pending={pendingDelete} onClose={() => setPendingDelete(null)} />
 
+    </div>
+  );
+}
+
+/**
+ * Rattrapage des identifiants : les entités créées dans l'administration gardent l'horodatage de
+ * leur naissance (`profile-1785410170666`), qui n'apprend rien à qui relit un script ou un diff.
+ * Cet outil les nomme d'après leur nom, en une passe, références comprises.
+ */
+function IdSlugifier({ cat, onSlugifyAll }: { cat: Catalog; onSlugifyAll: () => void }) {
+  const suggestions = technicalIdSuggestions(cat);
+  const [ouvert, setOuvert] = useState(false);
+
+  if (suggestions.length === 0) {
+    return (
+      <p className="adm-faint text-xs">
+        Tous les identifiants sont lisibles. Une entité créée ici en reçoit un dès qu'on la nomme.
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="adm-faint text-xs">
+        <strong>{suggestions.length}</strong> entité(s) portent encore l'identifiant de leur création.
+        Les renommer met à jour tout ce qui les cite dans le catalogue, mais <strong>pas les listes
+        déjà enregistrées</strong> par les joueurs, qui perdront les figurines concernées.
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="primary" onClick={onSlugifyAll}>
+          Renommer les {suggestions.length}
+        </Button>
+        <Button size="sm" onClick={() => setOuvert((o) => !o)}>
+          {ouvert ? "Masquer le détail" : "Voir le détail"}
+        </Button>
+      </div>
+      {ouvert && (
+        <ul className="adm-reflist">
+          {suggestions.map((s) => (
+            <li key={s.from}>
+              <span className="adm-faint">{s.label}</span> · <code>{s.from}</code> →{" "}
+              <code className="adm-accent">{s.to}</code>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

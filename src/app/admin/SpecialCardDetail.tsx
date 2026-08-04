@@ -21,6 +21,7 @@ export function SpecialCardDetail({
   onChange,
   onRemove,
   onRenameId,
+  onSlugifyId,
 }: {
   card: SpecialCard;
   cat: Catalog;
@@ -28,6 +29,8 @@ export function SpecialCardDetail({
   onRemove: () => void;
   /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
+  /** Donne un identifiant lisible à une entité qui porte encore celui de sa création. */
+  onSlugifyId?: () => void;
 }) {
   const scope = card.scope;
   const cond = Array.isArray(card.activationCondition)
@@ -52,6 +55,7 @@ export function SpecialCardDetail({
         <DetailHeader
           name={card.name}
           onName={(v) => onChange({ name: v })}
+          onNameCommit={onSlugifyId}
           cost={card.cost}
           onCost={(v) => onChange({ cost: v ?? 0 })}
           onRemove={onRemove}

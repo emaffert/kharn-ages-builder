@@ -12,6 +12,7 @@ import { SpellDetail } from "./admin/SpellDetail";
 import { MagicWaysDetail } from "./admin/MagicWaysDetail";
 import { MountsDetail } from "./admin/MountsDetail";
 import { MountOptionDetail } from "./admin/MountOptionDetail";
+import { isTechnicalId, suggestId } from "@core";
 import { FactionsDetail } from "./admin/FactionsDetail";
 import { SettingsDetail } from "./admin/SettingsDetail";
 import { AdminDocs } from "./admin/AdminDocs";
@@ -169,6 +170,17 @@ export function AdminCatalog() {
   const rename = (kind: RefKind, oldId: string, newId: string, select: (id: string) => void) => {
     store.renameEntityId(kind, oldId, newId);
     select(newId);
+  };
+  /**
+   * Baptême d'une entité qui porte encore l'identifiant de sa création, une fois son nom saisi.
+   * Sans effet si elle en a déjà un vrai ; la sélection suit le nouvel identifiant.
+   */
+  const slugify = (kind: RefKind, id: string, select: (id: string) => void) => {
+    if (!isTechnicalId(id)) return;
+    const next = suggestId(catalog, kind, id);
+    if (!next) return;
+    store.slugifyEntityId(kind, id);
+    select(next);
   };
 
   const selectedProfile = catalog.profiles.find((p) => p.id === selectedProfileId);
@@ -469,6 +481,7 @@ export function AdminCatalog() {
               <div className="contents">
                 <ProfileDetail
                   onRenameId={(newId) => rename("profile", selectedProfile.id, newId, setSelectedProfileId)}
+                  onSlugifyId={() => slugify("profile", selectedProfile.id, setSelectedProfileId)}
                   onRemove={() =>
                     confirmRemove("profile", selectedProfile.id, `le profil « ${selectedProfile.name} »`, () =>
                       setSelectedProfileId(neighbourOf(filteredProfiles, selectedProfile.id)),
@@ -496,6 +509,7 @@ export function AdminCatalog() {
                   cat={catalog}
                   onChange={(patch) => store.updateEquipment(selectedEquip.id, patch)}
                   onRenameId={(newId) => rename("equipment", selectedEquip.id, newId, setSelectedEquipId)}
+                  onSlugifyId={() => slugify("equipment", selectedEquip.id, setSelectedEquipId)}
                   onRemove={() =>
                     confirmRemove("equipment", selectedEquip.id, `l'équipement « ${selectedEquip.name} »`, () =>
                       setSelectedEquipId(neighbourOf(filteredEquipment, selectedEquip.id)),
@@ -515,6 +529,7 @@ export function AdminCatalog() {
                   cat={catalog}
                   onChange={(patch) => store.updateSkill(selectedSkill.id, patch)}
                   onRenameId={(newId) => rename("skill", selectedSkill.id, newId, setSelectedSkillId)}
+                  onSlugifyId={() => slugify("skill", selectedSkill.id, setSelectedSkillId)}
                   onRemove={() =>
                     confirmRemove("skill", selectedSkill.id, `la compétence « ${selectedSkill.keyword} »`, () =>
                       setSelectedSkillId(neighbourOf(filteredSkills, selectedSkill.id)),
@@ -533,6 +548,7 @@ export function AdminCatalog() {
                   cat={catalog}
                   onChange={(patch) => store.updateSpecialCard(selectedCard.id, patch)}
                   onRenameId={(newId) => rename("specialCard", selectedCard.id, newId, setSelectedCardId)}
+                  onSlugifyId={() => slugify("specialCard", selectedCard.id, setSelectedCardId)}
                   onRemove={() =>
                     confirmRemove("specialCard", selectedCard.id, `la carte « ${selectedCard.name} »`, () =>
                       setSelectedCardId(neighbourOf(filteredCards, selectedCard.id)),
@@ -551,6 +567,7 @@ export function AdminCatalog() {
                   cat={catalog}
                   onChange={(patch) => store.updateSpell(selectedSpell.id, patch)}
                   onRenameId={(newId) => rename("spell", selectedSpell.id, newId, setSelectedSpellId)}
+                  onSlugifyId={() => slugify("spell", selectedSpell.id, setSelectedSpellId)}
                   onRemove={() =>
                     confirmRemove("spell", selectedSpell.id, `le sort « ${selectedSpell.name} »`, () =>
                       setSelectedSpellId(neighbourOf(filteredSpells, selectedSpell.id)),
@@ -631,6 +648,7 @@ export function AdminCatalog() {
               onUpdateMunitionKind={store.updateMunitionKind}
               onRemoveMunitionKind={store.removeMunitionKind}
               onUpdateSettings={store.updateSettings}
+              onSlugifyAllIds={store.slugifyAllIds}
             />
           )}
         </div>

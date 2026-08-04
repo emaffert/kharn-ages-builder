@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Button, Dialog, Tag } from "@ui";
-import { canRenameId, findReferences, idIsFree, type Catalog, type Reference, type RefKind } from "@core";
+import { findReferences, idIsFree, suggestId, whyIdIsFixed, type Catalog, type Reference, type RefKind } from "@core";
 import type { FieldValue } from "../useCatalogStore";
 import { INPUT, SECTION } from "./shared";
 import offensive from "../../assets/maitrise/offensive.png";
@@ -164,13 +164,16 @@ export function IdField({
   id: string;
   onRename: (next: string) => void;
 }) {
+  // Identifiant qu'on obtiendrait à partir du nom : proposé tant qu'il diffère de l'actuel.
+  const suggested = suggestId(cat, kind, id);
   const [draft, setDraft] = useState<string | null>(null);
   const refs = useMemo(() => findReferences(cat, kind, id), [cat, kind, id]);
 
-  if (!canRenameId(kind)) {
+  const fixed = whyIdIsFixed(kind, id);
+  if (fixed) {
     return (
-      <span className="adm-id" title="Cet identifiant est une constante du moteur : il ne peut pas être renommé.">
-        {id}
+      <span className="adm-id adm-id--fixed" title={fixed}>
+        🔒 {id}
       </span>
     );
   }
@@ -200,6 +203,16 @@ export function IdField({
           if (e.key === "Escape") setDraft(null);
         }}
       />
+      {suggested && draft == null && (
+        <button
+          type="button"
+          className="adm-id-suggest"
+          title={`Renommer en « ${suggested} », d'après le nom`}
+          onClick={() => onRename(suggested)}
+        >
+          ↺ {suggested}
+        </button>
+      )}
       {draft != null && clean !== id && (
         <span className="adm-id-hint">
           {taken
@@ -349,6 +362,7 @@ export function DetailPage({
 export function DetailHeader({
   name,
   onName,
+  onNameCommit,
   namePlaceholder,
   cost,
   onCost,
@@ -360,6 +374,12 @@ export function DetailHeader({
 }: {
   name: string;
   onName: (v: string) => void;
+  /**
+   * Appelé quand la saisie du nom est **terminée** (sortie du champ, Entrée), et non à chaque
+   * frappe : c'est là qu'un identifiant encore technique peut prendre le nom pour racine. Le faire
+   * lettre à lettre produirait « g », puis « gu »…
+   */
+  onNameCommit?: () => void;
   namePlaceholder?: string;
   cost?: number | null;
   onCost?: (v: number | null) => void;
@@ -377,6 +397,10 @@ export function DetailHeader({
           value={name}
           placeholder={namePlaceholder}
           onChange={(e) => onName(e.target.value)}
+          onBlur={onNameCommit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
         />
         {extra}
         {onCost && (

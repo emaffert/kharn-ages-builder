@@ -62,7 +62,31 @@ describe("IdField", () => {
   it("montre en lecture seule un identifiant figé par le code", () => {
     render(<IdField cat={base} kind="grimoire" id="petit" onRename={() => {}} />);
     expect(screen.queryByDisplayValue("petit")).toBeNull();
-    expect(screen.getByText("petit")).toBeTruthy();
+    expect(screen.getByText(/petit/)).toBeTruthy();
+  });
+
+  it("verrouille aussi les compétences que le moteur lit en dur, et dit pourquoi", () => {
+    render(<IdField cat={base} kind="skill" id="apatride" onRename={() => {}} />);
+    expect(screen.queryByDisplayValue("apatride")).toBeNull();
+    expect(screen.getByTitle(/lit cet identifiant en dur/i)).toBeTruthy();
+  });
+
+  it("propose l'identifiant tiré du nom, et ne renomme qu'au clic", () => {
+    const onRename = vi.fn();
+    const cat = {
+      ...base,
+      spells: [{ ...base.spells[0], id: "spell-1785236064844", name: "Insensibilité" }],
+    };
+    render(<IdField cat={cat} kind="spell" id="spell-1785236064844" onRename={onRename} />);
+    const bouton = screen.getByTitle(/Renommer en « insensibilite »/);
+    expect(onRename).not.toHaveBeenCalled();
+    fireEvent.click(bouton);
+    expect(onRename).toHaveBeenCalledWith("insensibilite");
+  });
+
+  it("ne propose rien quand l'identifiant est déjà celui du nom", () => {
+    render(<IdField cat={base} kind="equipment" id="couteau" onRename={() => {}} />);
+    expect(screen.queryByTitle(/Renommer en/)).toBeNull();
   });
 });
 

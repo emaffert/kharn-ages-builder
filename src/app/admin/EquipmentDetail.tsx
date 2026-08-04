@@ -19,6 +19,7 @@ export function EquipmentDetail({
   onChange,
   onRemove,
   onRenameId,
+  onSlugifyId,
 }: {
   equipment: Equipment;
   cat: Catalog;
@@ -26,6 +27,8 @@ export function EquipmentDetail({
   onRemove: () => void;
   /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
+  /** Donne un identifiant lisible à une entité qui porte encore celui de sa création. */
+  onSlugifyId?: () => void;
 }) {
   const [protectionAsked, setProtectionAsked] = useState(false);
   const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
@@ -84,6 +87,7 @@ export function EquipmentDetail({
         <DetailHeader
           name={e.name}
           onName={(v) => onChange({ name: v })}
+          onNameCommit={onSlugifyId}
           cost={e.cost}
           onCost={(v) => onChange({ cost: v ?? 0 })}
           onRemove={onRemove}

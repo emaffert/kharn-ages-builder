@@ -9,6 +9,7 @@ export function SpellDetail({
   onChange,
   onRemove,
   onRenameId,
+  onSlugifyId,
 }: {
   spell: Spell;
   cat: Catalog;
@@ -16,6 +17,8 @@ export function SpellDetail({
   onRemove: () => void;
   /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
+  /** Donne un identifiant lisible à une entité qui porte encore celui de sa création. */
+  onSlugifyId?: () => void;
 }) {
   const numOrUndef = (v: string): number | undefined => (v === "" ? undefined : Number(v));
   const reserved = s.reservedTo ?? {};
@@ -25,6 +28,7 @@ export function SpellDetail({
         <DetailHeader
           name={s.name}
           onName={(v) => onChange({ name: v })}
+          onNameCommit={onSlugifyId}
           cost={s.cost ?? null}
           onCost={(v) => onChange({ cost: v ?? undefined })}
           costPlaceholder="—"

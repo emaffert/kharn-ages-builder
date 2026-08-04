@@ -7,6 +7,7 @@ export function SkillCatalogDetail({
   onChange,
   onRemove,
   onRenameId,
+  onSlugifyId,
 }: {
   skill: Skill;
   cat: Catalog;
@@ -14,6 +15,8 @@ export function SkillCatalogDetail({
   onRemove: () => void;
   /** Renomme l'identifiant, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
+  /** Donne un identifiant lisible à une entité qui porte encore celui de sa création. */
+  onSlugifyId?: () => void;
 }) {
   return (
     <DetailPage
@@ -21,6 +24,7 @@ export function SkillCatalogDetail({
         <DetailHeader
           name={s.keyword}
           onName={(v) => onChange({ keyword: v })}
+          onNameCommit={onSlugifyId}
           onRemove={onRemove}
           removeTitle="Supprimer cette compétence"
           sub={<IdField cat={cat} kind="skill" id={s.id} onRename={onRenameId} />}

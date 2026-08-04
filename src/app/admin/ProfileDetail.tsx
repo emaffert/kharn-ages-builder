@@ -25,6 +25,8 @@ interface DetailProps {
   toggleUnverified: (id: string, key: string) => void;
   /** Renomme l'identifiant du profil, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
+  /** Donne un identifiant lisible à une entité qui porte encore celui de sa création. */
+  onSlugifyId?: () => void;
   /** Supprime le profil, après confirmation, avec tout ce qui le cite. */
   onRemove: () => void;
 }
@@ -173,7 +175,7 @@ function GroupNameDialog({
   );
 }
 
-export function ProfileDetail({ profile, cat, updateField, updateProfile, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified, onRenameId, onRemove }: DetailProps) {
+export function ProfileDetail({ profile, cat, updateField, updateProfile, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified, onRenameId, onSlugifyId, onRemove }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
   const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
@@ -268,6 +270,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
         <DetailHeader
           name={profile.name}
           onName={(v) => upd("name", v)}
+          onNameCommit={onSlugifyId}
           cost={profile.cost}
           onCost={(v) => upd("cost", v ?? 0)}
           onRemove={onRemove}

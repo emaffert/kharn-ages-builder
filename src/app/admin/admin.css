@@ -230,6 +230,13 @@
 .adm-id-input:focus { background: var(--tint-2); border-color: var(--ember); color: var(--bone); }
 .adm-id-input--bad:focus { border-color: var(--scorch); }
 .adm-id-hint { font-size: 11px; color: var(--ember-bright); }
+/* Identifiant que le moteur lit en dur : ni champ ni bouton, seulement le cadenas et son pourquoi. */
+.adm-id--fixed { color: var(--bone-faint); cursor: help; }
+/* Proposition tirée du nom : discrète, elle ne doit pas concurrencer l'identifiant lui-même. */
+.adm-id-suggest { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+  color: var(--bone-faint); background: transparent; border: 0; padding: 1px 6px; border-radius: 6px;
+  cursor: pointer; transition: .16s var(--ease); }
+.adm-id-suggest:hover { color: var(--ember); background: color-mix(in srgb, var(--ember) 12%, transparent); }
 
 /* SIGNATURE - sommaire ancré (colle au défilement de .adm-scroll, surligné par scroll-spy).
    Rendu après le détail dans le DOM (ref attaché à temps), replacé à gauche via order. */

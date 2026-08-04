@@ -10,6 +10,7 @@ import { IconEditor } from "../IconEditor";
 import { AddButton, Badge, CardImageSection, ChipMultiSelect, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FieldGroup, FlagButton, IdField, NotesSection, RemoveButton, RuleCard, Section } from "./primitives";
 import { INPUT, LEVEL_LABEL, MASTERY_DOMAINS, SECTION, STATS_COMBAT, STATS_SECONDARY, STAT_LABELS, removeAt, replaceAt } from "./shared";
 import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
+import { ConstraintsHelp, EffectsHelp, IdentityHelp, TraitsHelp } from "./help/ProfileHelp";
 
 // ── Détail d'un profil ───────────────────────────────────────────────────────
 
@@ -303,7 +304,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
       }
       body={
         <>
-          <Section title="Identité" icon="identity">
+          <Section title="Identité" icon="identity" meta={<IdentityHelp />}>
             <div className="flex flex-col gap-4">
               {/* Icônes : partagée (par carte) et propre au niveau (déroge au partage). */}
               <div className="flex flex-wrap gap-4">
@@ -662,7 +663,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
             </div>
           </Section>
 
-          <Section title="Traits" icon="traits" note="tags internes, non imprimés sur les cartes">
+          <Section title="Traits" icon="traits" note="tags internes, non imprimés sur les cartes" meta={<TraitsHelp />}>
             <TraitsEditor traits={profile.traits} onChange={(t) => patch({ traits: t })} />
             <div className="mt-2 space-y-1 text-xs">
               {profile.traits.map((t) => {
@@ -687,7 +688,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
 
           <NotesSection notes={profile.notes ?? []} onChange={(v) => patch({ notes: v })} />
 
-          <Section title={SECTION.effects} icon="effects" id="sec-effects">
+          <Section title={SECTION.effects} icon="effects" id="sec-effects" meta={<EffectsHelp />}>
             <EffectListEditor
               effects={profile.effects ?? []}
               newSource={{ kind: "profile", id: profile.id }}
@@ -716,7 +717,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
             </Section>
           )}
 
-          <Section title={SECTION.constraints} icon="constraints" id="sec-constraints">
+          <Section title={SECTION.constraints} icon="constraints" id="sec-constraints" meta={<ConstraintsHelp />}>
             <ConstraintListEditor
               constraints={profile.recruitment}
               cat={cat}

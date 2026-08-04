@@ -15,7 +15,6 @@ import { MountOptionDetail } from "./admin/MountOptionDetail";
 import { isTechnicalId, suggestId } from "@core";
 import { FactionsDetail } from "./admin/FactionsDetail";
 import { SettingsDetail } from "./admin/SettingsDetail";
-import { AdminDocs } from "./admin/AdminDocs";
 import { WhatsNew } from "./admin/WhatsNew";
 import { PublishAction } from "./admin/PublishAction";
 import { NewVersionNotice } from "./admin/NewVersionNotice";
@@ -73,7 +72,6 @@ export function AdminCatalog() {
   const [pendingDelete, setPendingDelete] = useState<{ what: string; refs: Reference[]; run: () => void } | null>(null);
   const [factionFilter, setFactionFilter] = useState("all");
   const [zoom, setZoom] = useState<string | null>(null);
-  const [showDocs, setShowDocs] = useState(false);
 
   const onSave = async () => {
     const { frozen, error } = await store.saveToProject();
@@ -245,12 +243,7 @@ export function AdminCatalog() {
     <div className="adm-shell flex h-full">
       <aside className="adm-sidebar flex w-72 shrink-0 flex-col">
         <div className="adm-sidebar-head space-y-2 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <h1 className="adm-accent text-sm font-bold">Khârn-Âges - Admin catalogue</h1>
-            <button onClick={() => setShowDocs(true)} className="adm-tab" title="Aide sur l'édition du catalogue">
-              Aide
-            </button>
-          </div>
+          <h1 className="adm-accent text-sm font-bold">Khârn-Âges - Admin catalogue</h1>
           <nav className="space-y-1.5">
             <div className="flex flex-wrap gap-1.5">
               {NAV_GROUPS.map((g) => (
@@ -681,7 +674,6 @@ export function AdminCatalog() {
         </div>
       )}
 
-      {showDocs && <AdminDocs onClose={() => setShowDocs(false)} />}
 
       <WhatsNew />
 

@@ -2,7 +2,7 @@ import type { Catalog, EffectOperation } from "@core";
 import { EQUIPMENT_CATEGORIES, MASTERY_DOMAINS, INPUT, removeAt, replaceAt } from "../admin/shared";
 import { Combobox, DomainIcon, Field, ChipMultiSelect, InlineCheck, NumberField } from "../admin/primitives";
 import { AddButton, RemoveButton, StatSelect, StringList, TxtField } from "./kit";
-import { skillOptions, spellOptions } from "./helpers";
+import { OP_LABELS, skillOptions, spellOptions } from "./helpers";
 import { OfSelector } from "./SelectorEditor";
 
 /** Opération par défaut (valeurs neutres) pour un type d'action donné. */
@@ -41,24 +41,6 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
   }
 }
 
-// Libellés français des actions, regroupées par famille (menu de choix de l'opération).
-const OP_LABELS: Record<EffectOperation["kind"], string> = {
-  "cost-delta": "Modifier le coût",
-  "cost-set": "Fixer le coût",
-  "grimoire-discount": "Réduire un grimoire",
-  "grant-skill": "Conférer une compétence",
-  "grant-spell": "Conférer un sort",
-  "grant-spell-choice": "Conférer des sorts au choix",
-  "grant-trait": "Conférer un trait",
-  "grant-mastery-die": "Conférer un dé de maîtrise",
-  "unlock-upgrade": "Débloquer une amélioration",
-  "stat-modifier": "Modifier une caractéristique",
-  "stat-count": "Caractéristique = comptage de figurines",
-  "stat-max": "Caractéristique = plus forte du groupe",
-  "skill-count": "Compétence = comptage de figurines",
-  "spell-pages": "Pages de sorts",
-  "limit-modifier": "Modifier la limitation (X)",
-};
 
 // `cap` est volontairement absent du menu (non implémenté par le moteur).
 const OP_GROUPS: { group: string; kinds: EffectOperation["kind"][] }[] = [

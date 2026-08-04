@@ -1,4 +1,4 @@
-import type { Catalog, Selector } from "@core";
+import type { Catalog, ConstraintType, EffectOperation, Selector } from "@core";
 
 /**
  * Constantes et fonctions pures des éditeurs de règles (options dérivées du catalogue, nettoyage de
@@ -51,3 +51,32 @@ export function cleanSelector(sel: Selector): Selector {
   if (sel.countAtLeast != null) out.countAtLeast = sel.countAtLeast;
   return out;
 }
+
+// Libellés français des actions, regroupées par famille (menu de choix de l'opération).
+export const OP_LABELS: Record<EffectOperation["kind"], string> = {
+  "cost-delta": "Modifier le coût",
+  "cost-set": "Fixer le coût",
+  "grimoire-discount": "Réduire un grimoire",
+  "grant-skill": "Conférer une compétence",
+  "grant-spell": "Conférer un sort",
+  "grant-spell-choice": "Conférer des sorts au choix",
+  "grant-trait": "Conférer un trait",
+  "grant-mastery-die": "Conférer un dé de maîtrise",
+  "unlock-upgrade": "Débloquer une amélioration",
+  "stat-modifier": "Modifier une caractéristique",
+  "stat-count": "Caractéristique = comptage de figurines",
+  "stat-max": "Caractéristique = plus forte du groupe",
+  "skill-count": "Compétence = comptage de figurines",
+  "spell-pages": "Pages de sorts",
+  "limit-modifier": "Modifier la limitation (X)",
+};
+
+/** Libellés français des types de contrainte (menu de choix). */
+export const CONSTRAINT_LABELS: Record<ConstraintType, string> = {
+  "forbids-equipment": "Interdit d'équiper",
+  "requires-present": "Nécessite une présence",
+  "faction-membership": "Appartenance de faction",
+  "forbids-grimoire": "Interdit d'acquérir un grimoire",
+  attachment: "Rattachement (garde / porteur)",
+  slave: "Esclave (possédée par un Seigneur de guerre)",
+};

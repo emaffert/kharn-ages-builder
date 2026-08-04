@@ -13,16 +13,12 @@ import {
 } from "../../lib/icons";
 import { supabase } from "../../lib/supabase";
 import { Section } from "./primitives";
+import { HelpTitle } from "./SectionHelp";
 
 /** Délai de grâce de la purge, en jours. Doit rester cohérent avec le défaut de la migration 0004. */
 const GRACE_DAYS = 30;
 
 const ko = (bytes: number) => `${Math.round(bytes / 1024)} Ko`;
-
-/** Titre de rubrique de l'aide, aligné sur la typographie de `AdminDocs`. */
-function H({ children }: { children: string }) {
-  return <h2 className="adm-doc-h2">{children}</h2>;
-}
 
 /**
  * Aide de la section : d'où viennent les portraits, et ce que font les trois boutons.
@@ -53,7 +49,7 @@ function IconsHelp({ open, onOpenChange }: { open: boolean; onOpenChange: (open:
           les autres dans le bucket.
         </p>
 
-        <H>Créer un portrait</H>
+        <HelpTitle>Créer un portrait</HelpTitle>
         <p>
           Dans le détail d'un profil ou d'une monture, « Créer l'icône… » ouvre l'outil de recadrage. À
           l'enregistrement, l'image part <strong>aussitôt</strong> dans le bucket.
@@ -68,7 +64,7 @@ function IconsHelp({ open, onOpenChange }: { open: boolean; onOpenChange: (open:
           peut avoir le sien à la place, via le second emplacement de son détail.
         </p>
 
-        <H>« Synchroniser le bucket »</H>
+        <HelpTitle>« Synchroniser le bucket »</HelpTitle>
         <p>
           Envoie dans le bucket les portraits qu'il n'a pas encore. À lancer <strong>avant de publier</strong>{" "}
           si le compteur signale des images manquantes : sans cela, les joueurs dont le site n'est pas à jour ne
@@ -76,7 +72,7 @@ function IconsHelp({ open, onOpenChange }: { open: boolean; onOpenChange: (open:
         </p>
         <p>Sans risque, et à relancer autant de fois que voulu : rien n'est envoyé en double ni remplacé.</p>
 
-        <H>« Chercher les orphelines »</H>
+        <HelpTitle>« Chercher les orphelines »</HelpTitle>
         <p>
           Un portrait devient orphelin quand <strong>plus aucune version du catalogue ne l'utilise</strong> :
           image remplacée par un meilleur recadrage, profil supprimé, essai abandonné. Il occupe de la place
@@ -92,13 +88,13 @@ function IconsHelp({ open, onOpenChange }: { open: boolean; onOpenChange: (open:
           du catalogue n'est jamais proposé.
         </p>
 
-        <H>« Rafraîchir »</H>
+        <HelpTitle>« Rafraîchir »</HelpTitle>
         <p>
           Recompte les portraits en ligne. Utile si vous en avez ajouté depuis un autre ordinateur ou un autre
           navigateur : les chiffres affichés datent de l'ouverture de la page.
         </p>
 
-        <H>L'avertissement orange</H>
+        <HelpTitle>L'avertissement orange</HelpTitle>
         <p>
           S'il apparaît, des portraits du catalogue <strong>ne s'afficheront nulle part</strong>. Lancez «
           Synchroniser le bucket », puis publiez.

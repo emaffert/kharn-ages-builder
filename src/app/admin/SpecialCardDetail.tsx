@@ -4,6 +4,7 @@ import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { AutoTextarea, CardImageSection, CheckField, ChipMultiSelect, DetailHeader, DetailPage, Field, FieldGroup, IdField, NotesSection, Section } from "./primitives";
 import { INPUT, SECTION } from "./shared";
 import { ProfileMultiSelect } from "./editors";
+import { CardKindHelp, CardScopeHelp } from "./help/SpecialCardHelp";
 
 // Nature de la carte : 3 combinaisons valides (« Amélioration + Ost » n'existe pas - une carte d'Ost
 // est toujours automatique). Le type encode donc directement la portée possible.
@@ -71,7 +72,7 @@ export function SpecialCardDetail({
       }
       body={
         <>
-          <Section title="Type de carte" icon="type">
+          <Section title="Type de carte" icon="type" meta={<CardKindHelp />}>
             <FieldGroup label="Nature de la carte">
               <SegmentedControl
                 ariaLabel="Nature de la carte"
@@ -123,6 +124,7 @@ export function SpecialCardDetail({
             title="Portée"
             icon="scope"
             note={isOst ? "composition de l'Ost" : "figurines concernées"}
+            meta={<CardScopeHelp />}
           >
             {isOst ? (
               <div className="flex flex-col gap-3">

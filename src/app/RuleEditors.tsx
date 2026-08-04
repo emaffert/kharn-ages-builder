@@ -7,7 +7,7 @@ import { EQUIPMENT_CATEGORIES, INPUT, removeAt, replaceAt } from "./admin/shared
 import { Block, CheckField, Combobox, Field, FieldGroup } from "./admin/primitives";
 import { ProfileMultiSelect } from "./admin/editors";
 import { AddButton, ChipsField, StringList, TxtField } from "./ruleEditors/kit";
-import { GRIMOIRE_OPTIONS, modelOptions, profileOptions, type Option } from "./ruleEditors/helpers";
+import { CONSTRAINT_LABELS, GRIMOIRE_OPTIONS, modelOptions, profileOptions, type Option } from "./ruleEditors/helpers";
 import { SelectorEditor } from "./ruleEditors/SelectorEditor";
 import { OperationEditor } from "./ruleEditors/OperationEditor";
 
@@ -30,14 +30,6 @@ const CONSTRAINT_TYPES: ConstraintType[] = [
 ];
 
 // Libellés français des types de contrainte proposés (fallback sur l'identifiant brut).
-const CONSTRAINT_LABELS: Record<ConstraintType, string> = {
-  "forbids-equipment": "Interdit d'équiper",
-  "requires-present": "Nécessite une présence",
-  "faction-membership": "Appartenance de faction",
-  "forbids-grimoire": "Interdit d'acquérir un grimoire",
-  attachment: "Rattachement (garde / porteur)",
-  slave: "Esclave (possédée par un Seigneur de guerre)",
-};
 
 // Où le moteur cherche, dit du point de vue de l'utilisateur.
 const SCOPE_LABEL: Record<ConstraintScope, string> = {

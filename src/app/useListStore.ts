@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import {
   evaluateList,
+  isMountEligible,
   sealRequiredFor,
   type Catalog,
   type EvaluationResult,
@@ -117,7 +118,8 @@ export interface ListStore {
   toggleOstCard: (cardId: string) => void;
   setPointsLimit: (n: number | undefined) => void;
   newList: (factionId: string, opts?: { format?: ListDocument["format"]; pointsLimit?: number }) => void;
-  addMember: (profileId: string) => void;
+  /** `origin` : peuple choisi au recrutement, pour les profils qui laissent le choix (Agent sombre). */
+  addMember: (profileId: string, origin?: string) => void;
   addAttached: (carrierInstanceId: string, profileId: string) => void;
   /** Recrute une copie d'une figurine avec tout son chargement, juste après elle (cf. `copyLoadout`). */
   duplicateMember: (instanceId: string) => void;
@@ -129,6 +131,8 @@ export interface ListStore {
   toggleBase: (instanceId: string, equipId: string) => void;
   /** Attribue (ou retire avec `null`) une monture à la figurine. Conserve les options éventuelles. */
   setMount: (instanceId: string, mountId: string | null) => void;
+  /** Change le peuple d'origine d'une figurine qui laisse le choix ; retire la monture qu'il ferme. */
+  setOrigin: (instanceId: string, origin: string) => void;
   /** Achète/retire une option de monture (p.32) ; `value` = valeur X (1 par défaut), `null` = retirée. */
   setMountOption: (instanceId: string, optionId: string, value: number | null) => void;
   /** Ajoute/retire un équipement porté par la MONTURE (ex. Caparaçon) sur `mount.addedEquipmentIds`. */
@@ -200,9 +204,9 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
         ...(opts?.format ? { format: opts.format } : {}),
         ...(opts?.pointsLimit != null ? { pointsLimit: opts.pointsLimit } : {}),
       }),
-    addMember: (profileId) =>
+    addMember: (profileId, origin) =>
       patchFdl((f) => {
-        const m = newInstance(catalog, profileId, f.factionId);
+        const m = { ...newInstance(catalog, profileId, f.factionId), ...(origin ? { origin } : {}) };
         return { ...f, members: [...f.members, m], leaderInstanceId: f.leaderInstanceId || m.instanceId };
       }),
     addAttached: (carrierInstanceId, profileId) =>
@@ -309,6 +313,21 @@ export function useListStore(initialFactionId = "fangs"): ListStore {
           (id) => catalog.equipment.find((e) => e.id === id)?.mountEquipment !== "rider",
         );
         return { ...m, mount: undefined, addedEquipmentIds, mountOptionIds: undefined };
+      }),
+    setOrigin: (instanceId, origin) =>
+      patchMember(instanceId, (m) => {
+        const profile = catalog.profiles.find((p) => p.id === m.profileId);
+        const mountId = m.mount?.mountId;
+        const mount = mountId ? catalog.mounts.find((x) => x.id === mountId) : undefined;
+        // Changer de peuple change les montures accessibles : celle qu'on gardait peut ne plus
+        // l'être (un Agent sombre khârn qui devient fang perd son Quagga). On la retire plutôt que
+        // de laisser une erreur que le joueur devrait aller comprendre.
+        const perdue = profile && mount && !isMountEligible(catalog, profile, mount, origin);
+        if (!perdue) return { ...m, origin };
+        const addedEquipmentIds = m.addedEquipmentIds.filter(
+          (id) => catalog.equipment.find((e) => e.id === id)?.mountEquipment !== "rider",
+        );
+        return { ...m, origin, mount: undefined, addedEquipmentIds, mountOptionIds: undefined };
       }),
     setMountOption: (instanceId, optionId, value) =>
       patchMember(instanceId, (m) => {

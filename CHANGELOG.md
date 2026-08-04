@@ -7,6 +7,18 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-05 (2)
+
+### L'Agent sombre choisit son peuple
+
+- Un **Agent sombre** vient du peuple de votre choix - fang, goûn, khârn, khérops ou tembo. La
+  question est posée au recrutement, et le peuple retenu s'affiche sur sa ligne.
+- Ce choix décide de sa **monture** : un Agent khârn peut prendre un Quagga, un khérops un Kœlod, un
+  goûn une Mochère. Fang ou tembo, il reste à pied. La modale le rappelle au moment de choisir.
+- On peut en changer d'avis : un clic sur le peuple, sur la ligne de la figurine. Si la nouvelle
+  provenance ferme l'accès à la monture achetée, elle est retirée plutôt que de laisser une erreur.
+- Le peuple suit la figurine dans les listes exportées, en code comme en texte.
+
 ## 2026-08-05
 
 ### Les textes des cartes s'affichent tels qu'ils sont écrits

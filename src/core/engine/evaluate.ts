@@ -28,7 +28,7 @@ import {
   wornEquipmentIds,
 } from "./magic";
 import { totalMunitionCost } from "./munitions";
-import { originFactionId } from "./origin";
+import { effectiveOrigin, needsOriginChoice, originFactionId } from "./origin";
 import {
   FRERE_D_ARMES,
   alliedFactions,
@@ -816,6 +816,7 @@ function validate(
     validateSlaves(cat, fdl, inFdl, issues);
   }
 
+  validateChosenOrigin(cat, resolved, issues);
   validateMounts(cat, resolved, issues);
   validateMountOptions(cat, resolved, issues);
   validateForbiddenEquipment(cat, resolved, idx, issues);
@@ -1290,6 +1291,29 @@ function validateFactionMembership(
 }
 
 /**
+ * Origine choisie au recrutement : elle doit être posée, et figurer parmi celles que la carte
+ * propose. Vérifié même si l'interface l'impose, parce qu'une liste peut arriver par import ou avoir
+ * été écrite avant que la carte n'offre ce choix.
+ */
+function validateChosenOrigin(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
+  for (const ri of resolved) {
+    if (!needsOriginChoice(ri.profile)) continue;
+    if (effectiveOrigin(ri.profile, ri.instance) != null) continue;
+    const noms = (ri.profile.originChoices ?? [])
+      .map((f) => cat.factions.find((x) => x.id === f)?.name ?? f)
+      .join(", ");
+    issues.push({
+      severity: "error",
+      ferDeLanceId: ri.ferDeLanceId,
+      instanceId: ri.instance.instanceId,
+      ruleId: `origin:${ri.profile.id}`,
+      message: `« ${ri.profile.name} » doit venir d'un peuple : ${noms}.`,
+      sourceText: "Recrutés dans tous les royaumes, ils peuvent venir de n'importe quel peuple.",
+    });
+  }
+}
+
+/**
  * Plafonds du recrutement ouvert : « il ne peut y en avoir plus d'un par Fer de Lance » (les shamans
  * goûns, les prêtres du sacrifice khérops chez les Affranchis). Ne s'applique qu'aux figurines
  * **entrées par cette porte** : un shaman goûn dans un Fer de Lance goûn n'est pas concerné.
@@ -1379,7 +1403,7 @@ function validateMounts(cat: Catalog, resolved: ResolvedInstance[], issues: Issu
     const mountId = ri.instance.mount?.mountId;
     if (!mountId) continue;
     const mount = cat.mounts.find((m) => m.id === mountId);
-    if (!mount || !isMountEligible(cat, ri.profile, mount)) {
+    if (!mount || !isMountEligible(cat, ri.profile, mount, effectiveOrigin(ri.profile, ri.instance))) {
       issues.push({
         severity: "error",
         ferDeLanceId: ri.ferDeLanceId,
@@ -1666,14 +1690,19 @@ const BERSEKER_SKILL_ID = "berserk";
  * Un profil peut-il prendre CE niveau de monture ? Faction autorisée par le type, profil non exclu,
  * pas Berseker, et écart de niveau ≤ 1 (règles p.29). Un profil sans niveau n'est pas contraint sur l'écart.
  */
-export function isMountEligible(cat: Catalog, profile: Profile, mount: Mount): boolean {
+export function isMountEligible(
+  cat: Catalog,
+  profile: Profile,
+  mount: Mount,
+  /** Origine effective de la figurine, quand sa carte laisse le choix (cf. `effectiveOrigin`). */
+  origin: string | undefined = originFactionId(profile),
+): boolean {
   const type = cat.mountTypes.find((t) => t.id === mount.typeId);
   if (!type) return false;
   // Éligibilité par ORIGINE : le peuple d'origine (`profile.origin`, défaut = sa faction), car les
   // figurines des factions « creuset » gardent l'accès à la monture de leur peuple d'avant, mais pas
   // à ses objets/sorts réservés (FAQ). Une faction creuset n'a donc pas à figurer dans
   // `factionEligibility` : ses membres y entrent par leur origine.
-  const origin = originFactionId(profile);
   if (!(origin != null && type.factionEligibility.includes(origin))) return false;
   if (type.excludedProfileIds?.includes(profile.id)) return false;
   if (profile.skills.some((s) => s.skillId === BERSEKER_SKILL_ID)) return false;
@@ -1681,9 +1710,13 @@ export function isMountEligible(cat: Catalog, profile: Profile, mount: Mount): b
   return true;
 }
 
-/** Montures (niveaux) qu'un profil donné peut recruter. */
-export function eligibleMountsFor(cat: Catalog, profile: Profile): Mount[] {
-  return cat.mounts.filter((m) => isMountEligible(cat, profile, m));
+/** Montures (niveaux) qu'un profil donné peut recruter, pour l'origine indiquée. */
+export function eligibleMountsFor(
+  cat: Catalog,
+  profile: Profile,
+  origin: string | undefined = originFactionId(profile),
+): Mount[] {
+  return cat.mounts.filter((m) => isMountEligible(cat, profile, m, origin));
 }
 
 /** Nom lisible de la source d'un effet (carte, profil, monture, équipement). */

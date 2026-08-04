@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.3",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -10491,6 +10491,13 @@
       "name": "Agent sombre",
       "level": 1,
       "factionId": "guilde-noire",
+      "originChoices": [
+        "fangs",
+        "gouns",
+        "kharns",
+        "kherops",
+        "tembos"
+      ],
       "cost": 70,
       "limitation": {
         "kind": "X",
@@ -10534,7 +10541,7 @@
       "traits": [],
       "recruitment": [],
       "rules": [],
-      "cardImage": ""
+      "cardImage": "cards/Guilde Noire/agent_sombre.jpg"
     },
     {
       "id": "profile-1785423938572",
@@ -10542,6 +10549,13 @@
       "name": "Agent sombre",
       "level": 2,
       "factionId": "guilde-noire",
+      "originChoices": [
+        "fangs",
+        "gouns",
+        "kharns",
+        "kherops",
+        "tembos"
+      ],
       "cost": 90,
       "limitation": {
         "kind": "U",
@@ -10594,7 +10608,7 @@
       "traits": [],
       "recruitment": [],
       "rules": [],
-      "cardImage": ""
+      "cardImage": "cards/Guilde Noire/agent_sombre.jpg"
     },
     {
       "id": "profile-1785424157109",
@@ -10602,6 +10616,13 @@
       "name": "Agent sombre",
       "level": 3,
       "factionId": "guilde-noire",
+      "originChoices": [
+        "fangs",
+        "gouns",
+        "kharns",
+        "kherops",
+        "tembos"
+      ],
       "cost": 120,
       "limitation": {
         "kind": "U",
@@ -10660,7 +10681,7 @@
       "traits": [],
       "recruitment": [],
       "rules": [],
-      "cardImage": ""
+      "cardImage": "cards/Guilde Noire/agent_sombre.jpg"
     },
     {
       "id": "profile-1785424417613",
@@ -14103,7 +14124,7 @@
       "cost": 35,
       "hands": 2,
       "allonge": 1.5,
-      "effectsText": "+4 dgts.\n+2 en attaque.\nAttaque à 3 PA uniquement.\n- 2 en V et C ≤4."
+      "effectsText": "+4 dgts.\n+2 en attaque.\nAttaque à 3 PA uniquement.\n-2 en V si C ≤4."
     },
     {
       "id": "croc-a-depecer",
@@ -17489,6 +17510,22 @@
         "Deux profils distincts portent chacun ce que la carte lui accorde : la version Guilde Noire a cape d'ombre et rossignol, la version Affranchie a « Furtivité 3 ». Aucun effet à résoudre."
       ],
       "cardImage": "cards/Affranchis/affranchis-khalsa-ombre-lune.jpg"
+    },
+    {
+      "id": "agent-sombre",
+      "name": "Agent Sombre",
+      "cost": 0,
+      "scope": {
+        "profileIds": [
+          "profile-1785423741476",
+          "profile-1785423938572",
+          "profile-1785424157109"
+        ]
+      },
+      "rulesText": "- Un Agent Sombre est un infiltré de la Guilde Noire. Recrutés dans tous les royaumes, ils peuvent venir de n'importe quel peuple.\n\n- Vous pouvez représenter le profil d'Agent sombre shouaité par la figurine non nommée de non unique de votre choix. Elle acquiert toutes les caractéristiques de ce profil d'Agent.\n\n- Les Agents sombres Niveau I sont joués uniquement sur socle de 40mm, les Niveaux II et III sont au choix représentés sur socle de 40 ou 50 mm.",
+      "constraints": [],
+      "effects": [],
+      "cardImage": "cards/Guilde Noire/agent_sombre.jpg"
     }
   ],
   "munitionKinds": [
@@ -17681,6 +17718,7 @@
     "cards/Affranchis/affranchis-stoppeur.jpg": "bcec8c32772c8178.webp",
     "cards/Affranchis/affranchis-swe-dova.jpg": "3a5d564951d9758a.webp",
     "cards/Affranchis/affranchis-tireur-yuntaishan.jpg": "3a34aaa283fed55a.webp",
-    "cards/Affranchis/affranchis-vivandiere.jpg": "7b94407e1af33212.webp"
+    "cards/Affranchis/affranchis-vivandiere.jpg": "7b94407e1af33212.webp",
+    "cards/Guilde Noire/agent_sombre.jpg": "50c8cf0c55273818.webp"
   }
 }

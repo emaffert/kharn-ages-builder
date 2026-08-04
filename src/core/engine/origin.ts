@@ -23,3 +23,27 @@ import type { Profile } from "../model";
 export function originFactionId(profile: Profile): string | undefined {
   return profile.origin ?? profile.factionId;
 }
+
+/**
+ * Origine **de cette figurine-là**. Quand la carte laisse le choix (`originChoices`), c'est le
+ * joueur qui tranche au recrutement et la réponse varie d'un exemplaire à l'autre : deux Agents
+ * sombres d'un même Fer de Lance peuvent venir de deux peuples et n'avoir pas les mêmes montures.
+ *
+ * Le choix n'est retenu que s'il figure dans la liste proposée : une liste importée ou modifiée à la
+ * main ne doit pas ouvrir une monture par une origine que la carte n'offre pas.
+ */
+export function effectiveOrigin(
+  profile: Profile,
+  instance?: { origin?: string },
+): string | undefined {
+  const choices = profile.originChoices;
+  if (choices?.length) {
+    return instance?.origin && choices.includes(instance.origin) ? instance.origin : undefined;
+  }
+  return originFactionId(profile);
+}
+
+/** La figurine doit-elle se voir attribuer une origine au recrutement ? */
+export function needsOriginChoice(profile: Profile): boolean {
+  return (profile.originChoices?.length ?? 0) > 0;
+}

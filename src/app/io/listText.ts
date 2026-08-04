@@ -32,7 +32,13 @@ export function exportText(cat: Catalog, doc: ListDocument): string {
   const profile = (id: string) => cat.profiles.find((p) => p.id === id);
   const nameOf = (m: ProfileInstance) => {
     const p = profile(m.profileId);
-    return p ? `${p.name}${p.level ? ` ${LEVEL[p.level]}` : ""}` : m.profileId;
+    if (!p) return m.profileId;
+    // Le peuple d'origine fait partie de l'identité de la figurine quand il se choisit : sans lui,
+    // deux Agents sombres du même niveau seraient indiscernables à la relecture.
+    const peuple = p.originChoices?.length && m.origin
+      ? ` (${cat.factions.find((f) => f.id === m.origin)?.name ?? m.origin})`
+      : "";
+    return `${p.name}${p.level ? ` ${LEVEL[p.level]}` : ""}${peuple}`;
   };
   const equipName = (id: string) => cat.equipment.find((e) => e.id === id)?.name ?? id;
   const details = (m: ProfileInstance): string[] => {
@@ -220,16 +226,27 @@ export function importText(cat: Catalog, text: string): TextImportResult {
     // Ligne de figurine (top-level « • » ou rattachée « ↳ »).
     const attached = /^↳/.test(line);
     // On coupe sur « - » (format actuel) ou « — » (listes exportées avant, compat conservée).
-    const label = line.replace(/^[•↳*\-\s]+/, "").split(/\s+—\s+|\s+-\s+/)[0].trim();
+    const brut = line.replace(/^[•↳*\-\s]+/, "").split(/\s+—\s+|\s+-\s+/)[0].trim();
+    // Peuple d'origine entre parenthèses (« Agent sombre II (Khârn) ») : détaché avant la
+    // reconnaissance du profil, qui ne connaît que le nom et le niveau.
+    const peuple = brut.match(/\s*\(([^)]+)\)\s*$/);
+    const label = peuple ? brut.slice(0, peuple.index).trim() : brut;
     const prof = profByName(label);
     if (!prof) {
       unresolved.push(raw);
       current = null;
       continue;
     }
+    const origin = peuple
+      ? cat.factions.find(
+          (f) => (prof.originChoices ?? []).includes(f.id) && norm(f.name) === norm(peuple[1]),
+        )?.id
+      : undefined;
+    if (peuple && !origin) unresolved.push(raw);
     const inst: ProfileInstance = {
       instanceId: newId(prof.id),
       profileId: prof.id,
+      ...(origin ? { origin } : {}),
       addedEquipmentIds: [],
       removedBaseEquipmentIds: [],
       spellIds: [],

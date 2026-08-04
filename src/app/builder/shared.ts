@@ -15,6 +15,7 @@ import {
   isRecruitableIn,
   isSlaveIn,
   openRecruitmentAccepts,
+  originFactionId,
   mountKindOf,
   mountOptionCostOf,
   sealRequiredFor,
@@ -527,6 +528,14 @@ export function equipInfo(e: Catalog["equipment"][number]): ItemInfo {
 
 export type ModelEntry = { id: string; name: string; profiles: Profile[]; icon?: string };
 
+/** Peuples proposés au recrutement d'un profil, avec leur nom d'affichage. Vide si l'origine est fixée. */
+export function originOptions(cat: Catalog, p: Profile): { id: string; name: string }[] {
+  return (p.originChoices ?? []).map((id) => ({
+    id,
+    name: cat.factions.find((f) => f.id === id)?.name ?? id,
+  }));
+}
+
 // ── Roster (sidebar du constructeur) ── logique pure de catégorisation, testable hors composant.
 
 /** Sections de la sidebar. `personnage`/`troupe`/`conditionnel` = natifs de la faction ; les recrues
@@ -584,13 +593,24 @@ export function rosterSectionOf(cat: Catalog, factionId: string, profile: Profil
   return sealRequiredFor(cat, profile, factionId) ? "sceau" : "hors-faction";
 }
 
-/** Ids des types de monture accessibles à au moins un profil recrutable dans la faction (faction
- *  courante OU recrue inter-factions, via son peuple d'origine `profile.origin`). */
+/**
+ * Ids des types de monture consultables depuis le roster : ceux qu'au moins un profil recrutable
+ * dans la faction peut prendre, via sa faction ou son peuple d'origine.
+ *
+ * Pour un profil dont l'origine se choisit au recrutement, on prend l'**union** de ce que chaque
+ * peuple lui ouvrirait : le roster liste ce qui est consultable avant même qu'une figurine existe,
+ * il n'y a donc pas encore de choix à respecter.
+ */
 export function availableMountTypeIds(cat: Catalog, factionId: string): Set<string> {
   return new Set(
     cat.profiles
       .filter((p) => isRecruitableIn(cat, p, factionId))
-      .flatMap((p) => coreEligibleMountsFor(cat, p).map((m) => m.typeId)),
+      .flatMap((p) => {
+        const origines = p.originChoices?.length ? p.originChoices : [undefined];
+        return origines.flatMap((o) =>
+          coreEligibleMountsFor(cat, p, o ?? originFactionId(p)).map((m) => m.typeId),
+        );
+      }),
   );
 }
 
@@ -599,9 +619,12 @@ export type Modal =
   | { kind: "preview"; modelId: string }
   | { kind: "edit"; instanceId: string }
   | { kind: "guard"; instanceId: string }
+  | { kind: "origin"; instanceId: string }
   | { kind: "recruit-attached"; carrierInstanceId: string; modelId: string }
   | { kind: "recruit-slave"; carrierInstanceId: string }
-  | { kind: "recruit-level"; modelId: string }
+  /** Recrutement en deux temps : le niveau, puis le peuple d'origine quand la carte le laisse au
+   *  choix (`profileId` renseigné = niveau déjà retenu, on en est à l'origine). */
+  | { kind: "recruit-level"; modelId: string; profileId?: string }
   | { kind: "mount"; instanceId: string }
   | { kind: "mount-sheet"; instanceId: string }
   | { kind: "mount-preview"; typeId: string };

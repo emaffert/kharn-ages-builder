@@ -7,7 +7,7 @@ import { iconSrc } from "../../lib/icons";
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
-import { AddButton, Badge, CardImageSection, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FlagButton, IdField, NotesSection, RemoveButton, RuleCard, Section } from "./primitives";
+import { AddButton, Badge, CardImageSection, ChipMultiSelect, DetailHeader, DetailPage, DomainIcon, EditableNumber, Field, FieldGroup, FlagButton, IdField, NotesSection, RemoveButton, RuleCard, Section } from "./primitives";
 import { INPUT, LEVEL_LABEL, MASTERY_DOMAINS, SECTION, STATS_COMBAT, STATS_SECONDARY, STAT_LABELS, removeAt, replaceAt } from "./shared";
 import { EquipmentEditor, LimitationEditor, RulesEditor, SkillsEditor, TraitsEditor } from "./editors";
 
@@ -185,6 +185,11 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
   const shared = profile.cardImage ? cat.icons?.[profile.cardImage] : undefined;
   const own = profile.icon; // déroge au partage : l'emporte sur la partagée
   const displayed = iconFor(cat, profile); // ce que voit réellement l'app
+  // Origine : soit un peuple fixe, soit « choisie au recrutement » - le mode se lit sur la donnée
+  // (`originChoices` renseigné), sans état local qui survivrait au passage à un autre profil.
+  const CHOIX = "__au-recrutement__";
+  const autresPeuples = cat.factions.filter((f) => f.id !== profile.factionId).map((f) => f.id);
+  const auChoix = (profile.originChoices?.length ?? 0) > 0;
   const uv = (key: string) => profile.unverifiedFields?.includes(key) ?? false;
   const upd = (path: string, v: FieldValue) => updateField(profile.id, path, v);
   const patch = (p: Partial<Profile>) => updateProfile(profile.id, p);
@@ -411,10 +416,14 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
                 </Field>
                 {/* Origine : ne concerne que les transfuges (Guilde Noire, Affranchis). Vide = la
                     figurine est du peuple de sa faction, ce qui est le cas général. */}
-                <Field label="Peuple d’origine" className="w-44">
+                <Field label="Peuple d’origine" className="w-52">
                   <select
-                    value={profile.origin ?? ""}
-                    onChange={(e) => patch({ origin: e.target.value || undefined })}
+                    value={auChoix ? CHOIX : (profile.origin ?? "")}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === CHOIX) patch({ origin: undefined, originChoices: autresPeuples });
+                      else patch({ origin: v || undefined, originChoices: undefined });
+                    }}
                     className={INPUT}
                     title="Peuple quitté par la figurine : lui laisse la monture et la nature de ce peuple, pas ses objets ni ses sorts réservés."
                   >
@@ -426,6 +435,7 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
                           {f.name}
                         </option>
                       ))}
+                    <option value={CHOIX}>— choisie au recrutement —</option>
                   </select>
                 </Field>
                 {/* Socle : imprimé à droite de la limitation sur les cartes qui le donnent. Ne sert
@@ -451,6 +461,27 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
                   </select>
                 </Field>
               </div>
+              {/* N'apparaît que si l'origine est laissée au joueur (l'Agent sombre, seul cas à ce
+                  jour) : partout ailleurs, ce bloc n'aurait rien à dire. */}
+              {auChoix && (
+                <FieldGroup
+                  label="Peuples proposés"
+                  hint="La question est posée au joueur à chaque recrutement. Tout décocher revient à une origine fixe."
+                >
+                  <ChipMultiSelect
+                    options={autresPeuples.map((id) => ({
+                      value: id,
+                      label: cat.factions.find((f) => f.id === id)?.name ?? id,
+                    }))}
+                    selected={profile.originChoices ?? []}
+                    onToggle={(id) => {
+                      const cur = profile.originChoices ?? [];
+                      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+                      patch({ originChoices: next.length ? next : undefined });
+                    }}
+                  />
+                </FieldGroup>
+              )}
               <Field label="Limitation">
                 <LimitationEditor
                   limitation={profile.limitation}

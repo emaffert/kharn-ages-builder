@@ -8,6 +8,13 @@ import { z } from "zod";
 export const ProfileInstanceSchema = z.object({
   instanceId: z.string(),
   profileId: z.string(),
+  /**
+   * Peuple d'origine **choisi pour cette figurine**, quand sa carte laisse le choix
+   * (`Profile.originChoices`, ex. l'Agent sombre). Absent partout ailleurs : l'origine est alors une
+   * propriété du profil. C'est le seul trait d'identité que le joueur décide - le reste de ce
+   * document n'est qu'achats et liaisons.
+   */
+  origin: z.string().optional(),
   addedEquipmentIds: z.array(z.string()),
   /**
    * Exemplaires achetés d'un objet **empilable** (`equipment.stackable`) : id → quantité (absent = 1).

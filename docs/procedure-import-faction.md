@@ -112,6 +112,23 @@ Pas les objets, pas les sorts, pas les compétences réservés. Conséquences pr
 - Quand une carte vise une origine (« les Affranchis **khérops** dans son aura »), c'est `origin`
   qu'il faut lire, pas la faction.
 
+### Origine choisie au recrutement
+
+Certaines cartes ne fixent pas l'origine, elles la laissent au joueur : l'**Agent sombre** est un
+infiltré « recruté dans tous les royaumes », un seul profil pour cinq provenances possibles, dont
+dépend sa monture. On ne duplique pas le profil par peuple.
+
+- `Profile.originChoices` (liste explicite de peuples) déclare le choix ; il exclut `origin`. Dans
+  l'admin, c'est l'option **« — choisie au recrutement — »** du menu « Peuple d'origine » qui fait
+  apparaître la liste des peuples proposés.
+- `ProfileInstance.origin` porte la réponse, figurine par figurine. C'est le **seul trait d'identité**
+  que le joueur décide : tout le reste du document de liste n'est qu'achats et liaisons.
+- Le moteur lit `effectiveOrigin(profile, instance)`, qui ignore un choix hors liste (import, liste
+  écrite à la main). `validateChosenOrigin` réclame l'origine manquante.
+- Le constructeur pose la question **aux deux entrées du recrutement** : la modale de niveau et
+  l'aperçu de carte. Ensuite, une puce sur la ligne permet d'en changer - le store retire alors la
+  monture que le nouveau peuple ne permet plus.
+
 ## Recrutement ouvert (`faction.openRecruitment`)
 
 Une faction peut accueillir **les génériques** (limitation « X ») d'autres peuples, sans « Allié des

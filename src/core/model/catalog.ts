@@ -130,6 +130,15 @@ export const ProfileSchema = z.object({
    */
   origin: z.string().optional(),
   /**
+   * Peuples entre lesquels l'origine se **choisit au recrutement**, figurine par figurine, au lieu
+   * d'être fixée par la carte. C'est le cas de l'Agent sombre, infiltré « recruté dans tous les
+   * royaumes » : un seul profil, mais cinq provenances possibles, dont dépend sa monture.
+   *
+   * La liste est explicite, jamais « toutes les factions » : l'Agent sombre vient des cinq peuples,
+   * pas de la Guilde Noire elle-même ni des Affranchis. Exclut `origin`, qui dit une origine fixe.
+   */
+  originChoices: z.array(z.string()).optional(),
+  /**
    * **Diamètre du socle** en millimètres, tel qu'imprimé à droite de la limitation. Propriété de la
    * figurine physique, pas de son profil de jeu : elle ne change rien au recrutement ni au coût.
    * Absente sur beaucoup de cartes, qui ne l'impriment pas.

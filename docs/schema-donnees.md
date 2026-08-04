@@ -117,6 +117,7 @@ interface Profile {
   level?: Level;              // null pour certains profils spéciaux (Aliénés, etc.)
   factionId?: string;         // absent => profil "sans logo"
   origin?: string;            // peuple quitté (creusets) : lui laisse monture et nature, rien d'autre
+  originChoices?: string[];   // origine CHOISIE au recrutement parmi ces peuples (Agent sombre) ; exclut `origin`
   baseSize?: 30 | 40 | 50 | 60;  // socle en mm, imprimé à droite de la limitation (souvent absent)
   cost: number;               // Ko
   isNamed?: boolean;          // personnage nommé

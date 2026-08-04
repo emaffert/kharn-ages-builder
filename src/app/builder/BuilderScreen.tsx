@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   eligibleMountsFor,
+  effectiveOrigin,
+  needsOriginChoice,
   iconFor,
   mountIconFor,
   mountLabel,
@@ -27,6 +29,7 @@ import {
   profileMatchesAnySelector,
   protecteeSelectorsFor,
   recruitableDependentGroups,
+  originOptions,
   recruitableRosterModels,
   rosterSectionOf,
   type DependentGroup,
@@ -128,6 +131,14 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   // Coût de recrutement montré avant l'ajout : le sceau imposé y est déjà intégré (il sera équipé
   // d'office et non retirable), pour qu'aucune ligne du roster n'annonce un prix trop bas.
   const recruitCostOf = (p: Profile) => recruitCost(cat, p, factionId);
+  // Le peuple d'origine n'a d'effet visible que sur la monture : le dire au moment de choisir, sinon
+  // le joueur tranche à l'aveugle entre cinq noms.
+  const mountHintFor = (origin: string) => {
+    const noms = cat.mountTypes
+      .filter((t) => t.factionEligibility.includes(origin))
+      .map((t) => t.name);
+    return noms.length > 0 ? noms.join(", ") : "aucune monture";
+  };
   const sceauCost = sceau[0] ? sealRequiredFor(cat, sceau[0].profiles[0], factionId)?.cost : undefined;
   const sceauHint = sceauCost != null ? `sceau compris, +${sceauCost} Ko` : undefined;
   // Montures consultables (fiche) depuis le roster : toutes celles accessibles à AU MOINS un profil
@@ -322,13 +333,15 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     if (options.length === 1) store.setGuard(id, options[0].inst.instanceId);
     else if (options.length > 1) setModal({ kind: "guard", instanceId: id });
   };
-  // Ajout rapide depuis le roster (sans passer par la carte) ; choix du niveau si profils multiples.
+  // Ajout rapide depuis le roster (sans passer par la carte). La modale s'ouvre dès qu'un choix
+  // reste à faire : le niveau si le modèle en a plusieurs, le peuple d'origine si la carte le laisse
+  // au joueur (Agent sombre). Sinon on recrute directement.
   const onQuickAdd = (m: ModelEntry) => {
-    if (m.profiles.length === 1) {
-      if (!atLimit(m.profiles[0])) store.addMember(m.profiles[0].id);
-    } else {
-      setModal({ kind: "recruit-level", modelId: m.id });
-    }
+    if (m.profiles.length > 1) return setModal({ kind: "recruit-level", modelId: m.id });
+    const p = m.profiles[0];
+    if (atLimit(p)) return;
+    if (needsOriginChoice(p)) setModal({ kind: "recruit-level", modelId: m.id, profileId: p.id });
+    else store.addMember(p.id);
   };
 
   const modalModel = modal?.kind === "preview" ? models.find((m) => m.id === modal.modelId) : undefined;
@@ -412,7 +425,10 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
     const canDuplicate = !attached && isDuplicable(x.p);
     const duplicateBlocked = canDuplicate && atLimit(x.p) ? "Limite de recrutement atteinte" : null;
     // Monture : proposée sur une figurine éligible non montée (et pas sur une sous-ligne).
-    const canAddMount = !attached && !x.inst.mount && eligibleMountsFor(cat, x.p).length > 0;
+    const canAddMount =
+      !attached &&
+      !x.inst.mount &&
+      eligibleMountsFor(cat, x.p, effectiveOrigin(x.p, x.inst)).length > 0;
     const hasActions = depGroups.length > 0 || eligible || canAddMount || canOwnSlaves;
     return (
       <div
@@ -444,6 +460,17 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
                 {x.p.name}
               </button>
               {x.p.level ? <span className="lvltag">{LEVEL[x.p.level]}</span> : null}
+              {/* Peuple d'origine choisi au recrutement : affiché sur la ligne, et cliquable pour en
+                  changer d'avis sans avoir à supprimer la figurine. */}
+              {needsOriginChoice(x.p) && (
+                <button
+                  className="bld-origin-chip"
+                  onClick={() => setModal({ kind: "origin", instanceId: id })}
+                  title="Changer le peuple d'origine"
+                >
+                  {originOptions(cat, x.p).find((f) => f.id === x.inst.origin)?.name ?? "peuple ?"}
+                </button>
+              )}
               {isLeader && <span className="bld-crest-badge">❖ Meneur</span>}
               {!attached && !isLeader && leadable && (
                 <button
@@ -741,7 +768,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           title={modalModel.name}
           open
           onOpenChange={(o) => !o && setModal(null)}
-          onAdd={(profileId) => store.addMember(profileId)}
+          onAdd={(profileId, origin) => store.addMember(profileId, origin)}
           onInfo={setItemInfo}
           factionId={factionId}
           isAtLimit={(profileId) => {
@@ -915,30 +942,93 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         (() => {
           const m = models.find((mm) => mm.id === modal.modelId);
           if (!m) return null;
+          // Deux temps dans la même modale : le niveau, puis le peuple. Le second n'apparaît que
+          // pour les cartes qui laissent le choix, et le premier est sauté quand il n'y a qu'un niveau.
+          const retenu = modal.profileId ? m.profiles.find((p) => p.id === modal.profileId) : undefined;
+          const peuples = retenu ? originOptions(cat, retenu) : [];
+          const choisirNiveau = (p: Profile) => {
+            if (needsOriginChoice(p)) setModal({ ...modal, profileId: p.id });
+            else {
+              store.addMember(p.id);
+              setModal(null);
+            }
+          };
           return (
             <Dialog open onOpenChange={(o) => !o && setModal(null)} title={`Recruter - ${m.name}`} size="sm">
-              <p className="mdl-note">Choisir le niveau :</p>
+              {retenu ? (
+                <>
+                  <p className="mdl-note">
+                    {LEVEL[retenu.level ?? 0]} · de quel peuple vient-il ?
+                  </p>
+                  <div className="mdl-list">
+                    {peuples.map((f) => (
+                      <button
+                        key={f.id}
+                        className="mdl-choice"
+                        onClick={() => {
+                          store.addMember(retenu.id, f.id);
+                          setModal(null);
+                        }}
+                      >
+                        <span>{f.name}</span>
+                        <span className="cost">{mountHintFor(f.id)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mdl-note">Choisir le niveau :</p>
+                  <div className="mdl-list">
+                    {m.profiles.map((p) => {
+                      const max = atLimit(p);
+                      return (
+                        <button
+                          key={p.id}
+                          disabled={max}
+                          className="mdl-choice"
+                          onClick={() => choisirNiveau(p)}
+                        >
+                          <span>
+                            {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
+                            {max && <span className="max">max</span>}
+                          </span>
+                          <span className="cost">{recruitCostOf(p)} Ko</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </Dialog>
+          );
+        })()}
+      {modal?.kind === "origin" &&
+        (() => {
+          const item = memberOf(modal.instanceId);
+          if (!item) return null;
+          return (
+            <Dialog
+              open
+              onOpenChange={(o) => !o && setModal(null)}
+              title={`${item.p.name} - peuple d'origine`}
+              size="sm"
+            >
+              <p className="mdl-note">De quel peuple vient-il ?</p>
               <div className="mdl-list">
-                {m.profiles.map((p) => {
-                  const max = atLimit(p);
-                  return (
-                    <button
-                      key={p.id}
-                      disabled={max}
-                      className="mdl-choice"
-                      onClick={() => {
-                        store.addMember(p.id);
-                        setModal(null);
-                      }}
-                    >
-                      <span>
-                        {p.name} <span className="lvl">{LEVEL[p.level ?? 0]}</span>
-                        {max && <span className="max">max</span>}
-                      </span>
-                      <span className="cost">{recruitCostOf(p)} Ko</span>
-                    </button>
-                  );
-                })}
+                {originOptions(cat, item.p).map((f) => (
+                  <button
+                    key={f.id}
+                    className={`mdl-choice${item.inst.origin === f.id ? " is-sel" : ""}`}
+                    onClick={() => {
+                      store.setOrigin(modal.instanceId, f.id);
+                      setModal(null);
+                    }}
+                  >
+                    <span>{f.name}</span>
+                    <span className="cost">{mountHintFor(f.id)}</span>
+                  </button>
+                ))}
               </div>
             </Dialog>
           );

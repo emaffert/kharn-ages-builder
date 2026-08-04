@@ -19,6 +19,7 @@ import {
   cardMatchesBanner,
   specialCardCost,
 } from "./evaluate";
+import { effectiveOrigin, needsOriginChoice } from "./origin";
 import {
   equipmentAllowedIn,
   isRecruitableIn,
@@ -1867,5 +1868,52 @@ describe("recrutement ouvert : qui la faction refuse", () => {
     const gaal = catalog.profiles.find((p) => p.id === "tembos-gaal-3")!;
     expect(refused(gaal.id)).toBe(false);
     expect(isRecruitableIn(catalog, gaal, "affranchis")).toBe(true);
+  });
+});
+
+describe("origine choisie au recrutement (Agent sombre)", () => {
+  const AGENT = "profile-1785423938572"; // Agent sombre II
+  const agent = catalog.profiles.find((p) => p.id === AGENT)!;
+  const list = (origin?: string) =>
+    makeList([inst(AGENT, origin ? { origin } : {})], "guilde-noire");
+  const originErrs = (res: ReturnType<typeof evaluateList>) =>
+    res.issues.filter((i) => i.ruleId?.startsWith("origin:"));
+  const typesFor = (origin?: string) => [
+    ...new Set(
+      eligibleMountsFor(catalog, agent, effectiveOrigin(agent, { origin })).map(
+        (m) => catalog.mountTypes.find((t) => t.id === m.typeId)!.name,
+      ),
+    ),
+  ];
+
+  it("la carte laisse le choix entre cinq peuples", () => {
+    expect(needsOriginChoice(agent)).toBe(true);
+    expect(agent.originChoices).toEqual(["fangs", "gouns", "kharns", "kherops", "tembos"]);
+  });
+
+  it("exige une origine, et refuse celle que la carte ne propose pas", () => {
+    expect(originErrs(evaluateList(catalog, list()))).toHaveLength(1);
+    expect(originErrs(evaluateList(catalog, list("affranchis")))).toHaveLength(1);
+    expect(originErrs(evaluateList(catalog, list("kharns")))).toHaveLength(0);
+  });
+
+  it("ouvre la monture du peuple choisi, et elle seule", () => {
+    expect(typesFor("kharns")).toEqual(["Quagga"]);
+    expect(typesFor("kherops")).toEqual(["Koelod"]);
+    expect(typesFor("fangs")).toEqual([]); // les Fangs n'ont pas de monture
+    expect(typesFor()).toEqual([]); // sans choix, aucune
+  });
+
+  it("refuse la monture d'un autre peuple que celui choisi", () => {
+    const quagga = catalog.mounts.find(
+      (m) => catalog.mountTypes.find((t) => t.id === m.typeId)?.name === "Quagga" && m.level === 2,
+    )!;
+    const monte = (origin: string) =>
+      evaluateList(
+        catalog,
+        makeList([inst(AGENT, { origin, mount: { mountId: quagga.id } })], "guilde-noire"),
+      ).issues.filter((i) => i.ruleId?.startsWith("mount-"));
+    expect(monte("kharns")).toHaveLength(0);
+    expect(monte("gouns")).toHaveLength(1);
   });
 });

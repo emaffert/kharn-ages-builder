@@ -313,7 +313,7 @@ export function ProfileStatCard({
                     onInfo({
                       title: c.name,
                       price: px > 0 ? `${px} Ko` : "gratuit",
-                      lines: c.rulesText.map((r) => r.text),
+                      lines: [c.rulesText],
                     });
                   // Amélioration empilable : stepper 0..niveau, coût = quantité × coût unitaire.
                   if (c.perLevelStack && onSetUpgradeCount) {
@@ -374,7 +374,7 @@ export function ProfileStatCard({
                     key={c.id}
                     className="fe-linked-item"
                     onClick={() =>
-                      onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: c.rulesText.map((r) => r.text) })
+                      onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: [c.rulesText] })
                     }
                   >
                     <span>{c.name}</span>
@@ -413,7 +413,7 @@ export function ProfileStatCard({
                   key={c.id}
                   className="fe-linked-item"
                   onClick={() =>
-                    onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: c.rulesText.map((r) => r.text) })
+                    onInfo({ title: c.name, price: c.cost > 0 ? `${c.cost} Ko` : "auto", lines: [c.rulesText] })
                   }
                 >
                   <span>{c.name}</span>

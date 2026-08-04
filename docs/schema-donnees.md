@@ -303,7 +303,7 @@ interface SpecialCard {
   // absent/false : carte automatique appliquée d'office (ex. Fille de Nyx, Xayìn & Muskh).
   amelioration?: boolean;
   grantsCasting?: { magicWayIds: string[] };          // ex. Apprentie de Nyx → ostéomancie
-  rulesText: RuleText[];                              // verbatim, fait foi
+  rulesText: string;                                  // texte officiel d'un seul tenant (retours à la ligne rendus tels quels)                              // verbatim, fait foi
   constraints: Constraint[];                          // ex. Muskh requires-present Xayìn
   effects: Effect[];                                  // ex. Forgeronne déverrouille « Borax », Mathys octroie « Apatride »
   cardImage: string;

@@ -527,14 +527,14 @@ function validateOstCards(cat: Catalog, list: ListDocument, resolved: ResolvedIn
         severity: "error",
         ruleId: `ost-card-unavailable:${id}`,
         message: `« ${card.name} » : la figurine requise pour cette carte d'Ost n'est pas dans la liste.`,
-        sourceText: card.rulesText[0]?.text ?? "",
+        sourceText: card.rulesText,
       });
     } else if (!conditionHolds(card.activationCondition, "ost", resolved[0]?.ferDeLanceId ?? "", resolved)) {
       issues.push({
         severity: "error",
         ruleId: `ost-card:${id}`,
         message: `« ${card.name} » : condition de composition de l'Ost non remplie.`,
-        sourceText: card.rulesText[0]?.text ?? "",
+        sourceText: card.rulesText,
       });
     }
   }

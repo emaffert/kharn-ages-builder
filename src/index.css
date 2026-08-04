@@ -487,7 +487,8 @@ body {
   cursor: pointer; font-weight: 600; white-space: nowrap; }
 /* largeur figée pour « activer »/« activé » : la case ne saute pas au changement d'état */
 .bld-ocard-switch span { display: inline-block; min-width: 3.4em; text-align: left; }
-.bld-ocard-eff { margin: 0; font-size: 12.5px; color: var(--bone-dim); line-height: 1.45; }
+.bld-ocard-eff { margin: 0; font-size: 12.5px; color: var(--bone-dim); line-height: 1.45;
+  white-space: pre-line; }
 .bld-ocard-err { margin: 0; font-size: 12.5px; font-weight: 500; color: var(--on-scorch);
   background: color-mix(in srgb, var(--scorch) 16%, transparent); border-radius: 7px; padding: 6px 9px; }
 .bld-ocard-cond { border-top: 1px solid var(--hair); padding-top: 9px; display: flex; flex-direction: column; gap: 8px; }
@@ -663,14 +664,16 @@ body {
 .mdl-price { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-weight: 700;
   font-size: 13px; color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent); margin-bottom: 12px; }
-.mdl-line { font-size: 13.5px; line-height: 1.5; color: var(--bone); }
+/* Texte verbatim : les retours à la ligne de la carte sont rendus tels quels. `pre-line`
+   (et non `pre-wrap`) écrase au passage les espaces surnuméraires de saisie. */
+.mdl-line { font-size: 13.5px; line-height: 1.5; color: var(--bone); white-space: pre-line; }
 .mdl-line + .mdl-line { margin-top: 5px; }
 /* Bloc « Modifiée par » : détaché du descriptif, teinté braise pour bien le distinguer. */
 .mdl-sources { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--hair); }
 .mdl-sources--bare { margin-top: 0; padding-top: 0; border-top: 0; }
 .mdl-sources-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
   color: var(--ember); margin-bottom: 6px; }
-.mdl-source { font-size: 12.5px; line-height: 1.45; color: var(--bone-dim); }
+.mdl-source { font-size: 12.5px; line-height: 1.45; color: var(--bone-dim); white-space: pre-line; }
 .mdl-source + .mdl-source { margin-top: 4px; }
 .mdl-source b { color: var(--bone); font-weight: 600; }
 .mdl-list { display: flex; flex-direction: column; gap: 8px; }
@@ -773,7 +776,8 @@ body {
   font-weight: 500; color: var(--ember); background: none; border: 0; cursor: pointer;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ember) 40%, transparent); }
 .fe-lim-fx:hover { color: var(--ember-bright); background: color-mix(in srgb, var(--ember) 12%, transparent); }
-.fe-rules { margin-top: 20px; display: flex; flex-direction: column; gap: 9px; font-size: 13.5px; color: var(--bone-dim); }
+.fe-rules { margin-top: 20px; display: flex; flex-direction: column; gap: 9px; font-size: 13.5px;
+  color: var(--bone-dim); white-space: pre-line; }
 .fe-rules b { color: var(--bone); }
 .fe-rule-btn { color: var(--bone); font-weight: 600; background: none; border: 0; cursor: pointer;
   text-decoration: underline dotted; text-underline-offset: 2px; padding: 0; }

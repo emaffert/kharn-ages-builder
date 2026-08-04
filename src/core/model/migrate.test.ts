@@ -54,6 +54,24 @@ describe("mise à niveau d'un catalogue antérieur", () => {
     expect(parsed.profiles[0].unverifiedFields).toEqual(["stats.v", "armor"]);
   });
 
+  it("replie les blocs d'une carte spéciale en un seul texte, paragraphes séparés", () => {
+    const raw = structuredClone(catalog) as { specialCards: { rulesText: unknown }[] };
+    raw.specialCards[0].rulesText = [
+      { text: "  Premier paragraphe.  " },
+      { label: "Étiquette", text: "Deuxième." },
+      { text: "   " },
+    ];
+    const parsed = parseCatalog(raw);
+    expect(parsed.specialCards[0].rulesText).toBe("Premier paragraphe.\n\nÉtiquette : Deuxième.");
+  });
+
+  it("nettoie les blancs de bord d'un verbatim sans toucher aux lignes vides internes", () => {
+    const raw = structuredClone(catalog) as { equipment: { effectsText: string }[] };
+    raw.equipment[0].effectsText = "\n  3 dgts.\n\n2 ratés = sonné.  \n ";
+    const parsed = parseCatalog(raw);
+    expect(parsed.equipment[0].effectsText).toBe("3 dgts.\n\n2 ratés = sonné.");
+  });
+
   it("laisse intact un catalogue déjà à jour", () => {
     expect(parseCatalog(catalog)).toEqual(catalog);
   });

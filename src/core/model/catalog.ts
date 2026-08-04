@@ -458,7 +458,15 @@ export const SpecialCardSchema = z.object({
    * (ex. « ≥ 4 personnages parmi … »). Ses effets ne s'appliquent que si la condition est satisfaite.
    */
   activationCondition: z.union([SelectorSchema, z.array(SelectorSchema)]).optional(),
-  rulesText: z.array(RuleTextSchema),
+  /**
+   * Texte officiel de la carte, **d'un seul tenant**, retours à la ligne compris (rendus tels quels).
+   *
+   * Contrairement aux fiches de figurine (profils, montures), une carte spéciale n'énumère pas des
+   * capacités nommées : c'est un paragraphe suivi. Elle se saisit donc comme la description d'un
+   * objet, et non en blocs `RuleText` à étiquette - un emprunt au modèle des profils dont rien ici
+   * n'avait l'usage (l'étiquette n'était ni saisissable ni affichée).
+   */
+  rulesText: z.string(),
   constraints: z.array(ConstraintSchema),
   effects: z.array(EffectSchema),
   /**

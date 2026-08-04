@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Catalog, Equipment, Limitation, RuleText, SkillRef } from "@core";
-import { AddButton, ChipMultiSelect, Combobox, RemoveButton } from "./primitives";
+import { AddButton, AutoTextarea, ChipMultiSelect, Combobox, RemoveButton } from "./primitives";
 import { INPUT, LEVEL_LABEL, removeAt, replaceAt } from "./shared";
 
 // ── Liste réordonnable (drag & drop) ──────────────────────────────────────────
@@ -86,11 +86,10 @@ export function RulesEditor({ rules, onChange }: { rules: RuleText[]; onChange: 
               onChange={(e) => onChange(replaceAt(rules, i, { ...r, label: e.target.value || undefined }))}
               className={`${INPUT} w-32 shrink-0`}
             />
-            <textarea
+            <AutoTextarea
               value={r.text}
-              rows={2}
-              onChange={(e) => onChange(replaceAt(rules, i, { ...r, text: e.target.value }))}
-              className={`${INPUT} flex-1`}
+              onChange={(v) => onChange(replaceAt(rules, i, { ...r, text: v }))}
+              className="flex-1"
             />
             <RemoveButton onClick={() => onChange(removeAt(rules, i))} />
           </>
@@ -410,27 +409,6 @@ export function LimitationEditor({
   );
 }
 /** Éditeur de texte multi-lignes (RuleText[] sans label) - pour cartes spéciales. */
-export function TextLinesEditor({ items, onChange }: { items: RuleText[]; onChange: (r: RuleText[]) => void }) {
-  return (
-    <div className="space-y-2">
-      <SortableList items={items} onReorder={onChange}>
-        {(r, i) => (
-          <>
-            <textarea
-              value={r.text}
-              rows={2}
-              onChange={(e) => onChange(replaceAt(items, i, { text: e.target.value }))}
-              className={`${INPUT} flex-1`}
-            />
-            <RemoveButton onClick={() => onChange(removeAt(items, i))} />
-          </>
-        )}
-      </SortableList>
-      <AddButton onClick={() => onChange([...items, { text: "" }])}>+ ligne</AddButton>
-    </div>
-  );
-}
-
 export function ProfileMultiSelect({
   label,
   ids,

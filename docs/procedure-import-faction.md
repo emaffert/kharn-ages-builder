@@ -234,6 +234,25 @@ Conséquences, pour ne pas perdre de travail :
 - Une modification de **code** (composant React) prend effet au simple rechargement de page, elle
   n'est pas masquée par le brouillon.
 
+## Textes verbatim : blocs ou texte simple ?
+
+Deux formes, et une seule bonne raison de choisir l'une ou l'autre :
+
+- **Blocs `RuleText` (`{label?, text}`)** : réservés aux **fiches de figurine** - `profile.rules` et
+  `mount.rules`. Une fiche énumère des capacités **nommées** (« Fricot : … », « Vorace : … ») et
+  l'étiquette se rend en gras, comme sur la carte imprimée.
+- **Texte simple** : partout ailleurs - `specialCard.rulesText`, `equipment.effectsText`,
+  `skill.sourceText`, les textes de sort. Ce sont des paragraphes suivis, sans capacité nommée.
+
+Les **retours à la ligne sont rendus tels quels** (`white-space: pre-line`), lignes vides comprises :
+c'est ainsi qu'on sépare deux paragraphes dans un champ unique. Inutile donc de découper un texte en
+plusieurs entrées pour l'aérer. Les blancs de **bord** sont retirés à la lecture (`migrateCatalog`),
+et `pre-line` écrase les espaces surnuméraires : rien à nettoyer à la main.
+
+Le texte d'une carte spéciale s'écrivait autrefois en blocs, par emprunt au modèle des profils.
+Personne n'en avait l'usage - l'étiquette n'était ni saisissable ni affichée, et l'éditeur l'effaçait
+à la première frappe. `migrateCatalog` replie ces blocs en un seul texte, séparés par une ligne vide.
+
 ## Conventions d'édition de `catalog.json`
 
 - Le fichier est écrit exactement comme `JSON.stringify(obj, null, 2) + "\n"`.

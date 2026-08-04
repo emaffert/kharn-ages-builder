@@ -1,9 +1,9 @@
 import type { Catalog, SpecialCard } from "@core";
 import { SegmentedControl } from "@ui";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
-import { CardImageSection, CheckField, ChipMultiSelect, DetailHeader, DetailPage, Field, FieldGroup, IdField, NotesSection, Section } from "./primitives";
+import { AutoTextarea, CardImageSection, CheckField, ChipMultiSelect, DetailHeader, DetailPage, Field, FieldGroup, IdField, NotesSection, Section } from "./primitives";
 import { INPUT, SECTION } from "./shared";
-import { ProfileMultiSelect, TextLinesEditor } from "./editors";
+import { ProfileMultiSelect } from "./editors";
 
 // Nature de la carte : 3 combinaisons valides (« Amélioration + Ost » n'existe pas - une carte d'Ost
 // est toujours automatique). Le type encode donc directement la portée possible.
@@ -201,7 +201,13 @@ export function SpecialCardDetail({
           </Section>
 
           <Section title={SECTION.verbatim} icon="verbatim">
-            <TextLinesEditor items={card.rulesText} onChange={(r) => onChange({ rulesText: r })} />
+            {/* Le texte officiel d'une carte est un paragraphe suivi, pas une liste de capacités
+                nommées : un seul champ, dont les retours à la ligne sont rendus tels quels. */}
+            <AutoTextarea
+              value={card.rulesText}
+              onChange={(v) => onChange({ rulesText: v })}
+              placeholder="Texte de la carte, tel qu'il y est imprimé."
+            />
           </Section>
 
           <Section title={SECTION.effects} icon="effects">

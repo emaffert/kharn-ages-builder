@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -10020,7 +10020,7 @@
         },
         {
           "label": "Os de grand Ancien",
-          "text": "Réussit automatiquement une Défense à 3PA gratuitement  par tour "
+          "text": "Réussit automatiquement une Défense à 3PA gratuitement  par tour"
         }
       ],
       "cardImage": ""
@@ -10106,7 +10106,7 @@
         },
         {
           "label": "Limitation 2/*",
-          "text": "Limitée à 1 par allié possédant \"SDG\" si elle est jouée en tant qu'esclave "
+          "text": "Limitée à 1 par allié possédant \"SDG\" si elle est jouée en tant qu'esclave"
         }
       ],
       "cardImage": ""
@@ -10720,7 +10720,7 @@
       "rules": [
         {
           "label": "Dans le secret ",
-          "text": "\"détecter\" automatique une fois par activation. "
+          "text": "\"détecter\" automatique une fois par activation."
         }
       ],
       "cardImage": ""
@@ -10852,7 +10852,7 @@
       "rules": [
         {
           "label": "Puissance versatile",
-          "text": "Au début de chacune de ses activations, Balthus lance 1D10: \n1 à 3 = -2 au résultat naturel de tous ses dés.\n8+ = +2 à toutes ses caractéristiques. "
+          "text": "Au début de chacune de ses activations, Balthus lance 1D10: \n1 à 3 = -2 au résultat naturel de tous ses dés.\n8+ = +2 à toutes ses caractéristiques."
         }
       ],
       "cardImage": ""
@@ -12625,7 +12625,7 @@
         "max": 5
       },
       "munitionKind": "carreaux",
-      "effectsText": "4 dgts.\n2 jets de défense:\n1 raté = dégâts normaux\n2 ratés = dégâts X2. \nchaque tir supplémentaires lors d'un même tour coûte 1 PA de plus. "
+      "effectsText": "4 dgts.\n2 jets de défense:\n1 raté = dégâts normaux\n2 ratés = dégâts X2. \nchaque tir supplémentaires lors d'un même tour coûte 1 PA de plus."
     },
     {
       "id": "baton-relique-decatie-2",
@@ -13500,21 +13500,21 @@
       "name": "Rossignol",
       "category": "objet",
       "cost": 4,
-      "effectsText": "Pas d'EC sur l'action crocheter. "
+      "effectsText": "Pas d'EC sur l'action crocheter."
     },
     {
       "id": "guilde-noire-bourse-bien-remplie",
       "name": "Bourse bien remplie",
       "category": "objet",
       "cost": 4,
-      "effectsText": "1 fois par adversaire par partie. \navant de défendre sur 6+ vous avez +3 en défense. "
+      "effectsText": "1 fois par adversaire par partie. \navant de défendre sur 6+ vous avez +3 en défense."
     },
     {
       "id": "guilde-noire-ruse-du-pleutre",
       "name": "Ruse du pleutre",
       "category": "objet",
       "cost": 4,
-      "effectsText": "+2 lors de la relance d'un dé de maitrise défensif. "
+      "effectsText": "+2 lors de la relance d'un dé de maitrise défensif."
     },
     {
       "id": "guilde-noire-amulette-du-culte",
@@ -13699,7 +13699,7 @@
       "category": "bouclier",
       "cost": 8,
       "durability": 5,
-      "effectsText": "+1 en défense.\nPas d'EC en défense "
+      "effectsText": "+1 en défense.\nPas d'EC en défense"
     },
     {
       "id": "broquel",
@@ -13727,7 +13727,7 @@
       "protectionEchec": 0,
       "seuil": 7,
       "protectionReussite": -1,
-      "effectsText": "Si porté en plus d'une armure manufacturée, pas d'EC sur les tests des 2 armures. "
+      "effectsText": "Si porté en plus d'une armure manufacturée, pas d'EC sur les tests des 2 armures."
     },
     {
       "id": "armure-de-cuir",
@@ -13779,7 +13779,7 @@
       "category": "arme-cac",
       "cost": 20,
       "hands": 1,
-      "effectsText": "Attaque à 3 PA = 2D5+3 dgts et le porteur subit saignement 2. "
+      "effectsText": "Attaque à 3 PA = 2D5+3 dgts et le porteur subit saignement 2."
     },
     {
       "id": "armure-de-demi-plate",
@@ -13808,7 +13808,7 @@
       "name": "Casque à nasal",
       "category": "objet",
       "cost": 6,
-      "effectsText": "Le porteur n'est pas obligé de choisir une des caractéristiques utilisées par l'attaquant pour se défendre. "
+      "effectsText": "Le porteur n'est pas obligé de choisir une des caractéristiques utilisées par l'attaquant pour se défendre."
     },
     {
       "id": "bassinet",
@@ -13829,7 +13829,7 @@
       "name": "Barbute",
       "category": "objet",
       "cost": 10,
-      "effectsText": "Ajoute la maitrise défensive sur tous les dés. "
+      "effectsText": "Ajoute la maitrise défensive sur tous les dés."
     },
     {
       "id": "cerveliere",
@@ -13843,7 +13843,7 @@
       "name": "Heaume",
       "category": "objet",
       "cost": 15,
-      "effectsText": "ignore les effets \"assommé\", \"sonné\" et \"perce armure\". "
+      "effectsText": "ignore les effets \"assommé\", \"sonné\" et \"perce armure\"."
     },
     {
       "id": "canne-alaric",
@@ -13891,7 +13891,7 @@
       "category": "arme-cac",
       "cost": 10,
       "hands": 1,
-      "effectsText": "+2 en attaque.\n+1 en défense. "
+      "effectsText": "+2 en attaque.\n+1 en défense."
     },
     {
       "id": "misericorde",
@@ -13900,7 +13900,7 @@
       "cost": 10,
       "hands": 1,
       "perceArmure": 2,
-      "effectsText": "Pas d'attaque avec C. "
+      "effectsText": "Pas d'attaque avec C."
     },
     {
       "id": "dague",
@@ -13933,7 +13933,7 @@
       "category": "arme-cac",
       "cost": 15,
       "hands": 1,
-      "effectsText": "le porteur gagne la compétence \"sacrifice2\".\nun allié gagne \"réceptif X\". "
+      "effectsText": "le porteur gagne la compétence \"sacrifice2\".\nun allié gagne \"réceptif X\"."
     },
     {
       "id": "bec-de-corbin",
@@ -13941,7 +13941,7 @@
       "category": "arme-cac",
       "cost": 18,
       "hands": 1,
-      "effectsText": "l'armure adverse protège 2 dgts de moins. "
+      "effectsText": "l'armure adverse protège 2 dgts de moins."
     },
     {
       "id": "lame-perfide",
@@ -13949,7 +13949,7 @@
       "category": "arme-cac",
       "cost": 20,
       "hands": 1,
-      "effectsText": "2 dgts.\nPoison sur 7+.\nPas d'attaque avec A. "
+      "effectsText": "2 dgts.\nPoison sur 7+.\nPas d'attaque avec A."
     },
     {
       "id": "scramasaxe",
@@ -13965,7 +13965,7 @@
       "category": "arme-cac",
       "cost": 22,
       "hands": 1,
-      "effectsText": "Permet de choisir l'effet de A sur les attaques à 2 et 3 PA quelles que soient le caractéristiques choisies.\n2 effets de A max. "
+      "effectsText": "Permet de choisir l'effet de A sur les attaques à 2 et 3 PA quelles que soient le caractéristiques choisies.\n2 effets de A max."
     },
     {
       "id": "morgenstern",
@@ -13983,7 +13983,7 @@
       "cost": 30,
       "hands": 1,
       "allonge": 1,
-      "effectsText": "1D5 dgts.\ncoup tournoyant: attaque à 3 PA avec au moins 1 effet de V dans une direction aléatoire; 2D5 dgts à tous les Safars en ZDC. \nRC= sonne et perce armure 1. \nEC= porteur assommé. \nPas d'attaque à 1PA ou gratuite. "
+      "effectsText": "1D5 dgts.\ncoup tournoyant: attaque à 3 PA avec au moins 1 effet de V dans une direction aléatoire; 2D5 dgts à tous les Safars en ZDC. \nRC= sonne et perce armure 1. \nEC= porteur assommé. \nPas d'attaque à 1PA ou gratuite."
     },
     {
       "id": "goupillon",
@@ -14008,7 +14008,7 @@
       "category": "arme-cac",
       "cost": 10,
       "hands": 2,
-      "effectsText": "RC= regagne 1 PA.\nPas d'attaque ou de défense à 3 PA. ",
+      "effectsText": "RC= regagne 1 PA.\nPas d'attaque ou de défense à 3 PA.",
       "reservedTo": {
         "levels": [
           1
@@ -14031,7 +14031,7 @@
       "cost": 20,
       "hands": 2,
       "allonge": 1,
-      "effectsText": "+1 dgt.\nPas d'attaque à 1 PA. "
+      "effectsText": "+1 dgt.\nPas d'attaque à 1 PA."
     },
     {
       "id": "guisarme",
@@ -14059,7 +14059,7 @@
       "cost": 25,
       "hands": 2,
       "allonge": 3,
-      "effectsText": "annule le bonus d'assaut d'une charge de cavalerie. \nsaignement 2 sur les montures.\nne peut être porté par un cavalier.\n-1 en V tant qu'elle est en mains. "
+      "effectsText": "annule le bonus d'assaut d'une charge de cavalerie. \nsaignement 2 sur les montures.\nne peut être porté par un cavalier.\n-1 en V tant qu'elle est en mains."
     },
     {
       "id": "hallebarde",
@@ -14068,7 +14068,7 @@
       "cost": 28,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "+1 dgt.\n+3 en défense. "
+      "effectsText": "+1 dgt.\n+3 en défense."
     },
     {
       "id": "hache-a-double-tranchant",
@@ -14085,7 +14085,7 @@
       "cost": 30,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "saignement 1. \n+ stature au seuil des attaques à 3 PA hors charge. "
+      "effectsText": "saignement 1. \n+ stature au seuil des attaques à 3 PA hors charge."
     },
     {
       "id": "vouge",
@@ -14094,7 +14094,7 @@
       "cost": 30,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "saignement 2. "
+      "effectsText": "saignement 2."
     },
     {
       "id": "claymore",
@@ -14111,7 +14111,7 @@
       "category": "arme-cac",
       "cost": 10,
       "hands": 1,
-      "effectsText": "Attaques et défenses à 3 PA = saignement 1. ",
+      "effectsText": "Attaques et défenses à 3 PA = saignement 1.",
       "reservedTo": {
         "factionIds": [
           "fangs"
@@ -14149,7 +14149,7 @@
       },
       "munitionKind": "fleches",
       "baseMunitions": 12,
-      "effectsText": "3 dgts. \npermet d'utiliser les fléchettes de l'arsenal. "
+      "effectsText": "3 dgts. \npermet d'utiliser les fléchettes de l'arsenal."
     },
     {
       "id": "arbalete",
@@ -14185,7 +14185,7 @@
         "paCost": 2
       },
       "munitionKind": "carreaux",
-      "effectsText": "5 dgts.\nPas de tir précis.\nLa cible et toutes les figurines à 2\" ou moins doivent défendre ou subir les dgts. "
+      "effectsText": "5 dgts.\nPas de tir précis.\nLa cible et toutes les figurines à 2\" ou moins doivent défendre ou subir les dgts."
     },
     {
       "id": "arbalete-lourde",
@@ -14232,7 +14232,7 @@
       "name": "Père fondateur",
       "category": "objet",
       "cost": 5,
-      "effectsText": "Choisit sa zone de déploiement. "
+      "effectsText": "Choisit sa zone de déploiement."
     },
     {
       "id": "dose-de-poison",
@@ -14240,7 +14240,7 @@
       "category": "objet",
       "cost": 6,
       "stackable": true,
-      "effectsText": "Lors d'une attaque ou d'une défense ajoute l'effet \"poison\". "
+      "effectsText": "Lors d'une attaque ou d'une défense ajoute l'effet \"poison\"."
     },
     {
       "id": "affutage",
@@ -14254,21 +14254,21 @@
       "name": "Plan d'action",
       "category": "objet",
       "cost": 8,
-      "effectsText": "Permet d'additionner 2 dès lors d'un jet de scénario / objectif. 4 utilisations.\nPeut être \"pillé\" s'il reste des cases. "
+      "effectsText": "Permet d'additionner 2 dès lors d'un jet de scénario / objectif. 4 utilisations.\nPeut être \"pillé\" s'il reste des cases."
     },
     {
       "id": "main-du-destin",
       "name": "Main du destin",
       "category": "objet",
       "cost": 10,
-      "effectsText": "Peut la sacrifier pour relancer tous ses jets jusqu'à sa prochaine activation.\nLes jets doivent être relancé et majorés de 1 (un 9 devient donc une RC) \nle nouveau résultat est conservé sauf s'il est relancé par un dé de maitrise. "
+      "effectsText": "Peut la sacrifier pour relancer tous ses jets jusqu'à sa prochaine activation.\nLes jets doivent être relancé et majorés de 1 (un 9 devient donc une RC) \nle nouveau résultat est conservé sauf s'il est relancé par un dé de maitrise."
     },
     {
       "id": "sceau-de-la-guilde-noire",
       "name": "Sceau de la guilde noire",
       "category": "objet",
       "cost": 10,
-      "effectsText": "Permet de recruter n'importe quel membre de la guilde noire pour la partie. ",
+      "effectsText": "Permet de recruter n'importe quel membre de la guilde noire pour la partie.",
       "effects": [
         {
           "id": "e-1785444558380",
@@ -14305,7 +14305,7 @@
       "name": "Ordre de mission royale",
       "category": "objet",
       "cost": 5,
-      "effectsText": "gagne 1 domaine de maitrise de son choix. ",
+      "effectsText": "gagne 1 domaine de maitrise de son choix.",
       "reservedTo": {
         "factionIds": [
           "kharns"
@@ -14410,7 +14410,7 @@
       "category": "arme-cac",
       "cost": 30,
       "hands": 2,
-      "effectsText": "Réceptacle des PA que Balthus n'a pas utilisé au tour précédent. elle ne peut cependant pas retenir plus de PA qu'il n'en possède en début de partie. Il peut décider de les utiliser à tout moment en les cochant comme des PA classiques. Si c'est possible elle absorbe 1 PA à Balthus à la fin d'un tour de jeu. ",
+      "effectsText": "Réceptacle des PA que Balthus n'a pas utilisé au tour précédent. elle ne peut cependant pas retenir plus de PA qu'il n'en possède en début de partie. Il peut décider de les utiliser à tout moment en les cochant comme des PA classiques. Si c'est possible elle absorbe 1 PA à Balthus à la fin d'un tour de jeu.",
       "reservedTo": {
         "profileIds": [
           "profile-1785427326487"
@@ -14423,7 +14423,7 @@
       "category": "arme-cac",
       "cost": 30,
       "hands": 2,
-      "effectsText": "pas d'attaque à 1 PA.\nChaque RC = 1D10 dgts supplémentaires. ",
+      "effectsText": "pas d'attaque à 1 PA.\nChaque RC = 1D10 dgts supplémentaires.",
       "effects": [
         {
           "id": "e-1785435047000",
@@ -14454,7 +14454,7 @@
       "category": "arme-cac",
       "cost": 0,
       "hands": 2,
-      "effectsText": "La cible doit se défendre uniquement en utilisant son intelligence. Lors d'une défense à 2 ou 3PA réussie, elle peut cependant choisir un effet. ",
+      "effectsText": "La cible doit se défendre uniquement en utilisant son intelligence. Lors d'une défense à 2 ou 3PA réussie, elle peut cependant choisir un effet.",
       "effects": [
         {
           "id": "e-1785436195216",
@@ -14491,7 +14491,7 @@
       "protectionEchec": -1,
       "seuil": 5,
       "protectionReussite": -2,
-      "effectsText": "Compte comme un bouclier -1/5/-2. DV10 la rouge n'est pas détruite même si elle ne possède plus de case de DV. ",
+      "effectsText": "Compte comme un bouclier -1/5/-2. DV10 la rouge n'est pas détruite même si elle ne possède plus de case de DV.",
       "effects": [
         {
           "id": "e-1785436477701",
@@ -16232,17 +16232,7 @@
       "scope": {
         "trait": "fille-de-nyx"
       },
-      "rulesText": [
-        {
-          "text": "Les filles de Nyx sont les plus proches de la Mère de tous les Fangs, elles sont versées dans les arts occultes depuis leur plus tendre enfance."
-        },
-        {
-          "text": "Elles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit."
-        },
-        {
-          "text": "De plus, elles acquièrent la compétence « Garde rapprochée » : elles peuvent recruter 1 larbin dans leur Fer de Lance sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance)."
-        }
-      ],
+      "rulesText": "Les filles de Nyx sont les plus proches de la Mère de tous les Fangs, elles sont versées dans les arts occultes depuis leur plus tendre enfance.\n\nElles ont la capacité de posséder 3 pages de sorts même sans grimoire ou d'en ajouter 3 à la capacité d'un petit.\n\nDe plus, elles acquièrent la compétence « Garde rapprochée » : elles peuvent recruter 1 larbin dans leur Fer de Lance sans en payer le coût (maximum 2 Larbins gratuits, sans dépasser la limitation totale de 5 par Fer de Lance).",
       "constraints": [],
       "effects": [
         {
@@ -16298,14 +16288,7 @@
         "trait": "goulue"
       },
       "amelioration": true,
-      "rulesText": [
-        {
-          "text": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie."
-        },
-        {
-          "text": "Elle ajoute son niveau à sa valeur de I pour la partie."
-        }
-      ],
+      "rulesText": "La Goulue acquiert la capacité de lancer des sorts d'ostéomancie.\n\nElle ajoute son niveau à sa valeur de I pour la partie.",
       "constraints": [],
       "effects": [
         {
@@ -16354,17 +16337,7 @@
           "fangs-muskh-1"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Cette fille de Nyx a été bannie de la Tanière puis a fait d'un simple larbin une bête de guerre à force de magie et de régime kharné : Muskh."
-        },
-        {
-          "text": "Ce dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement. Il apporte +4 en soutien à sa maîtresse. Au moment où Xayìn est engagée, il peut effectuer un unique « bond » gratuit si ce dernier l'amène dans le corps à corps."
-        },
-        {
-          "text": "Lorsqu'ils sont réunis dans un même Fer de Lance, ils sont joués indifféremment lors de la même activation."
-        }
-      ],
+      "rulesText": "Cette fille de Nyx a été bannie de la Tanière puis a fait d'un simple larbin une bête de guerre à force de magie et de régime kharné : Muskh.\n\nCe dernier ne peut pas être recruté sans Xayìn, ni posséder d'équipement. Il apporte +4 en soutien à sa maîtresse. Au moment où Xayìn est engagée, il peut effectuer un unique « bond » gratuit si ce dernier l'amène dans le corps à corps.\n\nLorsqu'ils sont réunis dans un même Fer de Lance, ils sont joués indifféremment lors de la même activation.",
       "constraints": [
         {
           "id": "muskh-requires-xayin",
@@ -16404,17 +16377,7 @@
         "trait": "meneuse"
       },
       "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Peut contenir 3 pages de sorts."
-        },
-        {
-          "text": "Lors d'une incantation réussie, draine si possible 1 PA à la cible ennemie ou alliée."
-        },
-        {
-          "text": "En combat, draine si possible 3 PA de la cible en cas de RC au lieu des dégâts supplémentaires."
-        }
-      ],
+      "rulesText": "Peut contenir 3 pages de sorts.\n\nLors d'une incantation réussie, draine si possible 1 PA à la cible ennemie ou alliée.\n\nEn combat, draine si possible 3 PA de la cible en cas de RC au lieu des dégâts supplémentaires.",
       "constraints": [],
       "effects": [
         {
@@ -16443,17 +16406,7 @@
       "scope": {
         "trait": "synkherces"
       },
-      "rulesText": [
-        {
-          "text": "Les Synkherces sont solitaires, ils apprennent donc à se soigner seuls, ils maîtrisent uniquement le sort « Onde revigorante » sur eux-mêmes, sans grimoire."
-        },
-        {
-          "text": "Riposte."
-        },
-        {
-          "text": "Possibilité d'acquérir l'arme suivante en en payant le coût :\nMadrier (2 mains) - 20 Ko.\n+1 dégât.\nAllonge.\nPermet de répartir les dégâts sur tous ses adversaires au corps à corps."
-        }
-      ],
+      "rulesText": "Les Synkherces sont solitaires, ils apprennent donc à se soigner seuls, ils maîtrisent uniquement le sort « Onde revigorante » sur eux-mêmes, sans grimoire.\n\nRiposte.\n\nPossibilité d'acquérir l'arme suivante en en payant le coût :\nMadrier (2 mains) - 20 Ko.\n+1 dégât.\nAllonge.\nPermet de répartir les dégâts sur tous ses adversaires au corps à corps.",
       "constraints": [],
       "effects": [
         {
@@ -16503,11 +16456,7 @@
       },
       "amelioration": true,
       "shared": true,
-      "rulesText": [
-        {
-          "text": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie »."
-        }
-      ],
+      "rulesText": "Si votre Fer de Lance compte au moins 3 Dogons et 1 Père de famille, ils acquièrent tous « Héroïque défense » et « Instinct de Survie ».",
       "constraints": [],
       "effects": [
         {
@@ -16589,11 +16538,7 @@
         ]
       },
       "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Un Père de Famille sait se sacrifier pour protéger les siens.\nIl peut décider, une fois par tour, de ne réaliser aucune action lors de son activation, pour laisser le temps à un allié à 3\" qui s'est déjà activé ce tour de récupérer 5 PA."
-        }
-      ],
+      "rulesText": "Un Père de Famille sait se sacrifier pour protéger les siens.\nIl peut décider, une fois par tour, de ne réaliser aucune action lors de son activation, pour laisser le temps à un allié à 3\" qui s'est déjà activé ce tour de récupérer 5 PA.",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Gouns/pere-de-famille.jpg"
@@ -16609,11 +16554,7 @@
       },
       "amelioration": true,
       "choiceGroup": "artisane-racines",
-      "rulesText": [
-        {
-          "text": "Nourrice : les Goûns dans son aura ont +1 en stature."
-        }
-      ],
+      "rulesText": "Nourrice : les Goûns dans son aura ont +1 en stature.",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Gouns/artisane-dogon.jpg"
@@ -16629,11 +16570,7 @@
       },
       "amelioration": true,
       "choiceGroup": "artisane-racines",
-      "rulesText": [
-        {
-          "text": "Tisserande : les Goûns dans son aura sont équipés de l'armure suivante « Dashiki » (0/+1)."
-        }
-      ],
+      "rulesText": "Tisserande : les Goûns dans son aura sont équipés de l'armure suivante « Dashiki » (0/+1).",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Gouns/artisane-dogon.jpg"
@@ -16649,11 +16586,7 @@
       },
       "amelioration": true,
       "choiceGroup": "artisane-racines",
-      "rulesText": [
-        {
-          "text": "Herboriste : la 1ère fois qu'un Goûn allié est terrassé, il regagne 1D5 PV et reste en jeu."
-        }
-      ],
+      "rulesText": "Herboriste : la 1ère fois qu'un Goûn allié est terrassé, il regagne 1D5 PV et reste en jeu.",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Gouns/artisane-dogon.jpg"
@@ -16669,14 +16602,7 @@
       },
       "amelioration": true,
       "perLevelStack": true,
-      "rulesText": [
-        {
-          "text": "Le combattant commence la partie avec 1 domaine supplémentaire dans un emplacement vide de ses dés de maîtrise."
-        },
-        {
-          "text": "Il peut porter autant d'ordres de mission que son Niveau s'il en paye le coût."
-        }
-      ],
+      "rulesText": "Le combattant commence la partie avec 1 domaine supplémentaire dans un emplacement vide de ses dés de maîtrise.\n\nIl peut porter autant d'ordres de mission que son Niveau s'il en paye le coût.",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Kharns/kharn-guerrier-1-fr.jpg"
@@ -16690,14 +16616,7 @@
           "kharns-syrga"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Bien que farouche et indépendante, Syrga accepte sans hésiter les missions que lui donnent son Prince (Baudry) ou Engueran."
-        },
-        {
-          "text": "Si l'un d'eux est dans son Fer de Lance, elle gagne « Embuscade » et « Héroïque objectif »."
-        }
-      ],
+      "rulesText": "Bien que farouche et indépendante, Syrga accepte sans hésiter les missions que lui donnent son Prince (Baudry) ou Engueran.\n\nSi l'un d'eux est dans son Fer de Lance, elle gagne « Embuscade » et « Héroïque objectif ».",
       "constraints": [],
       "effects": [
         {
@@ -16759,18 +16678,7 @@
           "kharns-bourgmestre"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Le Bourgmestre est prêt à tout pour conserver son statut, il peut utiliser les dés de maîtrise de tous ses alliés où qu'ils soient sur la surface de jeu (il doit cependant respecter les domaines)."
-        },
-        {
-          "text": "En cas de RC lors de l'utilisation d'un dé de maîtrise allié il n'est pas dépensé. Ces derniers sont récupérés normalement à l'activation de leur possesseur."
-        },
-        {
-          "label": "Pleutre",
-          "text": "Lorsqu'il doit subir des dégâts, lancez un D10, sur 6+ c'est un allié dans les 3 toises qui les subit (jet d'armure éventuel de la cible)."
-        }
-      ],
+      "rulesText": "Le Bourgmestre est prêt à tout pour conserver son statut, il peut utiliser les dés de maîtrise de tous ses alliés où qu'ils soient sur la surface de jeu (il doit cependant respecter les domaines).\n\nEn cas de RC lors de l'utilisation d'un dé de maîtrise allié il n'est pas dépensé. Ces derniers sont récupérés normalement à l'activation de leur possesseur.\n\nPleutre : Lorsqu'il doit subir des dégâts, lancez un D10, sur 6+ c'est un allié dans les 3 toises qui les subit (jet d'armure éventuel de la cible).",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Kharns/bourgmestre.jpg"
@@ -16784,17 +16692,7 @@
           "kharns-key"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Le Fer de Lance de Key peut toujours choisir son bord de table."
-        },
-        {
-          "text": "Tant qu'il reste une figurine plus coûteuse que lui dans le Fer de Lance adverse, il peut décider de recommencer le tour le premier même en supériorité numérique si c'est lui qui s'active le premier."
-        },
-        {
-          "text": "Double ses dégâts sur les figurines souffrant de poison."
-        }
-      ],
+      "rulesText": "Le Fer de Lance de Key peut toujours choisir son bord de table.\n\nTant qu'il reste une figurine plus coûteuse que lui dans le Fer de Lance adverse, il peut décider de recommencer le tour le premier même en supériorité numérique si c'est lui qui s'active le premier.\n\nDouble ses dégâts sur les figurines souffrant de poison.",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Kharns/kharns-key-gn-negociateur.jpg"
@@ -16818,14 +16716,7 @@
         ],
         "countAtLeast": 4
       },
-      "rulesText": [
-        {
-          "text": "Au moins 4 personnages parmi Myriam, Martha, Syrga, Engueran et le prince Baudry doivent faire partie de votre Ost."
-        },
-        {
-          "text": "En contrepartie, toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé »."
-        }
-      ],
+      "rulesText": "Au moins 4 personnages parmi Myriam, Martha, Syrga, Engueran et le prince Baudry doivent faire partie de votre Ost.\n\nEn contrepartie, toutes les figurines de l'Ost peuvent défendre pour un allié dans le même corps à corps avec un bonus de +3 et obtiennent la compétence « Rusé ».",
       "constraints": [],
       "effects": [
         {
@@ -16860,20 +16751,7 @@
         ]
       },
       "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Les Khérops dans l'aura du Porte-Bannière possèdent toujours 1 PA pour se défendre, de plus ils peuvent relancer une fois chaque test de terreur et d'effroi raté."
-        },
-        {
-          "text": "Le Porte-Bannière est considéré comme possédant la compétence « Hors Normes » tant qu'il porte sa bannière."
-        },
-        {
-          "text": "Si le Tambour est dans le Fer de Lance, la bannière khéropse est gratuite."
-        },
-        {
-          "text": "Apporte 1 dé de maîtrise supplémentaire."
-        }
-      ],
+      "rulesText": "Les Khérops dans l'aura du Porte-Bannière possèdent toujours 1 PA pour se défendre, de plus ils peuvent relancer une fois chaque test de terreur et d'effroi raté.\n\nLe Porte-Bannière est considéré comme possédant la compétence « Hors Normes » tant qu'il porte sa bannière.\n\nSi le Tambour est dans le Fer de Lance, la bannière khéropse est gratuite.\n\nApporte 1 dé de maîtrise supplémentaire.",
       "constraints": [],
       "effects": [
         {
@@ -16948,14 +16826,7 @@
           "kherops-commandant-3"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Un Capitaine khérops fait régner l'ordre d'une poigne de fer dans ses rangs. S'il inflige un « Saignement » à un Guerrier khérops, ce dernier acquiert « Héroïque attaque » pour sa prochaine activation."
-        },
-        {
-          "text": "Un Commandant quant à lui permet aux Guerriers khérops de s'équiper pour 5 Ko de moins s'ils changent leur arme de base."
-        }
-      ],
+      "rulesText": "Un Capitaine khérops fait régner l'ordre d'une poigne de fer dans ses rangs. S'il inflige un « Saignement » à un Guerrier khérops, ce dernier acquiert « Héroïque attaque » pour sa prochaine activation.\n\nUn Commandant quant à lui permet aux Guerriers khérops de s'équiper pour 5 Ko de moins s'ils changent leur arme de base.",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Kherops/kherops-capitaine-commandant-1.jpg"
@@ -16969,14 +16840,7 @@
           "kherops-forgeronne-2"
         ]
       },
-      "rulesText": [
-        {
-          "text": "5 Ko/arme : les armes forgées au Borax sont plus résilientes et cassent moins facilement, elles confèrent « spécialiste attaque » et « spécialiste défense » aux « guerriers » qui en sont équipés."
-        },
-        {
-          "text": "10 Ko/armure : les armures confèrent « instinct de survie » aux « guerriers » qui en sont équipés."
-        }
-      ],
+      "rulesText": "5 Ko/arme : les armes forgées au Borax sont plus résilientes et cassent moins facilement, elles confèrent « spécialiste attaque » et « spécialiste défense » aux « guerriers » qui en sont équipés.\n\n10 Ko/armure : les armures confèrent « instinct de survie » aux « guerriers » qui en sont équipés.",
       "constraints": [],
       "effects": [
         {
@@ -17054,14 +16918,7 @@
         ]
       },
       "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Néphtys est toujours considérée à couvert et gagne « furtivité »."
-        },
-        {
-          "text": "Les alliés de son Fer de Lance acquièrent la compétence « Moringa 3 » ou augmentent sa valeur de 2 s'ils la possèdent déjà."
-        }
-      ],
+      "rulesText": "Néphtys est toujours considérée à couvert et gagne « furtivité ».\n\nLes alliés de son Fer de Lance acquièrent la compétence « Moringa 3 » ou augmentent sa valeur de 2 s'ils la possèdent déjà.",
       "constraints": [],
       "effects": [
         {
@@ -17108,11 +16965,7 @@
       "scope": {
         "trait": "frere-d-armes"
       },
-      "rulesText": [
-        {
-          "text": "Dès lors qu'ils sont au moins 2 « Frères d'armes » dans un Fer de Lance, ils gagnent tous le trait « apatride ». De plus ils acquièrent séparément (comme si écrites sur leur carte) : Mathys : En éveil. Bharbathos : Spécialiste « objectif ». Sükh : Héroïque « attaque ». Kaito : Héroïque « défense ». Gakere : Harcèlement."
-        }
-      ],
+      "rulesText": "Dès lors qu'ils sont au moins 2 « Frères d'armes » dans un Fer de Lance, ils gagnent tous le trait « apatride ». De plus ils acquièrent séparément (comme si écrites sur leur carte) : Mathys : En éveil. Bharbathos : Spécialiste « objectif ». Sükh : Héroïque « attaque ». Kaito : Héroïque « défense ». Gakere : Harcèlement.",
       "constraints": [],
       "effects": [
         {
@@ -17287,11 +17140,7 @@
         ]
       },
       "amelioration": true,
-      "rulesText": [
-        {
-          "text": "Ombre-Glace (épée bâtarde) : +3 en ATT et provoque « gelure » (1 fois/tour/adversaire), +3 en DEF si maniée à 2 mains. Marque de Mathys : pièce percée, soudoie un Safar dans sa ZDC 1 fois/tour (lancez 1D10 : sur EC Mathys perd 1PA pour le tour, sinon il en vole 1 à la cible). Inspiration : si Mathys est leader et tant qu'il est en vie, les frères d'armes de son Fer de Lance possèdent toutes les compétences conférées par les frères d'armes en présence."
-        }
-      ],
+      "rulesText": "- Ombre-Glace (épée bâtarde) : +3 en ATT et provoque « gelure » (1 fois/tour/adversaire), +3 en DEF si maniée à 2 mains.\n- Marque de Mathys : pièce percée, soudoie un Safar dans sa ZDC 1 fois/tour (lancez 1D10 : sur EC Mathys perd 1PA pour le tour, sinon il en vole 1 à la cible).\n- Inspiration : si Mathys est leader et tant qu'il est en vie, les frères d'armes de son Fer de Lance possèdent toutes les compétences conférées par les frères d'armes en présence.",
       "constraints": [],
       "effects": [
         {
@@ -17469,20 +17318,7 @@
           "guilde-noire-khalsa-2"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Khalsa est une voleuse de la Guilde qui a rejoint les Affrenchis pour le temps des conflits.\nElle n'a pas décidé si elle quittait définitivement la confrérie."
-        },
-        {
-          "text": "Elle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction.\nSinon elle est Affranchie."
-        },
-        {
-          "text": "Au  sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol »."
-        },
-        {
-          "text": "Chez les Affranchis, elle possède la compétence « Furtivité 3 »."
-        }
-      ],
+      "rulesText": "Khalsa est une voleuse de la Guilde qui a rejoint les Affrenchis pour le temps des conflits.\nElle n'a pas décidé si elle quittait définitivement la confrérie.\n\nElle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction.\nSinon elle est Affranchie.\n\nAu  sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol ».\n\nChez les Affranchis, elle possède la compétence « Furtivité 3 ».",
       "constraints": [],
       "effects": [],
       "cardImage": "cards/Guilde Noire/affranchis-khalsa-2.jpg"
@@ -17496,11 +17332,7 @@
           "profile-1785410170666"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Possède 1 sort d'Ostéomancie sans grimoire. \nDurant l'activation de la demi-soeur, 1 fille de Nyx peut réaliser une et unique action. 1 fois par partie par fille. "
-        }
-      ],
+      "rulesText": "Possède 1 sort d'Ostéomancie sans grimoire. \nDurant l'activation de la demi-soeur, 1 fille de Nyx peut réaliser une et unique action. 1 fois par partie par fille.",
       "constraints": [],
       "effects": [
         {
@@ -17532,11 +17364,7 @@
           "profile-1785411080435"
         ]
       },
-      "rulesText": [
-        {
-          "text": "SDG 5. \nQuand Nyx est vaincue, elle se réincarne instantanément dans la\nfemelle fang alliée la plus proche.\nElle conserve les PV, PA de son corps d'accucil mais remplace toutes les caractéristiques et l'équipement de ce profil par les siens. Si ce corps est une Fille de Nyx, elle regagne au choix tous ses PA ou tous ses PV.\nDe plus, elle peut accéder à tous les sorts fangs et en connaît 8 pages cumulables avec n'importe quel grimoire."
-        }
-      ],
+      "rulesText": "SDG 5. \nQuand Nyx est vaincue, elle se réincarne instantanément dans la\nfemelle fang alliée la plus proche.\nElle conserve les PV, PA de son corps d'accucil mais remplace toutes les caractéristiques et l'équipement de ce profil par les siens. Si ce corps est une Fille de Nyx, elle regagne au choix tous ses PA ou tous ses PV.\nDe plus, elle peut accéder à tous les sorts fangs et en connaît 8 pages cumulables avec n'importe quel grimoire.",
       "constraints": [],
       "effects": [
         {
@@ -17568,19 +17396,7 @@
           "affranchis"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Tous les membres d'un Fer de Lance affranchi possèdent la compétence « Furtivité » et ajoutent à leur défense contre les tirs un bonus d'une valeur égale à leur niveau dès qu'ils sont à couvert."
-        },
-        {
-          "label": "Une seule et même faction",
-          "text": "Toutes les figurines qui combattent sous la bannière des Affranchis, quelle que soit leur faction d'origine, s'apportent donc des bonus de soutien et bénéficient des effets comme une seule et même faction, que leurs cartes de profil soient « affranchies » ou non."
-        },
-        {
-          "label": "Mages",
-          "text": "Les mages affranchis (d'origine ou recrutés) auront un bonus de +1 par allié non activé dans son aura au moment de l'incantation."
-        }
-      ],
+      "rulesText": "Tous les membres d'un Fer de Lance affranchi possèdent la compétence « Furtivité » et ajoutent à leur défense contre les tirs un bonus d'une valeur égale à leur niveau dès qu'ils sont à couvert.\n\nUne seule et même faction : Toutes les figurines qui combattent sous la bannière des Affranchis, quelle que soit leur faction d'origine, s'apportent donc des bonus de soutien et bénéficient des effets comme une seule et même faction, que leurs cartes de profil soient « affranchies » ou non.\n\nMages : Les mages affranchis (d'origine ou recrutés) auront un bonus de +1 par allié non activé dans son aura au moment de l'incantation.",
       "constraints": [],
       "effects": [
         {
@@ -17617,14 +17433,7 @@
       },
       "amelioration": true,
       "costPerLevel": true,
-      "rulesText": [
-        {
-          "text": "Un combattant non « affranchi » qui combat pour eux peut acquérir les compétences « Éclaireur 2 » et « Rusé ». Il lui en coûtera 5 Ko x son niveau pour les 2 compétences."
-        },
-        {
-          "text": "Par exemple un Guerrier Khârn niveau II peut en tant qu'Affranchi devenir « Éclaireur 2 » et « Rusé » pour 10 Ko."
-        }
-      ],
+      "rulesText": "Un combattant non « affranchi » qui combat pour eux peut acquérir les compétences « Éclaireur 2 » et « Rusé ». Il lui en coûtera 5 Ko x son niveau pour les 2 compétences.\n\nPar exemple un Guerrier Khârn niveau II peut en tant qu'Affranchi devenir « Éclaireur 2 » et « Rusé » pour 10 Ko.",
       "constraints": [],
       "effects": [
         {
@@ -17673,23 +17482,7 @@
           "guilde-noire-khalsa-2"
         ]
       },
-      "rulesText": [
-        {
-          "text": "Khalsa est une voleuse de la Guilde qui a rejoint les Affranchis pour le temps des conflits."
-        },
-        {
-          "text": "Elle n'a pas décidé si elle quittait définitivement la confrérie."
-        },
-        {
-          "text": "Elle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction. Sinon elle est Affranchie."
-        },
-        {
-          "text": "Au sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol »."
-        },
-        {
-          "text": "Chez les Affranchis, elle possède la compétence « Furtivité 3 »."
-        }
-      ],
+      "rulesText": "Khalsa est une voleuse de la Guilde qui a rejoint les Affranchis pour le temps des conflits.\n\nElle n'a pas décidé si elle quittait définitivement la confrérie.\n\nElle est considérée comme faisant partie de la Guilde Noire dans un Fer de Lance de cette faction. Sinon elle est Affranchie.\n\nAu sein de la Guilde Noire elle possède gratuitement une « cape d'ombre » et un « rossignol ».\n\nChez les Affranchis, elle possède la compétence « Furtivité 3 ».",
       "constraints": [],
       "effects": [],
       "notes": [

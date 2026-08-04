@@ -436,7 +436,7 @@ export function useCatalogStore() {
       ...c,
       specialCards: [
         ...c.specialCards,
-        { id, name: "Nouvelle carte", cost: 0, scope: {}, rulesText: [], constraints: [], effects: [], cardImage: "" },
+        { id, name: "Nouvelle carte", cost: 0, scope: {}, rulesText: "", constraints: [], effects: [], cardImage: "" },
       ],
     }));
     return id;

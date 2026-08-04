@@ -7,6 +7,19 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-05
+
+### Les textes des cartes s'affichent tels qu'ils sont écrits
+
+- Les **retours à la ligne** des descriptions sont enfin rendus. Ils étaient écrasés partout : un
+  objet sur trois en contient, et le Goupillon ou l'Arbalète de poing s'affichaient en un seul bloc
+  illisible. Lignes vides comprises, pour séparer deux paragraphes.
+- Le texte d'une **carte spéciale** se saisit maintenant d'un seul tenant, comme la description d'un
+  objet, au lieu d'une liste de blocs héritée des fiches de figurine. Les cartes existantes ont été
+  converties sans rien perdre.
+- Dans l'administration, les **zones de texte grandissent avec leur contenu** au lieu de rester
+  coincées sur deux lignes.
+
 ## 2026-08-04
 
 ### Les Affranchis ouvrent leurs rangs

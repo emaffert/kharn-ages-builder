@@ -154,7 +154,7 @@ export function PurchaseSummary({
           : unit > 0
             ? `${unit * qty} Ko`
             : "auto",
-        lines: c.rulesText.map((r) => r.text),
+        lines: [c.rulesText],
       });
     });
   // Magie : le grimoire acheté (avec son coût) puis une entrée « N sorts » (coût total).

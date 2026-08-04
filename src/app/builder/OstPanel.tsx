@@ -117,8 +117,8 @@ export function OstPanel({
 
               {expanded && (
                 <div className="bld-ocard-body">
-                  {card.rulesText.some((r) => r.text) && (
-                    <p className="bld-ocard-eff">{card.rulesText.map((r) => r.text).filter(Boolean).join(" ")}</p>
+                  {card.rulesText.trim() !== "" && (
+                    <p className="bld-ocard-eff">{card.rulesText}</p>
                   )}
 
                   {bad && <p className="bld-ocard-err">⚠ Condition de composition de l'Ost non remplie.</p>}

@@ -115,6 +115,37 @@ function migrateArmorFlag(p: Bag): void {
   p.unverifiedFields = kept.includes("armor") ? kept : [...kept, "armor"];
 }
 
+/**
+ * Le texte d'une carte spéciale s'écrivait en blocs `RuleText`, calqués sur les règles d'un profil.
+ * Personne n'en avait l'usage : l'étiquette n'était ni saisissable ni affichée, et l'éditeur
+ * l'effaçait à la première frappe. On replie les blocs en **un seul texte**, séparés par une ligne
+ * vide - la séparation visuelle des paragraphes est ainsi conservée telle qu'elle se lisait.
+ */
+function migrateCardRulesText(card: Bag): void {
+  if (!Array.isArray(card.rulesText)) return;
+  card.rulesText = card.rulesText
+    .filter(isBag)
+    .map((b) => {
+      const text = typeof b.text === "string" ? b.text.trim() : "";
+      const label = typeof b.label === "string" ? b.label.trim() : "";
+      return label && text ? `${label} : ${text}` : label || text;
+    })
+    .filter((t) => t !== "")
+    .join("\n\n");
+}
+
+/**
+ * Blancs de bord d'un texte verbatim : invisibles à la saisie, mais bien là une fois le texte rendu
+ * avec ses retours à la ligne. Nettoyés à la lecture, donc aussi dans un brouillon d'administration
+ * ou une version publiée. Les **lignes vides internes** sont conservées : c'est le seul moyen dont
+ * dispose l'utilisateur pour séparer deux paragraphes dans un champ unique.
+ */
+function trimVerbatim(node: unknown, keys: readonly string[]): void {
+  for (const bag of bags(node)) {
+    for (const k of keys) if (typeof bag[k] === "string") bag[k] = (bag[k] as string).trim();
+  }
+}
+
 /** Applique les rattrapages à une donnée brute de catalogue (non mutante pour l'appelant). */
 export function migrateCatalog(data: unknown): unknown {
   if (!isBag(data)) return data;
@@ -129,7 +160,17 @@ export function migrateCatalog(data: unknown): unknown {
     migrateOrigin(p);
     migrateArmorFlag(p);
   }
-  for (const c of bags(cat.specialCards)) migrateConstraintHolder(c, "constraints");
+  for (const c of bags(cat.specialCards)) {
+    migrateConstraintHolder(c, "constraints");
+    migrateCardRulesText(c);
+  }
+  // Textes verbatim, partout où l'utilisateur les saisit à la main.
+  trimVerbatim(cat.specialCards, ["rulesText"]);
+  trimVerbatim(cat.equipment, ["effectsText"]);
+  trimVerbatim(cat.skills, ["sourceText"]);
+  trimVerbatim(cat.spells, ["effectText", "sourceText", "description"]);
+  for (const p of bags(cat.profiles)) trimVerbatim(p.rules, ["text"]);
+  for (const m of bags(cat.mounts)) trimVerbatim(m.rules, ["text"]);
   for (const [collection, field] of NAMED_COLLECTIONS) {
     for (const entity of bags(cat[collection])) {
       if (typeof entity[field] === "string") entity[field] = displayName(entity[field]);

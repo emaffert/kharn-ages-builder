@@ -104,6 +104,12 @@ export function SpecialCardDetail({
                     checked={card.shared ?? false}
                     onChange={(v) => onChange({ shared: v || undefined })}
                   />
+                  <CheckField
+                    label="Prix multiplié par le niveau"
+                    hint="Le prix ci-dessus est celui d'un niveau I : un niveau II paie le double."
+                    checked={card.costPerLevel ?? false}
+                    onChange={(v) => onChange({ costPerLevel: v || undefined })}
+                  />
                 </div>
               </div>
             )}
@@ -165,6 +171,30 @@ export function SpecialCardDetail({
                       onChange({ scope: { ...scope, factionIds: next.length ? next : undefined } });
                     }}
                   />
+                </FieldGroup>
+                <FieldGroup
+                  label="Factions du Fer de Lance"
+                  hint="La carte suit le Fer de Lance : elle vaut pour toutes ses figurines, même celles venues d’un autre peuple."
+                >
+                  <ChipMultiSelect
+                    options={cat.factions.map((f) => ({ value: f.id, label: f.name }))}
+                    selected={scope.ferDeLanceFactionIds ?? []}
+                    onToggle={(id) => {
+                      const cur = scope.ferDeLanceFactionIds ?? [];
+                      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+                      onChange({
+                        scope: { ...scope, ferDeLanceFactionIds: next.length ? next : undefined },
+                      });
+                    }}
+                  />
+                  {scope.ferDeLanceFactionIds && (
+                    <CheckField
+                      label="Seulement les figurines venues d’un autre peuple"
+                      hint="Pour ce que la faction d’accueil apprend à ses recrues, et qu’elle sait déjà."
+                      checked={scope.nonNativeOnly ?? false}
+                      onChange={(v) => onChange({ scope: { ...scope, nonNativeOnly: v || undefined } })}
+                    />
+                  )}
                 </FieldGroup>
               </div>
             )}

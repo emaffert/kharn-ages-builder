@@ -1,3 +1,4 @@
+import { cardMatchesBanner } from "@core";
 import type { Catalog, Constraint, Effect, Profile, Selector, SpecialCard } from "@core";
 
 /**
@@ -198,10 +199,6 @@ const BUILTIN_TRAIT_USAGE: Record<string, string> = {
 export function explainTraitUsage(trait: string, cat: Catalog): string[] {
   const out: string[] = [];
   if (BUILTIN_TRAIT_USAGE[trait]) out.push(BUILTIN_TRAIT_USAGE[trait]);
-  // Traits d'origine `monture-<faction>` : donnent accès à la monture du peuple d'origine (mais pas
-  // à ses objets/sorts réservés). Ex. un membre de la Guilde Noire d'origine khéropse → Kœlod.
-  const mo = /^monture-(.+)$/.exec(trait);
-  if (mo) out.push(`moteur - accès à la monture du peuple « ${mo[1]} » (origine, règle intégrée)`);
   const selUses = (sel?: Selector | Selector[]): boolean => {
     if (!sel) return false;
     const clauses = Array.isArray(sel) ? sel : [sel];
@@ -247,14 +244,25 @@ export function explainTraitUsage(trait: string, cat: Catalog): string[] {
   return [...new Set(out)];
 }
 
-/** Cartes spéciales dont la portée correspond à un profil donné. */
-export function specialCardsForProfile(profile: Profile, cat: Catalog): SpecialCard[] {
+/**
+ * Cartes spéciales dont la portée correspond à un profil donné.
+ *
+ * `fdlFactionId` = la faction du Fer de Lance qui l'accueille, quand on la connaît (le constructeur
+ * la connaît, l'éditeur de catalogue non) : elle seule révèle les cartes portées par la bannière,
+ * qui s'appliquent à une figurine à cause de qui la recrute et non de ce qu'elle est.
+ */
+export function specialCardsForProfile(
+  profile: Profile,
+  cat: Catalog,
+  fdlFactionId?: string,
+): SpecialCard[] {
   return cat.specialCards.filter(
     (card) =>
       card.scope.profileIds?.includes(profile.id) ||
       (card.scope.trait ? profile.traits.includes(card.scope.trait) : false) ||
       (card.scope.factionIds && profile.factionId
         ? card.scope.factionIds.includes(profile.factionId)
-        : false),
+        : false) ||
+      (fdlFactionId != null && cardMatchesBanner(card, profile, fdlFactionId)),
   );
 }

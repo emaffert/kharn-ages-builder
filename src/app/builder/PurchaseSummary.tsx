@@ -5,6 +5,7 @@ import {
   munitionKindForEquip,
   resolveMunitionLines,
   baseEquipmentCount,
+  specialCardCost,
   temboEquipmentSurcharge,
   type Catalog,
   type EquipmentCostRule,
@@ -35,10 +36,13 @@ export function PurchaseSummary({
   grimoireDiscount,
   mountId,
   mountOptionIds,
+  factionId,
   onPick,
 }: {
   p: Profile;
   cat: Catalog;
+  /** Faction du Fer de Lance : révèle les cartes portées par la bannière (bonus des Affranchis). */
+  factionId?: string;
   added: string[];
   /** Exemplaires achetés des objets empilables (id → quantité). */
   addedCounts?: Record<string, number>;
@@ -136,18 +140,19 @@ export function PurchaseSummary({
     }
   }
   // N'affiche que les cartes automatiques (appliquées d'office) et les améliorations réellement sélectionnées.
-  const cartes = specialCardsForProfile(p, cat)
+  const cartes = specialCardsForProfile(p, cat, factionId)
     .filter((c) => !c.amelioration || upgrades.includes(c.id))
     .map((c) => {
       // Amélioration empilable : quantité × coût, avec « ×N » dans le nom.
       const qty = c.perLevelStack ? (upgradeCounts?.[c.id] ?? 1) : 1;
+      const unit = specialCardCost(c, p);
       return chip(qty > 1 ? `${c.name} ×${qty}` : c.name, {
         // Partagée : payée une fois pour le Fer de Lance → « … Ko · partagée » (pas un coût par ligne).
         title: c.name,
         price: c.shared
-          ? `${c.cost > 0 ? `${c.cost} Ko · ` : ""}partagée`
-          : c.cost > 0
-            ? `${c.cost * qty} Ko`
+          ? `${unit > 0 ? `${unit} Ko · ` : ""}partagée`
+          : unit > 0
+            ? `${unit * qty} Ko`
             : "auto",
         lines: c.rulesText.map((r) => r.text),
       });

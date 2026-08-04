@@ -5,6 +5,7 @@ import {
   baseEquipmentCount,
   iconFor,
   isSlaveIn,
+  specialCardCost,
   type Armor,
   type Catalog,
   type EquipmentCostRule,
@@ -157,7 +158,7 @@ export function ProfileStatCard({
   ]
     .map((id) => cat.spells.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => Boolean(s));
-  const cards = specialCardsForProfile(p, cat);
+  const cards = specialCardsForProfile(p, cat, factionId);
   const autoCards = cards.filter((c) => !c.amelioration); // appliquées d'office
   // Esclave dans ce Fer de Lance : personne n'investit sur elle, aucune amélioration ne lui est
   // proposée - « Lien de la Terre » vise tous les Dogons, mais elle est asservie, pas soutenue.
@@ -306,10 +307,12 @@ export function ProfileStatCard({
             {canEditUpgrades ? (
               <div className="fe-col">
                 {ameliorations.map((c) => {
+                  // Prix effectif pour CETTE figurine : certaines cartes le multiplient par le niveau.
+                  const px = specialCardCost(c, p);
                   const detail = () =>
                     onInfo({
                       title: c.name,
-                      price: c.cost > 0 ? `${c.cost} Ko` : "gratuit",
+                      price: px > 0 ? `${px} Ko` : "gratuit",
                       lines: c.rulesText.map((r) => r.text),
                     });
                   // Amélioration empilable : stepper 0..niveau, coût = quantité × coût unitaire.
@@ -342,7 +345,7 @@ export function ProfileStatCard({
                         <button className="nm" onClick={detail} title="Voir le détail">
                           {c.name}
                         </button>
-                        <span className="px">{n > 0 ? `+${n * c.cost} Ko` : `${c.cost} Ko/u`}</span>
+                        <span className="px">{n > 0 ? `+${n * px} Ko` : `${px} Ko/u`}</span>
                       </div>
                     );
                   }
@@ -357,7 +360,7 @@ export function ProfileStatCard({
                         {c.name}
                       </button>
                       <span className="px">
-                        {c.cost > 0 ? `+${c.cost} Ko` : "gratuit"}
+                        {px > 0 ? `+${px} Ko` : "gratuit"}
                         {c.shared ? " · partagée" : ""}
                       </span>
                     </label>

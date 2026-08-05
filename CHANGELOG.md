@@ -7,6 +7,14 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (12)
+
+### Catalogue 0.5.6 : l'Ordre de mission royale n'existe plus en double
+
+- **L'Ordre de mission royale était à la fois un objet et une carte**, tous deux à 5 Kouronnes et
+  achetables ensemble. L'objet disparaît : aucune figurine ne le portait, et seule la carte sait ce
+  que dit la règle, à savoir qu'on peut en porter autant que son niveau.
+
 ## 2026-08-06 (11)
 
 ### Catalogue 0.5.5 : Ombre-Glace, l'épée de Mathys, devient une vraie arme

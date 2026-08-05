@@ -63,7 +63,12 @@ describe("aide - les libellés décrits existent à l'écran", () => {
     const aide = helpText(<CardKindHelp />);
     cleanup();
     const ecran = cardLabels("amelioration");
-    for (const reglage of ["Groupe de choix exclusif", "Partagée", "Prix multiplié par le niveau"]) {
+    for (const reglage of [
+      "Groupe de choix exclusif",
+      "Partagée",
+      "Prix multiplié par le niveau",
+      "Plusieurs exemplaires",
+    ]) {
       expect(ecran, `« ${reglage} » a disparu de l'interface`).toContain(reglage);
       expect(aide, `« ${reglage} » n'est plus expliqué`).toContain(reglage);
     }

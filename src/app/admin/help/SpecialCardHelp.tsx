@@ -32,7 +32,7 @@ export function CardKindHelp() {
         <strong>Apprentie de Nyx</strong> : proposée aux figurines éligibles, à 15 Ko. Une Goulue peut
         la prendre ou non, c'est le joueur qui tranche.
       </HelpExample>
-      <p>Trois réglages n'existent que pour cette nature :</p>
+      <p>Quatre réglages n'existent que pour cette nature :</p>
       <ul className="adm-doc-list">
         <li>
           <strong>Groupe de choix exclusif</strong> : parmi les améliorations d'un même groupe, une
@@ -45,6 +45,12 @@ export function CardKindHelp() {
         <li>
           <strong>Prix multiplié par le niveau</strong> : le prix saisi est celui d'un niveau I. Un
           niveau II paie le double. « Aguerri aux bois » coûte ainsi 5 Ko × le niveau.
+        </li>
+        <li>
+          <strong>Plusieurs exemplaires, jusqu'au niveau de la figurine</strong> : le joueur choisit
+          une <em>quantité</em>, et paie chaque exemplaire. Un niveau II peut porter deux « Ordres de
+          mission royale ». À ne pas confondre avec le réglage précédent, où c'est le prix qui varie
+          et non le nombre.
         </li>
       </ul>
 

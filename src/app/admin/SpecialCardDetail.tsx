@@ -115,6 +115,13 @@ export function SpecialCardDetail({
                     checked={card.costPerLevel ?? false}
                     onChange={(v) => onChange({ costPerLevel: v || undefined })}
                   />
+                  {/* À ne pas confondre avec le prix par niveau : ici c'est la QUANTITÉ qui varie. */}
+                  <CheckField
+                    label="Plusieurs exemplaires, jusqu'au niveau de la figurine"
+                    hint="Le joueur choisit la quantité (un niveau II peut en prendre 2), et chaque exemplaire est payé. Ex. Ordre de mission royale."
+                    checked={card.perLevelStack ?? false}
+                    onChange={(v) => onChange({ perLevelStack: v || undefined })}
+                  />
                 </div>
               </div>
             )}

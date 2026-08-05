@@ -130,8 +130,8 @@ de route.
 Le chapitre de la Geste dont dépend une des trois contraintes de Barda, et la même mécanique que les
 conditions de Pacte.
 
-- Une seule arme gratuite par Safar.
-- La même arme gratuite sur au plus la moitié du Fer de Lance.
+- ~~Une seule arme gratuite par Safar.~~ Faite le 2026-08-05 (`validateFreeWeapons`).
+- ~~La même arme gratuite sur au plus la moitié du Fer de Lance.~~ Faite le 2026-08-05.
 - Amulette du culte plafonnée aux niveaux cumulés des magiciens du Fer de Lance
   (`guilde-noire-amulette-du-culte`, 6 Ko).
 - **Nouveaux types de contraintes inter-Fers de Lance**, mutualisés avec la phase 4 : « au moins N
@@ -139,10 +139,10 @@ conditions de Pacte.
   faction sous la moitié des Fers de Lance », « chaque Fer de Lance contient au moins un X »,
   « chaque leader doit être un X », « le Seigneur de guerre doit être un X ». Six à huit types.
 
-**Livrable** : les listes d'escarmouche gagnent trois validations réelles ; le moteur de contraintes
-est prêt pour les Pactes.
+**Livrable** : les listes d'escarmouche gagnent leurs dernières validations de composition ; le
+moteur de contraintes est prêt pour les Pactes.
 
-**2 jours.**
+**1,5 jour** (les deux règles d'armes gratuites sont déjà livrées).
 
 ---
 

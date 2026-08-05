@@ -95,6 +95,7 @@ export function EquipPanel({
     isBase ? baseEquipmentCount(p, id) : (addedCounts?.[id] ?? 1);
 
   const worn = [...activeBase, ...added].map(eq).filter((e): e is NonNullable<typeof e> => Boolean(e));
+  const holdsFreeWeapon = worn.some(isFreeWeapon);
   // La limitation de mains ne s'applique qu'en jeu : on peut acheter autant d'armes que voulu.
   // L'armure, si : une seule par Safar, plus une armure cumulable (Gambison) sur son propre emplacement.
   const armorCap = 1;
@@ -107,6 +108,10 @@ export function EquipPanel({
   const showStackableSlot = canWearArmor && (stackableUsed > 0 || cat.equipment.some(isStackableArmor));
 
   const blockReason = (e: Catalog["equipment"][number]): string | null => {
+    // « Chaque Safar peut partir au combat avec une et unique arme gratuite » (FAQ 2026), celle de sa
+    // carte comprise. Les autres restent visibles - le joueur doit pouvoir les comparer - mais leur
+    // achat est fermé tant qu'il n'a pas rendu celle qu'il porte.
+    if (holdsFreeWeapon && isFreeWeapon(e)) return "Une seule arme gratuite par Safar : rendez d'abord la sienne";
     if (e.category !== "armure") return null;
     if (isStackableArmor(e)) {
       return stackableUsed >= armorCap ? "Emplacement d'armure cumulable déjà occupé" : null;
@@ -425,6 +430,12 @@ export function EquipPanel({
           {asSlave && (
             <p className="fe-mag-bonus">
               Esclave : seules les armes de corps à corps gratuites lui sont accessibles.
+            </p>
+          )}
+          {holdsFreeWeapon && (
+            <p className="fe-mag-bonus">
+              Une seule arme gratuite par Safar : les autres restent visibles, mais ne sont
+              achetables qu'après avoir rendu celle qu'il porte.
             </p>
           )}
           <input

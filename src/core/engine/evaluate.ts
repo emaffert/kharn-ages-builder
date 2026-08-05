@@ -28,6 +28,7 @@ import {
   wornEquipmentIds,
 } from "./magic";
 import { engineIdOf } from "../model/engineIds";
+import { freeWeaponsCarried } from "./equipment";
 import { forbiddenMunitionLines, totalMunitionCost } from "./munitions";
 import { effectiveOrigin, needsOriginChoice, originFactionId } from "./origin";
 import {
@@ -821,6 +822,7 @@ function validate(
     validateOpenRecruitmentCaps(cat, fdl, inFdl, issues);
     validateLeader(fdl, inFdl, issues);
     validateSlaves(cat, fdl, inFdl, issues);
+    validateFreeWeapons(cat, fdl, inFdl, issues);
     validateGuardSlots(fdl, inFdl, resolved, issues);
   }
 
@@ -1500,6 +1502,62 @@ function validateForbiddenEquipment(
         });
       }
     }
+  }
+}
+
+/**
+ * Armes gratuites (FAQ 2026, « Équipements ») : « Chaque Safar peut partir au combat avec une et
+ * unique arme gratuite. Il est cependant possible d'équiper plusieurs Safars de la même arme
+ * gratuite, sans pour autant dépasser la moitié du fer de lance équipé avec la même arme gratuite.
+ * Une arme gratuite figurant sur la carte de profil d'un Safar n'entre pas dans ce maximum autorisé. »
+ *
+ * Deux plafonds, donc, qui ne se comptent pas pareil :
+ *
+ * - **une par Safar**, l'arme de sa carte comprise - c'est ce avec quoi il part au combat. Le panneau
+ *   d'équipement l'empêche déjà à la saisie ; on le vérifie pour les listes importées ou plus vieilles
+ *   que la règle ;
+ * - **la moitié du Fer de Lance** sous la même arme gratuite, en ne comptant que les exemplaires
+ *   achetés. Signalé au niveau du Fer de Lance (sans `instanceId`) : c'est la composition qui est en
+ *   faute, pas une figurine en particulier, et le reproche n'a pas à se répéter sur chaque fiche.
+ */
+function validateFreeWeapons(
+  cat: Catalog,
+  fdl: FerDeLance,
+  inFdl: ResolvedInstance[],
+  issues: Issue[],
+): void {
+  const name = (id: string) => cat.equipment.find((e) => e.id === id)?.name ?? id;
+  const buyers = new Map<string, number>(); // arme gratuite → nombre de figurines qui l'ont achetée
+  for (const ri of inFdl) {
+    const { printed, bought } = freeWeaponsCarried(cat, ri.profile, ri.instance);
+    const all = [...printed, ...bought];
+    if (all.length > 1) {
+      issues.push({
+        severity: "error",
+        ferDeLanceId: fdl.id,
+        instanceId: ri.instance.instanceId,
+        ruleId: "free-weapon-single",
+        message: `« ${ri.profile.name} » emporte ${all.length} armes gratuites (${all.map(name).join(", ")}) : une seule est permise.`,
+        sourceText: "Chaque Safar peut partir au combat avec une et unique arme gratuite.",
+      });
+    }
+    // Un même Safar ne compte qu'une fois par arme, même s'il en a acheté deux exemplaires : le
+    // plafond compte des Safars équipés, pas des armes.
+    for (const id of new Set(bought)) buyers.set(id, (buyers.get(id) ?? 0) + 1);
+  }
+  // « La moitié du fer de lance », arrondie au plus bas. Le plancher à 1 épargne le Fer de Lance
+  // d'une seule figurine, à qui la moitié de son effectif n'ouvrirait aucune arme gratuite.
+  const cap = Math.max(1, Math.floor(inFdl.length / 2));
+  for (const [id, n] of buyers) {
+    if (n <= cap) continue;
+    issues.push({
+      severity: "error",
+      ferDeLanceId: fdl.id,
+      ruleId: `free-weapon-half:${id}`,
+      message: `${n} figurines achètent « ${name(id)} » pour un maximum de ${cap} sur un Fer de Lance de ${inFdl.length}. Celles qui l'ont sur leur carte ne comptent pas.`,
+      sourceText:
+        "Il est cependant possible d'équiper plusieurs Safars de la même arme gratuite, sans pour autant dépasser la moitié du fer de lance équipé avec la même arme gratuite. Une arme gratuite figurant sur la carte de profil d'un Safar n'entre pas dans ce maximum autorisé.",
+    });
   }
 }
 

@@ -7,6 +7,21 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (7)
+
+### Les armes gratuites sont enfin comptées
+
+La FAQ encadre les armes gratuites, et le constructeur les distribuait jusqu'ici sans compter.
+
+- **Une seule arme gratuite par Safar**, celle de sa carte comprise. Tant qu'un combattant en porte
+  une, les autres restent affichées, avec leurs caractéristiques, mais ne sont plus achetables ; pour
+  en changer, il rend d'abord la sienne. Un Éclaireur Mongo, qui part avec l'Arc court de sa carte,
+  ne peut donc plus y ajouter un Gourdin.
+- **Pas plus de la moitié du Fer de Lance sous la même arme gratuite**, en ne comptant que celles qui
+  sont achetées : jusqu'à 3 cannes gratuites dans un Fer de Lance de 6 combattants. Les armes
+  gratuites imprimées sur les cartes échappent à ce plafond, comme le précise la FAQ. Le
+  dépassement est signalé une fois pour le Fer de Lance, et non sur chaque figurine.
+
 ## 2026-08-06 (6)
 
 ### Catalogue 0.5.2 : la Flèche hydre n'est plus vendue avec un arc gratuit

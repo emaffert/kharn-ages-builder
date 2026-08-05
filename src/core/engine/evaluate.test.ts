@@ -572,6 +572,95 @@ describe("munitions", () => {
   });
 });
 
+// FAQ 2026 : une et unique arme gratuite par Safar (carte comprise), et pas plus de la moitié du Fer
+// de Lance sous la même arme gratuite ACHETÉE (celles imprimées sur les cartes ne comptent pas).
+describe("armes gratuites", () => {
+  const half = (res: ReturnType<typeof evalFang>, equipId: string) =>
+    res.issues.filter((i) => i.ruleId === `free-weapon-half:${equipId}`);
+  const single = (res: ReturnType<typeof evalFang>) => res.issues.filter((i) => i.ruleId === "free-weapon-single");
+
+  it("deux armes gratuites achetées sur le même Safar → invalide", () => {
+    const res = evalFang([inst("fangs-larbin-1", { addedEquipmentIds: ["gourdin", "couteau"] })]);
+    expect(single(res)).toHaveLength(1);
+  });
+
+  it("l'arme gratuite de la carte compte dans le total du Safar", () => {
+    // L'Éclaireur Mongo I porte l'Arc court (0 Ko) sur sa carte : il n'en achète pas une seconde…
+    const avecCarte = evaluateList(
+      catalog,
+      makeList([inst("gouns-eclaireur-mongo-1", { addedEquipmentIds: ["gourdin"] })], "gouns"),
+    );
+    expect(single(avecCarte)).toHaveLength(1);
+
+    // … mais rien ne l'empêche s'il a rendu celle de sa carte.
+    const rendue = evaluateList(
+      catalog,
+      makeList(
+        [
+          inst("gouns-eclaireur-mongo-1", {
+            addedEquipmentIds: ["gourdin"],
+            removedBaseEquipmentIds: ["arc-court"],
+          }),
+        ],
+        "gouns",
+      ),
+    );
+    expect(single(rendue)).toHaveLength(0);
+  });
+
+  it("une seule arme gratuite par Safar reste permise, achetée comme imprimée", () => {
+    const achetee = evalFang([inst("fangs-larbin-1", { addedEquipmentIds: ["gourdin"] })]);
+    expect(single(achetee)).toHaveLength(0);
+    const imprimee = evaluateList(catalog, makeList([inst("gouns-eclaireur-mongo-1")], "gouns"));
+    expect(single(imprimee)).toHaveLength(0);
+  });
+
+  it("plus de la moitié du Fer de Lance sous la même arme gratuite achetée → invalide", () => {
+    const armed = () => inst("fangs-larbin-1", { addedEquipmentIds: ["gourdin"] });
+    // 3 Gourdins sur 4 figurines : le plafond est de 2.
+    const trop = evalFang([armed(), armed(), armed(), inst("fangs-larbin-1")]);
+    expect(half(trop, "gourdin")).toHaveLength(1);
+    expect(half(trop, "gourdin")[0].message).toContain("maximum de 2");
+
+    const juste = evalFang([armed(), armed(), inst("fangs-larbin-1"), inst("fangs-larbin-1")]);
+    expect(half(juste, "gourdin")).toHaveLength(0);
+  });
+
+  it("le reproche est porté par le Fer de Lance, pas par chaque figurine", () => {
+    const armed = () => inst("fangs-larbin-1", { addedEquipmentIds: ["gourdin"] });
+    const trop = evalFang([armed(), armed(), armed()]);
+    expect(half(trop, "gourdin")).toHaveLength(1);
+    expect(half(trop, "gourdin")[0].instanceId).toBeUndefined(); // erreur de liste, affichée une fois
+  });
+
+  it("deux armes gratuites différentes se comptent séparément", () => {
+    const gourdins = [
+      inst("fangs-larbin-1", { addedEquipmentIds: ["gourdin"] }),
+      inst("fangs-larbin-1", { addedEquipmentIds: ["gourdin"] }),
+    ];
+    const couteaux = [
+      inst("fangs-larbin-1", { addedEquipmentIds: ["couteau"] }),
+      inst("fangs-larbin-1", { addedEquipmentIds: ["couteau"] }),
+    ];
+    // 4 figurines, 2 de chaque : chaque arme reste sous le plafond de 2.
+    const res = evalFang([...gourdins, ...couteaux]);
+    expect(half(res, "gourdin")).toHaveLength(0);
+    expect(half(res, "couteau")).toHaveLength(0);
+  });
+
+  it("les armes gratuites imprimées sur les cartes échappent au plafond de la moitié", () => {
+    // Trois Éclaireurs Mongo, chacun avec l'Arc court de sa carte : le plafond serait de 1.
+    const res = evaluateList(
+      catalog,
+      makeList(
+        [inst("gouns-eclaireur-mongo-1"), inst("gouns-eclaireur-mongo-1"), inst("gouns-eclaireur-mongo-1")],
+        "gouns",
+      ),
+    );
+    expect(half(res, "arc-court")).toHaveLength(0);
+  });
+});
+
 describe("validation magie & emplacements", () => {
   it("sorts sélectionnés sans lanceur → invalide", () => {
     const res = evalFang([inst("fangs-larbin-1", { spellIds: ["seduction-du-fiel"] })]);

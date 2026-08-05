@@ -102,10 +102,12 @@ bataille (« coût intégré au barda de l'Ost ») - c'est un autre sens, sans r
   du Barda ne peut pas les réutiliser tels quels ; il faudra soit extraire la partie « catalogue
   filtré + prix affiché », soit accepter un composant parallèle plus simple.
 - **Rien n'existe côté Barda** aujourd'hui : zéro occurrence dans `src/`.
-- **Les restrictions de composition du même chapitre ne sont pas implémentées non plus** : pas de
-  règle « une seule arme gratuite par Safar », pas de plafond « moitié du Fer de Lance », pas de
-  plafond d'amulette du culte. Le moteur ne connaît que « une arme gratuite le reste »
-  (`evaluate.ts:223`, question de prix, pas de quota).
+- **Les restrictions d'armes gratuites du même chapitre sont faites** (2026-08-05, cf.
+  `validateFreeWeapons` dans `evaluate.ts` et `freeWeaponsCarried` dans `engine/equipment.ts`) : une
+  seule arme gratuite par Safar, carte comprise, et pas plus de la moitié du Fer de Lance sous la
+  même arme gratuite achetée. Le décompte sur lequel s'appuie la troisième contrainte de Barda
+  (« arme gratuite non déjà attribuée ») est donc déjà écrit. **Le plafond d'amulette du culte, lui,
+  reste à faire.**
 - **Le format texte demande un aller-retour explicite** (`src/app/io/listText.ts`, export + import
   best-effort par nom) : le Barda doit y être écrit et relu, sinon un aller-retour le perd.
 - **Un client plus ancien perdrait silencieusement le Barda** : Zod retire les clés inconnues à la
@@ -160,14 +162,15 @@ données, toutes le sont pour finir le moteur.
 | Sérialisation | Export/import texte (`listText.ts`), code portable, fiche imprimable. | 0,5 j |
 | Finitions | Tests (`evaluate.test.ts`, panneau, aller-retour texte), CHANGELOG, `docs/schema-donnees.md` et `docs/regles-creation-liste.md`. | 0,5 à 1 j |
 
-### Phase 2 - restrictions de composition du même chapitre : ~1 jour
+### Phase 2 - restrictions de composition du même chapitre : ~0,5 jour
 
-- Une seule arme gratuite par Safar.
-- La même arme gratuite sur au plus la moitié du Fer de Lance.
+- ~~Une seule arme gratuite par Safar.~~ Faite le 2026-08-05.
+- ~~La même arme gratuite sur au plus la moitié du Fer de Lance.~~ Faite le 2026-08-05.
 - Amulette du culte plafonnée aux niveaux cumulés des magiciens du Fer de Lance.
 
 Indépendantes du Barda, mais c'est la même page de règles - et la troisième contrainte de Barda
-(« arme gratuite non déjà attribuée ») s'appuie sur le même décompte.
+(« arme gratuite non déjà attribuée ») s'appuie sur le décompte des deux premières, désormais
+disponible.
 
 ### Phase 3 - modulation entre rondes : 5 à 10 jours
 

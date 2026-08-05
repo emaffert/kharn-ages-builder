@@ -132,6 +132,46 @@ describe("EquipPanel (vue)", () => {
     expect(row.textContent).toContain(`${stacked.cost} Ko / unité`);
   });
 
+  // « Chaque Safar peut partir au combat avec une et unique arme gratuite » (FAQ 2026), celle de sa
+  // carte comprise : les autres restent affichées, mais leur achat est fermé.
+  describe("une seule arme gratuite par Safar", () => {
+    /** Boutons d'ajout des armes gratuites du volet « Disponible », dans l'ordre du catalogue. */
+    function freeWeaponButtons(props: ReturnType<typeof baseProps>) {
+      const { container } = render(<EquipPanel {...props} />);
+      const avail = container.querySelectorAll(".fe-panes > div")[1] as HTMLElement;
+      return catalog.equipment
+        .filter((e) => e.cost === 0 && ["arme-cac", "arme-tir"].includes(e.category))
+        .flatMap((e) => within(avail).queryAllByText(e.name))
+        .map((label) => label.closest(".fe-item")!.querySelector(".fe-move.add") as HTMLButtonElement);
+    }
+
+    it("les armes gratuites restent visibles mais inachetables à qui porte celle de sa carte", () => {
+      // L'Éclaireur Mongo I porte l'Arc court (0 Ko) en équipement de base.
+      const boutons = freeWeaponButtons(baseProps("gouns-eclaireur-mongo-1", "gouns"));
+      expect(boutons.length).toBeGreaterThan(0);
+      expect(boutons.every((b) => b.disabled)).toBe(true);
+      expect(screen.getByText(/Une seule arme gratuite par Safar/i)).toBeTruthy();
+    });
+
+    it("elles redeviennent achetables dès que celle de la carte est rendue", () => {
+      const props = { ...baseProps("gouns-eclaireur-mongo-1", "gouns"), removed: ["arc-court"] };
+      const boutons = freeWeaponButtons(props);
+      expect(boutons.length).toBeGreaterThan(0);
+      expect(boutons.some((b) => b.disabled)).toBe(false);
+    });
+
+    it("une arme gratuite achetée ferme l'achat des autres", () => {
+      // Une Affamée : sa carte ne porte aucune arme gratuite, et rien ne lui interdit les armes.
+      const libre = freeWeaponButtons(baseProps("fangs-affame-1"));
+      expect(libre.length).toBeGreaterThan(0);
+      expect(libre.some((b) => b.disabled)).toBe(false);
+
+      const armee = freeWeaponButtons({ ...baseProps("fangs-affame-1"), added: ["gourdin"] });
+      expect(armee.length).toBeGreaterThan(0);
+      expect(armee.every((b) => b.disabled)).toBe(true);
+    });
+  });
+
   // « La "flèche hydre" ne peut pas être utilisée avec un arc gratuit » (p.13) : elle ne doit pas
   // être proposée du tout sur l'Arc court, le seul arc gratuit du catalogue.
   describe("munitions interdites sur une arme gratuite", () => {

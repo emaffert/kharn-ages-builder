@@ -272,6 +272,14 @@ export const EquipmentSchema = z.object({
    */
   tranchant: z.boolean().optional(),
   /**
+   * **Jamais acheté** : cet équipement n'arrive que par une carte, via un effet `grant-equipment`
+   * (ex. Ombre-Glace, l'épée bâtarde comprise dans les « Atouts de Mathys »). Il n'est donc pas
+   * proposé au catalogue d'achat, et son prix nul ne fait pas de lui une **arme gratuite** au sens
+   * des règles - celles-ci parlent des armes que le livret offre à l'achat, pas de ce qu'une carte
+   * payante comprend. Cf. `isFreeWeapon`.
+   */
+  grantedOnly: z.boolean().optional(),
+  /**
    * Améliorations optionnelles *intrinsèques* à cet objet (ex. Caparaçon → « Pointes acérées » +5 Ko),
    * achetables une fois l'objet équipé. Stockées dans `equipmentUpgrades[equipmentId]` de l'instance.
    * À distinguer des améliorations *octroyées* par une carte (effets `unlock-upgrade`, ex. Borax).

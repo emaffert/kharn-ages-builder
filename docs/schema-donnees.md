@@ -197,6 +197,9 @@ interface Equipment {
   cost: number;
   hands?: 1 | 2;
   tranchant?: boolean;        // lame ou taillant : condition de l'Affûtage
+  // Jamais acheté : n'arrive que par un effet `grant-equipment` (Ombre-Glace, comprise dans les
+  // Atouts de Mathys). Absent du catalogue d'achat, et son prix nul n'en fait pas une arme gratuite.
+  grantedOnly?: boolean;
   allonge?: number;           // en toises
   range?: { short: number; long: number; max?: number };  // armes de tir
   reload?: { cadence: number; paCost: number };
@@ -502,6 +505,7 @@ type EffectOperation =
   | { kind: "cost-set"; amount: number; maxCount?: number }             // 1 cible/source, plafonné (ex. Larbins gratuits)
   | { kind: "grimoire-discount"; tier?: "petit" | "grand"; amount: number } // Mochère : grimoire gratuit
   | { kind: "unlock-upgrade"; upgradeId: string; label: string; cost: number; equipmentCategories: Equipment["category"][]; grantsSkills?: SkillRef[] } // Borax
+  | { kind: "grant-equipment"; equipmentIds: string[] } // équipement porté sans être acheté, non retirable (Ombre-Glace)
   | { kind: "grant-skill"; skillId: string; value?: string | number; precision?: string; incrementIfPresent?: number } // +N si déjà connue
   | { kind: "grant-spell"; spellId: string }                           // sort de signature (Alaric : Lien Mental)
   | { kind: "grant-spell-choice"; magicWayId?: string; spellIds?: string[]; count?: number } // N sorts au choix, hors budget (Demi-soeur : 1 sort d'Ostéomancie)

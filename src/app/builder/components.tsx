@@ -21,6 +21,29 @@ export function RecruitPill({
   );
 }
 
+/**
+ * Texte de carte rendu **en paragraphes**. Les cartes vont à la ligne pour séparer leurs règles
+ * (les trois atouts de Mathys, les effets d'un casque) : rendues d'un bloc, ces lignes se collaient
+ * les unes aux autres et se lisaient mal. Chaque ligne devient un paragraphe, détaché du suivant.
+ *
+ * Les lignes vides ne produisent pas de paragraphe vide : c'est l'espacement qui sépare, pas le vide.
+ */
+export function Verbatim({ text, className }: { text: string; className: string }) {
+  const paragraphs = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  return (
+    <>
+      {paragraphs.map((p, i) => (
+        <p key={i} className={className}>
+          {p}
+        </p>
+      ))}
+    </>
+  );
+}
+
 /** Titre de section (soulignement discret). */
 export function SectionTitle({ children }: { children: ReactNode }) {
   return <h4 className="fe-section-title">{children}</h4>;

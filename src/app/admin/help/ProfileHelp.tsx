@@ -228,6 +228,13 @@ export function EffectsHelp() {
           <em>chaque</em> objet des catégories visées, que le joueur coche objet par objet. Peut
           conférer des compétences tant que l'objet amélioré est porté.
         </li>
+        <li>
+          <strong>Octroyer un équipement</strong> - la figurine porte l'objet sans l'acheter, et ne
+          peut pas le retirer : il vient avec la carte et s'en va avec elle. Pour une arme ou un objet
+          compris dans une carte payante, comme Ombre-Glace dans les Atouts de Mathys. Coche{" "}
+          <em>« jamais acheté »</em> sur la fiche de l'objet pour qu'il ne soit pas proposé en plus au
+          catalogue d'achat.
+        </li>
       </ul>
       <p>
         <strong>Caractéristiques &amp; compétences</strong>

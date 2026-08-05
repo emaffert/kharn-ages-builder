@@ -144,6 +144,16 @@ export function EquipmentDetail({
               />
               Empilable : une figurine peut en porter plusieurs exemplaires (ex. doses de poison)
             </label>
+            {/* Un objet compris dans une carte : il n'a pas de prix propre et ne se choisit pas. */}
+            <label className="mt-2 flex items-center gap-2 text-xs adm-muted">
+              <input
+                type="checkbox"
+                checked={e.grantedOnly ?? false}
+                onChange={(ev) => onChange({ grantedOnly: ev.target.checked || undefined })}
+              />
+              Jamais acheté : n'arrive que par une carte qui l'octroie (ex. Ombre-Glace, dans les
+              Atouts de Mathys), donc absent du catalogue d'achat
+            </label>
           </Section>
 
           {/* Armes de corps à corps : mains, allonge, perce-armure. */}

@@ -32,6 +32,7 @@ export function PurchaseSummary({
   munitions,
   equipmentUpgrades,
   grantedUpgrades,
+  grantedEquipment,
   costRules,
   grimoireDiscount,
   mountId,
@@ -66,10 +67,13 @@ export function PurchaseSummary({
   equipmentUpgrades: Record<string, string[]>;
   /** Améliorations octroyées à cette figurine (définitions : coût + catégories concernées). */
   grantedUpgrades: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
+  /** Équipement octroyé par une carte (ex. Ombre-Glace) : compris dans son prix, donc jamais refacturé. */
+  grantedEquipment?: string[];
   onPick: (info: ItemInfo) => void;
 }) {
   const WEAPON_CATS = ["arme-cac", "arme-tir", "bouclier"];
-  const equip = [...p.baseEquipmentIds.filter((id) => !removed.includes(id)), ...added]
+  const granted = new Set(grantedEquipment ?? []);
+  const equip = [...p.baseEquipmentIds.filter((id) => !removed.includes(id)), ...added, ...granted]
     .map((id) => cat.equipment.find((e) => e.id === id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const chip = (name: string, info: ItemInfo): SummaryChip => ({ name, info });
@@ -109,6 +113,15 @@ export function PurchaseSummary({
     // sur la ligne de la figurine. Le laisser aux `prices` de la fiche n'écrivait rien à côté d'une
     // arme sans munition ni amélioration - l'épée bâtarde de Key s'affichait sans son prix.
     const total = e.cost * qty + munCost + upCost + (disc + surcharge) * qty;
+    // Octroyé par une carte : son prix est celui de la carte. Seules ses améliorations s'ajoutent.
+    if (granted.has(e.id)) {
+      return chip(label(e), {
+        ...base,
+        prices: undefined,
+        price: upCost > 0 ? `compris · +${upCost} Ko` : "compris",
+        lines: [...base.lines, "Compris dans une carte spéciale.", ...upsForE.map((g) => `${g.label} (+${g.cost} Ko)`)],
+      });
+    }
     return chip(label(e), {
       ...base,
       // Le total recalculé remplace le prix de catalogue : `prices` est vidé, sinon il primerait.

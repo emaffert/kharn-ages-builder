@@ -40,6 +40,15 @@ export const EffectOperationSchema = z.discriminatedUnion("kind", [
      */
     grantsSkills: z.array(SkillRefSchema).optional(),
   }),
+  /**
+   * Octroie un **équipement** aux cibles, sans qu'il soit acheté ni retirable : il vient avec la
+   * carte, et s'en va avec elle. Ex. « Atouts de Mathys » comprend Ombre-Glace, son épée bâtarde.
+   *
+   * L'équipement visé porte `grantedOnly` : il ne figure jamais au catalogue d'achat, et son prix
+   * nul ne fait pas de lui une arme gratuite. Ce que la carte coûte couvre déjà ce qu'elle contient,
+   * l'équipement octroyé n'ajoute donc rien au total.
+   */
+  z.object({ kind: z.literal("grant-equipment"), equipmentIds: z.array(z.string()) }),
   // `value` : pour une compétence « à valeur » (ex. octroie « Héroïque défense » → value "défense").
   // `precision` : précision libre affichée à côté de la compétence (ex. « Spécialiste : hache »).
   // `incrementIfPresent` : si la cible possède DÉJÀ la compétence (nativement), n'octroie pas `value`

@@ -1,5 +1,5 @@
 {
-  "version": "0.5.4",
+  "version": "0.5.5",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -12615,7 +12615,6 @@
       "name": "Faucille d'Os",
       "category": "arme-cac",
       "cost": 15,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "Inflige « Saignement 2 », confère « Riposte ».",
       "effects": [
@@ -12647,7 +12646,8 @@
           "fangs"
         ]
       },
-      "cardImage": "cards/Fangs/fangs-xayin-muskh.jpg"
+      "cardImage": "cards/Fangs/fangs-xayin-muskh.jpg",
+      "tranchant": true
     },
     {
       "id": "croc-de-fiel",
@@ -12673,7 +12673,6 @@
       "name": "Paire de poignards",
       "category": "arme-cac",
       "cost": 18,
-      "tranchant": true,
       "hands": 2,
       "effectsText": "3 dégâts / Saignement 2. 3 PA = 2 attaques à 2 PA successives.",
       "reservedTo": {
@@ -12686,7 +12685,8 @@
         "factionIds": [
           "fangs"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "arbalete-de-poing",
@@ -12947,16 +12947,15 @@
       "name": "Épée bâtarde",
       "category": "arme-cac",
       "cost": 15,
-      "tranchant": true,
       "hands": "1-2",
-      "effectsText": "+3 ATT. +3 DEF si maniée à 2 mains. Maniable à 1 ou 2 mains."
+      "effectsText": "+3 ATT. +3 DEF si maniée à 2 mains. Maniable à 1 ou 2 mains.",
+      "tranchant": true
     },
     {
       "id": "dagues-x2",
       "name": "Dagues x2",
       "category": "arme-cac",
       "cost": 20,
-      "tranchant": true,
       "hands": 2,
       "effectsText": "3 dégâts / Saignement 2. Charge interdite avec une attaque à 1 PA.",
       "reservedTo": {
@@ -12973,7 +12972,8 @@
         "factionIds": [
           "kharns"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "marteau-de-guerre",
@@ -13010,17 +13010,16 @@
       "name": "Hache à 2 mains",
       "category": "arme-cac",
       "cost": 22,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "Allonge 2\" en défense. \n+2 dégâts.\n Pas d'attaque à 1 PA."
+      "effectsText": "Allonge 2\" en défense. \n+2 dégâts.\n Pas d'attaque à 1 PA.",
+      "tranchant": true
     },
     {
       "id": "dague-damasquinee",
       "name": "Dague damasquinée",
       "category": "arme-cac",
       "cost": 25,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "+1 dégât. Ajoute gratuitement l'effet de A dès qu'elle utilise l'effet de V en attaque.",
       "reservedTo": {
@@ -13033,7 +13032,8 @@
         "factionIds": [
           "kharns"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "kherops-marteau",
@@ -13048,16 +13048,15 @@
       "name": "Francisque",
       "category": "arme-cac",
       "cost": 9,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "+1 dégât. Peut être utilisée comme arme de tir (4\" max)."
+      "effectsText": "+1 dégât. Peut être utilisée comme arme de tir (4\" max).",
+      "tranchant": true
     },
     {
       "id": "fauchard-kherops",
       "name": "Fauchard khérops",
       "category": "arme-cac",
       "cost": 30,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
       "effectsText": "Saignement 1. La stature est ajoutée au seuil de toutes les attaques à 3 PA (non cumulable en assaut).",
@@ -13065,7 +13064,8 @@
         "factionIds": [
           "kherops"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "arbalete-des-steppes",
@@ -13145,7 +13145,6 @@
       "name": "Glaive de Commandement",
       "category": "arme-cac",
       "cost": 15,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "Saignement 1. +2 en défense.",
       "reservedTo": {
@@ -13160,7 +13159,8 @@
         "factionIds": [
           "kherops"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "brigandine",
@@ -13267,7 +13267,6 @@
       "name": "Épées Assoiffées",
       "category": "arme-cac",
       "cost": 30,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "2 Tranchoirs (2 armes à 1 main). L'une bénéficie de « perce-armure 2 » ; l'autre regagne 1 PV par attaque infligeant des dégâts. Vous choisissez avec quelle arme Tarsak attaque.",
       "reservedTo": {
@@ -13280,7 +13279,8 @@
         "factionIds": [
           "kherops"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "eq-caparacon",
@@ -13352,7 +13352,6 @@
       "name": "Équité",
       "category": "arme-cac",
       "cost": 30,
-      "tranchant": true,
       "hands": "1-2",
       "effectsText": "Épée bâtarde. +3 ATT, +3 DEF. Le nombre de PA en défense est annoncé avant qu'Engueran décide de sa façon d'attaquer (le choix des caractéristiques se fait normalement).",
       "reservedTo": {
@@ -13360,14 +13359,14 @@
           "kharns-engueran"
         ]
       },
-      "cardImage": "cards/Kharns/kharns-enguerran.jpg"
+      "cardImage": "cards/Kharns/kharns-enguerran.jpg",
+      "tranchant": true
     },
     {
       "id": "sabre-khemiste",
       "name": "Sabre Khémiste",
       "category": "arme-cac",
       "cost": 10,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "1 fois par activation, une attaque à 3 PA n'en coûte que 2.",
       "reservedTo": {
@@ -13383,7 +13382,8 @@
         "factionIds": [
           "tembos"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "tonfa",
@@ -13431,7 +13431,6 @@
       "name": "Khépesh",
       "category": "arme-cac",
       "cost": 25,
-      "tranchant": true,
       "hands": 2,
       "allonge": 1.5,
       "effectsText": "Procure « Brutalité 1 » ou augmente cette compétence de 1. +2 en attaque. +2 en défense. Pas d'attaque à 1 PA.",
@@ -13463,7 +13462,8 @@
           "tembos"
         ]
       },
-      "cardImage": "cards/Tembos/khepesh.jpg"
+      "cardImage": "cards/Tembos/khepesh.jpg",
+      "tranchant": true
     },
     {
       "id": "godille-moringa",
@@ -13712,7 +13712,6 @@
       "name": "Dague à rouelle",
       "category": "arme-cac",
       "cost": 15,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "Confère au Négociateur la compétence « Bretteur 3 ».",
       "effects": [
@@ -13744,7 +13743,8 @@
         "factionIds": [
           "guilde-noire"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "guilde-noire-plommee",
@@ -13771,7 +13771,6 @@
       "name": "Dague damasquinée",
       "category": "arme-cac",
       "cost": 20,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "+1 dégât. Ajoute gratuitement l'effet de A dès qu'elle utilise l'effet de V en attaque.",
       "reservedTo": {
@@ -13779,7 +13778,23 @@
           "guilde-noire-khalsa-2",
           "affranchis-khalsa-2"
         ]
-      }
+      },
+      "tranchant": true
+    },
+    {
+      "id": "guilde-noire-ombre-glace",
+      "name": "Ombre-Glace",
+      "category": "arme-cac",
+      "cost": 0,
+      "hands": "1-2",
+      "effectsText": "+3 en ATT et provoque « gelure » (1 fois/tour/adversaire), +3 en DEF si maniée à 2 mains.",
+      "reservedTo": {
+        "profileIds": [
+          "guilde-noire-mathys-3"
+        ]
+      },
+      "tranchant": true,
+      "grantedOnly": true
     },
     {
       "id": "rondache",
@@ -13926,7 +13941,7 @@
       "category": "casque",
       "cost": 10,
       "durability": 5,
-      "effectsText": "Baisse de 2 le seuil de l'armure portée.\nS'ill n'a pas d'armure ignore les dégâts sur une RC."
+      "effectsText": "Baisse de 2 le seuil de l'armure portée.\nS'il n'a pas d'armure ignore les dégâts sur une RC."
     },
     {
       "id": "heaume",
@@ -13949,18 +13964,18 @@
       "name": "Couteau",
       "category": "arme-cac",
       "cost": 0,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "RC = saignement 1.\nPas d'effet avec C."
+      "effectsText": "RC = saignement 1.\nPas d'effet avec C.",
+      "tranchant": true
     },
     {
       "id": "epee-courte",
       "name": "Epée courte",
       "category": "arme-cac",
       "cost": 0,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "+1 en attaque ou +1 en défense.\nPeut prendre les 2 pour 5 KO",
+      "tranchant": true,
       "upgrades": [
         {
           "id": "up-1785221996426",
@@ -13974,46 +13989,46 @@
       "name": "Hache",
       "category": "arme-cac",
       "cost": 0,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "+1 dgt.\nPas d'effet avec A."
+      "effectsText": "+1 dgt.\nPas d'effet avec A.",
+      "tranchant": true
     },
     {
       "id": "epee",
       "name": "Epée",
       "category": "arme-cac",
       "cost": 10,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "+2 en attaque.\n+1 en défense."
+      "effectsText": "+2 en attaque.\n+1 en défense.",
+      "tranchant": true
     },
     {
       "id": "misericorde",
       "name": "Miséricorde",
       "category": "arme-cac",
       "cost": 10,
-      "tranchant": true,
       "hands": 1,
       "perceArmure": 2,
-      "effectsText": "Pas d'attaque avec C."
+      "effectsText": "Pas d'attaque avec C.",
+      "tranchant": true
     },
     {
       "id": "dague",
       "name": "Dague",
       "category": "arme-cac",
       "cost": 12,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "3 dgts.\nsaignement 2.\nPas d'attaque avec C."
+      "effectsText": "3 dgts.\nsaignement 2.\nPas d'attaque avec C.",
+      "tranchant": true
     },
     {
       "id": "glaive",
       "name": "Glaive",
       "category": "arme-cac",
       "cost": 12,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "+3 en attaque. \nRC = saignement 2"
+      "effectsText": "+3 en attaque. \nRC = saignement 2",
+      "tranchant": true
     },
     {
       "id": "fleau",
@@ -14029,9 +14044,9 @@
       "name": "Kriss du culte",
       "category": "arme-cac",
       "cost": 15,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "le porteur gagne la compétence \"sacrifice2\".\nun allié gagne \"réceptif X\"."
+      "effectsText": "le porteur gagne la compétence \"sacrifice2\".\nun allié gagne \"réceptif X\".",
+      "tranchant": true
     },
     {
       "id": "bec-de-corbin",
@@ -14046,27 +14061,27 @@
       "name": "Lame perfide",
       "category": "arme-cac",
       "cost": 20,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "2 dgts.\nPoison sur 7+.\nPas d'attaque avec A."
+      "effectsText": "2 dgts.\nPoison sur 7+.\nPas d'attaque avec A.",
+      "tranchant": true
     },
     {
       "id": "scramasaxe",
       "name": "Scramasaxe",
       "category": "arme-cac",
       "cost": 20,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "RC = 9 et 10.\nSaignement 2"
+      "effectsText": "RC = 9 et 10.\nSaignement 2",
+      "tranchant": true
     },
     {
       "id": "cimeterre",
       "name": "Cimeterre",
       "category": "arme-cac",
       "cost": 22,
-      "tranchant": true,
       "hands": 1,
-      "effectsText": "Permet de choisir l'effet de A sur les attaques à 2 et 3 PA quelles que soient le caractéristiques choisies.\n2 effets de A max."
+      "effectsText": "Permet de choisir l'effet de A sur les attaques à 2 et 3 PA quelles que soient le caractéristiques choisies.\n2 effets de A max.",
+      "tranchant": true
     },
     {
       "id": "morgenstern",
@@ -14108,55 +14123,55 @@
       "name": "Sarclette",
       "category": "arme-cac",
       "cost": 10,
-      "tranchant": true,
       "hands": 2,
       "effectsText": "RC= regagne 1 PA.\nPas d'attaque ou de défense à 3 PA.",
       "reservedTo": {
         "levels": [
           1
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "bardiche",
       "name": "Bardiche",
       "category": "arme-cac",
       "cost": 20,
-      "tranchant": true,
       "hands": 2,
       "allonge": 1.5,
-      "effectsText": "saignement 1."
+      "effectsText": "saignement 1.",
+      "tranchant": true
     },
     {
       "id": "epee-a-deux-mains",
       "name": "Epée à deux mains.",
       "category": "arme-cac",
       "cost": 20,
-      "tranchant": true,
       "hands": 2,
       "allonge": 1,
-      "effectsText": "+1 dgt.\nPas d'attaque à 1 PA."
+      "effectsText": "+1 dgt.\nPas d'attaque à 1 PA.",
+      "tranchant": true
     },
     {
       "id": "guisarme",
       "name": "Guisarme",
       "category": "arme-cac",
       "cost": 22,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "+1 dgt.\nRC = désarme."
+      "effectsText": "+1 dgt.\nRC = désarme.",
+      "tranchant": true
     },
     {
       "id": "pertuisane",
       "name": "Pertuisane",
       "category": "arme-cac",
       "cost": 25,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
       "perceArmure": "1D5",
-      "effectsText": "+1dgt."
+      "effectsText": "+1dgt.",
+      "tranchant": true
     },
     {
       "id": "pique",
@@ -14172,63 +14187,63 @@
       "name": "Hallebarde",
       "category": "arme-cac",
       "cost": 28,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "+1 dgt.\n+3 en défense."
+      "effectsText": "+1 dgt.\n+3 en défense.",
+      "tranchant": true
     },
     {
       "id": "hache-a-double-tranchant",
       "name": "Hache à double tranchant",
       "category": "arme-cac",
       "cost": 30,
-      "tranchant": true,
       "hands": 2,
-      "effectsText": "+3 dgts.\nLes défenses ne peuvent être relancées contre cette arme.\nPas d'attaque à 1 PA."
+      "effectsText": "+3 dgts.\nLes défenses ne peuvent être relancées contre cette arme.\nPas d'attaque à 1 PA.",
+      "tranchant": true
     },
     {
       "id": "hallebarde-kheropse",
       "name": "Hallebarde Khéropse",
       "category": "arme-cac",
       "cost": 30,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "saignement 1. \n+ stature au seuil des attaques à 3 PA hors charge."
+      "effectsText": "saignement 1. \n+ stature au seuil des attaques à 3 PA hors charge.",
+      "tranchant": true
     },
     {
       "id": "vouge",
       "name": "Vouge",
       "category": "arme-cac",
       "cost": 30,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
-      "effectsText": "saignement 2."
+      "effectsText": "saignement 2.",
+      "tranchant": true
     },
     {
       "id": "claymore",
       "name": "Claymore",
       "category": "arme-cac",
       "cost": 35,
-      "tranchant": true,
       "hands": 2,
       "allonge": 1.5,
-      "effectsText": "+4 dgts.\n+2 en attaque.\nAttaque à 3 PA uniquement.\n-2 en V si C ≤4."
+      "effectsText": "+4 dgts.\n+2 en attaque.\nAttaque à 3 PA uniquement.\n-2 en V si C ≤4.",
+      "tranchant": true
     },
     {
       "id": "croc-a-depecer",
       "name": "Croc à dépecer",
       "category": "arme-cac",
       "cost": 10,
-      "tranchant": true,
       "hands": 1,
       "effectsText": "Attaques et défenses à 3 PA = saignement 1.",
       "reservedTo": {
         "factionIds": [
           "fangs"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "aiguillon-en-bois-de-moringa",
@@ -14422,7 +14437,6 @@
       "name": "Faux de la damnation",
       "category": "arme-cac",
       "cost": 35,
-      "tranchant": true,
       "hands": 1,
       "allonge": 1,
       "effectsText": "Si un marqueur de carcasse est frappé par la faux, il devient un marqueur \"damné\". Il s'activera au tour suivant et possède le profil d'affamé ou de larbin. il ne gère pas les objo. Il ne possède pas de PV. il est retiré du terrain en infligeant 1D10 dgts à qui le dévore/pille.",
@@ -14436,14 +14450,14 @@
         "factionIds": [
           "fangs"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "vaillante",
       "name": "Vaillante",
       "category": "arme-cac",
       "cost": 25,
-      "tranchant": true,
       "hands": "1-2",
       "effectsText": "+3 en ATT.\n+3 en DEF.\nJustice rendue: permet 1 fois par partie de passer une attaque critique qui ne peut pas être défendue.",
       "reservedTo": {
@@ -14456,7 +14470,8 @@
         "factionIds": [
           "kharns"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "grimoire-de-joseve",
@@ -14592,7 +14607,6 @@
       "name": "Vouge de Moringa",
       "category": "arme-cac",
       "cost": 35,
-      "tranchant": true,
       "hands": 2,
       "allonge": 2,
       "durability": 10,
@@ -14626,7 +14640,8 @@
         "traits": [
           "tembo"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "affranchis-arc-en-acier",
@@ -14655,28 +14670,28 @@
       "name": "Hache d'abattage de Boquillon",
       "category": "arme-cac",
       "cost": 15,
-      "tranchant": true,
       "hands": 2,
       "effectsText": "Les dégâts et les effets sont appliqués 2 fois en cas de RC (à la place de la stature).",
       "reservedTo": {
         "profileIds": [
           "affranchis-boquillon-2"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "affranchis-hache-d-abattage-clotrique",
       "name": "Hache d'abattage de Clotrique",
       "category": "arme-cac",
       "cost": 15,
-      "tranchant": true,
       "hands": 2,
       "effectsText": "+1 dégât, confère « riposte ».",
       "reservedTo": {
         "profileIds": [
           "affranchis-clotrique-3"
         ]
-      }
+      },
+      "tranchant": true
     },
     {
       "id": "affranchis-lance-tribale",
@@ -14718,19 +14733,19 @@
       "name": "Houe",
       "category": "arme-cac",
       "cost": 6,
-      "tranchant": true,
       "hands": 2,
-      "effectsText": "Permet de « creuser » gratuitement."
+      "effectsText": "Permet de « creuser » gratuitement.",
+      "tranchant": true
     },
     {
       "id": "affranchis-bau-a-cognee",
       "name": "Bau à cognée",
       "category": "arme-cac",
       "cost": 12,
-      "tranchant": true,
       "hands": 2,
       "allonge": 1,
-      "effectsText": "Allonge / Tranchante / En cas de critiques multiples inflige en plus un saignement 2."
+      "effectsText": "Allonge / Tranchante / En cas de critiques multiples inflige en plus un saignement 2.",
+      "tranchant": true
     },
     {
       "id": "affranchis-bol-de-millet",
@@ -17254,6 +17269,24 @@
       "rulesText": "- Ombre-Glace (épée bâtarde) : +3 en ATT et provoque « gelure » (1 fois/tour/adversaire), +3 en DEF si maniée à 2 mains.\n- Marque de Mathys : pièce percée, soudoie un Safar dans sa ZDC 1 fois/tour (lancez 1D10 : sur EC Mathys perd 1PA pour le tour, sinon il en vole 1 à la cible).\n- Inspiration : si Mathys est leader et tant qu'il est en vie, les frères d'armes de son Fer de Lance possèdent toutes les compétences conférées par les frères d'armes en présence.",
       "constraints": [],
       "effects": [
+        {
+          "id": "guilde-noire-mathys-ombre-glace",
+          "source": {
+            "kind": "special-card",
+            "id": "guilde-noire-atouts-de-mathys"
+          },
+          "scope": "fer-de-lance",
+          "target": {
+            "self": true
+          },
+          "operation": {
+            "kind": "grant-equipment",
+            "equipmentIds": [
+              "guilde-noire-ombre-glace"
+            ]
+          },
+          "sourceText": "Ombre-Glace (épée bâtarde) : +3 en ATT et provoque « gelure » (1 fois/tour/adversaire), +3 en DEF si maniée à 2 mains."
+        },
         {
           "id": "guilde-noire-insp-mathys",
           "source": {

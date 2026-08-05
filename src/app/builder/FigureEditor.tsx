@@ -136,6 +136,7 @@ export function FigureEditor({
           onMunTier={onMunTier}
           onInfo={onInfo}
           grantedUpgrades={mods?.grantedUpgrades ?? []}
+          grantedEquipment={mods?.grantedEquipment ?? []}
           costRules={mods?.equipmentCostRules ?? []}
           equipmentUpgrades={equipmentUpgrades}
           onToggleEquipmentUpgrade={onToggleEquipmentUpgrade}

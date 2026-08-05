@@ -52,7 +52,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from "@ui";
-import { RecruitPill } from "./components";
+import { RecruitPill, Verbatim } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
 import { CopyIcon, TrashIcon } from "./icons";
@@ -582,6 +582,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
             munitions={x.inst.munitions ?? {}}
             equipmentUpgrades={x.inst.equipmentUpgrades ?? {}}
             grantedUpgrades={evaluation.grantedUpgrades[x.inst.instanceId] ?? []}
+            grantedEquipment={evaluation.grantedEquipment[x.inst.instanceId] ?? []}
             costRules={evaluation.equipmentCostRules[x.inst.instanceId] ?? []}
             grimoireDiscount={evaluation.grimoireDiscount[x.inst.instanceId] ?? {}}
             mountId={x.inst.mount?.mountId}
@@ -830,6 +831,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               grantedSkills: evaluation.grantedSkills[editItem.inst.instanceId],
               grantedTraitIds: evaluation.grantedTraits[editItem.inst.instanceId],
               grantedUpgrades: evaluation.grantedUpgrades[editItem.inst.instanceId],
+              grantedEquipment: evaluation.grantedEquipment[editItem.inst.instanceId],
               effectSources: evaluation.effectSources[editItem.inst.instanceId],
               grantedMasteryDice: evaluation.grantedMasteryDice[editItem.inst.instanceId],
               limitBonus: evaluation.limitBonuses[groupKey(editItem.p)] ?? 0,
@@ -1174,13 +1176,13 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
               ))}
             </div>
           )}
-          {itemInfo.text && <p className="mdl-verb">{itemInfo.text}</p>}
+          {itemInfo.text && <Verbatim text={itemInfo.text} className="mdl-verb" />}
+          {/* Précisions sous le texte de la carte (prix détaillé, provenance) : détachées de lui,
+              alignées sur lui, et plus discrètes - c'est la carte qui se lit d'abord. */}
           {itemInfo.lines.length > 0 && (
-            <div>
+            <div className="mdl-notes">
               {itemInfo.lines.map((l, k) => (
-                <p key={k} className="mdl-line">
-                  {l}
-                </p>
+                <Verbatim key={k} text={l} className="mdl-line" />
               ))}
             </div>
           )}

@@ -63,6 +63,7 @@ export const OP_LABELS: Record<EffectOperation["kind"], string> = {
   "grant-trait": "Conférer un trait",
   "grant-mastery-die": "Conférer un dé de maîtrise",
   "unlock-upgrade": "Débloquer une amélioration",
+  "grant-equipment": "Octroyer un équipement",
   "stat-modifier": "Modifier une caractéristique",
   "stat-count": "Caractéristique = comptage de figurines",
   "stat-per-count": "Caractéristique augmentée par figurine comptée",

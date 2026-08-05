@@ -37,6 +37,8 @@ export type ProfileMods = {
   grantedTraitIds?: string[];
   /** Améliorations d'équipement octroyées (opt-in par objet, ex. arme empoisonnée). */
   grantedUpgrades?: { upgradeId: string; label: string; cost: number; equipmentCategories: string[] }[];
+  /** Équipement octroyé par une carte (ex. Ombre-Glace) : porté sans être acheté, non retirable. */
+  grantedEquipment?: string[];
   /** Provenance des modifications (clé « stat:… » / « skill:… » / « trait:… » → effets responsables). */
   effectSources?: Record<string, { label: string; text: string }[]>;
   /** Dés de maîtrise octroyés par effet (ex. Bannière Khéropse). */

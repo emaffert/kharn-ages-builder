@@ -182,6 +182,11 @@ export function describeEffect(e: Effect, cat: Catalog): string {
     case "grant-mastery-die":
       base = `Octroie un dé de maîtrise (${op.domains.join(", ") || "vierge"}) à ${tgt}`;
       break;
+    case "grant-equipment": {
+      const noms = op.equipmentIds.map((id) => equipName(cat, id)).join(", ") || "-";
+      base = `Octroie ${noms} à ${tgt} (porté sans être acheté, non retirable)`;
+      break;
+    }
   }
   if (e.condition) {
     const clauses = Array.isArray(e.condition) ? e.condition : [e.condition];

@@ -159,6 +159,11 @@ export interface EvaluationResult {
   /** Améliorations d'équipement disponibles (octroyées par effet), par instance. Pour le constructeur. */
   grantedUpgrades: Record<string, GrantedUpgrade[]>;
   /**
+   * Équipement octroyé par effet (`grant-equipment`), par instance : porté sans être acheté ni
+   * retirable. Le constructeur l'affiche avec l'équipement de la figurine, verrouillé.
+   */
+  grantedEquipment: Record<string, string[]>;
+  /**
    * Provenance des modifications affichées (stats/compétences/traits), par instance puis par clé
    * (`stat:<carac>`, `skill:<id>`, `trait:<id>`) → liste des effets responsables (nom + texte).
    * Permet d'expliquer, au clic sur une valeur colorée, quel effet la modifie.
@@ -2087,14 +2092,45 @@ function collectGrantedUpgrades(
 }
 
 /**
+ * Équipement **octroyé** par un effet `grant-equipment`, par instance. Il vient avec la carte qui le
+ * porte, ne s'achète pas et ne se retire pas ; son prix n'est pas ajouté, la carte le couvre déjà.
+ * Ex. Ombre-Glace, l'épée bâtarde comprise dans les « Atouts de Mathys ».
+ */
+function collectGrantedEquipment(
+  resolved: ResolvedInstance[],
+  occurrences: EffectOccurrence[],
+): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const occ of occurrences) {
+    const op = occ.effect.operation;
+    if (op.kind !== "grant-equipment") continue;
+    if (!conditionHolds(occ.effect.condition, occ.effect.scope, occ.ferDeLanceId, resolved)) continue;
+    for (const ri of resolveTargets(occ, resolved)) {
+      const id = ri.instance.instanceId;
+      const list = out.get(id) ?? [];
+      for (const equipId of op.equipmentIds) if (!list.includes(equipId)) list.push(equipId);
+      out.set(id, list);
+    }
+  }
+  return out;
+}
+
+/**
  * Surcoût des améliorations d'équipement cochées (opt-in par objet), pour une instance. Compte les
  * intrinsèques comme les octroyées : c'est `upgradesForEquipment` qui dit ce qui est achetable, et
  * cette liste doit être la même que celle affichée dans le constructeur.
  */
-function upgradeCost(ri: ResolvedInstance, granted: Map<string, GrantedUpgrade>, cat: Catalog): number {
+function upgradeCost(
+  ri: ResolvedInstance,
+  granted: Map<string, GrantedUpgrade>,
+  cat: Catalog,
+  grantedEquipment: readonly string[] = [],
+): number {
   const ups = ri.instance.equipmentUpgrades;
   if (!ups) return 0;
-  const worn = new Set(wornEquipmentIds(ri.profile, ri.instance));
+  // L'équipement octroyé est porté au même titre que le reste : l'Affûtage acheté sur l'épée que
+  // donne une carte se facture comme sur une arme achetée.
+  const worn = new Set([...wornEquipmentIds(ri.profile, ri.instance), ...grantedEquipment]);
   const grantedList = [...granted.values()];
   let cost = 0;
   for (const [equipId, upIds] of Object.entries(ups)) {
@@ -2120,6 +2156,7 @@ function collectUpgradeGrantedSkills(
   grantedUp: Map<string, Map<string, GrantedUpgrade>>,
   idx: CatalogIndex,
   sources: Map<string, Map<string, EffectSourceRef[]>>,
+  grantedEquip: Map<string, string[]>,
 ): Map<string, GrantedSkill[]> {
   const out = new Map<string, GrantedSkill[]>();
   for (const ri of display) {
@@ -2127,7 +2164,7 @@ function collectUpgradeGrantedSkills(
     const ups = ri.instance.equipmentUpgrades;
     const granted = grantedUp.get(id);
     if (!ups || !granted) continue;
-    const worn = new Set(wornEquipmentIds(ri.profile, ri.instance));
+    const worn = new Set([...wornEquipmentIds(ri.profile, ri.instance), ...(grantedEquip.get(id) ?? [])]);
     for (const [equipId, upIds] of Object.entries(ups)) {
       if (!worn.has(equipId)) continue;
       const category = idx.equipmentCategory.get(equipId);
@@ -2301,8 +2338,10 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const cost = computeCosts(resolved, occurrences, idx, cat); // 4 : coûts
   // 4b : améliorations d'équipement octroyées (unlock-upgrade) + surcoût des options cochées.
   const grantedUp = collectGrantedUpgrades(resolved, occurrences);
+  const grantedEquip = collectGrantedEquipment(resolved, occurrences);
   for (const ri of resolved) {
-    const extra = upgradeCost(ri, grantedUp.get(ri.instance.instanceId) ?? new Map(), cat);
+    const id = ri.instance.instanceId;
+    const extra = upgradeCost(ri, grantedUp.get(id) ?? new Map(), cat, grantedEquip.get(id) ?? []);
     if (extra) cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + extra);
   }
   const limitBonuses = collectLimitBonuses(resolved, occurrences); // +1 limite (Lieutenant…)
@@ -2321,7 +2360,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const skillValuesByInstance = computeSkillValues(display, displayOcc);
   const sourcesByInstance = collectEffectSources(display, displayOcc, cat);
   // Compétences conférées par les améliorations d'équipement appliquées (ex. Borax) → grantedSkills + sources.
-  const upgradeSkillsByInstance = collectUpgradeGrantedSkills(display, grantedUp, idx, sourcesByInstance);
+  const upgradeSkillsByInstance = collectUpgradeGrantedSkills(display, grantedUp, idx, sourcesByInstance, grantedEquip);
   // Bonus de monture PARTAGÉS au cavalier : stats (V P A C … + PA) + allonge uniquement (pas PV/stature/compétences).
   const mount = applyMountBonuses(display, cat, statDeltasByInstance, skillValuesByInstance, sourcesByInstance);
   const mountAllonge: Record<string, number> = Object.fromEntries(mount.allonge);
@@ -2339,6 +2378,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   const statDeltas: Record<string, Record<string, number>> = {};
   const skillValues: Record<string, Record<string, number>> = {};
   const grantedUpgrades: Record<string, GrantedUpgrade[]> = {};
+  const grantedEquipment: Record<string, string[]> = {};
   const effectSources: Record<string, Record<string, EffectSourceRef[]>> = {};
   const grantedMasteryDice: Record<string, MasteryDomain[][]> = {};
   for (const ri of resolved) {
@@ -2350,6 +2390,8 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     costByFerDeLance[ri.ferDeLanceId] = (costByFerDeLance[ri.ferDeLanceId] ?? 0) + c + mc;
     const gu = grantedUp.get(id);
     if (gu && gu.size > 0) grantedUpgrades[id] = [...gu.values()];
+    const ge = grantedEquip.get(id);
+    if (ge && ge.length > 0) grantedEquipment[id] = ge;
 
     const dri = displayById.get(id);
     if (dri) {
@@ -2400,6 +2442,7 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
     statDeltas,
     skillValues,
     grantedUpgrades,
+    grantedEquipment,
     effectSources,
     limitBonuses: Object.fromEntries(limitBonuses),
     equipmentCostRules: Object.fromEntries(equipmentCostRules),

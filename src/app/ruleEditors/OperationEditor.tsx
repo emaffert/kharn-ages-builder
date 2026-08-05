@@ -40,6 +40,8 @@ function defaultOperation(kind: EffectOperation["kind"]): EffectOperation {
       return { kind, amount: 1 };
     case "grant-mastery-die":
       return { kind, domains: [] };
+    case "grant-equipment":
+      return { kind, equipmentIds: [] };
   }
 }
 
@@ -49,7 +51,7 @@ const OP_GROUPS: { group: string; kinds: EffectOperation["kind"][] }[] = [
   { group: "Coût", kinds: ["cost-delta", "cost-set", "grimoire-discount"] },
   {
     group: "Octrois",
-    kinds: ["grant-skill", "grant-spell", "grant-spell-choice", "grant-trait", "grant-mastery-die", "unlock-upgrade"],
+    kinds: ["grant-skill", "grant-spell", "grant-spell-choice", "grant-trait", "grant-mastery-die", "grant-equipment", "unlock-upgrade"],
   },
   {
     group: "Caractéristiques & compétences",
@@ -182,6 +184,23 @@ export function OperationEditor({
             </AddButton>
           </div>
         </>
+      )}
+
+      {op.kind === "grant-equipment" && (
+        <div className="w-full space-y-1">
+          <StringList
+            label="Équipements octroyés"
+            values={op.equipmentIds}
+            onChange={(v) => onChange({ ...op, equipmentIds: v })}
+            options={cat.equipment.map((e) => ({ value: e.id, label: e.name }))}
+            combo
+          />
+          <p className="adm-block-note">
+            L'équipement est porté sans être acheté et ne peut pas être retiré : la carte le contient,
+            son prix le couvre. Cochez « jamais acheté » sur sa fiche pour qu'il ne soit pas aussi
+            proposé au catalogue d'achat.
+          </p>
+        </div>
       )}
 
       {op.kind === "grant-skill" && (

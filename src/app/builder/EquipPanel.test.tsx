@@ -23,6 +23,7 @@ function baseProps(profileId: string, factionId = "fangs") {
     onMunTier: vi.fn(),
     onInfo: vi.fn(),
     grantedUpgrades: [],
+    grantedEquipment: [] as string[],
     costRules: [],
     equipmentUpgrades: {},
     onToggleEquipmentUpgrade: vi.fn(),
@@ -130,6 +131,37 @@ describe("EquipPanel (vue)", () => {
     render(<EquipPanel {...baseProps("fangs-goulue-1")} />);
     const row = [...screen.getAllByText(stacked.name)][0].closest(".fe-item")!;
     expect(row.textContent).toContain(`${stacked.cost} Ko / unité`);
+  });
+
+  // Ombre-Glace, comprise dans les « Atouts de Mathys » : portée sans être achetée, non retirable,
+  // et jamais proposée au catalogue d'achat.
+  describe("équipement octroyé par une carte", () => {
+    const EPEE = "guilde-noire-ombre-glace";
+    const epee = () => catalog.equipment.find((e) => e.id === EPEE)!;
+    const props = () => ({ ...baseProps("guilde-noire-mathys-3", "guilde-noire"), grantedEquipment: [EPEE] });
+
+    it("apparaît dans « Équipé », marquée offerte et verrouillée", () => {
+      const { container } = render(<EquipPanel {...props()} />);
+      const equipe = container.querySelectorAll(".fe-panes > div")[0] as HTMLElement;
+      const ligne = within(equipe).getByText(epee().name).closest(".fe-item")!;
+      expect(ligne.textContent).toContain("offert");
+      expect(ligne.textContent).toContain("compris");
+      expect(ligne.querySelector(".fe-move.rem")).toBeNull(); // pas de bouton « retirer »
+      expect(ligne.querySelector(".fe-move.is-locked")).toBeTruthy();
+    });
+
+    it("porte sa case d'Affûtage, comme une arme achetée", () => {
+      const p = props();
+      render(<EquipPanel {...p} />);
+      fireEvent.click(screen.getByRole("button", { name: "Affûtage" }));
+      expect(p.onInfo).toHaveBeenCalled();
+    });
+
+    it("n'est jamais proposée à l'achat, même sans la carte", () => {
+      const { container } = render(<EquipPanel {...baseProps("guilde-noire-mathys-3", "guilde-noire")} />);
+      const dispo = container.querySelectorAll(".fe-panes > div")[1] as HTMLElement;
+      expect(within(dispo).queryByText(epee().name)).toBeNull();
+    });
   });
 
   // L'amélioration se coche pour l'acheter, et son nom s'ouvre pour savoir ce qu'elle fait.

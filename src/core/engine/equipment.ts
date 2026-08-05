@@ -28,7 +28,9 @@ export function isWeapon(e: Equipment | undefined): boolean {
  * à corps gratuite (p.10, cf. `slaveMayBuy`).
  */
 export function isFreeWeapon(e: Equipment | undefined): boolean {
-  return e != null && isWeapon(e) && e.cost === 0;
+  // Une arme octroyée par une carte (`grantedOnly`) n'est pas une arme gratuite : elle ne s'achète
+  // pas, elle est comprise dans ce que la carte coûte. Cf. Ombre-Glace dans les Atouts de Mathys.
+  return e != null && isWeapon(e) && e.cost === 0 && !e.grantedOnly;
 }
 
 /**

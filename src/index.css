@@ -751,13 +751,18 @@ body {
 .mdl-rung p { margin: 0; align-self: center; font-size: 13.5px; line-height: 1.5; color: var(--bone); }
 
 /* Texte de la carte. Aligné sur le TEXTE du cartouche et non sur son cadre, sinon les deux colonnes
-   de lecture paraissent décalées de la valeur du retrait. */
-.mdl-verb { margin: 0; font-size: 13.5px; line-height: 1.58; color: var(--bone); white-space: pre-line; }
-.mdl-stats + .mdl-verb, .mdl-ladder + .mdl-verb { padding-left: 12px; }
-/* Texte verbatim : les retours à la ligne de la carte sont rendus tels quels. `pre-line`
-   (et non `pre-wrap`) écrase au passage les espaces surnuméraires de saisie. */
-.mdl-line { font-size: 13.5px; line-height: 1.5; color: var(--bone); white-space: pre-line; }
-.mdl-line + .mdl-line { margin-top: 5px; }
+   de lecture paraissent décalées de la valeur du retrait. Le retrait vaut pour toute la colonne de
+   lecture (texte ET précisions), d'où le combinateur de frère général plutôt qu'adjacent. */
+.mdl-verb { margin: 0; font-size: 13.5px; line-height: 1.58; color: var(--bone); }
+.mdl-stats ~ .mdl-verb, .mdl-ladder ~ .mdl-verb,
+.mdl-stats ~ .mdl-notes, .mdl-ladder ~ .mdl-notes { padding-left: 12px; }
+/* Une carte va à la ligne pour séparer ses règles : chaque ligne est un paragraphe (cf. `Verbatim`),
+   et c'est l'espacement qui les distingue, pas un simple retour à la ligne. */
+.mdl-verb + .mdl-verb { margin-top: 9px; }
+/* Précisions sous le texte de la carte (prix détaillé, provenance) : détachées, et plus discrètes. */
+.mdl-notes { margin-top: 12px; }
+.mdl-line { margin: 0; font-size: 13px; line-height: 1.5; color: var(--bone-dim); }
+.mdl-line + .mdl-line { margin-top: 6px; }
 /* Bloc « Modifiée par » : détaché du descriptif, teinté braise pour bien le distinguer. */
 .mdl-sources { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--hair); }
 .mdl-sources--bare { margin-top: 0; padding-top: 0; border-top: 0; }

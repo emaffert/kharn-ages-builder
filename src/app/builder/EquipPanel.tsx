@@ -45,6 +45,7 @@ export function EquipPanel({
   onMunTier,
   onInfo,
   grantedUpgrades,
+  grantedEquipment,
   costRules,
   equipmentUpgrades,
   onToggleEquipmentUpgrade,
@@ -64,6 +65,8 @@ export function EquipPanel({
   onMunTier: (equipId: string, typeId: string, tierIndex: number | null) => void;
   onInfo: (info: ItemInfo) => void;
   grantedUpgrades: NonNullable<ProfileMods["grantedUpgrades"]>;
+  /** Équipement octroyé par une carte (ex. Ombre-Glace) : porté sans être acheté, non retirable. */
+  grantedEquipment: string[];
   costRules: NonNullable<ProfileMods["equipmentCostRules"]>;
   equipmentUpgrades: Record<string, string[]>;
   onToggleEquipmentUpgrade: (equipmentId: string, upgradeId: string) => void;
@@ -86,7 +89,8 @@ export function EquipPanel({
   // Équipement de base soudé à la figurine (doses de poison, outillage…) : présent, non rendable.
   const fixedBase = p.fixedBaseEquipmentIds ?? [];
   /** Un objet équipé est-il verrouillé, et pourquoi ? (sceau imposé, ou base indissociable) */
-  const lockReason = (id: string, isBase: boolean): string | null => {
+  const lockReason = (id: string, isBase: boolean, isGranted = false): string | null => {
+    if (isGranted) return "Comprise dans une carte : elle s'en va avec elle";
     if (id === sealLockedId) return "Nécessaire au recrutement dans ce Fer de Lance";
     if (isBase && fixedBase.includes(id)) return "Équipement de base indissociable de la figurine";
     return null;
@@ -96,7 +100,9 @@ export function EquipPanel({
   const qtyOf = (id: string, isBase: boolean) =>
     isBase ? baseEquipmentCount(p, id) : (addedCounts?.[id] ?? 1);
 
-  const worn = [...activeBase, ...added].map(eq).filter((e): e is NonNullable<typeof e> => Boolean(e));
+  const worn = [...activeBase, ...added, ...grantedEquipment]
+    .map(eq)
+    .filter((e): e is NonNullable<typeof e> => Boolean(e));
   const holdsFreeWeapon = worn.some(isFreeWeapon);
   // La limitation de mains ne s'applique qu'en jeu : on peut acheter autant d'armes que voulu.
   // L'armure, si : une seule par Safar, plus une armure cumulable (Gambison) sur son propre emplacement.
@@ -143,6 +149,8 @@ export function EquipPanel({
       // Équipement de la MONTURE (Caparaçon) : jamais ici (il s'achète sur la fiche de la monture).
       (e.mountEquipment == null || (e.mountEquipment === "rider" && hasMount)) &&
       PURCHASE_CATS.includes(e.category) &&
+      // Équipement qui n'arrive que par une carte (Ombre-Glace) : jamais au catalogue d'achat.
+      !e.grantedOnly &&
       // Interdiction de la carte, objet par objet : « ne peut manier d'arme à 2 mains » ne retire
       // que les armes à deux mains, pas toute la catégorie (cf. `forbidRuleHits`, partagé avec le moteur).
       !equipForbidden(cat, p, e) &&
@@ -222,9 +230,13 @@ export function EquipPanel({
 
   // Équipé regroupé par catégorie - mêmes en-têtes que « disponible » (base en tête de chaque groupe).
   const ownedResolved = [
-    ...activeBase.map((id) => ({ id, isBase: true, e: eq(id) })),
-    ...added.map((id) => ({ id, isBase: false, e: eq(id) })),
-  ].filter((o): o is { id: string; isBase: boolean; e: NonNullable<ReturnType<typeof eq>> } => Boolean(o.e));
+    ...activeBase.map((id) => ({ id, isBase: true, isGranted: false, e: eq(id) })),
+    ...added.map((id) => ({ id, isBase: false, isGranted: false, e: eq(id) })),
+    ...grantedEquipment.map((id) => ({ id, isBase: false, isGranted: true, e: eq(id) })),
+  ].filter(
+    (o): o is { id: string; isBase: boolean; isGranted: boolean; e: NonNullable<ReturnType<typeof eq>> } =>
+      Boolean(o.e),
+  );
   const ownedCats = [
     ...PURCHASE_CATS,
     ...[...new Set(ownedResolved.map((o) => o.e.category))].filter((c) => !PURCHASE_CATS.includes(c)),
@@ -410,17 +422,19 @@ export function EquipPanel({
               <div key={c}>
                 <p className="fe-group-label">{CAT_LABEL[c] ?? c}</p>
                 <div className="fe-col">
-                  {list.map(({ id, isBase, e }) => (
+                  {list.map(({ id, isBase, isGranted, e }) => (
                     <div key={id}>
                       <div className="fe-item is-clickable" onClick={() => onInfo(equipInfo(e, cat))} title="Voir le détail">
                         <span className="fe-item-main">
                           <span className="fe-item-name">{e.name}</span>
                           {qtyOf(id, isBase) > 1 && <span className="fe-item-qty">×{qtyOf(id, isBase)}</span>}
                           {isBase && <span className="fe-badge-base">base</span>}
+                          {/* Comprise dans une carte payante : son prix est déjà dans celui de la carte. */}
+                          {isGranted && <span className="fe-badge-base">offert</span>}
                         </span>
-                        {priceCell(e, isBase)}
-                        {lockReason(id, isBase) ? (
-                          <span className="fe-move is-locked" title={lockReason(id, isBase)!}>
+                        {isGranted ? <span className="fe-item-cost">compris</span> : priceCell(e, isBase)}
+                        {lockReason(id, isBase, isGranted) ? (
+                          <span className="fe-move is-locked" title={lockReason(id, isBase, isGranted)!}>
                             🔒
                           </span>
                         ) : (

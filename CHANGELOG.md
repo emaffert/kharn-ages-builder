@@ -7,6 +7,29 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (11)
+
+### Catalogue 0.5.5 : Ombre-Glace, l'épée de Mathys, devient une vraie arme
+
+- **L'épée bâtarde de Mathys existe enfin en tant qu'arme.** Elle n'était qu'une ligne de texte dans
+  les « Atouts de Mathys », donc invisible au constructeur : impossible de l'affûter, alors que
+  c'est une lame. Elle apparaît désormais dans son équipement dès que la carte est prise, avec sa
+  case d'Affûtage.
+- **Rien ne change au prix.** L'épée est comprise dans les 15 Kouronnes de la carte et n'ajoute pas
+  un Ko ; elle ne s'achète pas et ne se retire pas, elle vient avec la carte et s'en va avec elle.
+  Elle ne compte pas non plus comme l'arme gratuite à laquelle chaque Safar a droit.
+- **Le mécanisme est général** : une carte peut désormais contenir un équipement. De quoi traiter,
+  le jour venu, la Crosse d'Ostéomancie des Meneuses, qui souffre du même travers.
+
+### Les fiches d'objet et de carte se lisent mieux
+
+- **Le texte d'une carte est rendu en paragraphes.** Les cartes vont à la ligne pour séparer leurs
+  règles : les trois atouts de Mathys, les effets d'un casque. Ces lignes étaient collées les unes
+  aux autres ; elles sont maintenant détachées.
+- **Les précisions de prix ne sont plus décalées.** Le détail sous le texte d'un objet - « compris
+  dans une carte spéciale », « Affûtage (+8 Ko) » - s'aligne désormais sur le texte au lieu de flotter
+  contre le bord, et se détache de lui.
+
 ## 2026-08-06 (10)
 
 ### Key le Sénéchal retrouve ses armes

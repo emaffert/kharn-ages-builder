@@ -28,6 +28,7 @@ import {
   recruitCost,
   recruitableWithoutSeal,
 } from "./recruitment";
+import { isFreeWeapon } from "./equipment";
 import { isSlaveIn } from "./slavery";
 
 /** L'identifiant de la voie Adansonia dans le catalogue (créée avec un id technique). */
@@ -1790,6 +1791,58 @@ describe("améliorations de catalogue (l'Affûtage)", () => {
     });
     expect(evalFang([triche]).costByInstance[triche.instanceId]).toBe(
       evalFang([nu]).costByInstance[nu.instanceId],
+    );
+  });
+});
+
+// Ombre-Glace, l'épée bâtarde comprise dans les « Atouts de Mathys » : une vraie arme, mais octroyée
+// par la carte - jamais achetée, jamais retirée, et donc affûtable comme n'importe quelle lame.
+describe("équipement octroyé par une carte", () => {
+  const CARTE = "guilde-noire-atouts-de-mathys";
+  const EPEE = "guilde-noire-ombre-glace";
+  const evalGN = (members: ProfileInstance[]) => evaluateList(catalog, makeList(members, "guilde-noire"));
+  const mathys = (over: Partial<ProfileInstance> = {}) => inst("guilde-noire-mathys-3", over);
+
+  it("l'épée n'arrive qu'avec la carte", () => {
+    const sans = mathys();
+    expect(evalGN([sans]).grantedEquipment[sans.instanceId]).toBeUndefined();
+    const avec = mathys({ specialCardIds: [CARTE] });
+    expect(evalGN([avec]).grantedEquipment[avec.instanceId]).toEqual([EPEE]);
+  });
+
+  it("elle ne coûte rien de plus : la carte la couvre", () => {
+    const nu = mathys();
+    const avec = mathys({ specialCardIds: [CARTE] });
+    const carte = catalog.specialCards.find((c) => c.id === CARTE)!;
+    const delta =
+      evalGN([avec]).costByInstance[avec.instanceId] - evalGN([nu]).costByInstance[nu.instanceId];
+    expect(delta).toBe(carte.cost); // 15 Ko, et pas un Ko de plus pour l'épée
+  });
+
+  it("ce n'est pas une arme gratuite : elle n'occupe pas l'unique emplacement d'arme gratuite", () => {
+    const epee = catalog.equipment.find((e) => e.id === EPEE)!;
+    expect(epee.cost).toBe(0);
+    expect(epee.grantedOnly).toBe(true);
+    expect(isFreeWeapon(epee)).toBe(false);
+    // Mathys garde donc le droit d'acheter, lui, une vraie arme gratuite.
+    const arme = mathys({ specialCardIds: [CARTE], addedEquipmentIds: ["gourdin"] });
+    expect(evalGN([arme]).issues.some((i) => i.ruleId === "free-weapon-single")).toBe(false);
+  });
+
+  it("elle est tranchante, donc l'Affûtage s'y achète et se facture", () => {
+    const affutage = catalog.equipmentUpgrades!.find((u) => u.id === "affutage")!;
+    const nue = mathys({ specialCardIds: [CARTE] });
+    const affutee = mathys({ specialCardIds: [CARTE], equipmentUpgrades: { [EPEE]: ["affutage"] } });
+    const delta =
+      evalGN([affutee]).costByInstance[affutee.instanceId] - evalGN([nue]).costByInstance[nue.instanceId];
+    expect(delta).toBe(affutage.cost);
+  });
+
+  it("sans la carte, l'Affûtage coché sur l'épée n'est pas facturé", () => {
+    const nu = mathys();
+    const triche = mathys({ equipmentUpgrades: { [EPEE]: ["affutage"] } });
+    expect(evalGN([triche]).costByInstance[triche.instanceId]).toBe(
+      evalGN([nu]).costByInstance[nu.instanceId],
     );
   });
 });

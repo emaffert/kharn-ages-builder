@@ -1,5 +1,5 @@
 {
-  "version": "0.5.1",
+  "version": "0.5.2",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -17625,7 +17625,8 @@
           "quantities": [
             0,
             1
-          ]
+          ],
+          "forbiddenOnFreeWeapon": true
         }
       ]
     },

@@ -133,6 +133,11 @@ export function SettingsDetail({
       {/* ── Munitions (sortes → paliers de prix × types) ─────────── */}
       <Section title="Munitions" icon="equipment">
         <div className="flex flex-col gap-5">
+          <p className="adm-muted text-xs">
+            Cochez « Pas sur une arme gratuite » pour un type que les règles refusent sur une arme
+            qui ne coûte rien (la Flèche hydre sur un arc gratuit) : il ne sera plus proposé sur ces
+            armes, et une liste qui en porte déjà sera signalée comme illégale.
+          </p>
           {(cat.munitionKinds ?? []).map((k) => (
             <MunitionKindEditor
               key={k.id}
@@ -293,6 +298,7 @@ function MunitionKindEditor({
                   </div>
                 </th>
               ))}
+              <th className="adm-field-label px-1 text-center">Pas sur une arme gratuite</th>
               <th className="px-1">
                 <button type="button" onClick={addTier} className="adm-add text-xs" title="Ajouter un palier">
                   + palier
@@ -322,6 +328,14 @@ function MunitionKindEditor({
                     />
                   </td>
                 ))}
+                <td className="text-center">
+                  <input
+                    type="checkbox"
+                    checked={t.forbiddenOnFreeWeapon ?? false}
+                    onChange={(e) => setType(ti, { forbiddenOnFreeWeapon: e.target.checked || undefined })}
+                    title="Ce type ne peut pas être acheté pour une arme qui ne coûte rien"
+                  />
+                </td>
                 <td>
                   <RemoveButton onClick={() => confirmDelete(`le type « ${t.label} »`, () => removeType(ti))} />
                 </td>

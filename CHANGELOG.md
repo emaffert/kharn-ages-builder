@@ -7,6 +7,18 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (6)
+
+### Catalogue 0.5.2 : la Flèche hydre n'est plus vendue avec un arc gratuit
+
+- **La Flèche hydre disparaît des munitions proposées sur un arc gratuit.** Le livret est explicite :
+  elle « ne peut pas être utilisée avec un arc gratuit ». Seul l'Arc court est concerné, celui que
+  l'Éclaireur Mongo porte sur sa carte ; sur tous les autres arcs, rien ne change. Les flèches
+  simples, perce-armure, enflammées et empoisonnées lui restent bien sûr accessibles.
+- **Une liste qui en porte déjà est signalée.** Une liste écrite avant ce correctif, ou reçue par
+  import, n'est plus acceptée en silence : le constructeur pointe la figurine et l'arme fautives. La
+  munition reste facturée tant qu'elle est là, pour que le total affiché ne mente pas.
+
 ## 2026-08-06 (5)
 
 ### Catalogue 0.5.1 : Khalsa et la Porteuse d'eau

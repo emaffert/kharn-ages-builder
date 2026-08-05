@@ -17,6 +17,7 @@
  */
 import type { Catalog, Constraint, Equipment, Profile } from "../model";
 import { engineIdOf } from "../model/engineIds";
+import { isFreeWeapon } from "./equipment";
 
 /** Compétence du porteur : « SDG X ». Sa valeur plafonne le nombre d'esclaves possédés. */
 export const SDG_SKILL_ID = engineIdOf("seigneur-de-guerre");
@@ -81,7 +82,7 @@ export function carriesSlaves(
  * à les équiper plus richement ». L'équipement imprimé sur sa carte, lui, reste le sien.
  */
 export function slaveMayBuy(e: Equipment): boolean {
-  return e.category === "arme-cac" && e.cost === 0;
+  return e.category === "arme-cac" && isFreeWeapon(e);
 }
 
 /** Profils esclaves recrutables dans ce Fer de Lance (tous modèles confondus, niveaux croissants). */

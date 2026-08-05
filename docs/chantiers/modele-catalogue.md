@@ -1,6 +1,6 @@
 # Chantier - Ajustements du modèle de catalogue
 
-Statut : **à implémenter, non commencé**. Ouvert le 2026-08-04.
+Statut : **point 1 fait le 2026-08-05, points 2 et 3 à implémenter**. Ouvert le 2026-08-04.
 
 Trois manques repérés en relisant le chapitre « Généralités » des règles de bataille
 (`rules corpus/LDR KA Saison2.pdf`, pages 4 à 14) et en auditant `catalog.json` v0.5.0. Aucun n'est
@@ -10,25 +10,38 @@ saisie approchée.
 Ils sont indépendants les uns des autres et de la
 [feuille de route Ost/Bataille](feuille-de-route-ost.md).
 
-## 1. Type de munition interdit aux armes gratuites
+## 1. Type de munition interdit aux armes gratuites - FAIT (2026-08-05)
 
-**C'est le seul des trois qui laisse aujourd'hui passer une liste illégale.**
+C'était le seul des trois qui laissait passer une liste illégale.
 
 Le livret (p. 13) : « l'affûtage » et la « dose de poison » ne peuvent pas être appliqués sur une
 arme de corps à corps gratuite, **la « flèche hydre » ne peut pas être utilisée avec un arc
 gratuit**.
 
-La Flèche hydre est modélisée comme un **type de munition** de la sorte `fleches`
-(`catalog.munitionKinds`), au palier à 15 Ko, quantité 1. Rien n'empêche de l'acheter pour un arc
-gratuit.
+La Flèche hydre est un **type de munition** de la sorte `fleches` (`catalog.munitionKinds`), au
+palier à 15 Ko, quantité 1. Elle porte désormais `forbiddenOnFreeWeapon: true` (catalogue 0.5.2).
+Le champ se pose sur le type, pas sur la sorte : seule la Flèche hydre est concernée, pas les
+flèches simples.
 
-**À faire** : un drapeau sur le *type* de munition, du genre `forbiddenOnFreeWeapon: true`, honoré
-par le moteur (issue de validation) et par le panneau d'achat (option grisée quand l'arme porteuse
-est gratuite). Le champ se pose sur le type, pas sur la sorte : seule la Flèche hydre est concernée,
-pas les flèches simples.
+Ce qui a été livré :
+
+- `isFreeWeapon` (`src/core/engine/equipment.ts`) : la définition partagée d'une arme gratuite,
+  c'est-à-dire une arme **que les règles donnent pour rien**, repérée par son prix nul au catalogue.
+  Une arme ramenée à 0 Ko par une remise n'en est pas une. `slaveMayBuy` et la facette « Gratuit »
+  du panneau d'achat, qui inlinaient chacune leur test, s'y adossent maintenant.
+- `munitionTypeAllowedOn` / `munitionTypesFor` (`munitions.ts`) : le panneau d'achat n'affiche plus
+  du tout la ligne interdite, plutôt que de la griser.
+- `validateMunitions` (`evaluate.ts`, `ruleId` `munition-free-weapon:<arme>`) : une liste importée
+  ou antérieure à la règle qui porte la munition interdite est refusée. Le prix de la munition reste
+  compté, pour qu'une liste illégale n'apparaisse pas moins chère qu'elle ne l'est.
+- Case à cocher « Pas sur une arme gratuite » dans l'admin, par type de munition.
+
+Seul l'**Arc court** (0 Ko, équipement de base de l'Éclaireur Mongo I) est concerné aujourd'hui : les
+autres arcs coûtent de 10 à 35 Ko, et les arbalètes n'ont pas de type Hydre dans leurs carreaux.
 
 À rapprocher des restrictions d'armes gratuites de la Geste de Safar, traitées en
-[phase 3 de la feuille de route](feuille-de-route-ost.md) : même motif, même endroit dans le moteur.
+[phase 3 de la feuille de route](feuille-de-route-ost.md) : même notion d'arme gratuite, à brancher
+sur `isFreeWeapon`.
 
 ## 2. Affûtage en amélioration d'arme
 

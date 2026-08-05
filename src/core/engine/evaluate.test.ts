@@ -536,6 +536,40 @@ describe("munitions", () => {
     ]).totalCost;
     expect(withMun - base).toBe(20); // 15 + 5
   });
+
+  // « La "flèche hydre" ne peut pas être utilisée avec un arc gratuit » (p.13). L'Arc court (0 Ko)
+  // est le seul arc gratuit du catalogue ; l'Éclaireur Mongo I le porte en équipement de base.
+  const HYDRE = catalog.munitionKinds!.find((k) => k.id === "fleches")!.types.find((t) => t.label === "Hydre")!.id;
+
+  it("la Flèche hydre sur un arc gratuit rend la liste illégale", () => {
+    const res = evaluateList(
+      catalog,
+      makeList([inst("gouns-eclaireur-mongo-1", { munitions: { "arc-court": { [HYDRE]: 1 } } })], "gouns"),
+    );
+    expect(res.issues.some((i) => i.ruleId === "munition-free-weapon:arc-court")).toBe(true);
+  });
+
+  it("la même flèche passe sur un arc payant, et les autres munitions passent sur l'arc gratuit", () => {
+    const paid = evalFang([
+      inst("fangs-executeur-1", { addedEquipmentIds: ["arc"], munitions: { arc: { [HYDRE]: 1 } } }),
+    ]);
+    expect(paid.issues.some((i) => i.ruleId?.startsWith("munition-free-weapon"))).toBe(false);
+
+    const simple = evaluateList(
+      catalog,
+      makeList([inst("gouns-eclaireur-mongo-1", { munitions: { "arc-court": { simple: 1 } } })], "gouns"),
+    );
+    expect(simple.issues.some((i) => i.ruleId?.startsWith("munition-free-weapon"))).toBe(false);
+  });
+
+  it("la munition interdite reste facturée : la liste illégale n'est pas la moins chère", () => {
+    const plain = evaluateList(catalog, makeList([inst("gouns-eclaireur-mongo-1")], "gouns")).totalCost;
+    const withHydre = evaluateList(
+      catalog,
+      makeList([inst("gouns-eclaireur-mongo-1", { munitions: { "arc-court": { [HYDRE]: 1 } } })], "gouns"),
+    ).totalCost;
+    expect(withHydre - plain).toBe(15);
+  });
 });
 
 describe("validation magie & emplacements", () => {

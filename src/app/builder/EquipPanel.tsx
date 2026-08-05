@@ -3,7 +3,9 @@ import {
   baseEquipmentCount,
   equipmentDiscount,
   equipmentMatchesEquipFilter,
+  isFreeWeapon,
   munitionKindForEquip,
+  munitionTypesFor,
   resolveMunitionLines,
   sealFor,
   sealOfferedFor,
@@ -153,7 +155,7 @@ export function EquipPanel({
         );
         if (!ok) return false;
       }
-      if (facets.has("free") && e.cost !== 0) return false;
+      if (facets.has("free") && !isFreeWeapon(e)) return false;
     }
     return true;
   };
@@ -243,6 +245,9 @@ export function EquipPanel({
   const munitionRow = (e: Catalog["equipment"][number]) => {
     const kind = munitionKindForEquip(cat, e.id);
     if (!kind) return null;
+    // Une arme gratuite n'ouvre pas tous les types : la Flèche hydre disparaît de la liste (p.13).
+    const types = munitionTypesFor(cat, e.id);
+    if (types.length === 0 && (e.baseMunitions ?? 0) <= 0) return null;
     const sel = munitions[e.id] ?? {};
     const open = openMun[e.id] ?? false;
     const base = e.baseMunitions ?? 0;
@@ -271,7 +276,7 @@ export function EquipPanel({
           </div>
         )}
         {open &&
-          kind.types.map((t) => {
+          types.map((t) => {
           const cur = sel[t.id]; // indice de palier sélectionné, ou undefined
           return (
             <div key={t.id} className="fe-mun-type">

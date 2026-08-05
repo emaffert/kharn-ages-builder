@@ -28,7 +28,7 @@ import {
   wornEquipmentIds,
 } from "./magic";
 import { engineIdOf } from "../model/engineIds";
-import { totalMunitionCost } from "./munitions";
+import { forbiddenMunitionLines, totalMunitionCost } from "./munitions";
 import { effectiveOrigin, needsOriginChoice, originFactionId } from "./origin";
 import {
   FRERE_D_ARMES,
@@ -828,6 +828,7 @@ function validate(
   validateMounts(cat, resolved, issues);
   validateMountOptions(cat, resolved, issues);
   validateForbiddenEquipment(cat, resolved, idx, issues);
+  validateMunitions(cat, resolved, issues);
   validateReservedEquipment(cat, resolved, issues);
   validateFixedBaseEquipment(cat, resolved, issues);
   validateRequiresPresent(cat, resolved, issues);
@@ -1498,6 +1499,30 @@ function validateForbiddenEquipment(
           sourceText: constraint.sourceText,
         });
       }
+    }
+  }
+}
+
+/**
+ * Munitions interdites sur une arme gratuite (p.13) : la Flèche hydre sur un arc gratuit. Le panneau
+ * d'achat ne les propose plus, donc seule une liste importée ou antérieure à la règle peut en porter.
+ */
+function validateMunitions(cat: Catalog, resolved: ResolvedInstance[], issues: Issue[]): void {
+  for (const ri of resolved) {
+    for (const equipId of Object.keys(ri.instance.munitions ?? {})) {
+      const lines = forbiddenMunitionLines(cat, ri.instance, equipId);
+      if (lines.length === 0) continue;
+      const weapon = cat.equipment.find((e) => e.id === equipId);
+      const noms = lines.map((l) => `« ${l.label} »`).join(", ");
+      issues.push({
+        severity: "error",
+        ferDeLanceId: ri.ferDeLanceId,
+        instanceId: ri.instance.instanceId,
+        ruleId: `munition-free-weapon:${equipId}`,
+        message: `« ${ri.profile.name} » : ${noms} ne peut pas être acheté pour « ${weapon?.name ?? equipId} », qui est une arme gratuite.`,
+        sourceText:
+          "« L'affûtage » et la « dose de poison » ne peuvent pas être appliqués sur une arme de corps à corps gratuite, la « flèche hydre » ne peut pas être utilisée avec un arc gratuit.",
+      });
     }
   }
 }

@@ -132,6 +132,39 @@ describe("EquipPanel (vue)", () => {
     expect(row.textContent).toContain(`${stacked.cost} Ko / unité`);
   });
 
+  // « La "flèche hydre" ne peut pas être utilisée avec un arc gratuit » (p.13) : elle ne doit pas
+  // être proposée du tout sur l'Arc court, le seul arc gratuit du catalogue.
+  describe("munitions interdites sur une arme gratuite", () => {
+    const hydre = catalog.munitionKinds!.find((k) => k.id === "fleches")!.types.find((t) => t.label === "Hydre")!;
+
+    /** Déplie le bloc « Munitions » de l'arme portée et rend son contenu. */
+    function openMunitions(profileId: string, faction: string) {
+      const { container } = render(<EquipPanel {...baseProps(profileId, faction)} />);
+      const head = [...container.querySelectorAll(".fe-mun-head")][0] as HTMLButtonElement;
+      fireEvent.click(head);
+      return head.closest(".fe-mun-block") as HTMLElement;
+    }
+
+    it("l'Arc court gratuit ne propose pas la Flèche hydre, mais garde les autres types", () => {
+      // L'Éclaireur Mongo I porte l'Arc court (0 Ko) en équipement de base.
+      const block = openMunitions("gouns-eclaireur-mongo-1", "gouns");
+      expect(within(block).queryByText(hydre.label)).toBeNull();
+      expect(within(block).getByText("Perce-armure")).toBeTruthy();
+    });
+
+    it("un arc payant la propose toujours", () => {
+      // Les Archers khârns portent un arc payant en équipement de base.
+      const porteur = catalog.profiles.find((p) =>
+        p.baseEquipmentIds.some((id) => {
+          const e = catalog.equipment.find((x) => x.id === id);
+          return e?.munitionKind === "fleches" && e.cost > 0;
+        }),
+      )!;
+      const block = openMunitions(porteur.id, porteur.factionId ?? "kharns");
+      expect(within(block).getByText(hydre.label)).toBeTruthy();
+    });
+  });
+
   it("ouvre la fiche d'un objet équipé au clic (onInfo)", () => {
     const props = baseProps(armed.id);
     const { container } = render(<EquipPanel {...props} />);

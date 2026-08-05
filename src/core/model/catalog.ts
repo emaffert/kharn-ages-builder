@@ -497,6 +497,12 @@ export const MunitionTypeSchema = z.object({
   id: z.string(),
   label: z.string(),
   quantities: z.array(z.number()),
+  /**
+   * Interdit sur une **arme gratuite** (p.13) : « la "flèche hydre" ne peut pas être utilisée avec un
+   * arc gratuit ». Le drapeau se pose sur le type, pas sur la sorte - seule la Flèche hydre est
+   * concernée, pas les flèches simples. Cf. `isFreeWeapon` pour ce qui compte comme arme gratuite.
+   */
+  forbiddenOnFreeWeapon: z.boolean().optional(),
 });
 export type MunitionType = z.infer<typeof MunitionTypeSchema>;
 

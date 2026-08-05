@@ -4,6 +4,7 @@
  * Référence : docs/schema-donnees.md - couche 2 (contraintes & effets).
  */
 
+export * from "./equipment";
 export * from "./evaluate";
 export * from "./magic";
 export * from "./origin";

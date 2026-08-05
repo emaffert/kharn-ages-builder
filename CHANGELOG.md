@@ -7,6 +7,20 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (8)
+
+### Catalogue 0.5.3 : les casques ont leur famille
+
+- **Les six casques ne sont plus rangés parmi les objets.** Barbute, Bassinet, Casque à nasal, Casque
+  à plumet, Cervelière et Heaume forment leur propre famille, avec son groupe et son filtre dans le
+  choix d'équipement.
+- **Un casque par Safar**, sur son propre emplacement : il se porte toujours en complément d'une
+  armure, sans lui prendre sa place, mais on n'en achète plus deux. Un compteur le montre comme pour
+  l'armure.
+- **La durée de vie des casques est affichée.** Le Bassinet et la Cervelière ont 5 cases à cocher,
+  qui figuraient jusqu'ici au milieu de leur texte ; les quatre autres n'en ont pas, et leur fiche
+  l'annonce clairement : leurs effets valent toute la partie.
+
 ## 2026-08-06 (7)
 
 ### Les armes gratuites sont enfin comptées

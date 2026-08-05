@@ -1,6 +1,6 @@
 # Chantier - Ajustements du modèle de catalogue
 
-Statut : **point 1 fait le 2026-08-05, points 2 et 3 à implémenter**. Ouvert le 2026-08-04.
+Statut : **points 1 et 3 faits le 2026-08-05, point 2 à implémenter**. Ouvert le 2026-08-04.
 
 Trois manques repérés en relisant le chapitre « Généralités » des règles de bataille
 (`rules corpus/LDR KA Saison2.pdf`, pages 4 à 14) et en auditant `catalog.json` v0.5.0. Aucun n'est
@@ -62,25 +62,32 @@ restriction « pas sur une arme de corps à corps gratuite » du point 1 s'appli
 différentes, l'objet empilable est la bonne modélisation. Elle reste concernée par la seule
 restriction « pas sur une arme de corps à corps gratuite ».
 
-## 3. Catégorie « Casque »
+## 3. Catégorie « Casque » - FAIT (2026-08-05)
 
 Les six casques (Barbute 10, Bassinet 8, Casque à nasal 6, Casque à plumet 8, Cervelière 10,
-Heaume 15) sont saisis en `objet`. Le livret (p. 14) en fait une famille à part : « les casques
+Heaume 15) étaient saisis en `objet`. Le livret (p. 14) en fait une famille à part : « les casques
 peuvent être portés par n'importe quel Safar, en complément d'une armure ou non ».
 
-Le comportement actuel est correct - un `objet` ne consomme pas l'emplacement d'armure - mais la
-famille n'est pas nommée, donc l'interface ne peut pas les regrouper ni les présenter comme un choix
-unique.
+Ce qui a été livré (catalogue 0.5.3) :
 
-**À faire** : une catégorie `casque` dans `EquipmentCategorySchema`, avec une **durabilité
-optionnelle**. Le livret précise « il coche une case de durée de vie à chaque utilisation, **si le
-casque n'en comporte pas**, ces effets sont effectifs pour toute la durée de la partie » : seuls le
-**Bassinet** et la **Cervelière** ont des cases.
+- catégorie `casque` dans `EquipmentCategorySchema`. Les listes de l'admin en dérivent
+  (`EQUIPMENT_CATEGORIES = EquipmentCategorySchema.options`), seuls les libellés de présentation
+  étaient à écrire : `PURCHASE_CATS`, `CAT_LABEL` et `EQUIP_KIND` côté constructeur,
+  `EQUIP_CAT_ORDER` / `EQUIP_CAT_LABEL` et `CATEGORY_LABEL` côté admin ;
+- **durabilité optionnelle** sur le champ `Equipment.durability` qui existait déjà : le Bassinet et
+  la Cervelière ont 5 cases chacun, sorties de leur texte d'effet où elles étaient racontées. Les
+  quatre autres n'en ont pas, et la fiche d'objet l'annonce désormais (« Durée de vie : toute la
+  partie »), comme le veut le livret ;
+- **un casque par Safar**, sur son propre emplacement : puce de compteur, achat d'un second fermé,
+  avertissement si une liste en porte deux. Il n'occupe pas l'emplacement d'armure. Le plafond de 1
+  ne vient pas du livret mais du jeu : aucune action ne permet de changer de casque en partie ;
+- le résumé d'achat lit le casque sur sa propre ligne, comme l'armure.
 
-Attention en changeant la catégorie : elle est référencée par `PURCHASE_CATS` et `CAT_LABEL`
-(`src/app/builder/shared.ts:351`), par les filtres `forbiddenCats`, et par les
-`equipmentCategories` des effets `unlock-upgrade` déjà saisis. Vérifier qu'aucune carte n'octroyait
-une amélioration « objets » en comptant sur les casques.
+Le piège était ailleurs : **quatre contraintes `forbids-equipment` énuméraient toutes les catégories**
+pour dire « aucun équipement » (les trois Likans et la carte Xayìn & Muskh). Sans retouche, elles
+ouvraient les casques à ces figurines. `casque` y a été ajouté, et un test de catalogue garde la
+porte fermée pour la prochaine catégorie. En revanche, aucun effet `unlock-upgrade` ni aucune règle
+de remise ne visait `objet` : aucune amélioration n'a changé de main.
 
 ## Points écartés
 

@@ -1,5 +1,5 @@
 {
-  "version": "0.5.2",
+  "version": "0.5.3",
   "rulesVersion": "FAQ 2026-01",
   "settings": {
     "temboEquipmentSurcharge": {
@@ -1549,6 +1549,7 @@
               "bouclier",
               "armure",
               "munition",
+              "casque",
               "objet",
               "monture-option"
             ]
@@ -1641,6 +1642,7 @@
               "bouclier",
               "armure",
               "munition",
+              "casque",
               "objet",
               "monture-option"
             ]
@@ -1740,6 +1742,7 @@
               "bouclier",
               "armure",
               "munition",
+              "casque",
               "objet",
               "monture-option"
             ]
@@ -13876,42 +13879,44 @@
     {
       "id": "casque-a-nasal",
       "name": "Casque à nasal",
-      "category": "objet",
+      "category": "casque",
       "cost": 6,
       "effectsText": "Le porteur n'est pas obligé de choisir une des caractéristiques utilisées par l'attaquant pour se défendre."
     },
     {
       "id": "bassinet",
       "name": "Bassinet",
-      "category": "objet",
+      "category": "casque",
       "cost": 8,
-      "effectsText": "Permet de relancer un jet d'armure raté. 8 utilisations.\ns'il est intact, peut être détruit en une fois pour ignorer les dégâts critiques."
+      "durability": 5,
+      "effectsText": "Permet de relancer un jet d'armure raté.\ns'il est intact, peut être détruit en une fois pour ignorer les dégâts critiques."
     },
     {
       "id": "casque-a-plumet",
       "name": "Casque à plumet",
-      "category": "objet",
+      "category": "casque",
       "cost": 8,
       "effectsText": "Ne subit pas les dégâts du aux RC."
     },
     {
       "id": "barbute",
       "name": "Barbute",
-      "category": "objet",
+      "category": "casque",
       "cost": 10,
       "effectsText": "Ajoute la maitrise défensive sur tous les dés."
     },
     {
       "id": "cerveliere",
       "name": "Cervelière",
-      "category": "objet",
+      "category": "casque",
       "cost": 10,
-      "effectsText": "Baisse de 2 le seuil de l'armure portée.\nS'ill n'a pas d'armure ignore les dégâts sur une RC.\n5 utilisations."
+      "durability": 5,
+      "effectsText": "Baisse de 2 le seuil de l'armure portée.\nS'ill n'a pas d'armure ignore les dégâts sur une RC."
     },
     {
       "id": "heaume",
       "name": "Heaume",
-      "category": "objet",
+      "category": "casque",
       "cost": 15,
       "effectsText": "ignore les effets \"assommé\", \"sonné\" et \"perce armure\"."
     },
@@ -16429,6 +16434,7 @@
               "arme-tir",
               "bouclier",
               "armure",
+              "casque",
               "objet"
             ]
           },

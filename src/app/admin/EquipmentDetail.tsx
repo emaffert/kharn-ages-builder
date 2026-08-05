@@ -10,6 +10,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   "arme-tir": "Tir",
   bouclier: "Bouclier",
   armure: "Armure",
+  casque: "Casque",
   objet: "Objet",
 };
 
@@ -36,11 +37,13 @@ export function EquipmentDetail({
   const isTir = e.category === "arme-tir";
   const isBouclier = e.category === "bouclier";
   const isArmure = e.category === "armure";
+  const isCasque = e.category === "casque";
   // Une arme ou un objet peut protéger (Vouge de Moringa). Les champs d'armure ne s'affichent alors
   // que si l'objet en porte déjà, ou si on vient de les demander - sinon ils encombreraient toutes
   // les armes du catalogue pour un cas isolé.
   const showProtectionValues = isArmure || protects(e) || protectionAsked;
-  const showProtection = showProtectionValues || isBouclier;
+  // Un casque a sa durée de vie sans être une protection chiffrée : la section s'ouvre pour lui aussi.
+  const showProtection = showProtectionValues || isBouclier || isCasque;
   const num = (label: string, value: number | undefined, key: keyof Equipment, className = "w-24") => (
     <NumberField
       label={label}
@@ -230,14 +233,16 @@ export function EquipmentDetail({
               proposés, mais seulement à la demande - ils n'ont rien à faire sur toutes les armes. */}
           {showProtection && (
             <Section
-              title={isArmure ? "Armure" : isBouclier ? "Bouclier" : "Protection"}
+              title={isArmure ? "Armure" : isBouclier ? "Bouclier" : isCasque ? "Casque" : "Protection"}
               icon="armor"
               note={
                 isArmure
                   ? "protection échec / seuil / réussite · DV"
                   : showProtectionValues
                     ? "protection échec / seuil / réussite · DV - s'ajoute à l'armure du porteur, sans occuper son emplacement"
-                    : "durée de vie"
+                    : isCasque
+                      ? "durée de vie = nombre de cases à cocher sur la carte ; sans case, les effets valent toute la partie"
+                      : "durée de vie"
               }
             >
               <div className="flex flex-wrap items-end gap-3">

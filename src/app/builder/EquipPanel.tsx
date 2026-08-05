@@ -106,12 +106,19 @@ export function EquipPanel({
   const canWearArmor = !forbidden.has("armure");
   // Le compteur « cumulable » n'a de sens que si la figurine en porte une ou peut en acheter une.
   const showStackableSlot = canWearArmor && (stackableUsed > 0 || cat.equipment.some(isStackableArmor));
+  // Casque (p.14) : il se porte « en complément d'une armure ou non », donc sur son propre
+  // emplacement, mais un seul - rien dans le jeu ne permet d'en changer en cours de partie.
+  const helmetUsed = worn.filter((e) => e.category === "casque").length;
+  const canWearHelmet = !forbidden.has("casque");
+  const showHelmetSlot =
+    canWearHelmet && (helmetUsed > 0 || cat.equipment.some((e) => e.category === "casque"));
 
   const blockReason = (e: Catalog["equipment"][number]): string | null => {
     // « Chaque Safar peut partir au combat avec une et unique arme gratuite » (FAQ 2026), celle de sa
     // carte comprise. Les autres restent visibles - le joueur doit pouvoir les comparer - mais leur
     // achat est fermé tant qu'il n'a pas rendu celle qu'il porte.
     if (holdsFreeWeapon && isFreeWeapon(e)) return "Une seule arme gratuite par Safar : rendez d'abord la sienne";
+    if (e.category === "casque") return helmetUsed >= 1 ? "Casque déjà porté" : null;
     if (e.category !== "armure") return null;
     if (isStackableArmor(e)) {
       return stackableUsed >= armorCap ? "Emplacement d'armure cumulable déjà occupé" : null;
@@ -360,15 +367,18 @@ export function EquipPanel({
       ? "Plusieurs armures équipées."
       : stackableUsed > armorCap
         ? "Plusieurs armures cumulables équipées."
-        : null;
+        : helmetUsed > 1
+          ? "Plusieurs casques équipés."
+          : null;
 
   return (
     <div className="fe-root">
       {equipWarning && <p className="fe-warn">⚠ {equipWarning}</p>}
-      {canWearArmor && (
+      {(canWearArmor || showHelmetSlot) && (
         <div className="flex flex-wrap items-center gap-2">
-          <SlotChip label="Armure" used={armorUsed} cap={armorCap} />
+          {canWearArmor && <SlotChip label="Armure" used={armorUsed} cap={armorCap} />}
           {showStackableSlot && <SlotChip label="Armure cumulable" used={stackableUsed} cap={armorCap} />}
+          {showHelmetSlot && <SlotChip label="Casque" used={helmetUsed} cap={1} />}
         </div>
       )}
 

@@ -125,7 +125,11 @@ export function PurchaseSummary({
   };
   const armes = equip.filter((e) => WEAPON_CATS.includes(e.category)).map(equipChip);
   const armures = equip.filter((e) => e.category === "armure").map(equipChip);
-  const objets = equip.filter((e) => !WEAPON_CATS.includes(e.category) && e.category !== "armure").map(equipChip);
+  // Le casque a son propre emplacement (p.14) : il se lit à part, comme l'armure.
+  const casques = equip.filter((e) => e.category === "casque").map(equipChip);
+  const objets = equip
+    .filter((e) => !WEAPON_CATS.includes(e.category) && e.category !== "armure" && e.category !== "casque")
+    .map(equipChip);
   // Monture : options payées par le cavalier (paniers « cavalier » + « partagée »), groupées en « Compétences ».
   const monture: SummaryChip[] = [];
   if (mountId != null) {
@@ -205,6 +209,7 @@ export function PurchaseSummary({
   const rows: [string, SummaryChip[]][] = [
     ["Armes", armes],
     ["Armure", armures],
+    ["Casque", casques],
     ["Équipement", objets],
     ["Cartes", cartes],
     ["Magie", magie],

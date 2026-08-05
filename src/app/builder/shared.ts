@@ -348,12 +348,13 @@ export function carrierLabel(p: Profile, cat: Catalog, factionId?: string): stri
 }
 
 /** Catégories d'équipement qu'une figurine peut acheter (hors munition/option de monture). */
-export const PURCHASE_CATS = ["arme-cac", "arme-tir", "bouclier", "armure", "objet"];
+export const PURCHASE_CATS = ["arme-cac", "arme-tir", "bouclier", "armure", "casque", "objet"];
 export const CAT_LABEL: Record<string, string> = {
   "arme-cac": "Corps à corps",
   "arme-tir": "Tir",
   bouclier: "Bouclier",
   armure: "Armure",
+  casque: "Casque",
   objet: "Objet",
 };
 
@@ -535,6 +536,7 @@ const EQUIP_KIND: Record<string, string> = {
   "arme-tir": "Tir",
   bouclier: "Bouclier",
   armure: "Armure",
+  casque: "Casque",
   objet: "Objet",
 };
 
@@ -564,6 +566,10 @@ export function equipInfo(e: Catalog["equipment"][number], cat?: Catalog): ItemI
     });
   }
   if (e.durability != null) stats.push({ label: "Durée de vie", value: String(e.durability) });
+  // Casque sans case à cocher : la règle vaut la peine d'être dite, elle est à l'avantage du porteur.
+  if (e.category === "casque" && e.durability == null) {
+    stats.push({ label: "Durée de vie", text: "toute la partie" });
+  }
   if (e.munitionKind) {
     const kind = cat?.munitionKinds?.find((k) => k.id === e.munitionKind);
     const nom = kind?.label ?? e.munitionKind;

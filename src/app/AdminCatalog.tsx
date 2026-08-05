@@ -24,12 +24,13 @@ import { ResetToFileAction } from "./admin/ResetToFileAction";
 import "./admin/admin.css";
 
 // Ordre et libellés des catégories d'équipement pour le regroupement de la barre latérale.
-const EQUIP_CAT_ORDER = ["arme-cac", "arme-tir", "bouclier", "armure", "objet"];
+const EQUIP_CAT_ORDER = ["arme-cac", "arme-tir", "bouclier", "armure", "casque", "objet"];
 const EQUIP_CAT_LABEL: Record<string, string> = {
   "arme-cac": "Corps à corps",
   "arme-tir": "Tir",
   bouclier: "Boucliers",
   armure: "Armures",
+  casque: "Casques",
   objet: "Objets",
 };
 

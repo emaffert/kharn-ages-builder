@@ -25,6 +25,43 @@ describe("catalogue", () => {
     expect(likan.skills.find((s) => s.skillId === "aliene")?.value).toBe("femelle Fang");
   });
 
+  // Les casques sont une famille à part (p.14), et leur durée de vie est le nombre de cases à cocher
+  // de la carte : seuls le Bassinet et la Cervelière en ont, les autres valent toute la partie.
+  it("range les six casques dans leur catégorie, avec la durée de vie des seuls concernés", () => {
+    const casques = catalog.equipment.filter((e) => e.category === "casque");
+    expect(casques.map((e) => e.id).sort()).toEqual([
+      "barbute",
+      "bassinet",
+      "casque-a-nasal",
+      "casque-a-plumet",
+      "cerveliere",
+      "heaume",
+    ]);
+    const avecDV = casques.filter((e) => e.durability != null);
+    expect(avecDV.map((e) => [e.id, e.durability])).toEqual([
+      ["bassinet", 5],
+      ["cerveliere", 5],
+    ]);
+    // Le nombre d'utilisations a quitté les textes d'effet pour le champ dédié.
+    expect(casques.filter((e) => /utilisations/i.test(e.effectsText))).toEqual([]);
+  });
+
+  // « Aucun équipement » se dit en énumérant les catégories : en oublier une ouvre une porte.
+  it("n'ouvre pas les casques à qui n'a droit à aucun équipement", () => {
+    const holders = [
+      ...catalog.profiles.map((p) => ({ id: p.id, rules: p.recruitment })),
+      ...catalog.specialCards.map((c) => ({ id: c.id, rules: c.constraints })),
+    ];
+    const trous = holders.filter(({ rules }) =>
+      rules.some((r) => {
+        if (r.type !== "forbids-equipment") return false;
+        const cats = (r.params as { categories?: string[] }).categories ?? [];
+        return cats.includes("objet") && cats.includes("armure") && !cats.includes("casque");
+      }),
+    );
+    expect(trous.map((h) => h.id)).toEqual([]);
+  });
+
   it("a des identifiants de profil uniques", () => {
     const ids = catalog.profiles.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);

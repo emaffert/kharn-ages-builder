@@ -206,7 +206,11 @@ export const EquipmentSchema = z.object({
   munitionKind: z.string().optional(),
   /** Quantité de munitions de base incluse (armes de tir). */
   baseMunitions: z.number().optional(),
-  /** Durée de vie (DV) - boucliers et armures. */
+  /**
+   * Durée de vie (DV) - boucliers, armures et casques : le nombre de cases à cocher imprimées sur la
+   * carte. Absente pour un casque qui n'en porte pas, et le livret est explicite là-dessus (p.14) :
+   * « si le casque n'en comporte pas, ces effets sont effectifs pour toute la durée de la partie ».
+   */
   durability: z.number().optional(),
   /**
    * **Empilable** : une même figurine peut en porter plusieurs exemplaires (ex. doses de poison,

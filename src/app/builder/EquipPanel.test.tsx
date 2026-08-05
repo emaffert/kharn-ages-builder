@@ -132,6 +132,40 @@ describe("EquipPanel (vue)", () => {
     expect(row.textContent).toContain(`${stacked.cost} Ko / unité`);
   });
 
+  // Casques (p.14) : portés « en complément d'une armure ou non », donc sur leur propre emplacement,
+  // mais un seul par Safar.
+  describe("emplacement de casque", () => {
+    const casque = catalog.equipment.find((e) => e.category === "casque")!;
+    const autreCasque = catalog.equipment.find((e) => e.category === "casque" && e.id !== casque.id)!;
+
+    /** Bouton d'ajout d'un équipement dans le volet « Disponible ». */
+    function addButton(props: ReturnType<typeof baseProps>, equipName: string) {
+      const { container } = render(<EquipPanel {...props} />);
+      const avail = container.querySelectorAll(".fe-panes > div")[1] as HTMLElement;
+      const label = within(avail).getAllByText(equipName)[0];
+      return label.closest(".fe-item")!.querySelector(".fe-move.add") as HTMLButtonElement;
+    }
+
+    it("affiche le compteur de casque et laisse acheter le premier", () => {
+      const props = baseProps("fangs-goulue-1");
+      expect(addButton(props, casque.name).disabled).toBe(false);
+      const { container } = render(<EquipPanel {...props} />);
+      const slots = [...container.querySelectorAll(".fe-slot")].map((s) => s.textContent);
+      expect(slots.some((t) => t?.startsWith("Casque") && t.includes("0/1"))).toBe(true);
+    });
+
+    it("ferme l'achat d'un second casque", () => {
+      const props = { ...baseProps("fangs-goulue-1"), added: [casque.id] };
+      expect(addButton(props, autreCasque.name).disabled).toBe(true);
+    });
+
+    it("n'occupe pas l'emplacement d'armure", () => {
+      const armure = catalog.equipment.find((e) => e.category === "armure" && e.reservedTo == null)!;
+      const props = { ...baseProps("fangs-goulue-1"), added: [casque.id] };
+      expect(addButton(props, armure.name).disabled).toBe(false);
+    });
+  });
+
   // « Chaque Safar peut partir au combat avec une et unique arme gratuite » (FAQ 2026), celle de sa
   // carte comprise : les autres restent affichées, mais leur achat est fermé.
   describe("une seule arme gratuite par Safar", () => {

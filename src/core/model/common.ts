@@ -20,6 +20,10 @@ export const EquipmentCategorySchema = z.enum([
   "arme-tir",
   "bouclier",
   "armure",
+  // Famille à part (Règles de bataille p.14) : « les casques peuvent être portés par n'importe quel
+  // Safar, en complément d'une armure ou non ». Ils n'occupent donc pas l'emplacement d'armure, mais
+  // un Safar n'en porte qu'un - aucune action du jeu ne permet d'en changer en cours de partie.
+  "casque",
   "objet",
 ]);
 export type EquipmentCategory = z.infer<typeof EquipmentCategorySchema>;

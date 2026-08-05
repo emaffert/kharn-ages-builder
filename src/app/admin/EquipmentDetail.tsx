@@ -70,6 +70,18 @@ export function EquipmentDetail({
       </select>
     </Field>
   );
+  // « Tranchante » : ce qui coupe (lames, haches, faux), par opposition à ce qui frappe (gourdins,
+  // masses, marteaux). Le drapeau sert aux améliorations qui l'exigent, l'Affûtage aujourd'hui.
+  const tranchantField = (
+    <label className="mt-3 flex items-center gap-2 text-xs adm-muted">
+      <input
+        type="checkbox"
+        checked={e.tranchant ?? false}
+        onChange={(ev) => onChange({ tranchant: ev.target.checked || undefined })}
+      />
+      Tranchante : elle possède une lame ou un taillant (et non une masse, une pointe ou un fléau)
+    </label>
+  );
   const perceArmureField = (
     <Field label="perce-armure" className="w-28">
       <input
@@ -142,6 +154,7 @@ export function EquipmentDetail({
                 {num("allonge", e.allonge, "allonge")}
                 {perceArmureField}
               </div>
+              {tranchantField}
             </Section>
           )}
 
@@ -225,6 +238,8 @@ export function EquipmentDetail({
                 {num("allonge", e.allonge, "allonge")}
                 {perceArmureField}
               </div>
+              {/* Un arc n'a pas de tranchant, une hache de jet en a un : la case vaut aussi ici. */}
+              {tranchantField}
             </Section>
           )}
 

@@ -958,6 +958,10 @@ body {
 .fe-upgrades { margin-left: 18px; display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 2px 0 2px; }
 .fe-upgrade { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--bone-dim);
   cursor: pointer; }
+/* Le nom ouvre la fiche de l'amélioration ; la case, elle, l'achète. */
+.fe-upgrade-name { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer;
+  text-align: left; text-decoration: underline dotted var(--hair-strong); text-underline-offset: 3px; }
+.fe-upgrade-name:hover { color: var(--bone); text-decoration-color: var(--ember); }
 .fe-upgrade-cost { color: var(--ember); font-weight: 600; }
 .fe-mun-head { display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0;
   cursor: pointer; font-weight: 600; font-size: 12px; color: var(--bone); text-align: left; }

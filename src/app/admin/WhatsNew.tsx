@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Dialog } from "@ui";
 import changelogSource from "../../../CHANGELOG.md?raw";
 import { entryKey, parseEntries, unseenEntries } from "./changelog";
+import { MarkdownInline } from "./MarkdownInline";
 
 /**
  * Annonce des nouveautés à l'ouverture de l'administration, une fois par version.
@@ -61,10 +62,12 @@ export function WhatsNew() {
             {plusieurs && <h2 className="adm-whatsnew-date">{entry.date}</h2>}
             {entry.sections.map((s) => (
               <section key={s.title}>
-                {s.title && <h3>{s.title}</h3>}
+                {s.title && <h3><MarkdownInline text={s.title} /></h3>}
                 <ul>
                   {s.items.map((item, i) => (
-                    <li key={i}>{item}</li>
+                    <li key={i}>
+                      <MarkdownInline text={item} />
+                    </li>
                   ))}
                 </ul>
               </section>

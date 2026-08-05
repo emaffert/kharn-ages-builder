@@ -7,6 +7,51 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-08-06 (10)
+
+### Key le Sénéchal retrouve ses armes
+
+- **Une interdiction partielle ne ferme plus toute une famille d'équipement.** La carte de Key dit
+  « ne peut manier d'arme de tir ou à 2 mains » : le constructeur en concluait qu'aucune arme de
+  corps à corps ne lui était accessible, et lui présentait une liste vide. Il ne lui retire
+  désormais que les armes à deux mains, en lui laissant toutes celles à une main. Les armes
+  bâtardes, qui se manient aussi d'une seule main, lui restent ouvertes.
+- **Le constructeur et la validation lisent maintenant la même règle.** La liste proposée à l'achat
+  et ce que le contrôle de liste accepte ne pouvaient pas coïncider : c'est désormais le même calcul
+  des deux côtés. Une interdiction visant une catégorie entière, elle, la ferme toujours
+  complètement, comme pour les Likans.
+
+### L'annonce des nouveautés se lit mieux
+
+- Passé neuf mises en ligne dans la même journée, la fenêtre « Nouveautés » de l'administration
+  cessait de s'ouvrir : la dixième était rangée avant la neuvième, et donc tenue pour déjà lue.
+- Le journal est écrit en Markdown, et ses marques de mise en forme s'affichaient telles quelles :
+  les passages en gras sont maintenant rendus comme tels, au lieu d'être encadrés d'astérisques.
+
+## 2026-08-06 (9)
+
+### Catalogue 0.5.4 : l'Affûtage s'applique enfin à une arme
+
+- **L'Affûtage n'est plus un objet acheté dans son coin.** Il se coche désormais sous l'arme qu'il
+  aiguise, comme le Borax ou l'arme empoisonnée, et ses 8 Kouronnes s'ajoutent au prix de cette arme.
+- **Il n'est proposé que sur les armes qui ont un tranchant**, comme le veut le livret : les épées,
+  haches, dagues, faux et autres lames. Un gourdin, une masse, un marteau ou une canne ne
+  l'affichent plus du tout. Quarante-quatre des quatre-vingt-quatre armes de corps à corps du
+  catalogue sont concernées.
+- **Ni sur une arme gratuite** : la règle qui l'interdit était jusqu'ici sans effet, faute de savoir
+  sur quelle arme l'Affûtage portait.
+- **Les listes existantes ne perdent rien** : celles qui avaient acheté l'objet Affûtage voient
+  simplement la ligne disparaître de leur équipement, et leur total baisser d'autant. L'amélioration
+  est à recocher sur l'arme voulue.
+- **Le nom d'une amélioration s'ouvre d'un clic** pour lire ce qu'elle fait et ce qu'elle coûte, sans
+  avoir à la cocher pour le découvrir. Vaut pour toutes : Affûtage, Borax, arme empoisonnée.
+
+### Le prix des objets se lit sur la ligne de la figurine
+
+- **Chaque objet du résumé affiche son prix**, y compris quand il n'a ni munition ni amélioration -
+  jusqu'ici, une arme achetée telle quelle restait muette sur son coût. Ce qui ne coûte rien est
+  annoncé « gratuit » plutôt que laissé vide.
+
 ## 2026-08-06 (8)
 
 ### Catalogue 0.5.3 : les casques ont leur famille

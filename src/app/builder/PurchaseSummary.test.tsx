@@ -44,6 +44,29 @@ describe("PurchaseSummary (vue)", () => {
     expect(onPick).toHaveBeenCalledTimes(1);
   });
 
+  // Le prix se lit sur la puce elle-même, sans avoir à ouvrir la fiche - y compris quand l'objet ne
+  // porte ni munition ni amélioration, cas où il restait muet.
+  it("affiche le prix d'une arme achetée telle quelle", () => {
+    const arme = catalog.equipment.find((e) => e.category === "arme-cac" && e.cost > 0 && e.reservedTo == null)!;
+    const { container } = render(
+      <PurchaseSummary {...baseProps("fangs-goulue-1")} added={[arme.id]} onPick={() => {}} />,
+    );
+    const chip = [...container.querySelectorAll(".bld-loadout-item")].find((el) =>
+      el.textContent?.startsWith(arme.name),
+    )!;
+    expect(chip.querySelector(".px")!.textContent).toBe(`${arme.cost} Ko`);
+  });
+
+  it("annonce « gratuit » pour une arme qui ne coûte rien", () => {
+    const { container } = render(
+      <PurchaseSummary {...baseProps("fangs-goulue-1")} added={["gourdin"]} onPick={() => {}} />,
+    );
+    const chip = [...container.querySelectorAll(".bld-loadout-item")].find((el) =>
+      el.textContent?.startsWith("Gourdin"),
+    )!;
+    expect(chip.querySelector(".px")!.textContent).toBe("gratuit");
+  });
+
   it("ne rend rien quand il n'y a aucun achat ni équipement de base", () => {
     // Profil sans équipement de base : le panneau se replie (retourne null).
     const bare = catalog.profiles.find((p) => p.baseEquipmentIds.length === 0);

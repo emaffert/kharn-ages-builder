@@ -24,8 +24,10 @@ import {
   PURCHASE_CATS,
   equipAllowedIn,
   equipBits,
+  equipForbidden,
   equipInfo,
   forbiddenCats,
+  upgradeInfo,
   type ItemInfo,
 } from "./shared";
 
@@ -141,7 +143,9 @@ export function EquipPanel({
       // Équipement de la MONTURE (Caparaçon) : jamais ici (il s'achète sur la fiche de la monture).
       (e.mountEquipment == null || (e.mountEquipment === "rider" && hasMount)) &&
       PURCHASE_CATS.includes(e.category) &&
-      !forbidden.has(e.category) &&
+      // Interdiction de la carte, objet par objet : « ne peut manier d'arme à 2 mains » ne retire
+      // que les armes à deux mains, pas toute la catégorie (cf. `forbidRuleHits`, partagé avec le moteur).
+      !equipForbidden(cat, p, e) &&
       (!asSlave || slaveMayBuy(e)) &&
       equipAllowedIn(cat, e, p, factionId) &&
       !isHiddenSeal(e) &&
@@ -234,22 +238,32 @@ export function EquipPanel({
   const upgradeRow = (e: Catalog["equipment"][number]) => {
     // Les améliorations propres à l'objet et celles qu'un effet lui octroie se cochent de la même
     // façon : une seule liste, produite par la règle du cœur (cf. `upgradesForEquipment`).
-    const ups = upgradesForEquipment(e, grantedUpgrades);
+    const ups = upgradesForEquipment(e, grantedUpgrades, cat.equipmentUpgrades);
     if (ups.length === 0) return null;
     const active = equipmentUpgrades[e.id] ?? [];
     return (
       <div className="fe-upgrades">
         {ups.map((u) => (
-          <label key={u.id} className="fe-upgrade">
+          // La case achète, le nom explique : cliquer le nom ouvre la fiche de l'amélioration plutôt
+          // que de la cocher par mégarde en cherchant à savoir ce qu'elle fait.
+          <span key={u.id} className="fe-upgrade">
             <input
               type="checkbox"
               className="ui-check"
               checked={active.includes(u.id)}
               onChange={() => onToggleEquipmentUpgrade(e.id, u.id)}
+              aria-label={`${u.label} (+${u.cost} Ko)`}
             />
-            <span>{u.label}</span>
+            <button
+              type="button"
+              className="fe-upgrade-name"
+              onClick={() => onInfo(upgradeInfo(u))}
+              title="Voir le détail"
+            >
+              {u.label}
+            </button>
             <span className="fe-upgrade-cost">+{u.cost} Ko</span>
-          </label>
+          </span>
         ))}
       </div>
     );

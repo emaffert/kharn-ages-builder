@@ -15,6 +15,7 @@ import { MountOptionDetail } from "./admin/MountOptionDetail";
 import { isTechnicalId, suggestId } from "@core";
 import { FactionsDetail } from "./admin/FactionsDetail";
 import { SettingsDetail } from "./admin/SettingsDetail";
+import { UpgradeDetail } from "./admin/UpgradesDetail";
 import { WhatsNew } from "./admin/WhatsNew";
 import { PublishAction } from "./admin/PublishAction";
 import { NewVersionNotice } from "./admin/NewVersionNotice";
@@ -38,6 +39,7 @@ type AdminView =
   | "profiles"
   | "equipment"
   | "skills"
+  | "equipment-upgrades"
   | "special-cards"
   | "spells"
   | "magic-ways"
@@ -49,7 +51,10 @@ type AdminView =
 // Navigation groupée par domaine (ordonnée), plutôt qu'une rangée d'onglets en vrac.
 const NAV_GROUPS: { label: string; items: [AdminView, string][] }[] = [
   { label: "Figurines", items: [["profiles", "Profils"], ["special-cards", "Cartes spé."]] },
-  { label: "Objets", items: [["equipment", "Équipement"], ["skills", "Compétences"]] },
+  {
+    label: "Objets",
+    items: [["equipment", "Équipement"], ["equipment-upgrades", "Améliorations"], ["skills", "Compétences"]],
+  },
   { label: "Magie", items: [["spells", "Sorts"], ["magic-ways", "Voies"]] },
   { label: "Montures", items: [["mounts", "Montures"], ["mount-options", "Options"]] },
   { label: "Réglages", items: [["factions", "Factions"], ["settings", "Réglages"]] },
@@ -64,6 +69,7 @@ export function AdminCatalog() {
   const [selectedProfileId, setSelectedProfileId] = useState(catalog.profiles[0]?.id ?? "");
   const [selectedEquipId, setSelectedEquipId] = useState(catalog.equipment[0]?.id ?? "");
   const [selectedSkillId, setSelectedSkillId] = useState(catalog.skills[0]?.id ?? "");
+  const [selectedUpgradeId, setSelectedUpgradeId] = useState(catalog.equipmentUpgrades?.[0]?.id ?? "");
   const [selectedCardId, setSelectedCardId] = useState(catalog.specialCards[0]?.id ?? "");
   const [selectedSpellId, setSelectedSpellId] = useState(catalog.spells[0]?.id ?? "");
   const [selectedMountId, setSelectedMountId] = useState(catalog.mounts[0]?.id ?? "");
@@ -159,6 +165,8 @@ export function AdminCatalog() {
       },
     });
 
+  const selectedUpgrade = (catalog.equipmentUpgrades ?? []).find((u) => u.id === selectedUpgradeId);
+
   /** Voisin de `id` dans la liste affichée : supprimer ne doit pas renvoyer à l'autre bout du catalogue. */
   const neighbourOf = (shown: readonly { id: string }[], id: string): string => {
     const i = shown.findIndex((e) => e.id === id);
@@ -229,6 +237,11 @@ export function AdminCatalog() {
     },
     equipment: { label: "+ équipement", title: "Créer un équipement", run: () => setSelectedEquipId(store.addEquipment()) },
     skills: { label: "+ compétence", title: "Créer une compétence", run: () => setSelectedSkillId(store.addSkill()) },
+    "equipment-upgrades": {
+      label: "+ amélioration",
+      title: "Créer une amélioration proposée à tous",
+      run: () => setSelectedUpgradeId(store.addCatalogUpgrade()),
+    },
     "special-cards": { label: "+ carte", title: "Créer une carte spéciale", run: () => setSelectedCardId(store.addSpecialCard()) },
     spells: { label: "+ sort", title: "Créer un sort", run: () => setSelectedSpellId(store.addSpell()) },
     mounts: {
@@ -303,6 +316,8 @@ export function AdminCatalog() {
                 `${filteredProfiles.length} profil(s) · ${store.unverifiedCount} champ(s) ⚠`}
               {view === "equipment" && `${filteredEquipment.length} équipement(s)`}
               {view === "skills" && `${filteredSkills.length} compétence(s)`}
+              {view === "equipment-upgrades" &&
+                `${(catalog.equipmentUpgrades ?? []).length} amélioration(s) de catalogue`}
               {view === "special-cards" && `${filteredCards.length} carte(s) spéciale(s)`}
               {view === "spells" && `${filteredSpells.length} sort(s)`}
               {view === "magic-ways" && `${catalog.magicWays.length} voie(s) de magie`}
@@ -435,6 +450,15 @@ export function AdminCatalog() {
               </Fragment>
             ))
           )}
+          {view === "equipment-upgrades" &&
+            (catalog.equipmentUpgrades ?? []).map((u) => (
+              <li key={u.id}>
+                <button onClick={() => setSelectedUpgradeId(u.id)} className={itemClass(u.id === selectedUpgradeId)}>
+                  <span>{listLabel(u.label)}</span>
+                  <span className="text-xs adm-faint">{u.cost} Ko</span>
+                </button>
+              </li>
+            ))}
           {view === "mount-options" && (
             catalog.mountOptions.map((o) => (
               <li key={o.id}>
@@ -625,6 +649,26 @@ export function AdminCatalog() {
               />
             ) : (
               <p className="adm-faint">Sélectionnez une option de monture.</p>
+            ))}
+          {view === "equipment-upgrades" &&
+            (selectedUpgrade ? (
+              <UpgradeDetail
+                upgrade={selectedUpgrade}
+                onChange={(patch) => store.updateCatalogUpgrade(selectedUpgrade.id, patch)}
+                onRemove={() => {
+                  const id = selectedUpgrade.id;
+                  setPendingDelete({
+                    what: `l'amélioration « ${selectedUpgrade.label} »`,
+                    refs: [],
+                    run: () => {
+                      store.removeCatalogUpgrade(id);
+                      setSelectedUpgradeId(neighbourOf(catalog.equipmentUpgrades ?? [], id));
+                    },
+                  });
+                }}
+              />
+            ) : (
+              <p className="adm-faint">Aucune amélioration. Le bouton « + amélioration » en crée une.</p>
             ))}
           {view === "factions" && (
             <FactionsDetail

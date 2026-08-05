@@ -9,6 +9,7 @@ import {
   type Mount,
   type MountOption,
   type MountType,
+  type CatalogUpgrade,
   type MunitionKind,
   type Profile,
   type Skill,
@@ -312,6 +313,32 @@ export function useCatalogStore() {
   );
   const removeMunitionKind = useCallback((id: string) => removeEntity("munitionKind", id), [removeEntity]);
 
+  // Améliorations de catalogue (ex. l'Affûtage) : ouvertes à tous, filtrées par équipement.
+  const addCatalogUpgrade = useCallback((): string => {
+    const id = `up-${Date.now()}`;
+    apply((c) => ({
+      ...c,
+      equipmentUpgrades: [
+        ...(c.equipmentUpgrades ?? []),
+        { id, label: "Nouvelle amélioration", cost: 0, equipmentCategories: [] },
+      ],
+    }));
+    return id;
+  }, [apply]);
+  const updateCatalogUpgrade = useCallback(
+    (id: string, patch: Partial<CatalogUpgrade>) =>
+      apply((c) => ({
+        ...c,
+        equipmentUpgrades: (c.equipmentUpgrades ?? []).map((u) => (u.id === id ? { ...u, ...patch } : u)),
+      })),
+    [apply],
+  );
+  const removeCatalogUpgrade = useCallback(
+    (id: string) =>
+      apply((c) => ({ ...c, equipmentUpgrades: (c.equipmentUpgrades ?? []).filter((u) => u.id !== id) })),
+    [apply],
+  );
+
   // Réglages transverses (ex. surcoût d'équipement Tembo).
   const updateSettings = useCallback(
     (patch: Partial<CatalogSettings>) =>
@@ -607,6 +634,9 @@ export function useCatalogStore() {
     addMunitionKind,
     updateMunitionKind,
     removeMunitionKind,
+    addCatalogUpgrade,
+    updateCatalogUpgrade,
+    removeCatalogUpgrade,
     updateSettings,
     addMountType,
     updateMountType,

@@ -1,8 +1,11 @@
 import type {
   Catalog,
+  CatalogUpgrade,
   Constraint,
   Effect,
   EffectScope,
+  Equipment,
+  EquipmentCategory,
   FerDeLance,
   ListDocument,
   MasteryDomain,
@@ -28,7 +31,7 @@ import {
   wornEquipmentIds,
 } from "./magic";
 import { engineIdOf } from "../model/engineIds";
-import { freeWeaponsCarried } from "./equipment";
+import { forbidEquipmentParams, forbidRuleHits, freeWeaponsCarried, isFreeWeapon } from "./equipment";
 import { forbiddenMunitionLines, totalMunitionCost } from "./munitions";
 import { effectiveOrigin, needsOriginChoice, originFactionId } from "./origin";
 import {
@@ -68,6 +71,8 @@ export type GrantedUpgrade = {
   label: string;
   cost: number;
   equipmentCategories: string[];
+  /** Wording de l'effet qui l'octroie - affiché au joueur quand il ouvre la fiche de l'amélioration. */
+  sourceText?: string;
   /** Compétences (avec valeur éventuelle) conférées tant qu'un équipement porte cette amélioration (Borax). */
   grantsSkills?: GrantedSkill[];
 };
@@ -77,26 +82,54 @@ export interface AvailableUpgrade {
   id: string;
   label: string;
   cost: number;
+  /** Ce qu'elle fait, tel que la carte l'écrit. Absent tant que la saisie ne l'a pas renseigné. */
+  effectsText?: string;
+}
+
+/** Cet équipement remplit-il les conditions d'une amélioration de catalogue (ex. l'Affûtage) ? */
+export function catalogUpgradeApplies(
+  u: CatalogUpgrade,
+  equipment: { category: string; cost?: number; tranchant?: boolean },
+): boolean {
+  if (!u.equipmentCategories.includes(equipment.category as EquipmentCategory)) return false;
+  if (u.requiresTranchant && !equipment.tranchant) return false;
+  // « Ne peut pas être appliqué sur une arme de corps à corps gratuite » : l'arme gratuite se
+  // reconnaît à son prix nul au catalogue, cf. `isFreeWeapon`.
+  if (u.forbiddenOnFreeWeapon && isFreeWeapon(equipment as Equipment)) return false;
+  return true;
 }
 
 /**
- * Améliorations achetables sur un objet donné : les **siennes** (`Equipment.upgrades`, ex. l'Épée
- * courte et ses « deux effets ») puis celles qu'un **effet lui octroie** (`unlock-upgrade`, ex. Borax).
+ * Améliorations achetables sur un objet donné, quelle que soit leur origine : les **siennes**
+ * (`Equipment.upgrades`, ex. l'Épée courte et ses « deux effets »), celles que le **catalogue** ouvre
+ * à tous sur les équipements qui remplissent ses conditions (`catalog.equipmentUpgrades`, ex.
+ * l'Affûtage sur une arme tranchante), et celles qu'un **effet lui octroie** (`unlock-upgrade`,
+ * ex. Borax).
  *
- * Les deux sortes partagent le même espace de noms dans `instance.equipmentUpgrades`, où seuls des
- * identifiants sont stockés. En cas d'homonymie, l'intrinsèque l'emporte : elle est portée par
- * l'objet lui-même, elle ne peut pas être comptée deux fois.
+ * Les trois sortes partagent le même espace de noms dans `instance.equipmentUpgrades`, où seuls des
+ * identifiants sont stockés. En cas d'homonymie, la plus spécifique l'emporte - l'intrinsèque
+ * d'abord, puis celle du catalogue : une amélioration ne peut pas être comptée deux fois.
  */
 export function upgradesForEquipment(
-  equipment: { category: string; upgrades?: readonly AvailableUpgrade[] },
+  equipment: { category: string; cost?: number; tranchant?: boolean; upgrades?: readonly AvailableUpgrade[] },
   granted: readonly GrantedUpgrade[],
+  catalogUpgrades: readonly CatalogUpgrade[] = [],
 ): AvailableUpgrade[] {
-  const own = (equipment.upgrades ?? []).map((u) => ({ id: u.id, label: u.label, cost: u.cost }));
-  const ownIds = new Set(own.map((u) => u.id));
+  const own = (equipment.upgrades ?? []).map((u) => ({
+    id: u.id,
+    label: u.label,
+    cost: u.cost,
+    effectsText: u.effectsText,
+  }));
+  const taken = new Set(own.map((u) => u.id));
+  const fromCatalog = catalogUpgrades
+    .filter((u) => !taken.has(u.id) && catalogUpgradeApplies(u, equipment))
+    .map((u) => ({ id: u.id, label: u.label, cost: u.cost, effectsText: u.effectsText }));
+  for (const u of fromCatalog) taken.add(u.id);
   const fromEffects = granted
-    .filter((g) => g.equipmentCategories.includes(equipment.category) && !ownIds.has(g.upgradeId))
-    .map((g) => ({ id: g.upgradeId, label: g.label, cost: g.cost }));
-  return [...own, ...fromEffects];
+    .filter((g) => g.equipmentCategories.includes(equipment.category) && !taken.has(g.upgradeId))
+    .map((g) => ({ id: g.upgradeId, label: g.label, cost: g.cost, effectsText: g.sourceText }));
+  return [...own, ...fromCatalog, ...fromEffects];
 }
 
 export interface Issue {
@@ -829,7 +862,7 @@ function validate(
   validateChosenOrigin(cat, resolved, issues);
   validateMounts(cat, resolved, issues);
   validateMountOptions(cat, resolved, issues);
-  validateForbiddenEquipment(cat, resolved, idx, issues);
+  validateForbiddenEquipment(cat, resolved, issues);
   validateMunitions(cat, resolved, issues);
   validateReservedEquipment(cat, resolved, issues);
   validateFixedBaseEquipment(cat, resolved, issues);
@@ -1426,37 +1459,9 @@ function validateOpenRecruitmentCaps(
   }
 }
 
-/**
- * Paramètres de `forbids-equipment`. Les trois filtres se lisent ensemble : un objet est interdit
- * s'il passe **tous** ceux qui sont renseignés, et qu'il ne figure pas dans les exceptions.
- *
- * - `categories` : catégories visées (vide = toutes) ;
- * - `hands` : nombre de mains visé (vide = tous), pour « ne peut manier d'arme à 2 mains ». Une arme
- *   bâtarde (`hands: "1-2"`) n'est jamais visée : elle se manie aussi à une main, donc rien
- *   n'interdit de la porter ;
- * - `exceptEquipmentIds` : liste blanche qui échappe à l'interdiction, pour les cartes qui n'ouvrent
- *   qu'un choix fermé (« ne peut choisir que la Sarclette ou le Couteau »).
- */
-type ForbidEquipmentParams = {
-  categories?: string[];
-  hands?: number[];
-  exceptEquipmentIds?: string[];
-};
-
-function forbidEquipmentParams(c: Constraint): ForbidEquipmentParams {
-  const p = c.params as Record<string, unknown>;
-  const list = (k: string): unknown[] => (Array.isArray(p[k]) ? (p[k] as unknown[]) : []);
-  return {
-    categories: list("categories") as string[],
-    hands: (list("hands") as unknown[]).map(Number).filter((n) => Number.isFinite(n)),
-    exceptEquipmentIds: list("exceptEquipmentIds") as string[],
-  };
-}
-
 function validateForbiddenEquipment(
   cat: Catalog,
   resolved: ResolvedInstance[],
-  idx: CatalogIndex,
   issues: Issue[],
 ): void {
   // Contraintes portées par les profils (sujet = le profil) ...
@@ -1476,20 +1481,13 @@ function validateForbiddenEquipment(
   }
 
   for (const { subjectProfileId, constraint } of checks) {
-    const { categories, hands, exceptEquipmentIds } = forbidEquipmentParams(constraint);
-    // Contrainte sans aucun filtre = brouillon d'admin (créée avec des params vierges) : elle
-    // n'interdit rien, plutôt que de tout interdire d'un coup sur une fiche en cours de saisie.
-    if (!categories?.length && !hands?.length) continue;
+    // `forbidRuleHits` est partagé avec le panneau d'équipement : ce qui est refusé ici est
+    // exactement ce qui n'est pas proposé là-bas.
+    const rule = forbidEquipmentParams(constraint);
     for (const ri of resolved.filter((r) => r.profile.id === subjectProfileId)) {
       const offending = ri.instance.addedEquipmentIds.filter((id) => {
-        if (exceptEquipmentIds?.includes(id)) return false;
-        if (categories?.length && !categories.includes(idx.equipmentCategory.get(id) ?? "")) return false;
-        if (hands?.length) {
-          // `hands` non numérique (arme bâtarde « 1-2 ») : jamais visée, cf. `ForbidEquipmentParams`.
-          const h = cat.equipment.find((e) => e.id === id)?.hands;
-          if (typeof h !== "number" || !hands.includes(h)) return false;
-        }
-        return true;
+        const e = cat.equipment.find((x) => x.id === id);
+        return e != null && forbidRuleHits(rule, e);
       });
       if (offending.length > 0) {
         issues.push({
@@ -2080,6 +2078,7 @@ function collectGrantedUpgrades(
         cost: op.cost,
         equipmentCategories: op.equipmentCategories,
         grantsSkills: op.grantsSkills,
+        sourceText: occ.effect.sourceText,
       });
       out.set(ri.instance.instanceId, m);
     }
@@ -2102,7 +2101,9 @@ function upgradeCost(ri: ResolvedInstance, granted: Map<string, GrantedUpgrade>,
     if (!worn.has(equipId)) continue; // amélioration sur un équipement retiré : ignorée
     const equipment = cat.equipment.find((e) => e.id === equipId);
     if (!equipment) continue;
-    const available = new Map(upgradesForEquipment(equipment, grantedList).map((u) => [u.id, u]));
+    const available = new Map(
+      upgradesForEquipment(equipment, grantedList, cat.equipmentUpgrades).map((u) => [u.id, u]),
+    );
     for (const upId of upIds) cost += available.get(upId)?.cost ?? 0;
   }
   return cost;

@@ -132,6 +132,57 @@ describe("EquipPanel (vue)", () => {
     expect(row.textContent).toContain(`${stacked.cost} Ko / unité`);
   });
 
+  // L'amélioration se coche pour l'acheter, et son nom s'ouvre pour savoir ce qu'elle fait.
+  describe("améliorations sous l'arme", () => {
+    /** Une Goulue avec l'Épée, arme tranchante payante : l'Affûtage lui est proposé. */
+    const props = () => ({ ...baseProps("fangs-goulue-1"), added: ["epee"] });
+
+    it("le nom de l'amélioration ouvre sa fiche, sans la cocher", () => {
+      const p = props();
+      render(<EquipPanel {...p} />);
+      const affutage = screen.getByRole("button", { name: "Affûtage" });
+      fireEvent.click(affutage);
+      expect(p.onInfo).toHaveBeenCalledTimes(1);
+      expect(p.onToggleEquipmentUpgrade).not.toHaveBeenCalled();
+      const info = p.onInfo.mock.calls[0][0];
+      expect(info.title).toBe("Affûtage");
+      expect(info.text).toContain("dégât");
+      expect(info.price).toBe("+8 Ko");
+    });
+
+    it("la case, elle, achète l'amélioration", () => {
+      const p = props();
+      const { container } = render(<EquipPanel {...p} />);
+      fireEvent.click(container.querySelector(".fe-upgrade input[type=checkbox]")!);
+      expect(p.onToggleEquipmentUpgrade).toHaveBeenCalledWith("epee", "affutage");
+    });
+  });
+
+  // « Ne peut manier d'arme de tir ou à 2 mains » (Key le Sénéchal) : l'interdiction porte sur les
+  // armes à deux mains, pas sur toute la catégorie. Le panneau lui retirait ses armes de mêlée.
+  describe("interdiction limitée au nombre de mains", () => {
+    /** Noms des armes proposées à l'achat dans le volet « Disponible ». */
+    function weaponsOffered(profileId: string, faction: string) {
+      const { container } = render(<EquipPanel {...baseProps(profileId, faction)} />);
+      const avail = container.querySelectorAll(".fe-panes > div")[1] as HTMLElement;
+      return catalog.equipment
+        .filter((e) => e.category === "arme-cac" || e.category === "arme-tir")
+        .filter((e) => within(avail).queryAllByText(e.name).length > 0);
+    }
+
+    it("Key garde ses armes de corps à corps à une main", () => {
+      const armes = weaponsOffered("kharns-key", "kharns");
+      expect(armes.length).toBeGreaterThan(0);
+      expect(armes.every((e) => e.category === "arme-cac")).toBe(true); // le tir lui reste fermé
+      expect(armes.every((e) => e.hands !== 2)).toBe(true); // les deux mains aussi
+      expect(armes.some((e) => e.hands === 1)).toBe(true);
+    });
+
+    it("une interdiction de catégorie entière ferme bien la catégorie (Larbin : aucune arme)", () => {
+      expect(weaponsOffered("fangs-larbin-1", "fangs")).toHaveLength(0);
+    });
+  });
+
   // Casques (p.14) : portés « en complément d'une armure ou non », donc sur leur propre emplacement,
   // mais un seul par Safar.
   describe("emplacement de casque", () => {

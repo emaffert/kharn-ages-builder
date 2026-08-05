@@ -11,6 +11,8 @@ import {
   castableSpells as coreCastableSpells,
   eligibleMountsFor as coreEligibleMountsFor,
   equipmentAllowedIn,
+  equipmentForbiddenFor,
+  fullyForbiddenCategories,
   isApatride,
   isRecruitableIn,
   isSlaveIn,
@@ -22,6 +24,7 @@ import {
   FRERE_D_ARMES,
 } from "@core";
 import type {
+  AvailableUpgrade,
   Armor,
   Catalog,
   GenericSpellAllocation,
@@ -358,21 +361,12 @@ export const CAT_LABEL: Record<string, string> = {
   objet: "Objet",
 };
 
-/** Catégories d'équipement interdites à une figurine par une contrainte `forbids-equipment`. */
-export function forbiddenCats(p: Profile, cat: Catalog): Set<string> {
-  const forbidden = new Set<string>();
-  const collect = (constraints: { type: string; params?: Record<string, unknown> }[]) => {
-    for (const c of constraints) {
-      if (c.type !== "forbids-equipment") continue;
-      const target = c.params?.profileId as string | undefined;
-      if (target && target !== p.id) continue;
-      for (const cat of (c.params?.categories as string[] | undefined) ?? []) forbidden.add(cat);
-    }
-  };
-  collect(p.recruitment);
-  collect(cat.specialCards.flatMap((s) => s.constraints));
-  return forbidden;
-}
+/**
+ * Catégories d'équipement **entièrement** fermées à une figurine. Une interdiction partielle - « ne
+ * peut manier d'arme à 2 mains » - n'en ferme aucune : c'est objet par objet que ça se décide, via
+ * `equipmentForbiddenFor`. Adaptateur mince vers la règle du cœur, qui est aussi celle du moteur.
+ */
+export const forbiddenCats = (p: Profile, cat: Catalog): Set<string> => fullyForbiddenCategories(cat, p);
 
 /**
  * Le profil peut-il exister en plusieurs exemplaires, et donc être dupliqué ?
@@ -392,6 +386,9 @@ export function canBuy(p: Profile, cat: Catalog): boolean {
 /** Une figurine peut-elle porter cet objet dans un Fer de Lance de cette faction ? (réservations +
  *  arsenal perdu par un transfuge du recrutement ouvert). */
 export const equipAllowedIn = equipmentAllowedIn;
+
+/** Cet objet est-il interdit à cette figurine par une contrainte de sa carte ? (règle du cœur). */
+export const equipForbidden = equipmentForbiddenFor;
 
 // ── Magie ── Adaptateurs minces vers `src/core/engine/magic.ts` (logique unique côté cœur).
 // Les panneaux travaillent avec (profil, listes) ; on synthétise une `ProfileInstance` pour appeler le cœur.
@@ -511,6 +508,22 @@ export function spellInfo(s: Spell, cat: Catalog): ItemInfo {
     price: "",
     stats,
     ladder: s.difficulties.map((d) => ({ threshold: d.threshold, text: d.effectText })),
+    lines: [],
+  };
+}
+
+/**
+ * Fiche d'une amélioration d'équipement (Affûtage, Borax, arme empoisonnée…), telle qu'elle s'ouvre
+ * au clic sur son nom dans le panneau. L'objet amélioré n'est pas rappelé : l'amélioration s'affiche
+ * juste sous lui, la question ne se pose pas.
+ */
+export function upgradeInfo(u: AvailableUpgrade): ItemInfo {
+  return {
+    title: u.label,
+    kind: "Amélioration",
+    prices: u.cost > 0 ? [{ value: String(u.cost), unit: "Ko" }] : [],
+    price: u.cost > 0 ? `+${u.cost} Ko` : "gratuit",
+    text: u.effectsText || undefined,
     lines: [],
   };
 }

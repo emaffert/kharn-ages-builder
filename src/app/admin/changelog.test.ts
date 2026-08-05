@@ -90,6 +90,37 @@ describe("ce qui reste à lire", () => {
     expect(unseenEntries(entries, avantComplement).map((e) => e.date)).toEqual(["2026-07-28"]);
   });
 
+  // Une journée à plus de neuf entrées : « (10) » se compare comme plus petit que « (9) », ce qui
+  // faisait passer la plus récente pour la plus ancienne et n'annonçait plus rien du tout.
+  it("compte les entrées d'un même jour dans le bon ordre au-delà de la dixième", () => {
+    const journee = `# Journal
+
+## 2026-08-06 (10)
+
+### Dixième
+
+- Une puce.
+
+## 2026-08-06 (9)
+
+### Neuvième
+
+- Une puce.
+
+## 2026-08-05
+
+### Veille
+
+- Une puce.
+`;
+    const entries = parseEntries(journee);
+    expect(unseenEntries(entries, entryKey(entries[1])).map((e) => e.date)).toEqual(["2026-08-06 (10)"]);
+    expect(unseenEntries(entries, entryKey(entries[2])).map((e) => e.date)).toEqual([
+      "2026-08-06 (10)",
+      "2026-08-06 (9)",
+    ]);
+  });
+
   it("s'arrête à la dernière entrée lue, même si le journal en compte beaucoup", () => {
     const long = JOURNAL.replace("## 2026-07-26", "## 2026-07-27\n\n### Intermédiaire\n\n- Une puce.\n\n## 2026-07-26");
     const toutes = parseEntries(long);

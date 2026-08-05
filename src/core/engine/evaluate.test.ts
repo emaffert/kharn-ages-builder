@@ -1712,6 +1712,88 @@ describe("améliorations intrinsèques d'un objet", () => {
   });
 });
 
+// « Ne peut manier d'arme de tir ou à 2 mains » : moteur et panneau lisent la même règle, et une
+// interdiction limitée au nombre de mains laisse passer les armes à une main.
+describe("interdiction d'équipement limitée au nombre de mains (Key)", () => {
+  const forbidIssues = (res: ReturnType<typeof evalFang>) =>
+    res.issues.filter((i) => i.ruleId === "key-no-two-handed" || i.ruleId === "key-no-ranged");
+  const key = (equip: string[]) =>
+    evaluateList(catalog, makeList([inst("kharns-key", { addedEquipmentIds: equip })], "kharns"));
+
+  it("une arme de mêlée à une main passe", () => {
+    expect(forbidIssues(key(["epee"]))).toEqual([]); // Épée, 1 main
+  });
+
+  it("une arme de mêlée à deux mains est refusée", () => {
+    expect(forbidIssues(key(["claymore"])).map((i) => i.ruleId)).toEqual(["key-no-two-handed"]);
+  });
+
+  it("une arme bâtarde passe : elle se manie aussi à une main", () => {
+    expect(catalog.equipment.find((e) => e.id === "epee-batarde")!.hands).toBe("1-2");
+    expect(forbidIssues(key(["epee-batarde"]))).toEqual([]);
+  });
+
+  it("une arme de tir reste refusée, quelle que soit sa prise", () => {
+    expect(forbidIssues(key(["arc"])).map((i) => i.ruleId)).toEqual(["key-no-ranged"]);
+  });
+});
+
+// L'Affûtage (p.13) : « la lame affûtée génère 1 dégât de plus (ne peut pas être appliqué sur une
+// arme ne possédant pas de tranchant) », et jamais sur une arme de corps à corps gratuite.
+describe("améliorations de catalogue (l'Affûtage)", () => {
+  const affutage = catalog.equipmentUpgrades!.find((u) => u.id === "affutage")!;
+  const ups = (equipId: string) =>
+    upgradesForEquipment(
+      catalog.equipment.find((e) => e.id === equipId)!,
+      [],
+      catalog.equipmentUpgrades,
+    ).map((u) => u.id);
+
+  it("est proposée sur une arme tranchante payante", () => {
+    expect(ups("epee")).toContain("affutage"); // Épée, 10 Ko, tranchante
+  });
+
+  it("ne l'est pas sur une arme sans tranchant", () => {
+    expect(ups("marteau-de-guerre")).not.toContain("affutage");
+  });
+
+  it("ne l'est pas sur une arme gratuite, même tranchante", () => {
+    const couteau = catalog.equipment.find((e) => e.id === "couteau")!;
+    expect(couteau.cost).toBe(0);
+    expect(couteau.tranchant).toBe(true);
+    expect(ups("couteau")).not.toContain("affutage");
+  });
+
+  it("ne l'est pas sur une armure ni sur un arc", () => {
+    expect(ups("arc")).not.toContain("affutage");
+    expect(catalog.equipment.filter((e) => e.category === "armure").every((e) => !ups(e.id).includes("affutage"))).toBe(
+      true,
+    );
+  });
+
+  it("son coût s'ajoute à celui de la figurine une fois cochée", () => {
+    const nue = inst("fangs-goulue-1", { addedEquipmentIds: ["epee"] });
+    const affutee = inst("fangs-goulue-1", {
+      addedEquipmentIds: ["epee"],
+      equipmentUpgrades: { epee: ["affutage"] },
+    });
+    const delta =
+      evalFang([affutee]).costByInstance[affutee.instanceId] - evalFang([nue]).costByInstance[nue.instanceId];
+    expect(delta).toBe(affutage.cost);
+  });
+
+  it("cochée sur une arme qui n'y a pas droit, elle n'est pas facturée", () => {
+    const nu = inst("fangs-goulue-1", { addedEquipmentIds: ["couteau"] });
+    const triche = inst("fangs-goulue-1", {
+      addedEquipmentIds: ["couteau"],
+      equipmentUpgrades: { couteau: ["affutage"] },
+    });
+    expect(evalFang([triche]).costByInstance[triche.instanceId]).toBe(
+      evalFang([nu]).costByInstance[nu.instanceId],
+    );
+  });
+});
+
 describe("Esclaves (LDR Saison 2, p. 10)", () => {
   const PORTEUSE = "gouns-porteuse-d-eau-1"; // Porteuse d'eau, goûne, 40 Ko, seule esclave du catalogue
   const GOURDIN = "gourdin"; // arme de corps à corps gratuite

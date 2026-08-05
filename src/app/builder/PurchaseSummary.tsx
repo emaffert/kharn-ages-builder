@@ -83,7 +83,7 @@ export function PurchaseSummary({
   const equipChip = (e: NonNullable<(typeof equip)[number]>): SummaryChip => {
     const munLines = resolveMunitionLines(munitionKindForEquip(cat, e.id), munitions[e.id]);
     const munCost = munLines.reduce((n, l) => n + l.price, 0);
-    const available = upgradesForEquipment(e, grantedUpgrades);
+    const available = upgradesForEquipment(e, grantedUpgrades, cat.equipmentUpgrades);
     const upsForE = (equipmentUpgrades[e.id] ?? [])
       .map((uid) => available.find((u) => u.id === uid))
       .filter((u): u is NonNullable<typeof u> => Boolean(u));
@@ -105,12 +105,15 @@ export function PurchaseSummary({
     ];
     const qty = qtyOf(e);
     const base = equipInfo(e, cat);
-    if (munCost === 0 && upCost === 0 && disc === 0 && surcharge === 0 && qty === 1) return chip(label(e), base);
+    // Le prix est TOUJOURS recalculé, même quand rien ne s'y ajoute : c'est lui que la puce affiche
+    // sur la ligne de la figurine. Le laisser aux `prices` de la fiche n'écrivait rien à côté d'une
+    // arme sans munition ni amélioration - l'épée bâtarde de Key s'affichait sans son prix.
+    const total = e.cost * qty + munCost + upCost + (disc + surcharge) * qty;
     return chip(label(e), {
       ...base,
       // Le total recalculé remplace le prix de catalogue : `prices` est vidé, sinon il primerait.
       prices: undefined,
-      price: `${e.cost * qty + munCost + upCost + (disc + surcharge) * qty} Ko`,
+      price: total > 0 ? `${total} Ko` : "gratuit",
       lines: [
         ...base.lines,
         ...(qty > 1 ? [`${qty} exemplaires (${e.cost} Ko l'unité)`] : []),

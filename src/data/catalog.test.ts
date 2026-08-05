@@ -62,6 +62,26 @@ describe("catalogue", () => {
     expect(trous.map((h) => h.id)).toEqual([]);
   });
 
+  // L'Affûtage n'est plus un objet qu'on achète dans son coin : c'est une amélioration d'arme.
+  it("porte l'Affûtage en amélioration de catalogue, et plus en équipement", () => {
+    expect(catalog.equipment.find((e) => e.id === "affutage")).toBeUndefined();
+    const affutage = (catalog.equipmentUpgrades ?? []).find((u) => u.id === "affutage");
+    expect(affutage).toBeDefined();
+    expect(affutage!.equipmentCategories).toEqual(["arme-cac"]);
+    expect(affutage!.requiresTranchant).toBe(true);
+    expect(affutage!.forbiddenOnFreeWeapon).toBe(true);
+  });
+
+  it("ne pose le tranchant que sur des armes", () => {
+    const horsArmes = catalog.equipment.filter(
+      (e) => e.tranchant && e.category !== "arme-cac" && e.category !== "arme-tir",
+    );
+    expect(horsArmes.map((e) => e.id)).toEqual([]);
+    // Le tri par famille : ni les masses, ni les cannes, ni les bâtons ne coupent.
+    const contondantes = ["gourdin", "canne-alaric", "canne-des-sages", "marteau-de-guerre", "fleau"];
+    expect(contondantes.filter((id) => catalog.equipment.find((e) => e.id === id)?.tranchant)).toEqual([]);
+  });
+
   it("a des identifiants de profil uniques", () => {
     const ids = catalog.profiles.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);

@@ -74,9 +74,13 @@ export function unseenEntries(entries: ChangelogEntry[], seen: string | null): C
   if (!seen) return entries.slice(0, 1);
 
   const seenDate = seen.split(":")[0];
+  // Le garde-fou compare les **jours**, pas le titre entier : une date porte souvent un rang dans la
+  // journée (« 2026-08-06 (10) »), et « (10) » est lexicographiquement plus petit que « (9) ». Comparer
+  // les titres faisait passer la dixième entrée du jour pour la plus ancienne, et n'annonçait plus rien.
+  const day = (date: string) => date.split(" ")[0];
   const unseen: ChangelogEntry[] = [];
   for (const entry of entries) {
-    if (entry.date < seenDate) break; // déjà lue, et tout ce qui suit l'est aussi
+    if (day(entry.date) < day(seenDate)) break; // déjà lue, et tout ce qui suit l'est aussi
     if (entryKey(entry) === seen) break;
     unseen.push(entry);
   }

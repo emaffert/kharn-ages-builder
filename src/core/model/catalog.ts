@@ -265,6 +265,13 @@ export const EquipmentSchema = z.object({
   /** Coût variable selon la faction du cavalier (ex. Caparaçon : khârn/GN 20, khérops 22). Prioritaire sur `cost`. */
   costByFaction: z.record(z.string(), z.number()).optional(),
   /**
+   * L'arme **possède un tranchant** (lame, fil, taillant) : épées, haches, dagues, faux… par
+   * opposition aux armes qui frappent sans couper (gourdins, masses, marteaux, fléaux, cannes).
+   * Le livret ne s'en sert qu'à un endroit - « ne peut pas être appliqué sur une arme ne possédant
+   * pas de tranchant » (p.13, l'Affûtage) - d'où un simple drapeau plutôt qu'un système de qualités.
+   */
+  tranchant: z.boolean().optional(),
+  /**
    * Améliorations optionnelles *intrinsèques* à cet objet (ex. Caparaçon → « Pointes acérées » +5 Ko),
    * achetables une fois l'objet équipé. Stockées dans `equipmentUpgrades[equipmentId]` de l'instance.
    * À distinguer des améliorations *octroyées* par une carte (effets `unlock-upgrade`, ex. Borax).
@@ -510,6 +517,35 @@ export const MunitionTypeSchema = z.object({
 });
 export type MunitionType = z.infer<typeof MunitionTypeSchema>;
 
+/**
+ * **Amélioration de catalogue** : une amélioration que n'importe quelle figurine peut payer sur un
+ * équipement qui correspond au filtre, sans qu'aucune carte ne l'ouvre (ex. l'Affûtage, 8 Ko, sur
+ * une arme de corps à corps tranchante).
+ *
+ * C'est la troisième forme d'amélioration, à côté de l'*intrinsèque* (`Equipment.upgrades`, propre à
+ * un objet donné) et de l'*octroyée* (effet `unlock-upgrade`, ouverte par une carte à ceux qu'elle
+ * vise). Les trois se cochent de la même façon et partagent `instance.equipmentUpgrades` : c'est
+ * `upgradesForEquipment` qui dit, pour un équipement donné, ce qui lui est proposé.
+ */
+export const CatalogUpgradeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  cost: z.number(),
+  /** Texte de la carte - fait foi, affiché au joueur. */
+  effectsText: z.string().optional(),
+  /** Catégories d'équipement concernées (l'Affûtage : les seules armes de corps à corps). */
+  equipmentCategories: z.array(EquipmentCategorySchema),
+  /** Réservée aux armes à tranchant (cf. `Equipment.tranchant`). */
+  requiresTranchant: z.boolean().optional(),
+  /**
+   * Interdite sur une **arme gratuite** (p.13) : « "l'affûtage" et la "dose de poison" ne peuvent pas
+   * être appliqués sur une arme de corps à corps gratuite ». Même notion que pour les munitions,
+   * cf. `isFreeWeapon`.
+   */
+  forbiddenOnFreeWeapon: z.boolean().optional(),
+});
+export type CatalogUpgrade = z.infer<typeof CatalogUpgradeSchema>;
+
 export const MunitionKindSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -548,6 +584,8 @@ export const CatalogSchema = z.object({
   specialCards: z.array(SpecialCardSchema),
   /** Sortes de munitions achetables (flèches, carreaux…) ; référencées par `equipment.munitionKind`. */
   munitionKinds: z.array(MunitionKindSchema).optional(),
+  /** Améliorations ouvertes à tous, filtrées par équipement (ex. l'Affûtage). Cf. `CatalogUpgradeSchema`. */
+  equipmentUpgrades: z.array(CatalogUpgradeSchema).optional(),
   /**
    * Icônes/portraits recadrés, indexés par `cardImage`. Comme plusieurs profils (les niveaux d'un
    * même modèle) partagent une illustration de carte, les indexer par `cardImage` partage

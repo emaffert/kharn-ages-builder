@@ -44,6 +44,7 @@ interface Catalog {
   mountOptions: MountOption[];
   specialCards: SpecialCard[]; // cartes spéciales / de règle / de trait
   munitionKinds?: MunitionKind[];
+  equipmentUpgrades?: CatalogUpgrade[]; // améliorations ouvertes à tous, filtrées par équipement (Affûtage)
   icons?: Record<string, string>; // portraits recadrés, indexés par `cardImage`
 }
 ```
@@ -189,16 +190,19 @@ interface RuleText { label?: string; text: string; }   // text = verbatim, fait 
 interface Equipment {
   id: string;
   name: string;
-  category: "arme-cac" | "arme-tir" | "bouclier" | "armure" | "munition" | "objet" | "monture-option";
-  cost: number;               // Ko (peut être 0 pour une arme gratuite)
-  isFree?: boolean;           // arme gratuite (règle du "max moitié du FdL")
+  category: "arme-cac" | "arme-tir" | "bouclier" | "armure" | "casque" | "objet";
+  // Ko. Un prix nul dit l'« arme gratuite » des règles (cf. `isFreeWeapon`) : une seule par Safar,
+  // la même sur au plus la moitié du Fer de Lance, ni Affûtage ni Flèche hydre dessus. Il n'y a pas
+  // de drapeau `isFree` : une arme soldée à 0 Ko par une remise n'est pas une arme gratuite.
+  cost: number;
   hands?: 1 | 2;
+  tranchant?: boolean;        // lame ou taillant : condition de l'Affûtage
   allonge?: number;           // en toises
   range?: { short: number; long: number; max?: number };  // armes de tir
   reload?: { cadence: number; paCost: number };
   munition?: { unitCost: number; max?: number };  // munitions achetables (tir sans recharge)
   grantsCasting?: { magicWayIds: string[] };      // objet conférant l'incantation (focus/relique)
-  durability?: number;        // armures / boucliers
+  durability?: number;        // armures / boucliers / casques (cases à cocher ; absente = toute la partie)
   // Protection : un `seuil` renseigné suffit à dire que l'objet protège, QUELLE QUE SOIT sa catégorie
   // (Vouge de Moringa : arme de corps à corps qui « compte comme un bouclier -1/5/-2, DV10 »).
   // La catégorie décide seulement de l'emplacement, cf. `armorRole` : « armure » occupe l'emplacement
@@ -217,6 +221,32 @@ interface Equipment {
     levels?: Level[]; factionIds?: string[];
   };
   cardImage?: string;          // si l'équipement a sa propre carte (sinon affiché inline)
+}
+```
+
+#### Les trois façons d'améliorer un équipement
+
+Elles se cochent toutes de la même façon et partagent `ProfileInstance.equipmentUpgrades`, où seuls
+des identifiants sont stockés. `upgradesForEquipment` est le guichet unique qui dit, pour un
+équipement donné, ce qui lui est proposé - le constructeur et le calcul de coût s'y adossent tous
+les deux, ils ne peuvent donc pas diverger.
+
+1. **Intrinsèque** (`Equipment.upgrades`) : propre à un objet précis. L'Épée courte et ses « deux
+   effets », le Caparaçon et ses Pointes acérées.
+2. **De catalogue** (`Catalog.equipmentUpgrades`) : ouverte à tous, sur les équipements qui remplissent
+   ses conditions. L'Affûtage, seul cas à ce jour.
+3. **Octroyée** (effet `unlock-upgrade`) : ouverte par une carte ou un profil, aux seules figurines
+   que l'effet vise. Le Borax, l'arme empoisonnée de Key.
+
+```ts
+interface CatalogUpgrade {
+  id: string;
+  label: string;
+  cost: number;                          // Ko, ajoutés au prix de l'équipement amélioré
+  effectsText?: string;                  // verbatim
+  equipmentCategories: Equipment["category"][];
+  requiresTranchant?: boolean;           // réservée aux armes à tranchant
+  forbiddenOnFreeWeapon?: boolean;       // jamais sur une arme gratuite (p.13)
 }
 ```
 

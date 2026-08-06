@@ -411,7 +411,7 @@ Barda** décrite dans la Geste de Safar - les deux chantiers se recoupent ici.
 - Export texte, code portable et fiche imprimable multi-Fers de Lance, import compris.
 - Réactivation du format bataille dans l'écran de départ.
 
-**4 à 6 jours.**
+**8 à 12 heures.**
 
 ### Lot B - Les Pactes
 
@@ -431,7 +431,7 @@ Barda** décrite dans la Geste de Safar - les deux chantiers se recoupent ici.
 - Éditeur de Pacte dans l'admin.
 - Saisie des 18 Pactes.
 
-**5 à 8 jours**, le tiers en saisie de données.
+**10 à 16 heures**, le tiers en saisie de données.
 
 ### Lot C - Les Ordres
 
@@ -444,7 +444,7 @@ Barda** décrite dans la Geste de Safar - les deux chantiers se recoupent ici.
 - Export : pouvoir **masquer le détail** et ne publier que le montant total, comme l'exige le livret.
 - Saisie des 12 Ordres.
 
-**2,5 à 3,5 jours.**
+**5 à 7 heures.**
 
 ### Lot D - Les Formations
 
@@ -460,7 +460,7 @@ Barda** décrite dans la Geste de Safar - les deux chantiers se recoupent ici.
   builder les porte ou non.
 - Saisie des 16 cartes (vérifier d'abord l'écart avec les 15 annoncées).
 
-**1,5 à 2,5 jours.**
+**3 à 5 heures.**
 
 ### Lot E - Les PIONs
 
@@ -470,7 +470,7 @@ Barda** décrite dans la Geste de Safar - les deux chantiers se recoupent ici.
   laisser le joueur décider.
 - Probablement une simple ligne budgétaire optionnelle.
 
-**0,5 jour.**
+**1 heure.**
 
 ### Lot F - Aides de jeu dérivées
 
@@ -484,7 +484,7 @@ Optionnel, mais c'est ce qui rend une liste de bataille réellement utilisable �
 - **Niveaux cumulés par Fer de Lance**, pour le calcul de PA du mode accéléré.
 - Effet des Formations sélectionnées sur le total de marqueurs.
 
-**1 à 2 jours.**
+**2 à 4 heures.**
 
 ### Lot G - Données de profil
 
@@ -493,12 +493,17 @@ Optionnel, mais c'est ce qui rend une liste de bataille réellement utilisable �
   appliquée** (Fangs cochés, le reste à faire).
 - Sans les valeurs de SDG, le lot F ne peut pas fonctionner.
 
-**1 jour.**
+**2 heures.**
 
 ### Total
 
-**16 à 24 jours**, dont environ un quart de saisie de données pure (18 Pactes, 12 Ordres,
+**32 à 48 heures**, dont environ un quart de saisie de données pure (18 Pactes, 12 Ordres,
 16 Formations, checklist de compétences).
+
+> **Unité.** Les charges sont en **heures**, calibrées sur le rythme réel du projet : une centaine
+> d'heures ont produit l'application complète et une partie de son catalogue. Réétalonnées le
+> 2026-08-06 ; la
+> version précédente chiffrait en jours et surestimait d'un facteur cinq à six.
 
 ## 4. Arbitrages à trancher
 

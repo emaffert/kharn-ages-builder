@@ -5,6 +5,12 @@ Rédigée le 2026-08-04. **Compile en un seul plan les deux chantiers étudiés 
 (LDR saison 2, pages 49-74). Ces deux documents restent la référence pour les **règles verbatim** et
 l'inventaire détaillé ; celui-ci ne porte que l'**ordre d'exécution**.
 
+> **Unité des charges.** Elles sont exprimées en **heures**, calibrées sur le rythme réel du projet :
+> une centaine d'heures ont produit l'application complète et une partie de son catalogue (le reste
+> de la saisie et sa vérification ont été faits par ailleurs). Ce ne sont pas des jours-homme
+> classiques, qui donneraient des chiffres cinq à six fois plus élevés. Réétalonnées le 2026-08-06 ;
+> la version précédente de ce document chiffrait en jours et surestimait d'autant.
+
 ## 1. Pourquoi les fusionner
 
 Les deux chantiers ont été étudiés séparément, mais ils butent sur les mêmes verrous et se rendent
@@ -76,7 +82,7 @@ intermédiaire inutilisable. L'ordre est contraint par les dépendances, pas par
 **Livrable** : on peut construire un Ost légal de 3 à 5 Fers de Lance, le sauvegarder, l'exporter et
 le réimporter. Sans Pacte, sans Ordre, sans Barda.
 
-**4 à 6 jours.**
+**8 à 12 heures.**
 
 ---
 
@@ -101,7 +107,7 @@ au milieu de la phase 2.
 **Livrable** : rien de visible pour le joueur. C'est le prix à payer pour que les phases 2 à 5 ne se
 marchent pas dessus. À ne pas sauter.
 
-**2 à 3 jours.**
+**4 à 6 heures.**
 
 ---
 
@@ -121,7 +127,7 @@ budgétés en pages, éligibilité, réserve modèle ou profil, origine choisie,
 affichage des jauges). Aucun ne bloque le modèle de données : on peut commencer et trancher en cours
 de route.
 
-**3 à 4 jours** (contre 4 à 6 en solo : la phase 1 en a retiré le lot le plus lourd).
+**6 à 9 heures** (contre 8 à 12 en solo : la phase 1 en a retiré le lot le plus lourd).
 
 ---
 
@@ -142,7 +148,7 @@ conditions de Pacte.
 **Livrable** : les listes d'escarmouche gagnent leurs dernières validations de composition ; le
 moteur de contraintes est prêt pour les Pactes.
 
-**1,5 jour** (les deux règles d'armes gratuites sont déjà livrées).
+**4 à 5 heures** (les deux règles d'armes gratuites sont déjà livrées).
 
 ---
 
@@ -164,7 +170,7 @@ Neuf des dix-huit ont un avantage à impact construction direct (sorts gratuits,
 demi-plate offerte, limitation des Larbins doublée, 15 Ko d'équipement gratuit par mochère III,
 jusqu'à 3 Ordres gratuits, 3 pages de grimoire gratuites…). Les autres ne posent que des conditions.
 
-**5 à 7 jours**, dont environ un tiers de saisie.
+**10 à 14 heures**, dont environ un tiers de saisie.
 
 ---
 
@@ -173,7 +179,7 @@ jusqu'à 3 Ordres gratuits, 3 pages de grimoire gratuites…). Les autres ne pos
 Deux lots petits et indépendants, regroupés parce qu'ils partagent le cadre de panneau et se
 livrent ensemble.
 
-**Ordres** (2,5 à 3,5 j) :
+**Ordres** (5 à 7 h) :
 
 - Schéma `Order`, achat rattaché au Seigneur de guerre et aux Vassaux, exemplaires multiples,
   plafonds « autant que de tours » et « un seul par tour et par leader ».
@@ -183,7 +189,7 @@ livrent ensemble.
   livret.
 - Saisie des 12 Ordres.
 
-**Formations** (1,5 à 2,5 j) :
+**Formations** (3 à 4 h) :
 
 - Schéma `Formation` : portée (générique / faction / nature), delta de marqueurs, `sourceText`.
 - Sélection plafonnée au nombre de tours, chacune une seule fois, filtrée par faction et par nature.
@@ -194,7 +200,7 @@ livrent ensemble.
 Ko, conditionné à une infériorité numérique et de niveau constatée **face à l'adversaire**. C'est un
 concept de mise en place de partie, pas de construction de liste : **le builder ne le gérera pas.**
 
-**4 à 6 jours.**
+**8 à 11 heures.**
 
 ---
 
@@ -213,7 +219,7 @@ Rien à reprendre ici.
   Safar le plus coûteux.
 - **Niveaux cumulés par Fer de Lance**, pour les PA d'accompagnement du mode accéléré.
 
-**1 à 2 jours.**
+**2 à 4 heures.**
 
 ---
 
@@ -231,7 +237,7 @@ la valeur **seulement si** le besoin tournoi est confirmé.
 **À ne lancer que sur besoin confirmé.** Tout ce qui précède fonctionne sans : on déclare son Ost,
 son Barda et ses Ordres, on valide, et on module à la main le jour du tournoi.
 
-**5 à 10 jours.**
+**10 à 16 heures.**
 
 ---
 
@@ -239,31 +245,31 @@ son Barda et ses Ordres, on valide, et on module à la main le jour du tournoi.
 
 | Phase | Contenu | Charge | Dépend de |
 | --- | --- | --- | --- |
-| 0 | Fondations multi-Fers de Lance | 4 à 6 j | - |
-| 1 | Briques transverses | 2 à 3 j | 0 |
-| 2 | Barda | 3 à 4 j | 1 |
-| 3 | Restrictions de composition | 2 j | 2 |
-| 4 | Pactes | 5 à 7 j | 3 |
-| 5 | Ordres et Formations | 4 à 6 j | 2 et 4 |
-| 6 | Aides de jeu dérivées | 1 à 2 j | 0 et 5 |
-| 7 | Phase d'adaptation | 5 à 10 j | tout |
+| 0 | Fondations multi-Fers de Lance | 8 à 12 h | - |
+| 1 | Briques transverses | 4 à 6 h | 0 |
+| 2 | Barda | 6 à 9 h | 1 |
+| 3 | Restrictions de composition | 4 à 5 h | 2 |
+| 4 | Pactes | 10 à 14 h | 3 |
+| 5 | Ordres et Formations | 8 à 11 h | 2 et 4 |
+| 6 | Aides de jeu dérivées | 2 à 4 h | 0 et 5 |
+| 7 | Phase d'adaptation | 10 à 16 h | tout |
 
-**Phases 0 à 6 : 21 à 30 jours.** Avec la phase 7 : 26 à 40 jours.
+**Phases 0 à 6 : 40 à 60 heures.** Avec la phase 7 : 50 à 75 heures.
 
-À titre de comparaison, les deux chantiers menés séparément coûtaient 4 à 6 jours (Barda phases 1-2)
-plus 16 à 24 jours (Bataille), soit 20 à 30 jours, **mais avec le refactor multi-Fers de Lance et les
-briques transverses faits deux fois**, et un Barda à rouvrir pour y loger les Ordres.
+À titre de comparaison, les deux chantiers menés séparément coûtaient 8 à 12 heures (Barda seul)
+plus 32 à 48 heures (Bataille), soit le même total, **mais avec le refactor multi-Fers de Lance et
+les briques transverses faits deux fois**, et un Barda à rouvrir pour y loger les Ordres.
 
 ## 5. Jalons de livraison
 
 Trois points d'arrêt naturels, chacun utilisable par un joueur.
 
-1. **Après la phase 2** (9 à 13 j) : le mode Bataille existe structurellement (Ost multi-Fers de
+1. **Après la phase 2** (18 à 27 h) : le mode Bataille existe structurellement (Ost multi-Fers de
    Lance, validé, exportable) et le Barda est complet en escarmouche. C'est déjà deux fonctionnalités
    annoncées qui sortent de « Bientôt ».
-2. **Après la phase 5** (20 à 28 j) : le mode Bataille est complet côté construction de liste.
+2. **Après la phase 5** (40 à 57 h) : le mode Bataille est complet côté construction de liste.
    Pactes, Ordres, Formations. C'est la cible naturelle du chantier.
-3. **Après la phase 6** (21 à 30 j) : les aides de jeu rendent la liste utilisable à la table.
+3. **Après la phase 6** (40 à 60 h) : les aides de jeu rendent la liste utilisable à la table.
 
 ## 6. Arbitrages à trancher, par phase
 

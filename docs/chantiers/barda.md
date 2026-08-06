@@ -6,7 +6,8 @@ Source : `~/Downloads/geste-de-safar-v2.0.pdf`, section « Le mode escarmouche �
 (« Le format de Fer de Lance et Barda », « Restrictions de composition de Fer de Lance »).
 
 Ce document rassemble les règles, l'état actuel du code, les arbitrages à trancher et le découpage
-du travail. Il est fait pour être repris tel quel plus tard, sans avoir à relire le PDF.
+du travail. Les charges sont en **heures**, calibrées sur le rythme réel du projet (réétalonnées le
+2026-08-06 ; la version précédente chiffrait en jours et surestimait d'un facteur cinq à six). Il est fait pour être repris tel quel plus tard, sans avoir à relire le PDF.
 
 > **L'ordre d'exécution ne se lit plus ici.** Ce chantier a été fusionné avec
 > [`mode-bataille.md`](mode-bataille.md) dans [`feuille-de-route-ost.md`](feuille-de-route-ost.md),
@@ -151,18 +152,18 @@ données, toutes le sont pour finir le moteur.
 
 ## 4. Découpage du travail
 
-### Phase 1 - le Barda lui-même : 4 à 6 jours
+### Phase 1 - le Barda lui-même : 8 à 12 heures
 
 | Lot | Détail | Charge |
 | --- | --- | --- |
-| Modèle | `FerDeLance.barda` : équipements + quantités, sorts, réserves. Plafond configurable (défaut 100). Champ optionnel, rétrocompatible. | 0,5 j |
-| Moteur | Coût du Barda par Fer de Lance dans `EvaluationResult` ; issues « Barda dépassé », « réserve à plus de 100 Ko », « arme gratuite déjà attribuée à un Safar ». Extraction d'un chemin de coût et d'éligibilité **sans porteur**. | 1 j |
-| UI | Panneau Barda dans le constructeur, à côté d'`OstPanel` : trois sections (équipements / sorts / réserves) + jauge 100 Ko. Sélecteurs « sans porteur ». **C'est le lot le plus lourd.** | 1,5 à 2 j |
-| En-tête | Seconde jauge (500 + 100), intégration à `isValid` et au popover d'erreurs. | 0,3 j |
-| Sérialisation | Export/import texte (`listText.ts`), code portable, fiche imprimable. | 0,5 j |
-| Finitions | Tests (`evaluate.test.ts`, panneau, aller-retour texte), CHANGELOG, `docs/schema-donnees.md` et `docs/regles-creation-liste.md`. | 0,5 à 1 j |
+| Modèle | `FerDeLance.barda` : équipements + quantités, sorts, réserves. Plafond configurable (défaut 100). Champ optionnel, rétrocompatible. | 1 h |
+| Moteur | Coût du Barda par Fer de Lance dans `EvaluationResult` ; issues « Barda dépassé », « réserve à plus de 100 Ko », « arme gratuite déjà attribuée à un Safar ». Extraction d'un chemin de coût et d'éligibilité **sans porteur**. | 2 h |
+| UI | Panneau Barda dans le constructeur, à côté d'`OstPanel` : trois sections (équipements / sorts / réserves) + jauge 100 Ko. Sélecteurs « sans porteur ». **C'est le lot le plus lourd.** | 3 à 4 h |
+| En-tête | Seconde jauge (500 + 100), intégration à `isValid` et au popover d'erreurs. | 0,5 h |
+| Sérialisation | Export/import texte (`listText.ts`), code portable, fiche imprimable. | 1 h |
+| Finitions | Tests (`evaluate.test.ts`, panneau, aller-retour texte), CHANGELOG, `docs/schema-donnees.md` et `docs/regles-creation-liste.md`. | 1 à 2 h |
 
-### Phase 2 - restrictions de composition du même chapitre : ~0,5 jour
+### Phase 2 - restrictions de composition du même chapitre : ~1 heure
 
 - ~~Une seule arme gratuite par Safar.~~ Faite le 2026-08-05.
 - ~~La même arme gratuite sur au plus la moitié du Fer de Lance.~~ Faite le 2026-08-05.
@@ -172,7 +173,7 @@ Indépendantes du Barda, mais c'est la même page de règles - et la troisième 
 (« arme gratuite non déjà attribuée ») s'appuie sur le décompte des deux premières, désormais
 disponible.
 
-### Phase 3 - modulation entre rondes : 5 à 10 jours
+### Phase 3 - modulation entre rondes : 10 à 16 heures
 
 Une notion de **variante de ronde** dérivée d'un Fer de Lance + son Barda : validation de chaque
 variante, comparaison entre variantes, choix du niveau des Safars engagés. Nouvel écran, nouveau
@@ -183,8 +184,8 @@ déclare son barda, on le valide, on module à la main le jour du tournoi.
 
 ### Recommandation
 
-Phase 1 seule d'abord (environ une semaine), puis enchaîner la phase 2 dans la foulée puisqu'elle est
-courte et complète le chapitre.
+Phase 1 seule d'abord (une dizaine d'heures), puis enchaîner la phase 2 dans la foulée puisqu'elle
+est courte et complète le chapitre.
 
 ## 5. Chantiers transverses repérés
 

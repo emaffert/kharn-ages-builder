@@ -46,6 +46,7 @@ import {
   sealFor,
 } from "./recruitment";
 import { isSlaveIn, sdgValue, slaveMayBuy, slavePerCarrierMax } from "./slavery";
+import { countOf } from "./wording";
 
 /**
  * Moteur d'évaluation d'une liste : calcul de coût + validation, en tenant compte
@@ -944,7 +945,7 @@ function validateGuardSlots(
     const protecteeId = ri.instance.bodyguardOfInstanceId;
     if (protecteeId == null) continue;
     if (protecteeId === ri.instance.instanceId) {
-      push(ri, `« ${ri.profile.name} » ne peut pas se désigner elle-même comme protégée.`);
+      push(ri, `La figurine « ${ri.profile.name} » ne peut pas se désigner elle-même comme protégée.`);
       continue;
     }
     // Hors du Fer de Lance : la liaison ne vaut rien, et l'ignorer en silence laisserait le joueur
@@ -968,7 +969,7 @@ function validateGuardSlots(
     for (const extra of guards.slice(1)) {
       push(
         extra,
-        `« ${name} » est déjà désignée par « ${guards[0].profile.name} » : elle n'offre qu'un seul emplacement de garde.`,
+        `La figurine « ${name} » est déjà désignée par « ${guards[0].profile.name} » : elle n'offre qu'un seul emplacement de garde.`,
       );
     }
   }
@@ -1010,7 +1011,7 @@ function validateSlaves(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[]
       push(
         slave,
         "slave-no-warlord",
-        `« ${slave.profile.name} » est une esclave : elle doit appartenir à un Seigneur de guerre du Fer de Lance.`,
+        `La figurine « ${slave.profile.name} » est esclave : elle doit appartenir à un Seigneur de guerre du Fer de Lance.`,
         "Les « esclaves » peuvent être recrutés dans un Fer de Lance dont au moins un combattant possède la compétence « SDG X ».",
       );
     }
@@ -1024,7 +1025,7 @@ function validateSlaves(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[]
       push(
         slave,
         "slave-upgrade",
-        `« ${slave.profile.name} » est une esclave : elle ne bénéficie d'aucune amélioration (${names.join(", ")}).`,
+        `La figurine « ${slave.profile.name} » est esclave : elle ne bénéficie d'aucune amélioration (${names.join(", ")}).`,
         "Les esclaves combattent malgré eux ; aucun peuple ne se risque à les équiper plus richement.",
       );
     }
@@ -1040,7 +1041,7 @@ function validateSlaves(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[]
         push(
           slave,
           "slave-equipment",
-          `« ${slave.profile.name} » est une esclave : elle ne peut porter qu'une arme de corps à corps gratuite.`,
+          `La figurine « ${slave.profile.name} » est esclave : elle ne peut porter qu'une arme de corps à corps gratuite.`,
           "Les esclaves ne peuvent être équipés que d'armes de corps à corps gratuites ou combattre à mains nues.",
         );
       }
@@ -1062,7 +1063,7 @@ function validateSlaves(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[]
       push(
         carrier,
         "slave-over-warlord-capacity",
-        `« ${carrier.profile.name} » possède ${owned.length} esclave(s) pour un maximum de ${cap}.`,
+        `« ${carrier.profile.name} » possède ${countOf(owned.length, "esclave", "esclaves")} pour un maximum de ${cap}.`,
         "Ce Seigneur de guerre ne peut pas posséder plus d'esclaves que sa valeur de SDG.",
       );
     }
@@ -1074,7 +1075,7 @@ function validateSlaves(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInstance[]
     push(
       null,
       "slave-outnumber",
-      `${slaves.length} esclave(s) pour ${others} autre(s) combattant(s) : les esclaves ne peuvent pas être les plus nombreux.`,
+      `${countOf(slaves.length, "esclave", "esclaves")} pour ${countOf(others, "autre combattant", "autres combattants")} : les esclaves ne peuvent pas être les plus nombreux.`,
       "Ils ne peuvent pas dépasser en nombre le total des autres combattants du Fer de Lance qui les accueille.",
     );
   }
@@ -1157,7 +1158,7 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
       const granted = [...ri.grantedSkills].map(([skillId, g]) => ({ skillId, value: g.value }));
       const ways = castWays(cat, p, inst, traits, [...ri.grantedSkills.keys()]);
       if (ways.length === 0) {
-        push("spells-no-caster", `« ${p.name} » a des sorts alors qu'elle ne peut pas en lancer.`);
+        push("spells-no-caster", `« ${p.name} » a des sorts mais ne peut pas en lancer.`);
       } else {
         // Sorts hors de portée : voie non maîtrisée ou réservation non satisfaite. Le cas se produit
         // quand ce qui ouvrait la voie disparaît APRÈS le choix des sorts (objet retiré, amélioration
@@ -1180,7 +1181,7 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
         if (gen.over) {
           push(
             "generic-spells-over-level",
-            `« ${p.name} » : ${gen.used} niveaux de sorts génériques pour un profil de niveau ${gen.cap}.`,
+            `« ${p.name} » : ${countOf(gen.used, "niveau", "niveaux")} de sorts génériques pour un profil de niveau ${gen.cap}.`,
           );
         }
         // Attribution optimale : les pools dédiés (Brassards) absorbent d'abord, le surplus va au général.
@@ -1189,9 +1190,9 @@ function validateMagicAndSlots(cat: Catalog, resolved: ResolvedInstance[], issue
           const g = alloc.general;
           push(
             "pages-over-capacity",
-            `« ${p.name} » : ${g.used} pages de sorts pour ${g.cap === Infinity ? "∞" : g.cap} au budget général` +
+            `« ${p.name} » : ${countOf(g.used, "page", "pages")} de sorts pour ${g.cap} disponibles` +
               (alloc.pools.length > 0
-                ? ` (hors pools dédiés : ${alloc.pools.map((pl) => `${pl.wayName} ${pl.used}/${pl.cap}`).join(", ")})`
+                ? ` (sans compter les pages réservées à une voie : ${alloc.pools.map((pl) => `${pl.wayName} ${pl.used}/${pl.cap}`).join(", ")})`
                 : "") +
               ".",
           );
@@ -1297,7 +1298,7 @@ function validateLimitations(
         severity: "error",
         ferDeLanceId: fdl.id,
         ruleId: `limitation:${key}`,
-        message: `« ${ri.profile.name} » : ${count} recruté(s) pour une limitation de ${max}.`,
+        message: `« ${ri.profile.name} » : ${countOf(count, "recruté", "recrutés")} pour une limitation de ${max}.`,
         sourceText: `Limitation ${lim.kind}${lim.value ? " " + lim.value : ""}.`,
       });
     }
@@ -1350,7 +1351,7 @@ function validateConsumesSlot(cat: Catalog, fdl: FerDeLance, inFdl: ResolvedInst
         severity: "error",
         ferDeLanceId: fdl.id,
         ruleId: `consumes-slot:${modelId}#${level}`,
-        message: `${total} occupant(s) de la place de « ${target.name} » (niveau ${level}) pour une limite de ${allowed}.`,
+        message: `${countOf(total, "occupant", "occupants")} de la place de « ${target.name} » (niveau ${level}) pour une limite de ${allowed}.`,
         sourceText: `Occupe l'emplacement d'un « ${target.name} » de niveau ${level}.`,
       });
     }
@@ -1364,6 +1365,7 @@ function validateFactionMembership(
   issues: Issue[],
 ): void {
   const host = cat.factions.find((f) => f.id === fdl.factionId);
+  const hostName = host?.name ?? fdl.factionId;
   for (const ri of inFdl) {
     const pf = ri.profile.factionId;
     if (!pf || pf === fdl.factionId) continue; // sans logo ou même faction
@@ -1377,7 +1379,7 @@ function validateFactionMembership(
         ferDeLanceId: fdl.id,
         instanceId: ri.instance.instanceId,
         ruleId: `faction:${ri.profile.id}`,
-        message: `« ${ri.profile.name} » n'est pas accepté chez les ${host?.name ?? fdl.factionId}.`,
+        message: `Les ${hostName} n'acceptent pas « ${ri.profile.name} ».`,
         sourceText:
           host?.openRecruitment?.sourceText ?? "Figurine écartée par la faction d'accueil.",
       });
@@ -1403,7 +1405,7 @@ function validateFactionMembership(
       ferDeLanceId: fdl.id,
       instanceId: ri.instance.instanceId,
       ruleId: `faction:${ri.profile.id}`,
-      message: `« ${ri.profile.name} » (${pf}) ne peut pas être recruté dans un Fer de Lance ${fdl.factionId}.${remedy}`,
+      message: `Un Fer de Lance des ${hostName} ne peut pas recruter « ${ri.profile.name} » (${cat.factions.find((f) => f.id === pf)?.name ?? pf}).${remedy}`,
       sourceText: "Vous devez composer votre Fer de Lance en choisissant parmi une unique faction.",
     });
   }
@@ -1500,7 +1502,7 @@ function validateForbiddenEquipment(
           ferDeLanceId: ri.ferDeLanceId,
           instanceId: ri.instance.instanceId,
           ruleId: constraint.id,
-          message: `« ${ri.profile.name} » ne peut pas être équipé de ce type d'équipement.`,
+          message: `« ${ri.profile.name} » n'a pas accès à ce type d'équipement.`,
           sourceText: constraint.sourceText,
         });
       }
@@ -1673,7 +1675,7 @@ function validateReservedEquipment(cat: Catalog, resolved: ResolvedInstance[], i
           ruleId: `reserved-${eq.id}`,
           message: lostArsenal
             ? `« ${ri.profile.name} » a quitté son peuple : « ${eq.name} » lui reste inaccessible.`
-            : `« ${ri.profile.name} » ne peut pas être équipé de « ${eq.name} » (réservé à d'autres figurines).`,
+            : `« ${ri.profile.name} » n'a pas accès à « ${eq.name} », réservé à d'autres figurines.`,
           sourceText: lostArsenal
             ? "Ayant fui leur peuple d'origine, ils ont de fait perdu l'accès à l'arsenal qui le caractérisait."
             : "Équipement réservé.",

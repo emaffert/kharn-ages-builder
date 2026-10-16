@@ -64,7 +64,7 @@ export function MountOptionsEditor({
         }
         return (
           <label key={o.id} className={`fe-opt${on ? " on" : ""}`}>
-            <input type="checkbox" checked={on} onChange={() => onSetOption(o.id, on ? null : 1)} />
+            <input type="checkbox" className="ui-check" checked={on} onChange={() => onSetOption(o.id, on ? null : 1)} />
             <span className="fe-opt-name">
               {o.name}
               {o.bucket === "both" && <span className="fe-opt-badge">partagée</span>}
@@ -117,7 +117,7 @@ export function MountEquipEditor({
         return (
           <div key={e.id} className="fe-equip-item">
             <label className={`fe-opt${on ? " on" : ""}`}>
-              <input type="checkbox" checked={on} onChange={() => onToggleEquip(e.id)} />
+              <input type="checkbox" className="ui-check" checked={on} onChange={() => onToggleEquip(e.id)} />
               <span className="fe-opt-name">
                 {e.name}
                 <span className="fe-opt-badge">équipement</span>

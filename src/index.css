@@ -24,6 +24,7 @@
   --km-tune:invert(1) brightness(.86) sepia(.3); /* dé de maîtrise : négatif réchauffé (teinte os) en sombre */
   --on-scorch:#ffd6c4; --on-amber:#ffe0b0; --on-moss:#e7f0cf; /* texte sur pastilles sémantiques */
   --header-glow:color-mix(in srgb, var(--faction) 24%, transparent); /* halo d'en-tête : faction en sombre */
+  --faction-ink:var(--faction-2);
 
   --radius:12px; --radius-sm:8px; --radius-lg:18px;
   /* Filets & survols dérivés de --bone → s'inversent automatiquement avec le thème */
@@ -54,6 +55,19 @@
   --shadow:inset 0 1px 0 rgba(255,250,238,.55), 0 1px 2px rgba(74,47,28,.13), 0 16px 34px -18px rgba(74,47,28,.5);
   --shadow-lift:inset 0 1px 0 rgba(255,250,238,.6), 0 3px 7px rgba(74,47,28,.17), 0 28px 56px -22px rgba(74,47,28,.62);
 }
+
+/* --faction-ink est la couleur de texte de faction : la teinte vive en sombre, assombrie en clair pour rester lisible
+   sur parchemin. Redéclarée là où les --faction* sont posés en ligne, pour suivre la faction de l'élément. */
+.fs-scene, .fs-tile, .fs-scard, .bld-root { --faction-ink: var(--faction-2); }
+[data-theme="light"] :is(.fs-scene, .fs-tile, .fs-scard, .bld-root) {
+  --faction-ink: color-mix(in srgb, var(--faction) 72%, #000); }
+
+/* Armoiries de faction : liseré clair et halo de faction, sans lesquels les armoiries sombres se fondent dans le fond. */
+.kh-crest { object-fit: contain; --crest-glow: 12px;
+  filter: drop-shadow(0 0 1px color-mix(in srgb, var(--bone) 30%, transparent))
+    drop-shadow(0 0 var(--crest-glow) color-mix(in srgb, var(--faction-2) 45%, transparent))
+    drop-shadow(0 3px 6px rgba(0, 0, 0, .55)); }
+[data-theme="light"] .kh-crest { filter: drop-shadow(0 2px 4px rgba(74, 47, 28, .38)); }
 
 body {
   font-family: Inter, system-ui, sans-serif;
@@ -245,7 +259,8 @@ body {
 
 /* 7 factions : flex centré → 4 par ligne puis 3 centrées (dernière ligne « voulue », pas un débordement). */
 .fs-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-bottom: 30px; }
-.fs-tile { position: relative; padding: 24px 18px 20px; border-radius: var(--radius-lg); text-align: center; cursor: pointer;
+/* Une case est un bouton, qui centre son contenu verticalement : la colonne flex le cale en haut. */
+.fs-tile { position: relative; display: flex; flex-direction: column; justify-content: flex-start; padding: 24px 18px 20px; border-radius: var(--radius-lg); text-align: center; cursor: pointer;
   border: 0; font: inherit; color: inherit; flex: 0 1 calc(25% - 12px);
   background: linear-gradient(180deg, var(--soot-2), var(--forge-2)); box-shadow: var(--shadow), inset 0 0 0 1px var(--hair);
   transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
@@ -261,15 +276,12 @@ body {
 .fs-tile.is-soon::after { content: "Bientôt"; position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 600;
   letter-spacing: .06em; color: var(--bone-faint); box-shadow: inset 0 0 0 1px var(--hair-strong); padding: 3px 8px;
   border-radius: 999px; }
-.fs-emblem { width: 74px; height: 80px; margin: 0 auto 14px; display: block;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .55)); transition: transform .18s var(--ease); }
+.fs-emblem { width: 74px; height: 80px; margin: 0 auto 14px; display: block; object-position: center bottom; transition: transform .18s var(--ease); }
 .fs-tile:hover .fs-emblem { transform: scale(1.05); }
 .fs-tile h3 { font-family: "Cinzel", serif; font-weight: 600; font-size: 19px; margin: 0 0 6px; color: var(--bone); }
 .fs-tile p { margin: 0 0 12px; font-size: 12.5px; color: var(--bone-dim); line-height: 1.4; min-height: 34px; }
-.fs-count { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faction-2); font-weight: 600; }
+.fs-count { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faction-ink); font-weight: 600; }
 .fs-tile.is-soon .fs-count { color: var(--bone-faint); }
-/* Affranchis : liseré doré discret pour dire « pas une maison classique ». */
-.fs-tile.is-transverse { box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--gold) 32%, transparent); }
 
 .fs-setup { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; padding: 20px 24px;
   border-radius: var(--radius-lg);
@@ -313,7 +325,7 @@ body {
 .fs-scard:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .fs-scard-main { display: flex; align-items: center; gap: 14px; width: 100%; border: 0; background: transparent;
   font: inherit; color: inherit; text-align: left; cursor: pointer; }
-.fs-scard-em { width: 38px; height: 42px; flex: none; filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .55)); }
+.fs-scard-em { width: 38px; height: 42px; flex: none; --crest-glow: 6px; }
 .fs-scard-info { flex: 1; min-width: 0; }
 .fs-scard-nm { font-weight: 600; font-size: 15px; color: var(--bone); white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; }
@@ -356,14 +368,14 @@ body {
 .bld-back { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px;
   font-size: 13px; color: var(--bone-dim); background: transparent; border: 0; cursor: pointer; transition: .16s var(--ease); }
 .bld-back:hover { color: var(--bone); background: var(--tint-2); }
-.bld-crest { width: 46px; height: 50px; flex: none; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .55)); }
+.bld-crest { width: 46px; height: 50px; flex: none; --crest-glow: 7px; }
 .bld-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .bld-name { font-family: "Cinzel", serif; font-weight: 600; font-size: 21px; color: var(--bone); background: none;
   border: 0; outline: none; padding: 2px 4px; border-radius: 6px; width: 18ch; max-width: 100%; transition: .18s var(--ease); }
 .bld-name:hover { background: var(--tint-2); }
 .bld-name:focus { background: var(--tint-3); box-shadow: inset 0 0 0 1px var(--hair-strong); }
 .bld-meta { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: var(--bone-dim); padding-left: 4px; }
-.bld-faction-chip { font-family: "Cinzel", serif; font-weight: 600; letter-spacing: .04em; color: var(--faction-2); font-size: 13px; }
+.bld-faction-chip { font-family: "Cinzel", serif; font-weight: 600; letter-spacing: .04em; color: var(--faction-ink); font-size: 13px; }
 .bld-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--bone-faint); flex: none; }
 
 .bld-forge { margin-left: auto; display: flex; align-items: center; gap: 14px; }
@@ -641,7 +653,7 @@ body {
   color: var(--on-scorch); }
 .bld-loadout-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px 22px; }
 .bld-loadout-label { font-family: "Cinzel", serif; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--faction-2); margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid var(--hair-strong); }
+  color: var(--faction-ink); margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid var(--hair-strong); }
 .bld-loadout-items { display: flex; flex-direction: column; gap: 1px; }
 .bld-loadout-item { display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
   padding: 5px 8px; border-radius: 7px; background: transparent; border: 0; cursor: pointer; text-align: left;
@@ -1046,7 +1058,6 @@ body {
   padding: 8px 11px; border-radius: 8px; background: var(--tint-2);
   box-shadow: inset 0 0 0 1px var(--hair-strong); cursor: pointer; }
 .fe-opt.on { box-shadow: inset 0 0 0 1px var(--ember); }
-.fe-opt input[type="checkbox"] { accent-color: var(--ember); }
 .fe-opt-name { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--bone); }
 .fe-opt-badge { font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   color: var(--bone-faint); padding: 1px 6px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--hair-strong); }

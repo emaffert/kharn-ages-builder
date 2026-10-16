@@ -6,7 +6,7 @@ import { FACTIONS } from "./shared";
 import { SyncBadge } from "../lists/SyncBadge";
 import { FactionEmblem } from "./FactionEmblem";
 import { resolveImport } from "./importList";
-import logoUrl from "../../assets/ka-logo.png";
+import logoUrl from "../../assets/ka-logo.webp";
 
 /** Écran 1 : choix de la faction / format / budget, ou reprise / import d'une liste existante. */
 
@@ -87,7 +87,7 @@ export function FactionSelect({
                 type="button"
                 disabled={soon}
                 aria-pressed={!soon && f.id === selectedId}
-                className={`fs-tile${f.transverse ? " is-transverse" : ""}${soon ? " is-soon" : f.id === selectedId ? " is-sel" : ""}`}
+                className={`fs-tile${soon ? " is-soon" : f.id === selectedId ? " is-sel" : ""}`}
                 style={facVars}
                 onClick={() => !soon && setSelectedId(f.id)}
               >

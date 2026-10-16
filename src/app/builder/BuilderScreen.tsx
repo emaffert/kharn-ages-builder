@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  countOf,
   eligibleMountsFor,
   effectiveOrigin,
   needsOriginChoice,
@@ -306,7 +307,7 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       slavePerCarrierMax(slave),
       ...owned.map((o) => slavePerCarrierMax(o.p)),
     );
-    if (owned.length >= cap) return `« ${carrierP.name} » possède déjà ${owned.length} esclave(s) sur ${cap}.`;
+    if (owned.length >= cap) return `« ${carrierP.name} » possède déjà ${countOf(owned.length, "esclave", "esclaves")} sur ${cap}.`;
     return null;
   };
 

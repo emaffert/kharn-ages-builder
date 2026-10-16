@@ -7,6 +7,24 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-10-16
+
+### Les armoiries officielles des factions
+
+- **Chaque faction arbore désormais ses armoiries officielles**, fournies par l'éditeur, à la place
+  des blasons provisoires : sur le choix de faction, dans les listes enregistrées et en tête de liste.
+- **Le logo Khârn-Âges de l'accueil est plus net**, dans sa version officielle en haute définition.
+- **Les couleurs des factions reprennent celles de leurs cartes** : les Khérops passent au rouge, les
+  Goüns au vert sombre, la Guilde Noire au gris acier et les Affranchis au vert olive ; les Khârns
+  et les Tembos ont été légèrement ajustés.
+- **Les Affranchis s'affichent comme les autres factions** au moment de choisir : leur case s'encadre
+  à leur couleur une fois choisie, et n'a plus de liseré doré à part.
+- **Les messages d'erreur sont mieux rédigés** : ils nomment les factions au lieu d'afficher un
+  identifiant technique, s'accordent avec le nombre (« 3 recrutés » plutôt que « 3 recruté(s) ») et
+  parlent de pages réservées à une voie plutôt que de « pools dédiés ».
+- **En thème clair, les intitulés aux couleurs de la faction sont lisibles**, alors qu'ils étaient
+  trop pâles sur le parchemin.
+
 ## 2026-08-06 (12)
 
 ### Catalogue 0.5.6 : l'Ordre de mission royale n'existe plus en double

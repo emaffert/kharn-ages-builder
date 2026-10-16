@@ -108,7 +108,7 @@ export function MagiePanel({
       ? `Budget de niveaux dépassé (${gen.used} / ${gen.cap}) - retire un sort générique.`
       : null,
     alloc.over
-      ? `Capacité de pages dépassée (${alloc.general.used} / ${capLabel} au budget général) - retire un sort ou prends un grimoire plus grand.`
+      ? `Trop de pages de sorts (${alloc.general.used} / ${capLabel}) - retire un sort ou prends un grimoire plus grand.`
       : null,
     orphanCount > 0
       ? `${orphanCount} sort${orphanCount > 1 ? "s offerts" : " offert"} sans source : ce qui les offrait n'est plus sur la figurine.`

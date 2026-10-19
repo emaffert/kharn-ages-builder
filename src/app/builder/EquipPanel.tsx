@@ -447,7 +447,7 @@ export function EquipPanel({
                             }}
                             title={isBase ? "Retirer (libère l'emplacement)" : "Retirer"}
                           >
-                            →
+                            <span className="fe-move-glyph">→</span>
                           </button>
                         )}
                       </div>
@@ -548,7 +548,7 @@ export function EquipPanel({
                           disabled={Boolean(blocked)}
                           title={blocked ?? (isBase ? "Remettre l'équipement de base" : "Ajouter")}
                         >
-                          ←
+                          <span className="fe-move-glyph">←</span>
                         </button>
                         <span className="fe-item-main">
                           <span className="fe-item-name">{e.name}</span>

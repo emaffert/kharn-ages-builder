@@ -135,7 +135,7 @@ export function CatalogProvider({
 
   if (waiting) {
     return (
-      <div className="kh-shell flex h-screen items-center justify-center text-sm" style={{ color: "var(--bone-faint)" }}>
+      <div className="kh-shell flex h-dvh items-center justify-center text-sm" style={{ color: "var(--bone-faint)" }}>
         {showSpinner ? "Chargement du catalogue…" : null}
       </div>
     );

@@ -44,7 +44,7 @@ export function AppShell() {
   // brouillon est abandonné - y compris sans quitter l'Admin.
   const staleCatalog = import.meta.env.DEV && localCatalogDivergesFromFile();
   return (
-    <div className="kh-shell flex h-screen flex-col">
+    <div className="kh-shell flex h-dvh flex-col">
       <nav className="kh-topbar flex items-center gap-2 px-4 py-1.5">
         <span className="kh-brand mr-3 text-sm font-bold">Khârn-Âges</span>
         <button

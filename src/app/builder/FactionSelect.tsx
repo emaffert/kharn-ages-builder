@@ -8,6 +8,10 @@ import { FactionEmblem } from "./FactionEmblem";
 import { resolveImport } from "./importList";
 import logoUrl from "../../assets/ka-logo.webp";
 
+/** Affiche le choix Escarmouche / Bataille ; masqué tant que le mode Bataille n'est pas livré
+ * (docs/chantiers/feuille-de-route-ost.md). */
+const SHOW_FORMAT = false;
+
 /** Écran 1 : choix de la faction / format / budget, ou reprise / import d'une liste existante. */
 
 const FORMAT_LABEL: Record<string, string> = { escarmouche: "Escarmouche", bataille: "Bataille" };
@@ -99,23 +103,26 @@ export function FactionSelect({
             );
           })}
         </div>
+        <p className="fs-sel-blurb">{selected.blurb}</p>
 
         <div className="fs-setup">
-          <div className="fs-grp">
-            <span className="fs-glabel">Format</span>
-            <SegmentedControl
-              ariaLabel="Format"
-              value={format}
-              onChange={setFormat}
-              options={[
-                { value: "escarmouche", label: "Escarmouche" },
-                { value: "bataille", label: "Bataille", disabled: true, title: "Bientôt" },
-              ]}
-            />
-          </div>
+          {SHOW_FORMAT && (
+            <div className="fs-grp">
+              <span className="fs-glabel">Format</span>
+              <SegmentedControl
+                ariaLabel="Format"
+                value={format}
+                onChange={setFormat}
+                options={[
+                  { value: "escarmouche", label: "Escarmouche" },
+                  { value: "bataille", label: "Bataille", disabled: true, title: "Bientôt" },
+                ]}
+              />
+            </div>
+          )}
           <div className="fs-grp">
             <span className="fs-glabel">Budget</span>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <SegmentedControl
                 ariaLabel="Budget"
                 value={budget}

@@ -77,7 +77,7 @@ intermédiaire inutilisable. L'ordre est contraint par les dépendances, pas par
   « si aucun ne dépasse 300 », aucun Fer de Lance au-dessus de la moitié de la valeur totale.
 - Interface : navigation entre Fers de Lance, jauge par Fer de Lance **et** jauge d'Ost.
 - Export texte, code portable et import multi-Fers de Lance.
-- Réactivation du format bataille (`FactionSelect.tsx:112`).
+- Réactivation du format bataille : repasser `SHOW_FORMAT` à `true` et activer l'option « Bataille » (`src/app/builder/FactionSelect.tsx`).
 
 **Livrable** : on peut construire un Ost légal de 3 à 5 Fers de Lance, le sauvegarder, l'exporter et
 le réimporter. Sans Pacte, sans Ordre, sans Barda.

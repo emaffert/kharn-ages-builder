@@ -19,10 +19,12 @@ import "@fontsource/cinzel/latin-ext-700.css";
 import { App } from "@app/App";
 import { setupServiceWorker } from "./pwa";
 import { ErrorBoundary } from "@app/ErrorBoundary";
+import { resetStaleLayers } from "@ui";
 import "./index.css";
 
 // Enregistré avant le rendu : la recherche de mise à jour ne dépend pas de React.
 setupServiceWorker();
+resetStaleLayers();
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Élément racine #root introuvable.");

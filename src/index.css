@@ -90,7 +90,8 @@ body {
   background: color-mix(in srgb, var(--scorch) 12%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--scorch) 45%, transparent); cursor: pointer; }
 .kh-stale:hover { background: color-mix(in srgb, var(--scorch) 20%, transparent); }
-.kh-toggle { box-shadow: inset 0 0 0 1px var(--hair-strong); }
+.kh-toggle { flex: none; box-shadow: inset 0 0 0 1px var(--hair-strong); }
+.kh-topbar > *, .kh-topbar > span > * { flex-shrink: 0; white-space: nowrap; }
 .kh-toggle button { color: var(--bone-dim); transition: .16s var(--ease); }
 .kh-toggle button:hover { color: var(--bone); }
 .kh-toggle button[data-on="true"] { color: var(--bone); background: var(--tint-3); }
@@ -346,13 +347,62 @@ body {
 /* Paliers de la grille de factions : 4 → 3 → 2 → 1 par ligne (dernière ligne toujours centrée). */
 @media (max-width: 1000px) { .fs-tile { flex-basis: calc(33.333% - 11px); } }
 @media (max-width: 720px) { .fs-tile { flex-basis: calc(50% - 8px); } }
-@media (max-width: 440px) { .fs-tile { flex-basis: 100%; } }
 
 @media (max-width: 820px) {
   .fs-slist { grid-template-columns: 1fr; }
   .fs-go { margin-left: 0; width: 100%; }
   .fs-title { font-size: 32px; }
 }
+
+/* La présentation de la faction choisie, affichée sous la grille quand les cases la masquent (téléphone). */
+.fs-sel-blurb { display: none; }
+
+/* Téléphone : grille compacte (armoirie + nom, 4 par ligne) pour que le choix tienne sur un écran. */
+@media (max-width: 560px) {
+  .fs-wrap { padding: 24px 16px 48px; }
+  .fs-hero { margin-bottom: 22px; }
+  .fs-grid { gap: 8px; margin-bottom: 12px; }
+  .fs-tile { flex-basis: calc(25% - 6px); padding: 12px 4px 10px; border-radius: var(--radius); }
+  .fs-tile:hover { transform: none; }
+  .fs-tile p, .fs-tile .fs-count, .fs-tile.is-sel::after, .fs-tile.is-soon::after { display: none; }
+  .fs-tile { min-width: 0; }
+  /* Hauteur de deux lignes pour tous les noms : « Guilde Noire » en prend deux, les autres cases s'alignent. */
+  .fs-tile h3 { display: flex; align-items: center; justify-content: center; min-height: 2.4em;
+    font-size: clamp(10.5px, 3vw, 12.5px); margin: 0; line-height: 1.2; overflow-wrap: anywhere; }
+  .fs-emblem { width: 44px; height: 48px; margin-bottom: 8px; --crest-glow: 7px; }
+  .fs-sel-blurb { display: block; margin: 0 0 22px; min-height: 2.8em; text-align: center; font-size: 13px;
+    line-height: 1.4; color: var(--bone-dim); }
+  .fs-setup { padding: 16px; gap: 16px; }
+  .fs-go { width: 100%; }
+  .fs-start-btn { width: 100%; }
+  .fs-saved { margin-top: 32px; }
+  .fs-saved-head { flex-wrap: wrap; row-gap: 10px; }
+  .fs-saved-head .fs-line { display: none; }
+  .fs-import-btn { width: 100%; }
+}
+
+/* Très petit écran : trois cases par ligne, faute de place pour quatre noms lisibles. */
+@media (max-width: 340px) { .fs-tile { flex-basis: calc(33.333% - 6px); } }
+
+/* Téléphone : la barre du haut tient sur la largeur. L'onglet « Constructeur » seul ne mène nulle part
+   ailleurs et disparaît ; avec l'onglet Admin, c'est le nom du site qui laisse la place. */
+@media (max-width: 560px) {
+  .kh-topbar { padding-left: 12px; padding-right: 12px; }
+  .kh-topbar > .kh-tab:only-of-type { display: none; }
+  .kh-topbar:has(> .kh-tab ~ .kh-tab) .kh-brand { display: none; }
+  .kh-account { padding-right: 3px; }
+  .kh-account__name { display: none; }
+  .kh-toggle button { padding-left: 9px; padding-right: 9px; }
+}
+/* Très petit écran : la bascule de thème passe en icônes. */
+.kh-toggle-ico { display: none; }
+@media (max-width: 380px) {
+  .kh-toggle-ico { display: inline; }
+  .kh-toggle-txt { display: none; }
+}
+
+/* Écran tactile : pas de survol, la croix de suppression reste visible. */
+@media (hover: none) { .fs-scard-del { opacity: 1; } }
 
 /* ============================================================================
    Écran 2 - Constructeur (Phase 2b). Vue principale : bandeau, roster, liste.
@@ -539,8 +589,6 @@ body {
 
 .bld-unit-group { display: flex; flex-direction: column; gap: 10px; }
 .bld-grip { touch-action: none; }
-.bld-add-mobile { align-self: flex-start; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
-  color: var(--ink-accent); background: linear-gradient(180deg, var(--ember-bright), var(--ember)); border: 0; cursor: pointer; }
 
 .bld-empty { text-align: center; color: var(--bone-faint); padding: 48px 0; font-size: 14px; }
 
@@ -671,21 +719,56 @@ body {
 .bld-leg { display: inline-flex; align-items: center; gap: 6px; }
 .bld-swatch { width: 9px; height: 9px; border-radius: 50%; }
 
+/* Barre d'actions du bas : seulement là où le roster latéral est masqué. */
+.bld-mobilebar { display: none; }
+
 @media (max-width: 900px) {
   .bld-roster { display: none; }
   .bld-listbar { flex-wrap: wrap; }
   .bld-forge { flex-wrap: wrap; gap: 10px; }
   .bld-gauge { width: 220px; }
   .bld-name { width: 12ch; }
+  .bld-actions { display: none; }
+  .bld-mobilebar { display: flex; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--hair); background: var(--forge-2); }
+  .bld-mobilebar-add { flex: 1; }
 }
+
+/* Téléphone : bandeau sur deux rangs (identité et validité, puis budget). `.bld-forge` s'efface pour que
+   la jauge et la validité se placent directement dans la grille du bandeau. */
 @media (max-width: 560px) {
-  .bld-forge { margin-left: 0; width: 100%; }
-  .bld-gauge { flex: 1 1 160px; width: auto; }
-  .bld-actions { margin-left: auto; }
-  .bld-back { padding: 6px 8px; }
-  .bld-list { padding: 16px 12px; }
+  .bld-listbar { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "back crest id valid" "gauge gauge gauge gauge"; gap: 10px; padding: 10px 12px; }
+  .bld-forge { display: contents; }
+  .bld-back { grid-area: back; padding: 6px 8px; font-size: 16px; }
+  .bld-back-txt { display: none; }
+  .bld-crest { grid-area: crest; width: 32px; height: 36px; --crest-glow: 5px; }
+  .bld-id { grid-area: id; }
+  .bld-name { width: 100%; font-size: 17px; padding: 2px; }
+  .bld-meta { padding-left: 2px; font-size: 12px; gap: 7px; flex-wrap: wrap; }
+  .bld-meta .bld-faction-chip, .bld-meta .bld-faction-chip + .bld-dot { display: none; }
+  .bld-validity { grid-area: valid; min-width: 0; padding: 7px 10px; }
+  .bld-validity-txt { display: none; }
+  .bld-gauge { grid-area: gauge; width: auto; margin-right: 0; }
+  .bld-list { padding: 12px; }
+
+  /* Ligne de figurine : le nom prend la largeur, le prix et les actions s'empilent à droite. */
+  .bld-unit { padding: 10px 10px 10px 6px; }
+  .bld-unit-main { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "grip thumb info cost" "grip thumb info actions"; gap: 4px 10px; align-items: center; }
+  .bld-grip { grid-area: grip; min-width: 16px; margin: -10px 0 -10px 0; padding: 0 2px; }
+  .bld-thumb { grid-area: thumb; width: 48px; height: 48px; border-radius: 12px; }
+  .bld-thumb.sm { width: 42px; height: 42px; border-radius: 11px; }
+  .bld-thumb-img, .bld-thumb.sm .bld-thumb-img { border-radius: inherit; }
+  .bld-thumb .lvl { font-size: 18px; }
+  .bld-uinfo { grid-area: info; }
+  .bld-uname { gap: 4px 6px; }
+  .bld-uname .nm { font-size: 15px; }
+  .bld-ucost { grid-area: cost; justify-self: end; font-size: 15px; }
+  .bld-uactions { grid-area: actions; justify-self: end; margin-left: 0; gap: 2px; }
+  .bld-unit.is-attached { margin-left: 18px; }
+  .bld-unit.is-attached::before { left: -13px; width: 8px; }
 }
-@media (min-width: 901px) { .bld-add-mobile { display: none; } }
 
 /* Toast (confirmations brèves) */
 .ui-toast-vp { position: fixed; bottom: 18px; right: 18px; z-index: 80; display: flex; flex-direction: column;
@@ -1071,5 +1154,10 @@ body {
 @media (max-width: 640px) {
   .fe-statcard { grid-template-columns: 1fr; }
   .fe-panes { grid-template-columns: 1fr; }
+  /* Volets empilés : les flèches vers le volet voisin n'ont plus de sens, place à + et −. */
+  .fe-move-glyph { display: none; }
+  .fe-move.add::before { content: "+"; }
+  .fe-move.rem::before { content: "−"; }
+  .fe-move { width: 34px; height: 32px; }
 }
 

@@ -1,10 +1,11 @@
 import * as RD from "@radix-ui/react-dialog";
 import type { ReactNode } from "react";
+import { useBackLayer } from "./backStack";
 
 /**
  * Modale à **taille fixe** (backée Radix : focus-trap, Échap, empilement et a11y gérés).
  * Les variantes `md`/`lg` imposent une hauteur fixe : le contenu défile à l'intérieur au
- * lieu de faire enfler la fenêtre.
+ * lieu de faire enfler la fenêtre. Le bouton retour du téléphone la ferme.
  */
 export function Dialog({
   open,
@@ -30,6 +31,7 @@ export function Dialog({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  useBackLayer(open, () => onOpenChange(false));
   return (
     <RD.Root open={open} onOpenChange={onOpenChange}>
       <RD.Portal>

@@ -7,6 +7,21 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-10-19
+
+### Le constructeur s'utilise sur téléphone
+
+- **Plus rien ne dépasse de l'écran** : la page tient dans la largeur du téléphone, même sur les plus
+  petits.
+- **L'accueil tient sur un écran** : les factions s'affichent en grille compacte, et la présentation
+  de celle qu'on choisit apparaît dessous.
+- **La liste se lit sans peine** : le bandeau du haut est plus compact, chaque figurine garde son nom
+  lisible, et les boutons Ajouter, Exporter et Sauvegarder sont en bas de l'écran, à portée de pouce.
+- **Le bouton retour du téléphone** ferme la fenêtre ouverte, puis ramène à l'accueil, au lieu de
+  quitter le site. Si la liste n'est pas enregistrée, il demande d'abord confirmation.
+- **Le choix du format disparaît de l'accueil** en attendant le mode Bataille : toutes les listes
+  sont en escarmouche.
+
 ## 2026-10-16
 
 ### Les armoiries officielles des factions

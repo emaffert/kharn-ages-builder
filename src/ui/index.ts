@@ -16,3 +16,4 @@ export { Tabs } from "./Tabs";
 export { Tooltip, TooltipProvider } from "./Tooltip";
 export { Popover } from "./Popover";
 export { Toast, ToastProvider } from "./Toast";
+export { pushLayer, resetStaleLayers, useBackLayer } from "./backStack";

@@ -52,7 +52,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover } from "@ui";
+import { Button, Dialog, SegmentedControl, Toast, ToastProvider, Popover, useBackLayer } from "@ui";
 import { RecruitPill, Verbatim } from "./components";
 import { FactionEmblem } from "./FactionEmblem";
 import { SortableUnit } from "./SortableUnit";
@@ -280,6 +280,14 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
   const savedCopy = store.savedLists.find((l) => l.id === store.list.id);
   const dirty = savedCopy ? savedCopy.updatedAt !== store.list.updatedAt : items.length > 0;
   const onBack = () => (dirty ? setConfirmBack(true) : onNew());
+  // Bouton retour du téléphone : retour à l'accueil, après confirmation si la liste n'est pas sauvegardée.
+  useBackLayer(true, () => {
+    if (dirty) {
+      setConfirmBack(true);
+      return false;
+    }
+    onNew();
+  });
 
   // Leader : personnage OU l'une des deux figurines les plus chères. Jamais un esclave, quel que
   // soit son coût : il combat malgré lui.
@@ -605,8 +613,8 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
       <div className="bld-root" style={factionVars}>
       {/* Bandeau de liste : identité + jauge-forge + validation + actions */}
       <div className="bld-listbar">
-        <button className="bld-back" onClick={onBack} title="Revenir à l'accueil">
-          ← Retour
+        <button className="bld-back" onClick={onBack} title="Revenir à l'accueil" aria-label="Retour">
+          ← <span className="bld-back-txt">Retour</span>
         </button>
         <FactionEmblem kind={fac.emblem} className="bld-crest" />
         <div className="bld-id">
@@ -674,13 +682,14 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
           </div>
           {isValid ? (
             <div className="bld-validity ok">
-              <span className="big">✓</span> Liste valide
+              <span className="big">✓</span> <span className="bld-validity-txt">Liste valide</span>
             </div>
           ) : (
             <Popover
               trigger={
                 <button className="bld-validity err" type="button">
-                  <span className="big">⚠</span> {errorTotal} erreur{errorTotal > 1 ? "s" : ""}
+                  <span className="big">⚠</span> {errorTotal}
+                  <span className="bld-validity-txt"> erreur{errorTotal > 1 ? "s" : ""}</span>
                 </button>
               }
             >
@@ -715,9 +724,6 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
         {/* Liste */}
         <section className="bld-list">
           <div className="bld-list-inner">
-            <button className="bld-add-mobile" onClick={() => setShowRoster(true)}>
-              + Ajouter depuis le roster
-            </button>
             <OstPanel cat={cat} list={store.list} issues={evaluation.issues} onToggle={store.toggleOstCard} />
             {groups.length === 0 && (
               <p className="bld-empty">Liste vide - ajoute des figurines depuis le roster.</p>
@@ -752,6 +758,15 @@ export function BuilderScreen({ store, onNew }: { store: ListStore; onNew: () =>
 
       {/* Pied réservé (vide pour l'instant) - masqué tant qu'il n'a pas de contenu (.bld-foot:empty). */}
       <footer className="bld-foot" />
+
+      {/* Barre d'actions des écrans étroits, où le roster est masqué : à portée de pouce, en bas. */}
+      <div className="bld-mobilebar">
+        <Button variant="primary" className="bld-mobilebar-add" onClick={() => setShowRoster(true)}>
+          + Ajouter
+        </Button>
+        <Button onClick={() => setIo("export")}>Exporter</Button>
+        <Button onClick={onSave}>Sauvegarder</Button>
+      </div>
 
       {/* Modale roster (mobile) : l'aside étant masqué sous `md`. */}
       {showRoster && (

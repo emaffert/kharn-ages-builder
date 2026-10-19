@@ -1,7 +1,7 @@
 # Chantier - Mode Bataille
 
 Statut : **étude, non commencé**. Le format est aujourd'hui **désactivé dans l'interface**
-(`src/app/builder/FactionSelect.tsx:112`, « Bientôt »). Rédigé le 2026-08-04.
+(le choix du format est masqué par `SHOW_FORMAT` dans `src/app/builder/FactionSelect.tsx`, et l'option « Bataille » y est désactivée). Rédigé le 2026-08-04.
 
 Source : `rules corpus/LDR KA Saison2.pdf`, chapitre « Le mode Bataille », **pages 49 à 74**.
 Complément hors chapitre : les **PIONs**, page 5 du même livre, qui sont un poste de coût du format
@@ -372,7 +372,7 @@ Barda** décrite dans la Geste de Safar - les deux chantiers se recoupent ici.
   par `patchFdl`, donc **la totalité des mutations** (recrutement, équipement, magie, montures,
   esclaves, gardes du corps…) est mono-Fer-de-Lance. `emptyList` crée un unique `fdl1` (`:96`).
   **C'est le verrou principal de tout le chantier.**
-- **Le format bataille est désactivé** dans l'écran de départ (`FactionSelect.tsx:112`).
+- **Le format bataille est désactivé** dans l'écran de départ, et le choix du format y est masqué (`SHOW_FORMAT`, `FactionSelect.tsx`).
 - **Les limitations sont toutes validées par Fer de Lance**, y compris « P »
   (`evaluate.ts:1230`, `validateLimitations(fdl, inFdl, …)`). En bataille, **P doit être validée sur
   l'Ost**.

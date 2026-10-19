@@ -239,7 +239,7 @@ function GrantedSpellPanel({
           disabled={Boolean(blockedTitle)}
           title={blockedTitle ?? "Ajouter"}
         >
-          ←
+          <span className="fe-move-glyph">←</span>
         </button>
       )}
       <span className="fe-item-main">
@@ -258,7 +258,7 @@ function GrantedSpellPanel({
           }}
           title="Retirer"
         >
-          →
+          <span className="fe-move-glyph">→</span>
         </button>
       )}
     </div>
@@ -385,7 +385,7 @@ function SpellPanel({
             disabled={no}
             title={no ? blockedTitle : "Ajouter"}
           >
-            ←
+            <span className="fe-move-glyph">←</span>
           </button>
         )}
         <span className="fe-item-main">
@@ -404,7 +404,7 @@ function SpellPanel({
             }}
             title="Retirer"
           >
-            →
+            <span className="fe-move-glyph">→</span>
           </button>
         )}
       </div>

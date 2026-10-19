@@ -10,8 +10,10 @@ export function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: T
         onClick={() => setTheme("dark")}
         className="px-3 py-1"
         aria-pressed={theme === "dark"}
+        title="Thème sombre"
       >
-        Sombre
+        <span className="kh-toggle-ico" aria-hidden="true">☾</span>
+        <span className="kh-toggle-txt">Sombre</span>
       </button>
       <button
         type="button"
@@ -19,8 +21,10 @@ export function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: T
         onClick={() => setTheme("light")}
         className="px-3 py-1"
         aria-pressed={theme === "light"}
+        title="Thème clair"
       >
-        Clair
+        <span className="kh-toggle-ico" aria-hidden="true">☀</span>
+        <span className="kh-toggle-txt">Clair</span>
       </button>
     </div>
   );

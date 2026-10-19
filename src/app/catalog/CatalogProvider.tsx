@@ -28,10 +28,11 @@ const POLL_INTERVAL_MS = 60 * 1000;
 /**
  * Fournit le catalogue actif à toute l'app.
  *
- * Au démarrage on laisse quelques secondes au serveur pour donner sa dernière version publiée ;
- * passé ce délai (ou en cas d'échec), on démarre sur le catalogue local - brouillon admin, sinon
- * dernière version publiée en cache, sinon catalogue bundlé - et la synchro se poursuit en
- * arrière-plan : la version distante s'applique dès qu'elle arrive.
+ * Avec une version publiée en cache, l'app démarre aussitôt dessus et la synchro se fait en
+ * arrière-plan : la version distante s'applique dès qu'elle arrive. Sans cache (première visite),
+ * on laisse quelques secondes au serveur pour donner sa dernière version, plutôt que de démarrer
+ * sur le catalogue bundlé, qui peut dater ; passé ce délai (ou en cas d'échec), on démarre sur le
+ * catalogue local - brouillon admin, sinon catalogue bundlé.
  *
  * Le catalogue pesant plusieurs Mo, on demande d'abord le seul numéro de version : sans nouveauté,
  * la synchro ne télécharge rien. Le client est injectable pour les tests ; `null` (pas de `.env`)
@@ -49,8 +50,8 @@ export function CatalogProvider({
 }) {
   const [catalog, setCatalog] = useState<Catalog>(() => loadCatalog());
   const [published, setPublished] = useState<PublishedMeta | null>(() => cachedMeta());
-  // Attente initiale : uniquement s'il y a un serveur à interroger.
-  const [waiting, setWaiting] = useState(() => Boolean(client));
+  // Attente initiale : uniquement s'il y a un serveur à interroger et rien en cache.
+  const [waiting, setWaiting] = useState(() => Boolean(client) && cachedMeta() === null);
   const [showSpinner, setShowSpinner] = useState(false);
   const [update, setUpdate] = useState<PublishedMeta | null>(null);
 

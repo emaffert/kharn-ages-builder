@@ -1,28 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { shouldReloadOnControllerChange } from "./pwa";
+import { controllerChangeAction } from "./pwa";
 
-describe("rechargement à la prise de main d'une nouvelle version", () => {
-  it("recharge quand une version remplace celle qui contrôlait la page", () => {
-    expect(shouldReloadOnControllerChange(true, false)).toBe(true);
+describe("prise de main d'une nouvelle version du site", () => {
+  it("recharge d'office juste après l'ouverture du site", () => {
+    expect(controllerChangeAction(true, false, 2_000)).toBe("reload");
   });
 
-  it("ne recharge pas à la première installation", () => {
+  it("annonce la mise à jour quand l'utilisateur est déjà au travail", () => {
+    expect(controllerChangeAction(true, false, 60_000)).toBe("announce");
+  });
+
+  it("ne fait rien à la première installation", () => {
     // Aucun contrôleur au démarrage : la page tourne déjà sur le code qui vient d'être servi.
-    expect(shouldReloadOnControllerChange(false, false)).toBe(false);
+    expect(controllerChangeAction(false, false, 2_000)).toBe("none");
   });
 
-  it("ne relance pas un rechargement déjà en cours", () => {
-    expect(shouldReloadOnControllerChange(true, true)).toBe(false);
-  });
-});
-
-describe("annonce d'une nouvelle version", () => {
-  it("annonce quand une version remplace celle qui contrôlait la page", () => {
-    expect(shouldReloadOnControllerChange(true, false)).toBe(true);
-  });
-
-  it("n'annonce rien à la première installation, ni deux fois", () => {
-    expect(shouldReloadOnControllerChange(false, false)).toBe(false);
-    expect(shouldReloadOnControllerChange(true, true)).toBe(false);
+  it("ne traite pas deux fois la même mise à jour", () => {
+    expect(controllerChangeAction(true, true, 2_000)).toBe("none");
+    expect(controllerChangeAction(true, true, 60_000)).toBe("none");
   });
 });

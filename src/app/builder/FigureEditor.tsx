@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Profile, Catalog } from "@core";
+import { useSwipe } from "@ui";
 import { ProfileStatCard, type ProfileMods } from "./ProfileStatCard";
 import { MountOptionsEditor } from "./MountOptions";
 import { EquipPanel } from "./EquipPanel";
@@ -93,91 +94,115 @@ export function FigureEditor({
   ].filter(Boolean) as { id: TabId; label: string }[];
   const [tab, setTab] = useState<TabId>("carte");
   const active = tabs.some((t) => t.id === tab) ? tab : "carte";
+  const activeIndex = tabs.findIndex((t) => t.id === active);
+  // Côté d'où arrive le nouvel onglet : il glisse depuis la droite quand on avance, la gauche quand on recule.
+  const [enterFrom, setEnterFrom] = useState<"left" | "right" | null>(null);
+  const goTo = (index: number) => {
+    if (index === activeIndex) return;
+    setEnterFrom(index > activeIndex ? "right" : "left");
+    setTab(tabs[index].id);
+  };
+  // Sur écran tactile, le contenu suit le doigt et un balayage passe à l'onglet voisin.
+  const swipe = useSwipe({
+    onNext: () => goTo(activeIndex + 1),
+    onPrevious: () => goTo(activeIndex - 1),
+    canNext: activeIndex < tabs.length - 1,
+    canPrevious: activeIndex > 0,
+  });
 
   return (
     <div className="fe-root">
       {tabs.length > 1 && (
         <div className="fe-tabs">
-          {tabs.map((t) => (
-            <button key={t.id} className="ui-tab" data-state={active === t.id ? "active" : "inactive"} onClick={() => setTab(t.id)}>
+          {tabs.map((t, i) => (
+            <button key={t.id} className="ui-tab" data-state={active === t.id ? "active" : "inactive"} onClick={() => goTo(i)}>
               {t.label}
             </button>
           ))}
         </div>
       )}
 
-      {active === "carte" && (
-        <ProfileStatCard
-          p={p}
-          cat={cat}
-          onInfo={onInfo}
-          upgrades={upgrades}
-          onToggleUpgrade={onToggleUpgrade}
-          upgradeCounts={upgradeCounts}
-          onSetUpgradeCount={onSetUpgradeCount}
-          mods={mods}
-          wornArmors={wornArmorsFrom(cat, [...activeBase, ...added], undefined, p.armor)}
-          wornEquipIds={[...activeBase, ...added]}
-          grantedSpells={grantedSpells}
-          factionId={factionId}
-        />
-      )}
-      {active === "equip" && (
-        <EquipPanel
-          profile={p}
-          cat={cat}
-          added={added}
-          addedCounts={addedCounts}
-          removed={removed}
-          onAdd={onAdd}
-          onRemove={onRemove}
-          onToggleBase={onToggleBase}
-          munitions={munitions}
-          onMunTier={onMunTier}
-          onInfo={onInfo}
-          grantedUpgrades={mods?.grantedUpgrades ?? []}
-          grantedEquipment={mods?.grantedEquipment ?? []}
-          costRules={mods?.equipmentCostRules ?? []}
-          equipmentUpgrades={equipmentUpgrades}
-          onToggleEquipmentUpgrade={onToggleEquipmentUpgrade}
-          hasMount={mountId != null}
-          factionId={factionId}
-        />
-      )}
-      {active === "magie" && (
-        <MagiePanel
-          profile={p}
-          cat={cat}
-          upgrades={upgrades}
-          grimoire={grimoire}
-          spells={spells}
-          ways={ways}
-          grantedSkills={mods?.grantedSkills}
-          wornEquipIds={[...activeBase, ...added]}
-          onGrimoire={onGrimoire}
-          onToggleSpell={onToggleSpell}
-          grantedSpells={grantedSpells}
-          onToggleGrantedSpell={onToggleGrantedSpell}
-          onInfo={onInfo}
-          grimoireDiscount={mods?.grimoireDiscount}
-        />
-      )}
-      {active === "monture" && (
-        <div className="fe-root">
-          <p className="fe-opt-intro">
-            Compétences débloquées par la monture (réservées au cavalier ou partagées avec la monture). La
-            Lance de cavalerie, elle, s'achète dans l'onglet « Équipement ».
-          </p>
-          <MountOptionsEditor
+      <div
+        key={active}
+        className="fe-pane"
+        data-enter={enterFrom ?? undefined}
+        data-dragging={swipe.dragging || undefined}
+        style={swipe.dragging ? { transform: `translateX(${swipe.dragX}px)`, opacity: 1 - Math.min(Math.abs(swipe.dragX) / 600, 0.35) } : undefined}
+        {...swipe.handlers}
+      >
+        {active === "carte" && (
+          <ProfileStatCard
+            p={p}
             cat={cat}
-            mountId={mountId}
-            factionId={p.factionId}
-            selected={mountOptionIds ?? {}}
-            buckets={["rider", "both"]}
-            onSetOption={(oid, v) => onSetMountOption?.(oid, v)}
+            onInfo={onInfo}
+            upgrades={upgrades}
+            onToggleUpgrade={onToggleUpgrade}
+            upgradeCounts={upgradeCounts}
+            onSetUpgradeCount={onSetUpgradeCount}
+            mods={mods}
+            wornArmors={wornArmorsFrom(cat, [...activeBase, ...added], undefined, p.armor)}
+            wornEquipIds={[...activeBase, ...added]}
+            grantedSpells={grantedSpells}
+            factionId={factionId}
           />
-        </div>
-      )}
+        )}
+        {active === "equip" && (
+          <EquipPanel
+            profile={p}
+            cat={cat}
+            added={added}
+            addedCounts={addedCounts}
+            removed={removed}
+            onAdd={onAdd}
+            onRemove={onRemove}
+            onToggleBase={onToggleBase}
+            munitions={munitions}
+            onMunTier={onMunTier}
+            onInfo={onInfo}
+            grantedUpgrades={mods?.grantedUpgrades ?? []}
+            grantedEquipment={mods?.grantedEquipment ?? []}
+            costRules={mods?.equipmentCostRules ?? []}
+            equipmentUpgrades={equipmentUpgrades}
+            onToggleEquipmentUpgrade={onToggleEquipmentUpgrade}
+            hasMount={mountId != null}
+            factionId={factionId}
+          />
+        )}
+        {active === "magie" && (
+          <MagiePanel
+            profile={p}
+            cat={cat}
+            upgrades={upgrades}
+            grimoire={grimoire}
+            spells={spells}
+            ways={ways}
+            grantedSkills={mods?.grantedSkills}
+            wornEquipIds={[...activeBase, ...added]}
+            onGrimoire={onGrimoire}
+            onToggleSpell={onToggleSpell}
+            grantedSpells={grantedSpells}
+            onToggleGrantedSpell={onToggleGrantedSpell}
+            onInfo={onInfo}
+            grimoireDiscount={mods?.grimoireDiscount}
+          />
+        )}
+        {active === "monture" && (
+          <div className="fe-root">
+            <p className="fe-opt-intro">
+              Compétences débloquées par la monture (réservées au cavalier ou partagées avec la monture). La
+              Lance de cavalerie, elle, s'achète dans l'onglet « Équipement ».
+            </p>
+            <MountOptionsEditor
+              cat={cat}
+              mountId={mountId}
+              factionId={p.factionId}
+              selected={mountOptionIds ?? {}}
+              buckets={["rider", "both"]}
+              onSetOption={(oid, v) => onSetMountOption?.(oid, v)}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -22,28 +22,39 @@ import { markUpdateReady } from "@app/updates";
 /** Intervalle de vérification, pour un onglet qui ne navigue jamais. */
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
+/** Fenêtre après l'ouverture de la page pendant laquelle une mise à jour s'applique d'office. */
+const FRESH_OPEN_MS = 10 * 1000;
+
 /**
- * Faut-il **annoncer** une nouvelle version quand le worker qui contrôle la page change ?
+ * Que faire quand le worker qui contrôle la page change ?
  *
- * Deux gardes : à la toute première installation il n'y avait aucun contrôleur, et la page tourne
- * déjà sur le bon code - l'annoncer serait un faux message à la première visite. Et une annonce
- * déjà faite ne se répète pas.
+ * - Rien à la toute première installation : il n'y avait aucun contrôleur, la page tourne déjà sur
+ *   le bon code. Rien non plus si c'est déjà fait.
+ * - **Recharger** juste après l'ouverture du site : le navigateur a servi la version gardée en cache
+ *   avant de découvrir la nouvelle. Annoncer une mise à jour à quelqu'un qui vient d'arriver serait
+ *   déroutant, et la liste en cours survit au rechargement.
+ * - **Annoncer** au-delà : l'utilisateur est au travail, il choisit son moment.
  */
-export function shouldReloadOnControllerChange(hadController: boolean, alreadyAnnounced: boolean): boolean {
-  return hadController && !alreadyAnnounced;
+export function controllerChangeAction(
+  hadController: boolean,
+  alreadyHandled: boolean,
+  msSinceOpen: number,
+): "none" | "reload" | "announce" {
+  if (!hadController || alreadyHandled) return "none";
+  return msSinceOpen < FRESH_OPEN_MS ? "reload" : "announce";
 }
 
 export function setupServiceWorker(): void {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
 
   const hadController = Boolean(navigator.serviceWorker.controller);
-  let announced = false;
+  let handled = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!shouldReloadOnControllerChange(hadController, announced)) return;
-    announced = true;
-    // Annoncée, pas appliquée : une liste en cours n'existe que dans la page, et un rechargement
-    // décidé par le site l'effacerait. L'application affiche l'invitation, l'utilisateur décide.
-    markUpdateReady();
+    const action = controllerChangeAction(hadController, handled, performance.now());
+    if (action === "none") return;
+    handled = true;
+    if (action === "reload") location.reload();
+    else markUpdateReady();
   });
 
   registerSW({

@@ -21,6 +21,12 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
   quitter le site. Si la liste n'est pas enregistrée, il demande d'abord confirmation.
 - **Le choix du format disparaît de l'accueil** en attendant le mode Bataille : toutes les listes
   sont en escarmouche.
+- **Une liste en cours n'est plus perdue** quand le téléphone se met en veille ou que la page se
+  recharge : on la retrouve là où on l'avait laissée.
+- **Le site s'ouvre aussitôt**, sans attendre le serveur, dès qu'il a déjà été visité. Une mise à
+  jour découverte à l'ouverture s'applique d'elle-même au lieu d'afficher un message.
+- **Sur la fiche d'une figurine**, un balayage du doigt passe d'un onglet à l'autre, et le contenu
+  suit le geste.
 
 ## 2026-10-16
 

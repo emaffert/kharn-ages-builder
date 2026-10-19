@@ -162,10 +162,11 @@ export interface ListStore {
   removeSaved: (id: string) => Promise<void>;
 }
 
-export function useListStore(initialFactionId = "fangs"): ListStore {
+/** useListStore part de `initialList` s'il est fourni, sinon d'une liste vide de `initialFactionId`. */
+export function useListStore(initialFactionId = "fangs", initialList?: ListDocument): ListStore {
   // Catalogue actif fourni par `CatalogProvider` (version publiée ou brouillon admin local).
   const { catalog } = useCatalog();
-  const [list, setList] = useState<ListDocument>(() => emptyList(catalog, initialFactionId));
+  const [list, setList] = useState<ListDocument>(() => initialList ?? emptyList(catalog, initialFactionId));
   const evaluation = useMemo(() => evaluateList(catalog, list), [catalog, list]);
   const fdl = list.fersDeLance[0];
 

@@ -7,6 +7,11 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-11-22
+
+- **Le lien de confirmation de l'e-mail d'inscription** ramène bien sur le constructeur, au lieu
+  d'une page d'erreur.
+
 ## 2026-10-19
 
 ### Le constructeur s'utilise sur téléphone

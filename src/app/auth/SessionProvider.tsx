@@ -5,6 +5,14 @@ import { SessionContext, type Profile, type SessionStatus, type SessionValue } f
 import { authErrorMessage } from "./errors";
 
 /**
+ * appUrl renvoie l'adresse de l'app, sous-chemin compris (GitHub Pages la sert sous /<dépôt>/) :
+ * c'est là que doivent ramener les liens des e-mails de confirmation et de réinitialisation.
+ */
+function appUrl(): string {
+  return new URL(import.meta.env.BASE_URL, window.location.origin).href;
+}
+
+/**
  * Fournit la session (utilisateur + profil + rôle) à toute l'app.
  *
  * Le client est injectable (`client`) : par défaut celui de `lib/supabase`, mais les tests
@@ -77,7 +85,7 @@ export function SessionProvider({
       const { data, error } = await client.auth.signUp({
         email,
         password,
-        options: { data: { pseudo } },
+        options: { data: { pseudo }, emailRedirectTo: appUrl() },
       });
       // Sans session en retour, Supabase attend la confirmation de l'adresse e-mail.
       return { error: authErrorMessage(error), needsConfirmation: !error && !data?.session };
@@ -93,9 +101,7 @@ export function SessionProvider({
   const requestPasswordReset = useCallback(
     async (email: string) => {
       if (!client) return { error: "Authentification indisponible." };
-      // Le lien doit revenir sur l'app, sous-chemin compris (GitHub Pages sert sous /<dépôt>/).
-      const redirectTo = new URL(import.meta.env.BASE_URL, window.location.origin).href;
-      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
+      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: appUrl() });
       return { error: authErrorMessage(error) };
     },
     [client],

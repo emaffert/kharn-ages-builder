@@ -142,7 +142,7 @@ describe("SessionProvider", () => {
     expect(calls.signUp).toHaveBeenCalledWith({
       email: "a@b.c",
       password: "secret",
-      options: { data: { pseudo: "Xayin" } },
+      options: { data: { pseudo: "Xayin" }, emailRedirectTo: expect.any(String) },
     });
     expect(calls.signOut).toHaveBeenCalled();
   });

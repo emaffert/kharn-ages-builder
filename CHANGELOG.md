@@ -9,6 +9,8 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 ## 2026-11-22
 
+### L'inscription par e-mail aboutit
+
 - **Le lien de confirmation de l'e-mail d'inscription** ramène bien sur le constructeur, au lieu
   d'une page d'erreur.
 

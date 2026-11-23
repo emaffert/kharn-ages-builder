@@ -13,7 +13,8 @@ n'y figurent que lorsqu'ils ont une conséquence visible.
 
 - **La remise d'Ogodeï sur les armes à deux mains** ne descend plus sous le prix de l'arme : avec
   une arme gratuite, il coûte son prix normal au lieu de 10 Ko de moins.
-  Le même plafond vaut pour toutes les remises sur un objet.
+- **Aucune remise ne peut plus rendre un coût négatif** : sur un objet, un grimoire ou une figurine,
+  le prix s'arrête à 0, même quand plusieurs remises se cumulent.
 
 ## 2026-11-22
 

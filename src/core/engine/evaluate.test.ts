@@ -1037,6 +1037,25 @@ describe("effet conditionné au meneur (Engueran)", () => {
     const notLeader = evaluateList(catalog, makeList([pal, eng], "kharns", "bataille"));
     expect(leader.costByInstance[pal.instanceId]).toBe(notLeader.costByInstance[pal.instanceId] - 15);
   });
+
+  it("une remise plus grosse que le prix de la figurine la laisse à 0", () => {
+    const cat: Catalog = {
+      ...catalog,
+      profiles: catalog.profiles.map((p) =>
+        p.id !== "kharns-engueran"
+          ? p
+          : {
+              ...p,
+              effects: (p.effects ?? []).map((e) =>
+                e.operation.kind === "cost-delta" ? { ...e, operation: { ...e.operation, amount: -10000 } } : e,
+              ),
+            },
+      ),
+    };
+    const eng = inst("kharns-engueran");
+    const pal = inst("kharns-paladin-3");
+    expect(evaluateList(cat, makeList([eng, pal], "kharns", "bataille")).costByInstance[pal.instanceId]).toBe(0);
+  });
 });
 
 describe("montures", () => {

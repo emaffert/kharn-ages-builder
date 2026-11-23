@@ -818,6 +818,9 @@ function computeCosts(
     if (d) cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) - d);
   }
 
+  // Aucune remise, même cumulée, ne rend une figurine négative.
+  for (const [id, c] of cost) if (c < 0) cost.set(id, 0);
+
   // cost-set : fixe le coût (ex. larbins « garde du corps » gratuits). Seules les cibles
   // *désignées* (bodyguardOfInstanceId) en bénéficient - le joueur choisit qui occupe l'emplacement -
   // dans la limite de maxCount et du nombre de sources (sourceCount).

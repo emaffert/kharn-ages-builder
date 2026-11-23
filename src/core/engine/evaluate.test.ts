@@ -905,6 +905,16 @@ describe("Khérops - concepts (Lieutenant / Commandant / Ogodeï)", () => {
     expect(r1.costByInstance[oneH.instanceId]).toBe(165 + 20);
   });
 
+  it("Ogodeï : la remise ne rend pas une arme gratuite négative", () => {
+    const og = inst("kherops-ogodei-3", { addedEquipmentIds: ["canne-alaric"] });
+    const r = evaluateList(catalog, makeList([og], "kherops", "bataille"));
+    expect(r.costByInstance[og.instanceId]).toBe(165);
+    expect(equipmentDiscount(catalog, "canne-alaric", r.equipmentCostRules[og.instanceId], [])).toBe(0);
+    const cheap = inst("kherops-ogodei-3", { addedEquipmentIds: ["canne-des-esprits"] });
+    const r2 = evaluateList(catalog, makeList([cheap], "kherops", "bataille"));
+    expect(r2.costByInstance[cheap.instanceId]).toBe(165);
+  });
+
   it("Commandant : −5 Ko à un Guerrier qui change son arme de base (rien s'il ne fait qu'ajouter)", () => {
     const cmd = inst("kherops-commandant-3");
     const swap = inst("kherops-guerrier-1-1", { removedBaseEquipmentIds: ["kherops-marteau"], addedEquipmentIds: ["kherops-francisque"] });

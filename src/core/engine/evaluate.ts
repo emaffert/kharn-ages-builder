@@ -225,7 +225,8 @@ export function equipmentMatchesEquipFilter(
 
 /**
  * Remise cumulée (négatif) / surcoût pour un équipement donné, d'après les règles applicables à la
- * figurine et son état (équipement de base retiré, pour le gate « arme de base changée »).
+ * figurine et son état (équipement de base retiré, pour le gate « arme de base changée »). Une remise
+ * ne descend jamais sous le prix de l'objet : une arme gratuite reste à 0.
  */
 export function equipmentDiscount(
   cat: Catalog,
@@ -240,7 +241,7 @@ export function equipmentDiscount(
     if (r.requiresBaseSwap && !removedBaseIds.some((id) => equipmentMatchesEquipFilter(cat, id, r))) continue;
     d += r.amount;
   }
-  return d;
+  return Math.max(d, 0 - (cat.equipment.find((x) => x.id === equipId)?.cost ?? 0));
 }
 
 /**
@@ -769,7 +770,9 @@ function computeCosts(
     }
   }
 
-  // cost-delta : modificateurs additifs.
+  // cost-delta : modificateurs additifs. Les remises par objet sont cumulées par exemplaire puis
+  // plafonnées au prix de l'objet, pour qu'une arme gratuite ne fasse pas baisser le coût.
+  const perItem = new Map<string, Map<string, number>>();
   for (const occ of occurrences) {
     const op = occ.effect.operation;
     if (op.kind !== "cost-delta") continue;
@@ -782,17 +785,29 @@ function computeCosts(
         (sel.equipmentIds?.length ?? 0) > 0 ||
         (sel.equipmentHands?.length ?? 0) > 0;
       const matches = (id: string) => equipmentMatchesEquipFilter(cat, id, sel);
-      let delta = op.amount;
-      if (hasFilter) {
-        // Gate « changement d'arme de base » : au moins un équipement de base retiré correspond au filtre.
-        if (op.requiresBaseSwap && !ri.instance.removedBaseEquipmentIds.some(matches)) continue;
-        // Appliqué une fois par exemplaire acheté correspondant au filtre (catégorie / id / mains).
-        delta = op.amount * [...addedEquipmentTally(ri.instance)]
-          .filter(([id]) => matches(id))
-          .reduce((n, [, qty]) => n + qty, 0);
+      const id = ri.instance.instanceId;
+      if (!hasFilter) {
+        cost.set(id, (cost.get(id) ?? 0) + op.amount);
+        continue;
       }
-      cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + delta);
+      // Gate « changement d'arme de base » : au moins un équipement de base retiré correspond au filtre.
+      if (op.requiresBaseSwap && !ri.instance.removedBaseEquipmentIds.some(matches)) continue;
+      const items = perItem.get(id) ?? new Map<string, number>();
+      perItem.set(id, items);
+      for (const [equipId] of addedEquipmentTally(ri.instance)) {
+        if (matches(equipId)) items.set(equipId, (items.get(equipId) ?? 0) + op.amount);
+      }
     }
+  }
+  for (const ri of resolved) {
+    const items = perItem.get(ri.instance.instanceId);
+    if (!items) continue;
+    let delta = 0;
+    for (const [equipId, qty] of addedEquipmentTally(ri.instance)) {
+      const unit = items.get(equipId);
+      if (unit != null) delta += Math.max(unit, 0 - (idx.equipmentCost.get(equipId) ?? 0)) * qty;
+    }
+    cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + delta);
   }
 
   // grimoire-discount : réduit le prix du grimoire CHOISI de la cible (ex. Mochère).

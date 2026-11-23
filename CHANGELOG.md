@@ -7,6 +7,14 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-11-23
+
+### Ogodeï ne gagne plus de Kouronnes avec une arme gratuite
+
+- **La remise d'Ogodeï sur les armes à deux mains** ne descend plus sous le prix de l'arme : avec
+  une arme gratuite, il coûte son prix normal au lieu de 10 Ko de moins.
+  Le même plafond vaut pour toutes les remises sur un objet.
+
 ## 2026-11-22
 
 ### L'inscription par e-mail aboutit

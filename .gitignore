@@ -39,3 +39,4 @@ graphic/
 
 # Table de correspondance intermédiaire de la migration des icônes (régénérable)
 scripts/.icons-map.json
+*.tsbuildinfo

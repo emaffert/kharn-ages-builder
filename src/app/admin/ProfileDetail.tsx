@@ -3,7 +3,7 @@ import { iconFor } from "@core";
 import type { Catalog, Constraint, Effect, Level, Profile } from "@core";
 import { Button, Dialog } from "@ui";
 import { describeConstraint, describeEffect, explainTraitUsage, specialCardsForProfile } from "@ui/explain";
-import { iconSrc } from "../../lib/icons";
+import { cardScanSrc, iconSrc } from "../../lib/icons";
 import type { FieldValue } from "../useCatalogStore";
 import { ConstraintListEditor, EffectListEditor } from "../RuleEditors";
 import { IconEditor } from "../IconEditor";
@@ -23,6 +23,7 @@ interface DetailProps {
   addModel: (factionId?: string, name?: string) => string;
   assignProfileToModel: (profileId: string, targetModelId: string) => void;
   setIcon: (cardImage: string, dataUrl: string | null) => void;
+  setSharedIcon: (profileId: string, ref: string) => void;
   toggleUnverified: (id: string, key: string) => void;
   /** Renomme l'identifiant du profil, en cascade sur tout ce qui le cite. */
   onRenameId: (newId: string) => void;
@@ -41,7 +42,6 @@ export function IconSlot({
   src,
   active,
   createLabel = "Créer l'icône…",
-  disabledReason,
   onEdit,
   onRemove,
 }: {
@@ -50,8 +50,6 @@ export function IconSlot({
   src?: string;
   active: boolean;
   createLabel?: string;
-  /** Non vide = emplacement inutilisable, et pourquoi (remplace l'explication habituelle). */
-  disabledReason?: string;
   onEdit: () => void;
   onRemove: () => void;
 }) {
@@ -67,13 +65,9 @@ export function IconSlot({
           <span className="adm-muted text-[11px] font-semibold">{title}</span>
           {active && <span className="adm-slot-on px-1 text-[9px]">affichée</span>}
         </div>
-        <p className="adm-faint text-[10px] leading-tight">{disabledReason ?? hint}</p>
+        <p className="adm-faint text-[10px] leading-tight">{hint}</p>
         <div className="mt-auto flex gap-1.5">
-          <button
-            onClick={onEdit}
-            disabled={disabledReason != null}
-            className="adm-btn-soft px-2 py-0.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onEdit} className="adm-btn-soft px-2 py-0.5 text-xs">
             {src ? "Modifier…" : createLabel}
           </button>
           {src && (
@@ -176,7 +170,7 @@ function GroupNameDialog({
   );
 }
 
-export function ProfileDetail({ profile, cat, updateField, updateProfile, renameModel, addModel, assignProfileToModel, setIcon, toggleUnverified, onRenameId, onSlugifyId, onRemove }: DetailProps) {
+export function ProfileDetail({ profile, cat, updateField, updateProfile, renameModel, addModel, assignProfileToModel, setIcon, setSharedIcon, toggleUnverified, onRenameId, onSlugifyId, onRemove }: DetailProps) {
   const cards = specialCardsForProfile(profile, cat);
   // Éditeur ouvert et pour quelle cible : "shared" (par carte) ou "own" (propre à ce niveau).
   const [editingIcon, setEditingIcon] = useState<null | "shared" | "own">(null);
@@ -313,13 +307,6 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
                   hint="Commune à tous les niveaux de ce modèle."
                   src={iconSrc(shared)}
                   active={shared != null && own == null}
-                  /* Le partage se fait par image de carte : sans elle, il n'y a rien à partager
-                     - et toutes les fiches sans carte se retrouveraient avec la même icône. */
-                  disabledReason={
-                    profile.cardImage
-                      ? undefined
-                      : "Renseignez d'abord l'image de carte, en bas de la fiche."
-                  }
                   onEdit={() => setEditingIcon("shared")}
                   onRemove={() => setIcon(profile.cardImage, null)}
                 />
@@ -338,10 +325,10 @@ export function ProfileDetail({ profile, cat, updateField, updateProfile, rename
               )}
               {editingIcon && (
                 <IconEditor
-                  initialSrc={profile.cardImage ? `/${profile.cardImage}` : undefined}
-                  onSave={(dataUrl) => {
-                    if (editingIcon === "own") patch({ icon: dataUrl });
-                    else setIcon(profile.cardImage, dataUrl);
+                  initialSrc={cardScanSrc(profile.cardImage)}
+                  onSave={(ref) => {
+                    if (editingIcon === "own") patch({ icon: ref });
+                    else setSharedIcon(profile.id, ref);
                     setEditingIcon(null);
                   }}
                   onClose={() => setEditingIcon(null)}

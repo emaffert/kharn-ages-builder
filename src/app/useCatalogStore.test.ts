@@ -89,6 +89,47 @@ describe("useCatalogStore", () => {
     expect(() => parseCatalog(result.current.catalog)).not.toThrow();
   });
 
+  it("partage l'icône d'une figurine sans image de carte entre les niveaux de son groupe", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    let a = "";
+    let b = "";
+    act(() => {
+      a = result.current.addProfile("kherops");
+    });
+    act(() => {
+      b = result.current.addProfile("kherops");
+    });
+    const modelId = result.current.catalog.profiles.find((p) => p.id === a)!.modelId!;
+    act(() => result.current.assignProfileToModel(b, modelId));
+    act(() => result.current.setProfileSharedIcon(a, "0123456789abcdef.webp"));
+    const cat = result.current.catalog;
+    const key = `cards/model-${modelId}`;
+    expect(cat.profiles.find((p) => p.id === a)!.cardImage).toBe(key);
+    expect(cat.profiles.find((p) => p.id === b)!.cardImage).toBe(key);
+    expect(cat.icons?.[key]).toBe("0123456789abcdef.webp");
+    expect(() => parseCatalog(cat)).not.toThrow();
+  });
+
+  it("garde l'image de carte existante comme clé de l'icône partagée", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    const p = result.current.catalog.profiles.find((x) => x.cardImage)!;
+    act(() => result.current.setProfileSharedIcon(p.id, "0123456789abcdef.webp"));
+    expect(result.current.catalog.profiles.find((x) => x.id === p.id)!.cardImage).toBe(p.cardImage);
+    expect(result.current.catalog.icons?.[p.cardImage]).toBe("0123456789abcdef.webp");
+  });
+
+  it("attribue une clé d'icône à un type de monture sans image de carte", () => {
+    const { result } = renderHook(() => useCatalogStore());
+    let id = "";
+    act(() => {
+      id = result.current.addMountType();
+    });
+    act(() => result.current.setMountTypeSharedIcon(id, "0123456789abcdef.webp"));
+    const key = `cards/mount-${id}`;
+    expect(result.current.catalog.mountTypes.find((t) => t.id === id)!.cardImage).toBe(key);
+    expect(result.current.catalog.icons?.[key]).toBe("0123456789abcdef.webp");
+  });
+
   it("la figurine créée suit son groupe quand on la rattache à un groupe existant", () => {
     const { result } = renderHook(() => useCatalogStore());
     const host = result.current.catalog.profiles.find((p) => p.modelId != null)!;

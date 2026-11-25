@@ -64,6 +64,14 @@ export function iconSrc(ref: string | undefined): string | undefined {
 }
 
 /**
+ * URL du scan de carte servi par le serveur de développement (dossier `cards/`, absent du build
+ * de production), ou `undefined` en production et pour une clé vide.
+ */
+export function cardScanSrc(cardImage: string | undefined): string | undefined {
+  return import.meta.env.DEV && cardImage ? `/${cardImage}` : undefined;
+}
+
+/**
  * Nom adressé par contenu : 16 hex du SHA-256 des octets, plus l'extension.
  *
  * 64 bits suffisent très largement ici (quelques centaines d'icônes) et gardent le catalogue

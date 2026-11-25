@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Catalog, Mount, MountType } from "@core";
-import { iconSrc } from "../../lib/icons";
+import { cardScanSrc, iconSrc } from "../../lib/icons";
 import { INPUT, SECTION } from "./shared";
 import { ChipMultiSelect, Combobox, DetailHeader, DetailPage, EditableNumber, Field, FieldGroup, IdField, RemoveButton, Section } from "./primitives";
 import { IconSlot } from "./ProfileDetail";
@@ -35,6 +35,7 @@ export function MountsDetail({
   onChangeMount,
   onRemoveMount,
   setIcon,
+  setSharedIcon,
   onRenameId,
 }: {
   cat: Catalog;
@@ -44,6 +45,7 @@ export function MountsDetail({
   onChangeMount: (id: string, patch: Partial<Mount>) => void;
   onRemoveMount: (id: string) => void;
   setIcon: (cardImage: string, dataUrl: string | null) => void;
+  setSharedIcon: (typeId: string, ref: string) => void;
   /** Renomme l'identifiant du niveau de monture, en cascade. */
   onRenameId: (newId: string) => void;
 }) {
@@ -110,10 +112,10 @@ export function MountsDetail({
               </div>
               {editingIcon && (
                 <IconEditor
-                  initialSrc={type?.cardImage ? `/${type.cardImage}` : undefined}
-                  onSave={(dataUrl) => {
-                    if (editingIcon === "own") onChangeMount(m.id, { icon: dataUrl });
-                    else if (type?.cardImage) setIcon(type.cardImage, dataUrl);
+                  initialSrc={cardScanSrc(type?.cardImage)}
+                  onSave={(ref) => {
+                    if (editingIcon === "own") onChangeMount(m.id, { icon: ref });
+                    else if (type) setSharedIcon(type.id, ref);
                     setEditingIcon(null);
                   }}
                   onClose={() => setEditingIcon(null)}

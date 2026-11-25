@@ -7,6 +7,16 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-11-25
+
+### Les icônes des figurines se créent depuis le site
+
+- **L'icône partagée d'une figurine** se crée directement en ligne, même sans image de carte : il
+  suffit de charger une image depuis son ordinateur. Elle est commune à tous les niveaux du groupe
+  de figurines.
+- **Même chose pour les montures** : l'icône partagée d'un type de monture se crée sans image de
+  carte.
+
 ## 2026-11-23
 
 ### Ogodeï ne gagne plus de Kouronnes avec une arme gratuite

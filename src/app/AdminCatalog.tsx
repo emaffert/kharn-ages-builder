@@ -513,6 +513,7 @@ export function AdminCatalog() {
                   addModel={store.addModel}
                   assignProfileToModel={store.assignProfileToModel}
                   setIcon={store.setIcon}
+                  setSharedIcon={store.setProfileSharedIcon}
                   toggleUnverified={store.toggleUnverified}
                 />
               </div>
@@ -632,6 +633,7 @@ export function AdminCatalog() {
                 )
               }
               setIcon={store.setIcon}
+              setSharedIcon={store.setMountTypeSharedIcon}
             />
           )}
           {view === "mount-options" &&

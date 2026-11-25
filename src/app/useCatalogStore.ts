@@ -501,6 +501,45 @@ export function useCatalogStore() {
     [apply],
   );
 
+  /**
+   * Définit l'icône partagée d'un profil. Sans `cardImage`, le profil et ses frères de groupe qui
+   * n'en ont pas non plus reçoivent la clé `cards/model-<modelId>` (ou `cards/profile-<id>` hors
+   * groupe), pour que l'icône soit partagée sans scan de carte.
+   */
+  const setProfileSharedIcon = useCallback(
+    (profileId: string, ref: string) =>
+      apply((c) => {
+        const profile = c.profiles.find((p) => p.id === profileId);
+        if (!profile) return c;
+        const key = profile.cardImage || (profile.modelId ? `cards/model-${profile.modelId}` : `cards/profile-${profile.id}`);
+        const profiles = profile.cardImage
+          ? c.profiles
+          : c.profiles.map((p) =>
+              !p.cardImage && (p.id === profileId || (profile.modelId != null && p.modelId === profile.modelId))
+                ? { ...p, cardImage: key }
+                : p,
+            );
+        return { ...c, profiles, icons: { ...(c.icons ?? {}), [key]: ref } };
+      }),
+    [apply],
+  );
+
+  /** Définit l'icône partagée d'un type de monture ; sans `cardImage`, lui attribue `cards/mount-<id>`. */
+  const setMountTypeSharedIcon = useCallback(
+    (typeId: string, ref: string) =>
+      apply((c) => {
+        const type = c.mountTypes.find((t) => t.id === typeId);
+        if (!type) return c;
+        const key = type.cardImage || `cards/mount-${type.id}`;
+        return {
+          ...c,
+          mountTypes: c.mountTypes.map((t) => (t.id === typeId ? { ...t, cardImage: key } : t)),
+          icons: { ...(c.icons ?? {}), [key]: ref },
+        };
+      }),
+    [apply],
+  );
+
   const toggleUnverified = useCallback(
     (id: string, key: string) =>
       apply((c) =>
@@ -656,6 +695,8 @@ export function useCatalogStore() {
     updateSpell,
     addSpell,
     setIcon,
+    setProfileSharedIcon,
+    setMountTypeSharedIcon,
     toggleUnverified,
     renameEntityId,
     slugifyEntityId,

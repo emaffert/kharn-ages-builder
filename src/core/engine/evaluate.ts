@@ -224,15 +224,25 @@ export function equipmentMatchesEquipFilter(
 }
 
 /**
- * Remise cumulée (négatif) / surcoût pour un équipement donné, d'après les règles applicables à la
- * figurine et son état (équipement de base retiré, pour le gate « arme de base changée »). Une remise
- * ne descend jamais sous le prix de l'objet : une arme gratuite reste à 0.
+ * Remise (négatif) sur qty exemplaires d'un objet, à partir de sa remise unitaire. Elle ne dépasse
+ * jamais ce que coûte l'objet avec les améliorations cochées dessus : une arme gratuite sans
+ * amélioration reste à 0.
+ */
+export function cappedItemDiscount(unit: number, price: number, qty: number, optionsCost: number): number {
+  return Math.max(unit * qty, 0 - (price * qty + optionsCost));
+}
+
+/**
+ * Remise cumulée (négatif) / surcoût pour qty exemplaires d'un équipement, d'après les règles
+ * applicables à la figurine et son état (équipement de base retiré, pour le gate « arme de base
+ * changée »). optionsCost est le prix des améliorations cochées sur l'objet (cf. `cappedItemDiscount`).
  */
 export function equipmentDiscount(
   cat: Catalog,
   equipId: string,
   rules: EquipmentCostRule[] | undefined,
   removedBaseIds: readonly string[],
+  { qty = 1, optionsCost = 0 }: { qty?: number; optionsCost?: number } = {},
 ): number {
   if (!rules) return 0;
   let d = 0;
@@ -241,7 +251,7 @@ export function equipmentDiscount(
     if (r.requiresBaseSwap && !removedBaseIds.some((id) => equipmentMatchesEquipFilter(cat, id, r))) continue;
     d += r.amount;
   }
-  return Math.max(d, 0 - (cat.equipment.find((x) => x.id === equipId)?.cost ?? 0));
+  return cappedItemDiscount(d, cat.equipment.find((x) => x.id === equipId)?.cost ?? 0, qty, optionsCost);
 }
 
 /**
@@ -748,6 +758,7 @@ function computeCosts(
   occurrences: EffectOccurrence[],
   idx: CatalogIndex,
   cat: Catalog,
+  grantedUp: Map<string, Map<string, GrantedUpgrade>>,
 ): Map<string, number> {
   const cost = new Map<string, number>();
   for (const ri of resolved) cost.set(ri.instance.instanceId, baseInstanceCost(ri, idx, cat));
@@ -771,7 +782,7 @@ function computeCosts(
   }
 
   // cost-delta : modificateurs additifs. Les remises par objet sont cumulées par exemplaire puis
-  // plafonnées au prix de l'objet, pour qu'une arme gratuite ne fasse pas baisser le coût.
+  // plafonnées au prix de l'objet et de ses améliorations (cf. `cappedItemDiscount`).
   const perItem = new Map<string, Map<string, number>>();
   for (const occ of occurrences) {
     const op = occ.effect.operation;
@@ -802,10 +813,13 @@ function computeCosts(
   for (const ri of resolved) {
     const items = perItem.get(ri.instance.instanceId);
     if (!items) continue;
+    const grantedList = [...(grantedUp.get(ri.instance.instanceId)?.values() ?? [])];
     let delta = 0;
     for (const [equipId, qty] of addedEquipmentTally(ri.instance)) {
       const unit = items.get(equipId);
-      if (unit != null) delta += Math.max(unit, 0 - (idx.equipmentCost.get(equipId) ?? 0)) * qty;
+      if (unit == null) continue;
+      const options = equipmentOptionsCost(cat, equipId, ri.instance.equipmentUpgrades?.[equipId], grantedList);
+      delta += cappedItemDiscount(unit, idx.equipmentCost.get(equipId) ?? 0, qty, options);
     }
     cost.set(ri.instance.instanceId, (cost.get(ri.instance.instanceId) ?? 0) + delta);
   }
@@ -2155,14 +2169,24 @@ function upgradeCost(
   let cost = 0;
   for (const [equipId, upIds] of Object.entries(ups)) {
     if (!worn.has(equipId)) continue; // amélioration sur un équipement retiré : ignorée
-    const equipment = cat.equipment.find((e) => e.id === equipId);
-    if (!equipment) continue;
-    const available = new Map(
-      upgradesForEquipment(equipment, grantedList, cat.equipmentUpgrades).map((u) => [u.id, u]),
-    );
-    for (const upId of upIds) cost += available.get(upId)?.cost ?? 0;
+    cost += equipmentOptionsCost(cat, equipId, upIds, grantedList);
   }
   return cost;
+}
+
+/** Prix des améliorations upIds cochées sur l'objet equipId. */
+function equipmentOptionsCost(
+  cat: Catalog,
+  equipId: string,
+  upIds: readonly string[] | undefined,
+  grantedList: readonly GrantedUpgrade[],
+): number {
+  const equipment = cat.equipment.find((e) => e.id === equipId);
+  if (!equipment || !upIds?.length) return 0;
+  const available = new Map(
+    upgradesForEquipment(equipment, grantedList, cat.equipmentUpgrades).map((u) => [u.id, u]),
+  );
+  return upIds.reduce((n, upId) => n + (available.get(upId)?.cost ?? 0), 0);
 }
 
 /**
@@ -2355,10 +2379,10 @@ export function evaluateList(cat: Catalog, list: ListDocument): EvaluationResult
   ];
 
   applyGrants(resolved, occurrences); // 1-2 : octrois jusqu'au point fixe (construction)
-  const cost = computeCosts(resolved, occurrences, idx, cat); // 4 : coûts
-  // 4b : améliorations d'équipement octroyées (unlock-upgrade) + surcoût des options cochées.
   const grantedUp = collectGrantedUpgrades(resolved, occurrences);
   const grantedEquip = collectGrantedEquipment(resolved, occurrences);
+  const cost = computeCosts(resolved, occurrences, idx, cat, grantedUp); // 4 : coûts
+  // 4b : améliorations d'équipement octroyées (unlock-upgrade) + surcoût des options cochées.
   for (const ri of resolved) {
     const id = ri.instance.instanceId;
     const extra = upgradeCost(ri, grantedUp.get(id) ?? new Map(), cat, grantedEquip.get(id) ?? []);

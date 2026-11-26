@@ -94,7 +94,8 @@ export function PurchaseSummary({
     const upCost = upsForE.reduce((n, u) => n + u.cost, 0);
     // Remise et surcoût Tembo (p.20) : seulement sur l'équipement ACHETÉ (pas l'équipement de base).
     const isBase = p.baseEquipmentIds.includes(e.id);
-    const disc = isBase ? 0 : equipmentDiscount(cat, e.id, costRules, removed);
+    const qty = qtyOf(e);
+    const disc = isBase ? 0 : equipmentDiscount(cat, e.id, costRules, removed, { qty, optionsCost: upCost });
     const surcharge = isBase ? 0 : temboEquipmentSurcharge(cat, p.traits, e.id);
     const discSources = [
       ...new Set(
@@ -107,12 +108,11 @@ export function PurchaseSummary({
           .map((r) => r.label),
       ),
     ];
-    const qty = qtyOf(e);
     const base = equipInfo(e, cat);
     // Le prix est TOUJOURS recalculé, même quand rien ne s'y ajoute : c'est lui que la puce affiche
     // sur la ligne de la figurine. Le laisser aux `prices` de la fiche n'écrivait rien à côté d'une
     // arme sans munition ni amélioration - l'épée bâtarde de Key s'affichait sans son prix.
-    const total = e.cost * qty + munCost + upCost + (disc + surcharge) * qty;
+    const total = e.cost * qty + munCost + upCost + disc + surcharge * qty;
     // Octroyé par une carte : son prix est celui de la carte. Seules ses améliorations s'ajoutent.
     if (granted.has(e.id)) {
       return chip(label(e), {

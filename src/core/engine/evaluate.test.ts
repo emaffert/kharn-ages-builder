@@ -944,6 +944,35 @@ describe("Khérops - concepts (Lieutenant / Commandant / Ogodeï)", () => {
     expect(equipmentDiscount(catalog, "kherops-francisque", rules, ["kherops-marteau"])).toBe(-5);
   });
 
+  it("Commandant : la remise porte sur l'arme et ses améliorations, sans rendre une arme gratuite négative", () => {
+    const cmd = inst("kherops-commandant-3");
+    const swap = (over: Partial<ProfileInstance>) =>
+      inst("kherops-guerrier-1-1", { removedBaseEquipmentIds: ["kherops-marteau"], ...over });
+    const deuxEffets = swap({
+      addedEquipmentIds: ["epee-courte"],
+      equipmentUpgrades: { "epee-courte": ["up-1785221996426"] },
+    });
+    const sansOption = swap({ addedEquipmentIds: ["epee-courte"] });
+    const r = evaluateList(catalog, makeList([cmd, deuxEffets, sansOption], "kherops", "bataille"));
+    expect(r.costByInstance[deuxEffets.instanceId]).toBe(79 - 14 + 5 - 5);
+    expect(r.costByInstance[sansOption.instanceId]).toBe(79 - 14);
+    const rules = r.equipmentCostRules[deuxEffets.instanceId];
+    expect(equipmentDiscount(catalog, "epee-courte", rules, ["kherops-marteau"], { optionsCost: 5 })).toBe(-5);
+    expect(equipmentDiscount(catalog, "epee-courte", rules, ["kherops-marteau"])).toBe(0);
+  });
+
+  it("Commandant : la remise s'applique aussi à une amélioration octroyée (Borax sur une arme gratuite)", () => {
+    const cmd = inst("kherops-commandant-3");
+    const forge = inst("kherops-forgeronne-2");
+    const g = inst("kherops-guerrier-1-1", {
+      removedBaseEquipmentIds: ["kherops-marteau"],
+      addedEquipmentIds: ["couteau"],
+      equipmentUpgrades: { couteau: ["borax-arme"] },
+    });
+    const r = evaluateList(catalog, makeList([cmd, forge, g], "kherops", "bataille"));
+    expect(r.costByInstance[g.instanceId]).toBe(79 - 14 + 5 - 5);
+  });
+
   it("Bannière Khéropse : octroie un dé de maîtrise au Porte-Bannière qui la porte", () => {
     const pb = inst("kherops-porte-banniere-2", { specialCardIds: ["banniere-kheropse"] });
     const r = evaluateList(catalog, makeList([pb], "kherops", "bataille"));

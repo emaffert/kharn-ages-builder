@@ -7,6 +7,17 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-11-26
+
+### Les remises sur une arme comptent ses améliorations
+
+- **Injonction Sanglante du Commandant khérops** : la remise de 5 Ko porte sur le prix total de
+  l'arme, améliorations comprises. Une épée courte avec ses deux effets (5 Ko) revient ainsi à
+  0 Ko pour un Guerrier qui change son arme de base. Il en va de même pour une arme gratuite
+  améliorée au Borax.
+- **Même règle pour toutes les remises sur une arme** (Ogodeï, Brute, Exécuteurs, Éclaireuse) :
+  elles peuvent aller jusqu'au prix de l'arme avec ses améliorations, jamais au-delà.
+
 ## 2026-11-25
 
 ### Les icônes des figurines se créent depuis le site

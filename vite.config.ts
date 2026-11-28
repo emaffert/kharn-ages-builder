@@ -154,6 +154,8 @@ export default defineConfig(({ command }) => ({
       // ici, `src/assets/icons/` serait bien buildé mais chargé au coup par coup depuis le réseau.
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
+        // Images des e-mails d'authentification : servies aux webmails, inutiles à l'app.
+        globIgnores: ["email/**"],
         // Icônes servies par le bucket : celles créées depuis l'admin déployé, donc plus récentes
         // que le miroir précaché ci-dessus. `CacheFirst` sans revalidation est le bon choix ici,
         // le nom d'un objet ÉTANT son hash de contenu : il ne peut pas changer sous le même nom.

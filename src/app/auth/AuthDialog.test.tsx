@@ -63,6 +63,7 @@ describe("AuthDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Créer le compte" }));
     await waitFor(() => expect(signUp).toHaveBeenCalledWith("a@b.c", "secret1", "Xayin"));
     expect(await screen.findByText(/confirme ton adresse/i)).toBeTruthy();
+    expect(screen.getByText(/courriers indésirables/i)).toBeTruthy();
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
@@ -86,6 +87,7 @@ describe("AuthDialog", () => {
     await waitFor(() => expect(requestPasswordReset).toHaveBeenCalledWith("a@b.c"));
     // Réponse volontairement neutre : elle ne révèle pas si l'adresse a un compte.
     expect(await screen.findByText(/Si un compte existe/i)).toBeTruthy();
+    expect(screen.getByText(/courriers indésirables/i)).toBeTruthy();
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 

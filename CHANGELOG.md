@@ -7,6 +7,15 @@ Conventions : une entrée par date de mise en ligne, la plus récente en haut, r
 vue de l'utilisateur (ce qui change pour lui, pas comment c'est fait). Les détails techniques
 n'y figurent que lorsqu'ils ont une conséquence visible.
 
+## 2026-11-28
+
+### Des e-mails de compte en français
+
+- **Les e-mails d'inscription et de mot de passe oublié** sont rédigés en français, aux couleurs de
+  Khârn-Âges, et expliquent pourquoi on les reçoit.
+- **Après une inscription ou une demande de mot de passe**, le site rappelle de regarder dans les
+  courriers indésirables si le message n'arrive pas.
+
 ## 2026-11-26
 
 ### Les remises sur une arme comptent ses améliorations

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Choisis un nouveau mot de passe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&amp;display=swap" rel="stylesheet">
+<style>
+  @media (max-width: 600px) {
+    .ka-card { padding: 28px 22px !important; }
+    .ka-title { font-size: 20px !important; }
+  }
+</style>
+</head>
+<body style="margin:0; padding:0; background-color:#e7d9bb;">
+<div style="display:none; max-height:0; overflow:hidden; opacity:0;">Le lien pour choisir un nouveau mot de passe sur le constructeur de listes Khârn-Âges.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#e7d9bb;">
+  <tr>
+    <td align="center" style="padding:32px 16px 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+        <tr>
+          <td align="center" style="padding:0 0 24px;">
+            <img src="https://emaffert.github.io/kharn-ages-builder/email/ka-logo.png" width="240" height="92" alt="Khârn-Âges" style="display:block; border:0; width:240px; height:auto; font-family:Georgia, 'Times New Roman', serif; font-size:24px; color:#2c2015;">
+          </td>
+        </tr>
+        <tr>
+          <td class="ka-card" style="background-color:#faf3e1; border:1px solid #cdb890; border-radius:6px; padding:36px 40px; font-family:Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#2c2015;">
+            <h1 class="ka-title" style="margin:0 0 18px; font-family:Cinzel, Georgia, 'Times New Roman', serif; font-size:22px; font-weight:600; line-height:1.3; color:#2c2015;">Nouveau mot de passe</h1>
+            <p style="margin:0 0 16px; font-size:15px; line-height:1.6;">Une demande de nouveau mot de passe a été faite pour le compte <strong>{{ .Email }}</strong> sur le constructeur de listes Khârn-Âges.</p>
+            <p style="margin:0 0 28px; font-size:15px; line-height:1.6;">Pour le choisir, utilise ce bouton. Le lien n'est valable que pour une durée limitée.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="background-color:#9c4410; border-radius:4px;">
+                  <a href="{{ .ConfirmationURL }}" style="display:inline-block; padding:13px 26px; font-family:Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:15px; font-weight:600; color:#fff8ec; text-decoration:none; border-radius:4px;">Choisir un nouveau mot de passe</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:28px 0 6px; font-size:13px; line-height:1.5; color:#6a5942;">Si le bouton ne fonctionne pas, copie ce lien dans ton navigateur&nbsp;:</p>
+            <p style="margin:0 0 28px; font-size:13px; line-height:1.5; word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#9c4410;">{{ .ConfirmationURL }}</a></p>
+            <p style="margin:0; padding-top:20px; border-top:1px solid #cdb890; font-size:13px; line-height:1.5; color:#6a5942;">Tu n'as rien demandé&nbsp;? Ignore ce message&nbsp;: ton mot de passe actuel reste valable.</p>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding:24px 24px 0; font-family:Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:12px; line-height:1.5; color:#6a5942;">
+            Ce message automatique t'est envoyé par le constructeur de listes Khârn-Âges. Merci de ne pas y répondre.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

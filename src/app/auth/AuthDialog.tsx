@@ -41,7 +41,10 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       const { error: message } = await requestPasswordReset(email.trim());
       setError(message);
       if (!message) {
-        setNotice("Si un compte existe pour cette adresse, un lien de réinitialisation vient d'y être envoyé.");
+        setNotice(
+          "Si un compte existe pour cette adresse, un lien de réinitialisation vient d'y être envoyé. " +
+            "Pense à regarder aussi dans tes courriers indésirables.",
+        );
       }
     } else if (mode === "signin") {
       const { error: message } = await signIn(email.trim(), password);
@@ -54,7 +57,10 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       if (!message) {
         // Sans confirmation d'e-mail requise, la session est déjà ouverte : on ferme.
         if (needsConfirmation) {
-          setNotice("Compte créé. Confirme ton adresse e-mail depuis le message qu'on vient de t'envoyer.");
+          setNotice(
+            "Compte créé. Confirme ton adresse e-mail depuis le message qu'on vient de t'envoyer. " +
+              "S'il n'apparaît pas d'ici quelques minutes, regarde dans tes courriers indésirables.",
+          );
         } else {
           onOpenChange(false);
         }
